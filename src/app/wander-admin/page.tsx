@@ -7,7 +7,7 @@ import { redirect } from "next/navigation";
 export default async function AdminPage() {
   const { userId } = await auth();
   if (!userId) {
-    redirect("/sign-in");
+    redirect("/sign-in?redirect_url=/wander-admin");
   }
 
   const dbUser = await prisma.user.findUnique({
