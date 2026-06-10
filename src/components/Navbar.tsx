@@ -29,22 +29,7 @@ export default function Navbar() {
     }
   }, [isSignedIn, router]);
 
-  // Redirect vendor or admin to dashboard automatically if they are logged in
-  useEffect(() => {
-    if (isSignedIn) {
-      // Small timeout to ensure the current route hasn't already handled navigation
-      const timeoutId = setTimeout(() => {
-        if (window.location.pathname === '/' || window.location.pathname.startsWith('/sign-in')) {
-           if (role === 'ADMIN') {
-             router.push('/wander-admin');
-           } else if (isRegistered) {
-             router.push('/partner/dashboard');
-           }
-        }
-      }, 500);
-      return () => clearTimeout(timeoutId);
-    }
-  }, [isSignedIn, isRegistered, role, router]);
+
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 10);
