@@ -556,7 +556,7 @@ export default function AdminDashboardClient({ vendors, properties = [], totalUs
             <p className="text-slate-500 mt-2">Manage vendors, approve documents, and oversee platform health.</p>
           </div>
           <div className="bg-white p-2 rounded-full shadow-sm border border-slate-100 flex items-center justify-center">
-            <UserButton afterSignOutUrl="/" />
+            <UserButton />
           </div>
         </header>
 
