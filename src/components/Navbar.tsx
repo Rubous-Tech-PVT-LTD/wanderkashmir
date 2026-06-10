@@ -73,12 +73,7 @@ export default function Navbar() {
 
           {/* Right Actions */}
           <div className="hidden lg:flex items-center gap-3">
-            <Link
-              href="/partner"
-              className="text-xs font-bold text-white bg-[var(--primary)] px-4 py-2.5 rounded-lg"
-            >
-              {isRegistered ? "Vendor Dashboard" : "Become a Partner"}
-            </Link>
+
             <button className="flex items-center gap-1.5 text-xs font-bold text-slate-700 hover:text-slate-900 bg-slate-50 border border-slate-100 px-3 py-2 rounded-lg transition-colors">
               INR <ChevronDown className="w-3.5 h-3.5 text-slate-500" />
             </button>
@@ -142,13 +137,7 @@ export default function Navbar() {
                 {link.label}
               </Link>
             ))}
-            <Link
-              href="/partner"
-              onClick={() => setMobileOpen(false)}
-              className="block mt-4 px-4 py-3.5 rounded-xl text-white font-bold text-lg bg-[var(--primary)] shadow-md shadow-sky-500/20 text-center border-2 border-[var(--primary)]"
-            >
-              {isRegistered ? "Vendor Dashboard" : "Become a Partner"}
-            </Link>
+
           </div>
           
           <div className="p-5 border-t border-slate-100 space-y-3">
@@ -166,27 +155,12 @@ export default function Navbar() {
                 <UserButton />
               </div>
             )}
-            <Link
-              href="/partner"
-              onClick={() => setMobileOpen(false)}
-              className="btn-primary w-full justify-center py-3.5 text-base"
-            >
-              List Your Property
-            </Link>
+
           </div>
         </div>
       )}
 
-      {/* Floating Become a Partner Button */}
-      <Link
-        href="/partner"
-        className="fixed bottom-6 right-6 z-50 flex items-center gap-2 bg-gradient-to-r from-sky-500 to-indigo-600 text-white font-bold px-6 py-3.5 rounded-full shadow-xl shadow-sky-500/30 hover:scale-105 hover:shadow-2xl hover:shadow-sky-500/40 transition-all duration-300 group animate-bounce-slow"
-      >
-        <span>Become a Partner</span>
-        <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
-        </svg>
-      </Link>
+
     </>
   );
 }
