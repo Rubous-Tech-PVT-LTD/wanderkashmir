@@ -211,7 +211,7 @@ export default function HomestayDashboard({ bookings = [] }: { bookings?: any[] 
       </div>
 
       <div className="flex gap-6 border-b border-slate-200 mb-8 overflow-x-auto whitespace-nowrap">
-        {["financials", "overview", "listings", "bookings"].map((tab) => (
+        {["overview", "listings", "bookings", "financials"].map((tab) => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}

@@ -309,7 +309,7 @@ export default function HotelDashboard({ properties = [], bookings = [] }: { pro
 
       {/* Tabs */}
       <div className="flex gap-6 border-b border-slate-200 mb-8 overflow-x-auto whitespace-nowrap">
-        {["financials", "overview", "listings", "bookings"].map((tab) => (
+        {["overview", "listings", "bookings", "financials"].map((tab) => (
           <button
             key={tab}
             onClick={() => {
