@@ -1,0 +1,134 @@
+"use client";
+
+import { useState } from "react";
+import Script from "next/script";
+import { useRouter } from "next/navigation";
+import toast from "react-hot-toast";
+
+interface CheckoutButtonProps {
+  propertyId: string;
+  pricePerNight: number;
+  isLoggedIn?: boolean;
+  checkIn: string;
+  checkOut: string;
+  guests: number;
+  nights: number;
+  guestName?: string;
+  guestPhone?: string;
+  specialRequests?: string;
+  otherGuests?: {name: string, age: string}[];
+  baseAmount?: number;
+  taxiAmount?: number;
+  guideAmount?: number;
+  selectedTaxiId?: string;
+  selectedGuideId?: string;
+}
+
+export default function CheckoutButton({ 
+  propertyId, pricePerNight, isLoggedIn, checkIn, checkOut, guests, nights, 
+  guestName, guestPhone, specialRequests, otherGuests,
+  baseAmount, taxiAmount, guideAmount, selectedTaxiId, selectedGuideId
+}: CheckoutButtonProps) {
+  const [isLoading, setIsLoading] = useState(false);
+  const router = useRouter();
+
+  const handleCheckout = async () => {
+    if (!isLoggedIn) {
+      router.push("/sign-in");
+      return;
+    }
+    
+    setIsLoading(true);
+    try {
+      // 1. Create a Razorpay order on the server
+      const response = await fetch("/api/razorpay/order", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          propertyId,
+          vehicleId: selectedTaxiId,
+          guideProfileId: selectedGuideId,
+          checkIn,
+          checkOut,
+          guests,
+          amount: (baseAmount || pricePerNight * nights) + (taxiAmount || 0) + (guideAmount || 0),
+          baseAmount: baseAmount || pricePerNight * nights,
+          taxiAmount,
+          guideAmount,
+          guestName,
+          guestPhone,
+          specialRequests,
+          otherGuests,
+        }),
+      });
+
+      const orderData = await response.json();
+
+      if (orderData.error) {
+        toast.error("Error: " + orderData.error);
+        setIsLoading(false);
+        return;
+      }
+
+      // 2. Initialize Razorpay options
+      const options = {
+        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID, 
+        amount: orderData.amount,
+        currency: orderData.currency,
+        name: "WanderKashmir",
+        description: "Booking Reservation",
+        image: "/images/razorpay.svg",
+        order_id: orderData.id,
+        handler: async function (response: any) {
+          // 3. Verify Payment
+          const verifyRes = await fetch("/api/razorpay/verify", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_signature: response.razorpay_signature,
+            }),
+          });
+          const verifyData = await verifyRes.json();
+          if (verifyData.success) {
+            router.push(`/stays/${propertyId}?success=true`);
+          } else {
+            toast.error("Payment Verification Failed!");
+          }
+        },
+        theme: {
+          color: "#ea580c", // Saffron color
+        },
+      };
+
+      // @ts-ignore
+      const razorpayInstance = new window.Razorpay(options);
+      razorpayInstance.on("payment.failed", function (response: any) {
+        toast.error(`Payment failed: ${response.error.description}`);
+      });
+      razorpayInstance.open();
+
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to initiate checkout");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return (
+    <>
+      <Script src="https://checkout.razorpay.com/v1/checkout.js" />
+      <button
+        onClick={handleCheckout}
+        disabled={isLoading}
+        className="w-full bg-orange-600 text-white font-bold py-3.5 rounded-xl hover:bg-orange-700 transition-colors shadow-md disabled:opacity-50"
+      >
+        <span className="font-semibold text-lg">{isLoading ? "Processing..." : "Pay with Razorpay"}</span>
+      </button>
+    </>
+  );
+}

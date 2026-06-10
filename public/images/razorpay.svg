@@ -1,0 +1,7 @@
+<svg width="240" height="60" viewBox="0 0 240 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Simplified Razorpay Mark (Lightning Bolt + Leaf) -->
+  <path d="M15.5 10L5 35H18L12 50L25 25H12L15.5 10Z" fill="white" />
+  
+  <!-- "Razorpay" Text in sleek font -->
+  <text x="35" y="44" fill="white" font-family="Outfit, sans-serif" font-size="32" font-weight="900" style="font-style: italic;">Razorpay</text>
+</svg>

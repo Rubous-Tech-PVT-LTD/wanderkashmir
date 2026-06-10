@@ -1,0 +1,171 @@
+@import url('https://fonts.googleapis.com/css2?family=Dancing+Script:wght@600&family=Inter:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+
+@import "tailwindcss";
+
+:root {
+  --background: #ffffff;
+  --foreground: #1e293b;
+  --primary: #0284c7; /* Ocean Blue */
+  --primary-hover: #0369a1;
+  --primary-light: #38bdf8;
+  --primary-muted: #e0f2fe;
+  
+  --slate-900: #0f172a;
+  --slate-800: #1e293b;
+  --slate-50: #f8fafc;
+}
+
+@layer base {
+  body {
+    background-color: var(--background);
+    color: var(--foreground);
+    font-family: 'Inter', sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    letter-spacing: -0.02em;
+  }
+}
+
+@layer components {
+  /* Layout utilities */
+  .container-custom {
+    width: 100%;
+    max-width: 80rem;
+    margin-left: auto;
+    margin-right: auto;
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+  @media (min-width: 640px) {
+    .container-custom {
+      padding-left: 1.5rem;
+      padding-right: 1.5rem;
+    }
+  }
+  @media (min-width: 1024px) {
+    .container-custom {
+      padding-left: 2rem;
+      padding-right: 2rem;
+    }
+  }
+  
+  .section-padding {
+    padding-top: 4rem;
+    padding-bottom: 4rem;
+  }
+  @media (min-width: 768px) {
+    .section-padding {
+      padding-top: 6rem;
+      padding-bottom: 6rem;
+    }
+  }
+
+  /* Buttons */
+  .btn-primary {
+    background-color: var(--primary);
+    color: #ffffff;
+    padding: 0.625rem 1.25rem;
+    border-radius: 0.75rem;
+    font-weight: 700;
+    transition: all 0.2s;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.875rem;
+  }
+  .btn-primary:hover {
+    background-color: var(--primary-hover);
+  }
+
+  .btn-secondary {
+    background-color: #ffffff;
+    color: #1e293b;
+    border: 1px solid #e5e7eb;
+    padding: 0.625rem 1.25rem;
+    border-radius: 0.75rem;
+    font-weight: 700;
+    transition: all 0.2s;
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.875rem;
+  }
+  .btn-secondary:hover {
+    background-color: #f9fafb;
+  }
+
+  .btn-outline {
+    background-color: transparent;
+    color: var(--primary);
+    border: 1px solid var(--primary);
+    padding: 0.625rem 1.25rem;
+    border-radius: 0.75rem;
+    font-weight: 700;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.875rem;
+  }
+  .btn-outline:hover {
+    background-color: var(--primary-muted);
+  }
+
+  /* Cards */
+  .card-white {
+    background-color: #ffffff;
+    border-radius: 1rem;
+    border: 1px solid #f3f4f6;
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    transition: all 0.2s;
+    overflow: hidden;
+  }
+  .card-white:hover {
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  }
+
+  .badge {
+    padding: 0.25rem 0.625rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+  }
+  
+  .badge-primary {
+    background-color: var(--primary-muted);
+    color: var(--primary);
+  }
+
+  .badge-white {
+    background-color: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(12px);
+    color: #111827;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+  }
+}
+
+/* Hide scrollbar for clean tabs */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+
+/* Clerk Profile Customization: Hide unnecessary security options */
+.cl-profileSection__mfa,
+.cl-profileSection__activeDevices,
+.cl-profileSection__danger,
+.cl-profileSection__emailAddresses,
+.cl-profileSection__connectedAccounts {
+  display: none !important;
+}
