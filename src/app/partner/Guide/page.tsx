@@ -99,7 +99,7 @@ export default function GuideDashboard({ bookings = [] }: { bookings?: any[] }) 
       toast.error("Error: Your profile is pending Admin approval. You cannot publish your profile yet.");
       return;
     }
-    console.log("Valid Guide Profile Submitted:", data);
+
     toast.success("Profile published successfully!");
   };
 

@@ -133,7 +133,7 @@ export async function processBookingEmailInBackground(bookingId: string) {
       ]
     });
 
-    console.log(`[Worker] Successfully sent booking email and invoice for ${bookingId}`);
+
   } catch (error) {
     console.error(`[Worker] Error processing booking email for ${bookingId}:`, error);
   }

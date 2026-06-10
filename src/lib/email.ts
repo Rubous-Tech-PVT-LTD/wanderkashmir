@@ -15,7 +15,7 @@ export async function sendBookingConfirmation(
   }
 ) {
   if (!resend) {
-    console.log("RESEND_API_KEY missing. Mock email sent to:", guestEmail);
+
     return { success: true, mocked: true };
   }
 

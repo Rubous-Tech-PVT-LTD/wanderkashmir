@@ -55,7 +55,7 @@ export async function POST(req: Request) {
             razorpayPaymentId: paymentId,
           },
         });
-        console.log(`Booking for order ${orderId} marked as CONFIRMED via webhook.`);
+
 
         // Send Email Notification
         if (booking && booking.user && booking.user.email) {
@@ -76,7 +76,7 @@ export async function POST(req: Request) {
               amount: booking.amount
             }
           );
-          console.log(`Confirmation email sent to ${email}`);
+
         }
       }
     }

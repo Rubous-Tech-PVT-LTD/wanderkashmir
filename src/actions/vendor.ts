@@ -100,7 +100,7 @@ export async function approveVendor(vendorId: string) {
     try {
       const client = await clerkClient();
       await client.users.updateUser(updatedVendor.userId, { username: generatedVendorId });
-      console.log(`Updated Clerk username to ${generatedVendorId} for user ${updatedVendor.userId}`);
+
     } catch (clerkError) {
       console.error("Failed to update Clerk username:", clerkError);
       // We don't fail the approval if Clerk update fails, but ideally it should succeed
