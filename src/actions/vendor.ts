@@ -27,10 +27,17 @@ export async function registerVendor(data: VendorRegistrationData) {
 
     await ensureDbUser(userId);
 
-    await prisma.user.update({
+    const dbUser = await prisma.user.findUnique({
       where: { id: userId },
-      data: { role: "VENDOR" }
+      select: { role: true }
     });
+
+    if (dbUser && dbUser.role !== "ADMIN") {
+      await prisma.user.update({
+        where: { id: userId },
+        data: { role: "VENDOR" }
+      });
+    }
 
     const typeString = validData.vendorType;
     let type: VendorType = "HOTEL";
