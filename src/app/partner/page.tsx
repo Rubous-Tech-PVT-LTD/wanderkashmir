@@ -134,21 +134,7 @@ export default function VendorEntryPage() {
               </div>
             )}
             
-            <div className="mt-4 p-4 bg-sky-50 border border-sky-100 rounded-lg inline-block text-center space-y-2">
-              <p className="text-sm text-slate-700">
-                Already a partner? 
-                <a href="/sign-in?redirect_url=/partner/dashboard" className="ml-2 font-bold text-sky-600 hover:text-sky-700 hover:underline">
-                  Login here
-                </a>
-              </p>
-              {isRegistered && (
-                <div className="pt-2 border-t border-sky-200 mt-2">
-                  <a href="/partner/dashboard" className="text-sm font-bold text-slate-900 bg-white px-4 py-2 rounded-lg shadow-sm border border-slate-200 hover:bg-slate-50 transition-colors inline-flex items-center">
-                    Go to my Dashboard →
-                  </a>
-                </div>
-              )}
-            </div>
+
           </div>
 
           {/* Progress Bar */}
