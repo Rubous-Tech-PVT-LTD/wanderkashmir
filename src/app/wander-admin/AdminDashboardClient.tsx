@@ -14,6 +14,7 @@ import { markVendorPaid } from "@/actions/payouts";
 import { useRouter } from "next/navigation";
 import { format, isSameDay, addDays } from "date-fns";
 import toast from "react-hot-toast";
+import { UserButton } from "@clerk/nextjs";
 
 // Define the type based on the props passed from Server
 type VendorProfile = {
@@ -549,9 +550,14 @@ export default function AdminDashboardClient({ vendors, properties = [], totalUs
 
       {/* Main Content */}
       <div className="flex-1 p-10 max-w-6xl">
-        <header className="mb-10">
-          <h2 className="text-3xl font-bold text-slate-900">Platform Administration</h2>
-          <p className="text-slate-500 mt-2">Manage vendors, approve documents, and oversee platform health.</p>
+        <header className="mb-10 flex justify-between items-start">
+          <div>
+            <h2 className="text-3xl font-bold text-slate-900">Platform Administration</h2>
+            <p className="text-slate-500 mt-2">Manage vendors, approve documents, and oversee platform health.</p>
+          </div>
+          <div className="bg-white p-2 rounded-full shadow-sm border border-slate-100 flex items-center justify-center">
+            <UserButton afterSignOutUrl="/" />
+          </div>
         </header>
 
         {/* Stats Row */}
