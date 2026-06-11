@@ -305,14 +305,14 @@ export default function AdminDashboardClient({ vendors, properties = [], totalUs
 
   // Stats calculation
   // Stats calculation
-  const totalVendors = vendors.length;
+  const totalLiveVendors = vendors.filter(v => v.isApproved && v.status !== "SUSPENDED").length;
   const pendingVendors = vendors.filter(v => !v.isApproved && v.status !== "REJECTED" && v.status !== "SUSPENDED").length;
   const rejectedVendors = vendors.filter(v => v.status === "REJECTED").length;
 
   const stats = [
     { label: "Total Platform Revenue", value: `₹${totalRevenue.toLocaleString('en-IN')}`, icon: IndianRupee, color: "text-emerald-500", bg: "bg-emerald-50", tab: "payouts" },
-    { label: "Total Registered Users", value: totalUsers.toString(), icon: Users, color: "text-sky-500", bg: "bg-sky-50", tab: "users" },
-    { label: "Total Registered Vendors", value: totalVendors.toString(), icon: Building2, color: "text-indigo-500", bg: "bg-indigo-50", tab: "live_vendors" },
+    { label: "Total Registered Users", value: users.length.toString(), icon: Users, color: "text-sky-500", bg: "bg-sky-50", tab: "users" },
+    { label: "Total Live Vendors", value: totalLiveVendors.toString(), icon: Building2, color: "text-indigo-500", bg: "bg-indigo-50", tab: "live_vendors" },
     { label: "Total Rejected", value: rejectedVendors.toString(), icon: XCircle, color: "text-red-500", bg: "bg-red-50", tab: "rejected" },
     { label: "Pending Vendor Approvals", value: pendingVendors.toString(), icon: Clock, color: "text-orange-500", bg: "bg-orange-50", tab: "approvals" },
   ];
