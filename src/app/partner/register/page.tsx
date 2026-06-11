@@ -18,12 +18,14 @@ export default function VendorEntryPage() {
   const { setVendorType, setVendorName, setIsRegistered, setIsApproved, isRegistered, status, rejectionReason } = useVendor();
   const router = useRouter();
 
-  // Auto-redirect registered vendors to their dashboard
+  // Only redirect if vendor was ALREADY registered before visiting this page (on mount).
+  // Do NOT watch `isRegistered` as a dependency — that would skip Step 4.
   useEffect(() => {
     if (isRegistered) {
       router.push("/partner/dashboard");
     }
-  }, [isRegistered, router]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // run only on mount
 
   const [mounted, setMounted] = useState(false);
 
