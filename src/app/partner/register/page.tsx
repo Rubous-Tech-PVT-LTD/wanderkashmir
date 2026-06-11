@@ -71,8 +71,16 @@ export default function VendorEntryPage() {
       if (res.success) {
         setVendorType(data.vendorType as any);
         setVendorName(data.businessName);
-        setIsRegistered(true);
         setIsApproved(false);
+
+        // Auto-login: set session cookie so dashboard can read the session
+        await fetch("/api/auth/vendor-login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email: data.email, password: data.password }),
+        });
+
+        setIsRegistered(true);
         setStep(4);
       } else {
         if (res.error === "Unauthorized") {
