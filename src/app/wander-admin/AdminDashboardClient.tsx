@@ -305,7 +305,7 @@ export default function AdminDashboardClient({ vendors, properties = [], totalUs
 
   // Stats calculation
   const totalVendors = vendors.length;
-  const pendingVendors = vendors.filter(v => !v.isApproved).length;
+  const pendingVendors = vendors.filter(v => !v.isApproved && v.status !== "REJECTED" && v.status !== "SUSPENDED").length;
 
   const stats = [
     { label: "Total Platform Revenue", value: `₹${totalRevenue.toLocaleString('en-IN')}`, icon: IndianRupee, color: "text-sky-500", bg: "bg-sky-50" },
