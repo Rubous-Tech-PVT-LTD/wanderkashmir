@@ -20,32 +20,40 @@ export async function registerVendor(data: VendorRegistrationData) {
     }
 
     const validData = parsedData.data;
-    const userId = await getCurrentUserId();
-    
-    if (!userId) {
-      return { success: false, error: "You must be logged in to register as a vendor." };
-    }
 
-    await ensureDbUser(userId);
-
-    const dbUser = await prisma.user.findUnique({
-      where: { id: userId },
-      select: { role: true, password: true }
+    // Check if user with this email exists
+    let dbUser = await prisma.user.findUnique({
+      where: { email: validData.email }
     });
 
-    // Hash the password they provided during registration
     const bcrypt = require("bcrypt");
     const passwordHash = await bcrypt.hash(validData.password, 10);
 
-    const updateData: any = { password: passwordHash };
-    if (dbUser && dbUser.role !== "ADMIN") {
-      updateData.role = "VENDOR";
-    }
+    let userId = "";
 
-    await prisma.user.update({
-      where: { id: userId },
-      data: updateData
-    });
+    if (dbUser) {
+      // User exists, update role and password
+      const updateData: any = { password: passwordHash };
+      if (dbUser.role !== "ADMIN") {
+        updateData.role = "VENDOR";
+      }
+      await prisma.user.update({
+        where: { id: dbUser.id },
+        data: updateData
+      });
+      userId = dbUser.id;
+    } else {
+      // Create new user
+      const newUser = await prisma.user.create({
+        data: {
+          email: validData.email,
+          password: passwordHash,
+          name: validData.businessName || "Vendor",
+          role: "VENDOR"
+        }
+      });
+      userId = newUser.id;
+    }
 
     const typeString = validData.vendorType;
     let type: VendorType = "HOTEL";

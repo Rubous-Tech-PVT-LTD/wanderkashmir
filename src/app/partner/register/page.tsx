@@ -10,7 +10,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { vendorRegistrationSchema, VendorRegistrationData } from "@/lib/validations";
 import { toast } from "react-hot-toast";
 import ImageUpload from "@/components/ImageUpload";
-import { useAuth, SignInButton } from "@clerk/nextjs";
 
 export default function VendorEntryPage() {
   const [step, setStep] = useState(1);
@@ -102,28 +101,7 @@ export default function VendorEntryPage() {
     </div>
   );
 
-  // if (isRegistered) {
-  //   return null; // Prevents flashing while redirecting
-  // }
-
-  if (!mounted || !isLoaded) return null;
-
-  if (!isSignedIn) {
-    return (
-      <div className="max-w-md mx-auto py-24 text-center">
-        <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-6">
-          <UserCircle2 className="w-8 h-8 text-slate-400" />
-        </div>
-        <h2 className="text-2xl font-bold text-slate-900 mb-4">Login Required</h2>
-        <p className="text-slate-500 mb-8">You must be logged in before registering as a vendor on WanderKashmir.</p>
-        <SignInButton mode="modal" fallbackRedirectUrl="/partner/register">
-          <button className="bg-sky-500 text-white px-8 py-3 rounded-lg font-bold hover:bg-sky-600 transition-colors shadow-sm">
-            Login / Sign up
-          </button>
-        </SignInButton>
-      </div>
-    );
-  }
+  if (!mounted) return null;
 
   return (
     <div className="max-w-4xl mx-auto py-12">

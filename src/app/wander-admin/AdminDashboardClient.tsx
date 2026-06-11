@@ -14,7 +14,7 @@ import { markVendorPaid } from "@/actions/payouts";
 import { useRouter } from "next/navigation";
 import { format, isSameDay, addDays } from "date-fns";
 import toast from "react-hot-toast";
-import { UserButton } from "@clerk/nextjs";
+import { LogOut } from "lucide-react";
 
 // Define the type based on the props passed from Server
 type VendorProfile = {
@@ -555,9 +555,15 @@ export default function AdminDashboardClient({ vendors, properties = [], totalUs
             <h2 className="text-3xl font-bold text-slate-900">Platform Administration</h2>
             <p className="text-slate-500 mt-2">Manage vendors, approve documents, and oversee platform health.</p>
           </div>
-          <div className="bg-white p-2 rounded-full shadow-sm border border-slate-100 flex items-center justify-center">
-            <UserButton />
-          </div>
+          <button 
+            onClick={async () => {
+              await fetch("/api/auth/admin-logout", { method: "POST" });
+              router.push("/wander-admin/login");
+            }}
+            className="flex items-center gap-2 text-slate-500 hover:text-red-500 hover:bg-red-50 px-4 py-2 rounded-lg font-bold transition-all bg-white border border-slate-100 shadow-sm"
+          >
+            <LogOut className="w-5 h-5" /> Sign Out
+          </button>
         </header>
 
         {/* Stats Row */}
