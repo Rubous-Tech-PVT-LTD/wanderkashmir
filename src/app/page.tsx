@@ -268,20 +268,20 @@ export default async function HomePage() {
       <Navbar />
 
       {/* ─── HERO ─────────────────────────────────────────── */}
-      <section className="relative h-[85vh] flex flex-col justify-center items-center text-center overflow-visible">
+      <section className="relative h-[85vh] flex flex-col justify-center overflow-visible">
         {/* Background Image Carousel */}
         <HeroCarousel />
 
         {/* Hero Content */}
-        <div className="relative z-10 container-custom mt-[-5vh]">
+        <div className="relative z-10 container-custom mt-[-5vh] text-left">
           <h1 className="text-[3rem] md:text-[4.5rem] font-bold text-white leading-[1.1] drop-shadow-xl tracking-tight mb-2">
             Discover <span className="text-orange-500">Paradise</span> <br className="hidden md:block" />
-            <div className="font-['Dancing_Script'] text-[#38bdf8] font-normal drop-shadow-md mt-2 flex items-baseline justify-center gap-4">
+            <div className="font-['Dancing_Script'] text-[#38bdf8] font-normal drop-shadow-md mt-2 flex items-baseline justify-start gap-4">
               <span className="text-[2.5rem] md:text-[3.5rem]">in</span>
               <span className="text-[4.5rem] md:text-[6rem]">Kashmir</span>
             </div>
           </h1>
-          <p className="text-white text-base md:text-lg font-medium drop-shadow-lg max-w-2xl mx-auto tracking-wide mt-4">
+          <p className="text-white text-base md:text-lg font-medium drop-shadow-lg max-w-2xl tracking-wide mt-4">
             Book Homestays, Hotels, Taxis & Tour Packages<br />
             <span className="font-normal opacity-90">Explore the Beauty of Heaven on Earth</span>
           </p>
