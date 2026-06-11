@@ -62,6 +62,7 @@ export default function VendorLoginPage() {
   const handleSignOut = async () => {
     await fetch("/api/auth/vendor-logout", { method: "POST" });
     setPendingState(null);
+    router.refresh();
   };
 
   // ── REJECTED CARD ──
