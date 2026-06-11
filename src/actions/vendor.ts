@@ -90,6 +90,99 @@ export async function registerVendor(data: VendorRegistrationData) {
     revalidatePath("/wander-admin");
     revalidatePath("/partner");
 
+    // Send "Application Received" confirmation email to vendor
+    try {
+      const vendorName = validData.businessName || "Vendor";
+      const firstName = vendorName.split(" ")[0];
+      const typeLabel = type === "HOTEL" ? "Hotel" : type === "HOMESTAY" ? "Homestay" : type === "TAXI" ? "Taxi" : "Guide";
+
+      await resend.emails.send({
+        from: 'WanderKashmir <support@wanderkashmir.com>',
+        to: validData.email,
+        subject: `Application Received – WanderKashmir Partner Program`,
+        html: `
+          <div style="font-family: 'Segoe UI', sans-serif; background: #f8fafc; padding: 40px 20px; min-height: 100vh;">
+            <div style="max-width: 580px; margin: 0 auto; background: white; border-radius: 20px; overflow: hidden; box-shadow: 0 4px 24px rgba(0,0,0,0.08);">
+              
+              <!-- Header -->
+              <div style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); padding: 40px 40px 32px; text-align: center;">
+                <div style="display: inline-flex; align-items: center; gap: 8px; margin-bottom: 20px;">
+                  <span style="font-size: 20px; font-weight: 900; color: white; letter-spacing: -0.5px;">Wander<span style="color: #f97316;">Kashmir</span></span>
+                </div>
+                <div style="width: 72px; height: 72px; background: rgba(249,115,22,0.15); border-radius: 50%; margin: 0 auto 16px; display: flex; align-items: center; justify-content: center;">
+                  <span style="font-size: 36px;">📋</span>
+                </div>
+                <h1 style="color: white; font-size: 24px; font-weight: 800; margin: 0 0 8px;">Application Received!</h1>
+                <p style="color: #94a3b8; font-size: 15px; margin: 0;">Your ${typeLabel} partner application is under review</p>
+              </div>
+
+              <!-- Body -->
+              <div style="padding: 40px;">
+                <p style="color: #334155; font-size: 16px; margin: 0 0 24px;">Hi <strong>${firstName}</strong>,</p>
+                <p style="color: #475569; font-size: 15px; line-height: 1.7; margin: 0 0 24px;">
+                  Thank you for registering as a <strong>${typeLabel}</strong> partner on WanderKashmir. We have received your details and documents.
+                </p>
+                
+                <!-- Status Card -->
+                <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 14px; padding: 24px; margin-bottom: 28px;">
+                  <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
+                    <span style="font-size: 24px;">⏳</span>
+                    <div>
+                      <p style="font-weight: 800; color: #166534; margin: 0; font-size: 16px;">Under Evaluation</p>
+                      <p style="color: #15803d; margin: 0; font-size: 13px;">Estimated: 24–48 hours</p>
+                    </div>
+                  </div>
+                  <p style="color: #166534; font-size: 14px; margin: 0; line-height: 1.6;">
+                    Our team is reviewing your documents. Once approved, you will receive a separate confirmation email with your Vendor ID and dashboard access.
+                  </p>
+                </div>
+
+                <!-- What's Next -->
+                <div style="margin-bottom: 28px;">
+                  <p style="font-weight: 700; color: #0f172a; font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 16px;">What happens next?</p>
+                  <div style="display: flex; flex-direction: column; gap: 12px;">
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                      <div style="width: 28px; height: 28px; background: #dbeafe; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; color: #1d4ed8; flex-shrink: 0;">1</div>
+                      <p style="color: #475569; font-size: 14px; margin: 0;">Our team reviews your submitted documents</p>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                      <div style="width: 28px; height: 28px; background: #dbeafe; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; color: #1d4ed8; flex-shrink: 0;">2</div>
+                      <p style="color: #475569; font-size: 14px; margin: 0;">You receive an approval confirmation email</p>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                      <div style="width: 28px; height: 28px; background: #dbeafe; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; color: #1d4ed8; flex-shrink: 0;">3</div>
+                      <p style="color: #475569; font-size: 14px; margin: 0;">Log in and publish your first listing!</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div style="background: #fefce8; border: 1px solid #fef08a; border-radius: 12px; padding: 16px; margin-bottom: 28px;">
+                  <p style="color: #713f12; font-size: 13px; margin: 0; line-height: 1.6;">
+                    📧 <strong>Registered Email:</strong> ${validData.email}<br/>
+                    🏢 <strong>Business Name:</strong> ${validData.businessName}<br/>
+                    🔑 <strong>Service Type:</strong> ${typeLabel}
+                  </p>
+                </div>
+
+                <p style="color: #64748b; font-size: 13px; line-height: 1.7; margin: 0;">
+                  If you have any questions, feel free to reply to this email or contact us at 
+                  <a href="mailto:support@wanderkashmir.com" style="color: #f97316; font-weight: 600;">support@wanderkashmir.com</a>.
+                </p>
+              </div>
+
+              <!-- Footer -->
+              <div style="padding: 24px 40px; background: #f8fafc; border-top: 1px solid #e2e8f0; text-align: center;">
+                <p style="color: #94a3b8; font-size: 12px; margin: 0;">© 2024 WanderKashmir. All rights reserved.</p>
+              </div>
+            </div>
+          </div>
+        `
+      });
+    } catch (emailError) {
+      console.error("Failed to send registration confirmation email:", emailError);
+      // Don't fail registration if email fails
+    }
+
     return { success: true, vendorId: vendorProfile.id };
   } catch (error: any) {
     console.error("Error registering vendor:", error);

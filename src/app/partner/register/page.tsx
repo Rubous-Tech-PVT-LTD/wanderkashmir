@@ -368,20 +368,76 @@ export default function VendorEntryPage() {
 
           {/* Step 4: Complete */}
           {step === 4 && (
-            <div className="bg-white p-12 rounded-2xl shadow-sm border border-slate-200 text-center max-w-2xl mx-auto">
-              <div className="w-24 h-24 bg-sky-100 text-sky-500 rounded-full flex items-center justify-center mx-auto mb-8">
-                <CheckCircle2 className="w-12 h-12" />
+            <div className="max-w-2xl mx-auto">
+              {/* Animated success card */}
+              <div className="bg-white rounded-3xl shadow-xl border border-slate-100 overflow-hidden">
+                {/* Top gradient banner */}
+                <div className="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 px-8 py-10 text-center relative overflow-hidden">
+                  <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'radial-gradient(circle at 20% 50%, #f97316 0%, transparent 50%), radial-gradient(circle at 80% 20%, #0ea5e9 0%, transparent 50%)' }} />
+                  <div className="relative">
+                    <div className="w-20 h-20 bg-orange-500/20 rounded-full flex items-center justify-center mx-auto mb-5 ring-4 ring-orange-500/30">
+                      <CheckCircle2 className="w-10 h-10 text-orange-400" />
+                    </div>
+                    <h2 className="text-3xl font-black text-white mb-2">Application Submitted!</h2>
+                    <p className="text-slate-400 text-base">Your details have been received successfully</p>
+                  </div>
+                </div>
+
+                {/* Body */}
+                <div className="p-8">
+                  {/* Status row */}
+                  <div className="flex items-center gap-4 bg-amber-50 border border-amber-200 rounded-2xl p-5 mb-6">
+                    <div className="w-12 h-12 bg-amber-100 rounded-full flex items-center justify-center shrink-0">
+                      <svg className="w-6 h-6 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                    </div>
+                    <div>
+                      <p className="font-bold text-amber-900 text-base">Under Evaluation</p>
+                      <p className="text-amber-700 text-sm mt-0.5">Our team will review your documents within 24–48 hours</p>
+                    </div>
+                  </div>
+
+                  {/* What happens next */}
+                  <div className="mb-6">
+                    <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">What happens next</p>
+                    <div className="space-y-3">
+                      {[
+                        { step: 1, text: "Our team reviews your submitted documents", icon: "📄" },
+                        { step: 2, text: "You receive a confirmation email with your Vendor ID", icon: "📧" },
+                        { step: 3, text: "Log in and publish your first listing!", icon: "🚀" },
+                      ].map(item => (
+                        <div key={item.step} className="flex items-center gap-4 p-3 rounded-xl bg-slate-50 border border-slate-100">
+                          <div className="w-9 h-9 rounded-full bg-slate-200 text-slate-700 font-black text-sm flex items-center justify-center shrink-0">
+                            {item.step}
+                          </div>
+                          <span className="text-slate-700 text-sm font-medium flex-1">{item.text}</span>
+                          <span className="text-xl">{item.icon}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Info box */}
+                  <div className="bg-sky-50 border border-sky-100 rounded-xl p-4 mb-8">
+                    <div className="flex items-start gap-3">
+                      <Mail className="w-5 h-5 text-sky-500 shrink-0 mt-0.5" />
+                      <p className="text-sky-800 text-sm leading-relaxed">
+                        A confirmation email has been sent to <strong className="font-bold">{watch("email")}</strong>. Please check your inbox (and spam folder) for details.
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* CTA Button */}
+                  <button 
+                    onClick={handleCompleteRegistration}
+                    className="w-full bg-gradient-to-r from-orange-500 to-orange-600 text-white py-4 rounded-2xl font-bold text-lg hover:from-orange-600 hover:to-orange-700 transition-all shadow-lg shadow-orange-500/25 hover:shadow-orange-500/40 flex items-center justify-center gap-2"
+                  >
+                    Go to My Dashboard <ArrowRight className="w-5 h-5" />
+                  </button>
+                  <p className="text-center text-slate-400 text-xs mt-3">Your listing will go live after approval</p>
+                </div>
               </div>
-              <h2 className="text-3xl font-bold text-slate-900 mb-4">Registration Submitted!</h2>
-              <p className="text-slate-500 mb-8 max-w-md mx-auto text-lg">
-                Your legal documents are pending verification. You can now access your dashboard and start drafting your first <strong className="text-slate-700 capitalize">{selectedType}</strong> listing.
-              </p>
-              <button 
-                onClick={handleCompleteRegistration}
-                className="bg-sky-500 text-white px-10 py-4 rounded-xl font-bold text-lg hover:bg-sky-600 transition-colors shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
-              >
-                Access My Dashboard
-              </button>
             </div>
           )}
         </div>
