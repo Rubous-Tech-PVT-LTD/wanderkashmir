@@ -37,7 +37,7 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
     // Return as downloadable file
     const filename = `WanderKashmir_Invoice_${booking.id.slice(-8)}.pdf`;
 
-    return new NextResponse(pdfBuffer, {
+    return new NextResponse(pdfBuffer as any, {
       status: 200,
       headers: {
         "Content-Type": "application/pdf",

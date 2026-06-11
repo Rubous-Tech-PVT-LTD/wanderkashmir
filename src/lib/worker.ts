@@ -40,25 +40,34 @@ export async function generateInvoicePDF(booking: any): Promise<Buffer> {
   // Service Details
   let serviceName = "Custom Package";
   let vendorName = "WanderKashmir";
+  let vendorPhone = "+91 60058 88754"; // Default support
+  let vendorAddress = "Srinagar, Kashmir";
   
   if (booking.property) {
     serviceName = booking.property.name;
     vendorName = booking.property.vendorProfile?.businessName || "Unknown Vendor";
+    vendorPhone = booking.property.vendorProfile?.phone || vendorPhone;
+    vendorAddress = booking.property.location || vendorAddress;
   } else if (booking.vehicle) {
     serviceName = `${booking.vehicle.make} ${booking.vehicle.model}`;
     vendorName = booking.vehicle.vendorProfile?.businessName || "Unknown Vendor";
+    vendorPhone = booking.vehicle.vendorProfile?.phone || vendorPhone;
   } else if (booking.guideProfile) {
     serviceName = `Guide Service`;
     vendorName = booking.guideProfile.vendorProfile?.businessName || "Unknown Vendor";
+    vendorPhone = booking.guideProfile.vendorProfile?.phone || vendorPhone;
   }
 
   page.drawText("Service Details", { x: 50, y: height - 240, size: 14, font: boldFont });
   page.drawText(`Service: ${serviceName}`, { x: 50, y: height - 270, size: 12, font });
   page.drawText(`Provider: ${vendorName}`, { x: 50, y: height - 290, size: 12, font });
+  page.drawText(`Contact: ${vendorPhone}`, { x: 50, y: height - 310, size: 12, font });
+  page.drawText(`Address: ${vendorAddress}`, { x: 50, y: height - 330, size: 12, font });
+  page.drawText(`Map Location: This functionality will be implemented soon`, { x: 50, y: height - 350, size: 11, font, color: rgb(0.5, 0.5, 0.5) });
 
   if (booking.checkIn && booking.checkOut) {
-    page.drawText(`Check-in: ${new Date(booking.checkIn).toLocaleDateString()}`, { x: 50, y: height - 310, size: 12, font });
-    page.drawText(`Check-out: ${new Date(booking.checkOut).toLocaleDateString()}`, { x: 50, y: height - 330, size: 12, font });
+    page.drawText(`Check-in: ${new Date(booking.checkIn).toLocaleDateString()}`, { x: 350, y: height - 270, size: 12, font });
+    page.drawText(`Check-out: ${new Date(booking.checkOut).toLocaleDateString()}`, { x: 350, y: height - 290, size: 12, font });
   }
 
   // Pricing
