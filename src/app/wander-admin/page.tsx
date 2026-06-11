@@ -63,5 +63,9 @@ export default async function AdminPage() {
     orderBy: { createdAt: 'desc' }
   });
 
-  return <AdminDashboardClient vendors={vendors} properties={properties as any} totalUsers={usersCount} totalRevenue={totalRevenue} payouts={payouts} users={users} bookings={bookings as any} />;
+  const tours = await prisma.tour.findMany({
+    orderBy: { createdAt: 'desc' }
+  });
+
+  return <AdminDashboardClient tours={tours} vendors={vendors} properties={properties as any} totalUsers={usersCount} totalRevenue={totalRevenue} payouts={payouts} users={users} bookings={bookings as any} />;
 }

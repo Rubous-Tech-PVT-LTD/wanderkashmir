@@ -15,6 +15,7 @@ import { useRouter } from "next/navigation";
 import { format, isSameDay, addDays } from "date-fns";
 import toast from "react-hot-toast";
 import { LogOut } from "lucide-react";
+import AdminToursTab from "./AdminToursTab";
 
 // Define the type based on the props passed from Server
 type VendorProfile = {
@@ -91,7 +92,7 @@ const downloadCSV = (data: any[], filename: string) => {
   document.body.removeChild(link);
 };
 
-export default function AdminDashboardClient({ vendors, properties = [], totalUsers, totalRevenue, payouts = [], users = [], bookings = [] }: { vendors: VendorProfile[], properties?: PropertyProfile[], totalUsers: number, totalRevenue: number, payouts?: any[], users?: any[], bookings?: any[] }) {
+export default function AdminDashboardClient({ tours = [], vendors, properties = [], totalUsers, totalRevenue, payouts = [], users = [], bookings = [] }: { tours?: any[], vendors: VendorProfile[], properties?: PropertyProfile[], totalUsers: number, totalRevenue: number, payouts?: any[], users?: any[], bookings?: any[] }) {
   const [activeTab, setActiveTab] = useState("dashboard");
   const [isProcessing, setIsProcessing] = useState<string | null>(null);
   const [selectedVendorDetails, setSelectedVendorDetails] = useState<VendorProfile | null>(null);
@@ -582,6 +583,7 @@ export default function AdminDashboardClient({ vendors, properties = [], totalUs
             { id: "live_vendors", label: "Live Vendors", icon: Users },
             { id: "listings", label: "Listing Approvals", icon: Building2 },
             { id: "live_listings", label: "Live Listings", icon: MapPin },
+            { id: "tours", label: "Tours", icon: Map },
             { id: "payouts", label: "Payouts", icon: IndianRupee },
             { id: "rejected", label: "Rejected Vendors", icon: XCircle },
           ].map((item) => (
@@ -645,6 +647,8 @@ export default function AdminDashboardClient({ vendors, properties = [], totalUs
         )}
 
         {/* Dynamic Content Area */}
+        {activeTab === "tours" && <AdminToursTab initialTours={tours} />}
+
         {activeTab === "approvals" && (
           <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
             <div className="p-6 border-b border-slate-100 flex flex-col md:flex-row md:items-center justify-between bg-slate-50 gap-4">
