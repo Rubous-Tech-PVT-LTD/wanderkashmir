@@ -74,7 +74,7 @@ export default function Navbar() {
           {/* Right Actions */}
           <div className="hidden lg:flex items-center gap-3">
             <Link
-              href="/partner"
+              href="/partner/register"
               className="text-xs font-bold text-white bg-[var(--primary)] px-4 py-2.5 rounded-lg"
             >
               Become a Partner
@@ -143,7 +143,7 @@ export default function Navbar() {
               </Link>
             ))}
             <Link
-              href="/partner"
+              href="/partner/register"
               onClick={() => setMobileOpen(false)}
               className="block mt-4 px-4 py-3.5 rounded-xl text-white font-bold text-lg bg-[var(--primary)] shadow-md shadow-sky-500/20 text-center border-2 border-[var(--primary)]"
             >
@@ -167,7 +167,7 @@ export default function Navbar() {
               </div>
             )}
             <Link
-              href="/partner"
+              href="/partner/register"
               onClick={() => setMobileOpen(false)}
               className="btn-primary w-full justify-center py-3.5 text-base"
             >
@@ -179,7 +179,7 @@ export default function Navbar() {
 
       {/* Floating Become a Partner Button */}
       <Link
-        href="/partner"
+        href="/partner/register"
         className="fixed bottom-6 right-6 z-50 flex items-center gap-2 bg-gradient-to-r from-sky-500 to-indigo-600 text-white font-bold px-6 py-3.5 rounded-full shadow-xl shadow-sky-500/30 hover:scale-105 hover:shadow-2xl hover:shadow-sky-500/40 transition-all duration-300 group animate-bounce-slow"
       >
         <span>Become a Partner</span>

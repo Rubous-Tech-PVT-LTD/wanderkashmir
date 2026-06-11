@@ -47,7 +47,7 @@ const footerLinks = {
     { label: "Blog", href: "/blog" },
     { label: "Careers", href: "/careers" },
     { label: "Press", href: "/press" },
-    { label: "Partner With Us", href: "/partner" },
+    { label: "Partner With Us", href: "/partner/register" },
     { label: "Contact", href: "/contact" },
   ],
   Support: [

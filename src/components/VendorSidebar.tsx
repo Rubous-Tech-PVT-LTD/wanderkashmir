@@ -14,7 +14,7 @@ export default function VendorSidebar() {
   const pathname = usePathname();
 
   // Hide sidebar completely on the onboarding entry page
-  if (pathname === "/partner") {
+  if (pathname === "/partner" || pathname === "/partner/register") {
     return null;
   }
 

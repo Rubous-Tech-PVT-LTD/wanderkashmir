@@ -9,11 +9,9 @@ import { getVendorBookings } from "@/actions/bookings";
 
 export default async function DynamicVendorDashboard() {
   const session = await getVendorSession();
-  
   if (!session || (session.role !== "VENDOR" && session.role !== "ADMIN")) {
-    redirect("/partner/login");
+    redirect("/partner");
   }
-  
   const userId = session.userId;
 
   const vendorProfile = await prisma.vendorProfile.findUnique({
