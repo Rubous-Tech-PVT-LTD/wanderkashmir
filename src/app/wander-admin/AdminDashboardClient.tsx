@@ -98,6 +98,7 @@ export default function AdminDashboardClient({ vendors, properties = [], totalUs
   const [rejectingVendor, setRejectingVendor] = useState<VendorProfile | null>(null);
   const [rejectionRemarks, setRejectionRemarks] = useState("");
   const [kycVendor, setKycVendor] = useState<VendorProfile | null>(null);
+  const [payoutConfirmModal, setPayoutConfirmModal] = useState<{ isOpen: boolean, vendorId: string, businessName: string, amount: number } | null>(null);
   
   // User Management
   const [banningUser, setBanningUser] = useState<any | null>(null);
@@ -1479,9 +1480,12 @@ export default function AdminDashboardClient({ vendors, properties = [], totalUs
                         {p.pendingBalance > 0 ? (
                           <button 
                             onClick={() => {
-                              if (window.confirm(`Are you sure you want to mark ₹${p.pendingBalance} as PAID for ${p.businessName}? Make sure you have transferred the money to their bank account first.`)) {
-                                handleMarkPaid(p.vendorId);
-                              }
+                              setPayoutConfirmModal({
+                                isOpen: true,
+                                vendorId: p.vendorId,
+                                businessName: p.businessName,
+                                amount: p.pendingBalance
+                              });
                             }}
                             disabled={isProcessing === p.vendorId}
                             className="bg-sky-500 hover:bg-sky-600 text-white px-4 py-2 rounded-lg text-sm font-bold shadow-sm transition-colors disabled:opacity-50 flex items-center gap-2 ml-auto"
@@ -1926,6 +1930,45 @@ export default function AdminDashboardClient({ vendors, properties = [], totalUs
                 className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg text-sm font-bold hover:bg-red-700 transition-colors disabled:opacity-50"
               >
                 {isProcessing === rejectingProperty.id ? "Processing..." : (activeTab === 'live_listings' ? "Suspend Listing" : "Reject Listing")}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* Payout Confirmation Modal */}
+      {payoutConfirmModal?.isOpen && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white w-full max-w-md rounded-2xl shadow-xl overflow-hidden animate-in fade-in zoom-in duration-200">
+            <div className="p-6 text-center pt-8">
+              <div className="w-16 h-16 bg-sky-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <ShieldCheck className="w-8 h-8 text-sky-600" />
+              </div>
+              <h3 className="text-2xl font-black text-slate-900 mb-2">Confirm Payout</h3>
+              <p className="text-slate-600">
+                Are you sure you want to mark <span className="font-bold text-slate-900">₹{payoutConfirmModal.amount.toLocaleString()}</span> as PAID for <span className="font-bold text-slate-900">{payoutConfirmModal.businessName}</span>?
+              </p>
+              <div className="mt-4 p-3 bg-orange-50 border border-orange-100 rounded-xl">
+                <p className="text-sm text-orange-800 font-medium">
+                  Make sure you have already transferred the money to their bank account before confirming.
+                </p>
+              </div>
+            </div>
+            <div className="p-4 bg-slate-50 border-t border-slate-100 flex gap-3">
+              <button 
+                onClick={() => setPayoutConfirmModal(null)}
+                className="flex-1 px-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-700 font-bold hover:bg-slate-50 transition-colors"
+              >
+                Cancel
+              </button>
+              <button 
+                onClick={() => {
+                  handleMarkPaid(payoutConfirmModal.vendorId);
+                  setPayoutConfirmModal(null);
+                }}
+                disabled={isProcessing === payoutConfirmModal.vendorId}
+                className="flex-1 px-4 py-3 bg-sky-500 text-white rounded-xl font-bold hover:bg-sky-600 transition-colors shadow-md disabled:opacity-50"
+              >
+                {isProcessing === payoutConfirmModal.vendorId ? "Updating..." : "Yes, Mark as Paid"}
               </button>
             </div>
           </div>
