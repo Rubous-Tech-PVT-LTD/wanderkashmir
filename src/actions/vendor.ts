@@ -28,7 +28,7 @@ export async function registerVendor(data: VendorRegistrationData) {
     });
 
     if (dbUser && dbUser.vendorProfile) {
-      return { success: false, error: "This email is already registered as a vendor. Please log in instead." };
+      return { success: false, error: "Email id is already registered as a vendor please use different email" };
     }
 
     const bcrypt = require("bcrypt");
