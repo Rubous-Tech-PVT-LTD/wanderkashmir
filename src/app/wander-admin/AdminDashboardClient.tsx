@@ -886,7 +886,6 @@ export default function AdminDashboardClient({ vendors, properties = [], totalUs
                 </tbody>
               </table>
             </div>
-            </div>
           </div>
         )}
 
