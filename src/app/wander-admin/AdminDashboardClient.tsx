@@ -304,13 +304,17 @@ export default function AdminDashboardClient({ vendors, properties = [], totalUs
   };
 
   // Stats calculation
+  // Stats calculation
   const totalVendors = vendors.length;
   const pendingVendors = vendors.filter(v => !v.isApproved && v.status !== "REJECTED" && v.status !== "SUSPENDED").length;
+  const rejectedVendors = vendors.filter(v => v.status === "REJECTED").length;
 
   const stats = [
-    { label: "Total Platform Revenue", value: `₹${totalRevenue.toLocaleString('en-IN')}`, icon: IndianRupee, color: "text-sky-500", bg: "bg-sky-50" },
-    { label: "Total Registered Users", value: totalUsers.toString(), icon: Users, color: "text-orange-500", bg: "bg-orange-50" },
-    { label: "Pending Vendor Approvals", value: pendingVendors.toString(), icon: Clock, color: "text-orange-500", bg: "bg-orange-50" },
+    { label: "Total Platform Revenue", value: `₹${totalRevenue.toLocaleString('en-IN')}`, icon: IndianRupee, color: "text-emerald-500", bg: "bg-emerald-50", tab: "payouts" },
+    { label: "Total Registered Users", value: totalUsers.toString(), icon: Users, color: "text-sky-500", bg: "bg-sky-50", tab: "users" },
+    { label: "Total Registered Vendors", value: totalVendors.toString(), icon: Building2, color: "text-indigo-500", bg: "bg-indigo-50", tab: "live_vendors" },
+    { label: "Total Rejected", value: rejectedVendors.toString(), icon: XCircle, color: "text-red-500", bg: "bg-red-50", tab: "rejected" },
+    { label: "Pending Vendor Approvals", value: pendingVendors.toString(), icon: Clock, color: "text-orange-500", bg: "bg-orange-50", tab: "approvals" },
   ];
 
   const handleApprove = async (vendorId: string) => {
@@ -507,6 +511,57 @@ export default function AdminDashboardClient({ vendors, properties = [], totalUs
     }
   };
 
+  const exportUsers = () => {
+    const data = filteredUsers.map(u => ({
+      "Name": u.name || "N/A",
+      "Email": u.email,
+      "Phone": u.phone || "N/A",
+      "Status": u.isBanned ? "BANNED" : "ACTIVE",
+      "Joined At": format(new Date(u.createdAt), "dd MMM yyyy HH:mm")
+    }));
+    downloadCSV(data, `Registered_Users_${format(new Date(), "yyyy-MM-dd")}.csv`);
+  };
+
+  const exportLiveVendors = () => {
+    const data = filteredVendors.filter(v => v.isApproved || v.status === "SUSPENDED").map(v => ({
+      "Business Name": v.businessName,
+      "Owner Name": v.user?.name || "N/A",
+      "Email": v.email || "N/A",
+      "Phone": v.phone || "N/A",
+      "Type": v.type,
+      "Status": v.status === "SUSPENDED" ? "SUSPENDED" : "LIVE",
+      "Registered At": format(new Date(v.createdAt), "dd MMM yyyy")
+    }));
+    downloadCSV(data, `Live_Vendors_${format(new Date(), "yyyy-MM-dd")}.csv`);
+  };
+
+  const exportApprovals = () => {
+    const data = filteredVendors.filter(v => !v.isApproved && v.status !== "REJECTED" && v.status !== "SUSPENDED").map(v => ({
+      "Business Name": v.businessName,
+      "Owner Name": v.user?.name || "N/A",
+      "Email": v.email || "N/A",
+      "Phone": v.phone || "N/A",
+      "Type": v.type,
+      "Status": "PENDING",
+      "Registered At": format(new Date(v.createdAt), "dd MMM yyyy")
+    }));
+    downloadCSV(data, `Pending_Vendor_Approvals_${format(new Date(), "yyyy-MM-dd")}.csv`);
+  };
+
+  const exportRejectedVendors = () => {
+    const data = filteredVendors.filter(v => v.status === "REJECTED").map(v => ({
+      "Business Name": v.businessName,
+      "Owner Name": v.user?.name || "N/A",
+      "Email": v.email || "N/A",
+      "Phone": v.phone || "N/A",
+      "Type": v.type,
+      "Status": "REJECTED",
+      "Rejection Reason": v.rejectionReason || "No reason provided",
+      "Registered At": format(new Date(v.createdAt), "dd MMM yyyy")
+    }));
+    downloadCSV(data, `Rejected_Vendors_${format(new Date(), "yyyy-MM-dd")}.csv`);
+  };
+
   return (
     <div className="min-h-screen bg-slate-50 flex">
       {/* Sidebar */}
@@ -527,6 +582,7 @@ export default function AdminDashboardClient({ vendors, properties = [], totalUs
             { id: "listings", label: "Listing Approvals", icon: Building2 },
             { id: "live_listings", label: "Live Listings", icon: MapPin },
             { id: "payouts", label: "Payouts", icon: IndianRupee },
+            { id: "rejected", label: "Rejected Vendors", icon: XCircle },
           ].map((item) => (
             <button
               key={item.id}
@@ -567,15 +623,19 @@ export default function AdminDashboardClient({ vendors, properties = [], totalUs
         </header>
 
         {/* Stats Row */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-10">
           {stats.map((stat, idx) => (
-            <div key={idx} className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex items-center gap-4">
-              <div className={`w-14 h-14 rounded-full flex items-center justify-center ${stat.bg}`}>
-                <stat.icon className={`w-7 h-7 ${stat.color}`} />
+            <div 
+              key={idx} 
+              onClick={() => handleTabChange(stat.tab)}
+              className="bg-white p-4 lg:p-6 rounded-2xl shadow-sm border border-slate-100 flex flex-col items-start gap-3 cursor-pointer hover:shadow-md hover:border-orange-200 transition-all"
+            >
+              <div className={`w-10 h-10 lg:w-12 lg:h-12 rounded-full flex items-center justify-center ${stat.bg}`}>
+                <stat.icon className={`w-5 h-5 lg:w-6 lg:h-6 ${stat.color}`} />
               </div>
               <div>
-                <p className="text-sm font-bold text-slate-500 uppercase tracking-wider mb-1">{stat.label}</p>
-                <p className="text-3xl font-black text-slate-900">{stat.value}</p>
+                <p className="text-[10px] lg:text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">{stat.label}</p>
+                <p className="text-2xl lg:text-3xl font-black text-slate-900">{stat.value}</p>
               </div>
             </div>
           ))}
@@ -611,6 +671,15 @@ export default function AdminDashboardClient({ vendors, properties = [], totalUs
               </div>
             </div>
             
+            <div className="bg-slate-50 border-b border-slate-100 px-6 py-3 flex gap-3 overflow-x-auto">
+              <button 
+                onClick={exportApprovals}
+                className="whitespace-nowrap flex items-center gap-2 text-xs font-bold bg-white border border-slate-200 text-slate-700 px-3 py-1.5 rounded-lg hover:bg-slate-100 hover:text-sky-600 transition-colors shadow-sm"
+              >
+                <FileText className="w-3.5 h-3.5" /> Export Pending Approvals (CSV)
+              </button>
+            </div>
+
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse">
                 <thead>
@@ -738,6 +807,15 @@ export default function AdminDashboardClient({ vendors, properties = [], totalUs
               </div>
             </div>
             
+            <div className="bg-slate-50 border-b border-slate-100 px-6 py-3 flex gap-3 overflow-x-auto">
+              <button 
+                onClick={exportLiveVendors}
+                className="whitespace-nowrap flex items-center gap-2 text-xs font-bold bg-white border border-slate-200 text-slate-700 px-3 py-1.5 rounded-lg hover:bg-slate-100 hover:text-sky-600 transition-colors shadow-sm"
+              >
+                <FileText className="w-3.5 h-3.5" /> Export Live Vendors (CSV)
+              </button>
+            </div>
+
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse">
                 <thead>
@@ -802,6 +880,104 @@ export default function AdminDashboardClient({ vendors, properties = [], totalUs
                     <tr>
                       <td colSpan={6} className="px-6 py-8 text-center text-slate-500">
                         No live vendors found.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+            </div>
+          </div>
+        )}
+
+        {activeTab === "rejected" && (
+          <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+            <div className="p-6 border-b border-slate-100 flex flex-col md:flex-row md:items-center justify-between bg-slate-50 gap-4">
+              <div>
+                <h3 className="text-lg font-bold text-slate-900">Rejected Vendors</h3>
+                <p className="text-sm text-slate-500">Review all rejected vendor applications</p>
+              </div>
+              <div className="flex flex-col sm:flex-row gap-3">
+                <input 
+                  type="text" 
+                  placeholder="Search rejected vendors..." 
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="px-4 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500"
+                />
+                <select 
+                  value={filterType} 
+                  onChange={(e) => setFilterType(e.target.value)}
+                  className="px-4 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500 bg-white"
+                >
+                  <option value="ALL">All Types</option>
+                  <option value="HOTEL">Hotels</option>
+                  <option value="HOMESTAY">Homestays</option>
+                  <option value="TAXI">Taxis</option>
+                  <option value="GUIDE">Guides</option>
+                </select>
+              </div>
+            </div>
+            
+            <div className="bg-slate-50 border-b border-slate-100 px-6 py-3 flex gap-3 overflow-x-auto">
+              <button 
+                onClick={exportRejectedVendors}
+                className="whitespace-nowrap flex items-center gap-2 text-xs font-bold bg-white border border-slate-200 text-slate-700 px-3 py-1.5 rounded-lg hover:bg-slate-100 hover:text-sky-600 transition-colors shadow-sm"
+              >
+                <FileText className="w-3.5 h-3.5" /> Export Rejected Vendors (CSV)
+              </button>
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="bg-white border-b border-slate-100">
+                    <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Business Name</th>
+                    <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Owner</th>
+                    <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Type</th>
+                    <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Rejection Reason</th>
+                    <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Registered At</th>
+                    <th className="px-6 py-4 text-right text-xs font-bold text-slate-500 uppercase tracking-wider">Action</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {filteredVendors.filter(v => v.status === "REJECTED").map((vendor) => (
+                    <tr key={vendor.id} className="hover:bg-slate-50 transition-colors">
+                      <td className="px-6 py-4">
+                        <div className="font-bold text-slate-900">{vendor.businessName}</div>
+                      </td>
+                      <td className="px-6 py-4 font-medium text-slate-700">
+                        {vendor.user?.name || "Unknown"}
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-2 capitalize font-medium text-slate-700">
+                          {getTypeIcon(vendor.type)} {vendor.type.toLowerCase()}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className="text-sm text-red-600 bg-red-50 px-3 py-1.5 rounded-lg inline-block border border-red-100">
+                          {vendor.rejectionReason || "No reason provided"}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 text-sm text-slate-500">
+                        {format(new Date(vendor.createdAt), "dd MMM yyyy")}
+                      </td>
+                      <td className="px-6 py-4 text-right">
+                        <div className="flex items-center justify-end gap-2">
+                          <button 
+                            onClick={() => setSelectedVendorDetails(vendor)}
+                            className="text-slate-400 px-4 py-2 rounded-lg text-sm font-medium border border-slate-200 hover:bg-slate-50 flex items-center gap-2"
+                          >
+                            <Eye className="w-4 h-4" /> View
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                  {filteredVendors.filter(v => v.status === "REJECTED").length === 0 && (
+                    <tr>
+                      <td colSpan={6} className="px-6 py-8 text-center text-slate-500">
+                        No rejected vendors found.
                       </td>
                     </tr>
                   )}
@@ -1038,6 +1214,15 @@ export default function AdminDashboardClient({ vendors, properties = [], totalUs
               </div>
             </div>
             
+            <div className="bg-slate-50 border-b border-slate-100 px-6 py-3 flex gap-3 overflow-x-auto">
+              <button 
+                onClick={exportUsers}
+                className="whitespace-nowrap flex items-center gap-2 text-xs font-bold bg-white border border-slate-200 text-slate-700 px-3 py-1.5 rounded-lg hover:bg-slate-100 hover:text-sky-600 transition-colors shadow-sm"
+              >
+                <FileText className="w-3.5 h-3.5" /> Export Users (CSV)
+              </button>
+            </div>
+
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse">
                 <thead>
