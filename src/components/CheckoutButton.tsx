@@ -30,6 +30,7 @@ export default function CheckoutButton({
   baseAmount, taxiAmount, guideAmount, selectedTaxiId, selectedGuideId
 }: CheckoutButtonProps) {
   const [isLoading, setIsLoading] = useState(false);
+  const [isVerifying, setIsVerifying] = useState(false);
   const router = useRouter();
 
   const handleCheckout = async () => {
@@ -82,6 +83,7 @@ export default function CheckoutButton({
         image: "/images/razorpay.svg",
         order_id: orderData.id,
         handler: async function (response: any) {
+          setIsVerifying(true);
           // 3. Verify Payment
           const verifyRes = await fetch("/api/razorpay/verify", {
             method: "POST",
@@ -97,6 +99,7 @@ export default function CheckoutButton({
             router.push(`/stays/${propertyId}?success=true`);
           } else {
             toast.error("Payment Verification Failed!");
+            setIsVerifying(false);
           }
         },
         theme: {
@@ -124,10 +127,12 @@ export default function CheckoutButton({
       <Script src="https://checkout.razorpay.com/v1/checkout.js" />
       <button
         onClick={handleCheckout}
-        disabled={isLoading}
+        disabled={isLoading || isVerifying}
         className="w-full bg-orange-600 text-white font-bold py-3.5 rounded-xl hover:bg-orange-700 transition-colors shadow-md disabled:opacity-50"
       >
-        <span className="font-semibold text-lg">{isLoading ? "Processing..." : "Pay with Razorpay"}</span>
+        <span className="font-semibold text-lg">
+          {isVerifying ? "Verifying Payment..." : isLoading ? "Processing..." : "Pay with Razorpay"}
+        </span>
       </button>
     </>
   );
