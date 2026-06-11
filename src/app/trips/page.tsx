@@ -128,9 +128,13 @@ export default async function TripsPage() {
                           View Property
                         </Link>
                       )}
-                      <button className="text-slate-600 hover:text-slate-900 text-sm font-bold bg-slate-100 px-4 py-2 rounded-lg transition-colors">
+                      <a 
+                        href={`/api/booking/${booking.id}/receipt`}
+                        target="_blank"
+                        className="text-slate-600 hover:text-slate-900 text-sm font-bold bg-slate-100 px-4 py-2 rounded-lg transition-colors inline-flex items-center justify-center"
+                      >
                         Download Receipt
-                      </button>
+                      </a>
                     </div>
 
                   </div>
