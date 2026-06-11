@@ -5,6 +5,7 @@ import { ClerkProvider } from '@clerk/nextjs'
 import { auth } from "@clerk/nextjs/server";
 import prisma from "@/lib/prisma";
 import ToasterProvider from "@/components/ToasterProvider";
+import { getVendorSession } from "@/lib/auth";
 
 export const metadata: Metadata = {
   title: "WanderKashmir – Hotels, Homestays, Taxis & Tours in Kashmir",
@@ -26,7 +27,12 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const { userId } = await auth();
+  const { userId: clerkUserId } = await auth();
+  const vendorSession = await getVendorSession();
+  
+  // Use custom vendor session first (for partner portal), then fall back to Clerk
+  const userId = vendorSession?.userId || clerkUserId || null;
+  
   let initialProfile: InitialVendorProfile | null = null;
 
   if (userId) {

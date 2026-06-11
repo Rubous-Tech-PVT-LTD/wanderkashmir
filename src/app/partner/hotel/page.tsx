@@ -484,7 +484,7 @@ export default function HotelDashboard({ properties = [], bookings = [] }: { pro
 
 
           {/* ADVANCED ANALYTICS (FEATURE GATED) */}
-          <div className="relative bg-white rounded-2xl shadow-sm border border-slate-200 p-6 overflow-hidden mt-8">
+          <div className={`relative bg-white rounded-2xl shadow-sm border border-slate-200 p-6 overflow-hidden mt-8 ${!hasAnalytics ? 'min-h-[350px] bg-slate-50 flex flex-col' : ''}`}>
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
               <div className="flex items-center gap-2">
                 <LineChartIcon className="w-6 h-6 text-sky-500" />
@@ -505,16 +505,27 @@ export default function HotelDashboard({ properties = [], bookings = [] }: { pro
             </div>
             
             {!hasAnalytics && (
-              <div className="absolute inset-0 bg-white/60 backdrop-blur-sm z-10 flex flex-col items-center justify-center p-6 text-center">
-                <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center shadow-md mb-4">
-                  <Lock className="w-8 h-8 text-slate-400" />
+              <>
+                <div className="absolute inset-0 bg-slate-50/80 backdrop-blur-sm z-10 flex flex-col items-center justify-center p-6 text-center">
+                  <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center shadow-md mb-4 ring-4 ring-slate-100">
+                    <Lock className="w-8 h-8 text-slate-400" />
+                  </div>
+                  <h3 className="text-2xl font-bold text-slate-900 mb-2">Analytics Locked</h3>
+                  <p className="text-slate-600 max-w-md mb-6">Upgrade to the Growth Pro or Enterprise plan to view detailed conversion rates, customer demographics, and search appearances.</p>
+                  <button onClick={() => setActiveTab("financials")} className="bg-sky-500 text-white px-6 py-2.5 rounded-lg font-bold hover:bg-sky-600 transition-colors shadow-sm">
+                    View Upgrade Plans
+                  </button>
                 </div>
-                <h3 className="text-2xl font-bold text-slate-900 mb-2">Analytics Locked</h3>
-                <p className="text-slate-600 max-w-md mb-6">Upgrade to the Growth Pro or Enterprise plan to view detailed conversion rates, customer demographics, and search appearances.</p>
-                <button onClick={() => setActiveTab("financials")} className="bg-sky-500 text-white px-6 py-2.5 rounded-lg font-bold hover:bg-sky-600 transition-colors shadow-sm">
-                  View Upgrade Plans
-                </button>
-              </div>
+                {/* Fake blurred background to give it shape */}
+                <div className="flex-1 opacity-20 pointer-events-none mt-4 flex items-end gap-2 px-8">
+                  <div className="w-1/6 h-24 bg-sky-200 rounded-t-lg"></div>
+                  <div className="w-1/6 h-32 bg-sky-300 rounded-t-lg"></div>
+                  <div className="w-1/6 h-16 bg-sky-200 rounded-t-lg"></div>
+                  <div className="w-1/6 h-40 bg-sky-400 rounded-t-lg"></div>
+                  <div className="w-1/6 h-28 bg-sky-300 rounded-t-lg"></div>
+                  <div className="w-1/6 h-48 bg-sky-500 rounded-t-lg"></div>
+                </div>
+              </>
             )}
             {hasAnalytics && (() => {
               const { totalViews, totalBookings, totalRevenue, growthViews, growthBookings, growthRevenue } = calculateDashboardMetrics(bookings, "HOTEL", timeRange);
