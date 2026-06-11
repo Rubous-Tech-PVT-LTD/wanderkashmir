@@ -22,7 +22,7 @@ export default function VendorSidebar() {
     return (
       <aside className="w-64 bg-slate-900 text-white min-h-screen flex flex-col hidden md:flex sticky top-0 h-screen">
         <div className="p-6 border-b border-slate-800">
-          <Link href="/" className="flex items-center gap-2">
+          <Link href="/partner/dashboard" className="flex items-center gap-2">
             <div className="w-8 h-8 bg-sky-500 rounded-lg flex items-center justify-center">
               <LayoutDashboard className="w-5 h-5 text-white" />
             </div>
@@ -64,7 +64,7 @@ export default function VendorSidebar() {
   return (
     <aside className="w-64 bg-slate-900 text-white min-h-screen flex flex-col hidden md:flex sticky top-0 h-screen">
       <div className="p-6 border-b border-slate-800">
-        <Link href="/" className="flex items-center gap-2">
+        <Link href="/partner/dashboard" className="flex items-center gap-2">
           <div className="w-8 h-8 bg-sky-500 rounded-lg flex items-center justify-center">
             <LayoutDashboard className="w-5 h-5 text-white" />
           </div>
