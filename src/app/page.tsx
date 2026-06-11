@@ -323,10 +323,17 @@ export default async function HomePage() {
               <span className="text-[4.5rem] md:text-[6rem]">Kashmir</span>
             </div>
           </h1>
-          <p className="text-white text-base md:text-lg font-medium drop-shadow-lg max-w-2xl tracking-wide mt-4">
+          <p className="text-white text-base md:text-lg font-medium drop-shadow-lg max-w-2xl tracking-wide mt-4 mb-6">
             Book Homestays, Hotels, Taxis & Tour Packages<br />
             <span className="font-normal opacity-90">Explore the Beauty of Heaven on Earth</span>
           </p>
+          <Link 
+            href="/partner" 
+            className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-md border border-white/40 text-white px-6 py-3 rounded-full font-bold hover:bg-white hover:text-slate-900 transition-all shadow-lg"
+          >
+            Register your property
+            <span>&rarr;</span>
+          </Link>
         </div>
 
         {/* Floating Search Bar Overlap */}
