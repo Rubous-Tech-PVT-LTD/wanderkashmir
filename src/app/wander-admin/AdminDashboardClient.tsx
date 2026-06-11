@@ -623,23 +623,25 @@ export default function AdminDashboardClient({ vendors, properties = [], totalUs
         </header>
 
         {/* Stats Row */}
-        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-10">
-          {stats.map((stat, idx) => (
-            <div 
-              key={idx} 
-              onClick={() => handleTabChange(stat.tab)}
-              className="bg-white p-4 lg:p-6 rounded-2xl shadow-sm border border-slate-100 flex flex-col items-start gap-3 cursor-pointer hover:shadow-md hover:border-orange-200 transition-all"
-            >
-              <div className={`w-10 h-10 lg:w-12 lg:h-12 rounded-full flex items-center justify-center ${stat.bg}`}>
-                <stat.icon className={`w-5 h-5 lg:w-6 lg:h-6 ${stat.color}`} />
+        {activeTab === "dashboard" && (
+          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-10">
+            {stats.map((stat, idx) => (
+              <div 
+                key={idx} 
+                onClick={() => handleTabChange(stat.tab)}
+                className="bg-white p-4 lg:p-6 rounded-2xl shadow-sm border border-slate-100 flex flex-col items-start gap-3 cursor-pointer hover:shadow-md hover:border-orange-200 transition-all"
+              >
+                <div className={`w-10 h-10 lg:w-12 lg:h-12 rounded-full flex items-center justify-center ${stat.bg}`}>
+                  <stat.icon className={`w-5 h-5 lg:w-6 lg:h-6 ${stat.color}`} />
+                </div>
+                <div>
+                  <p className="text-[10px] lg:text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">{stat.label}</p>
+                  <p className="text-2xl lg:text-3xl font-black text-slate-900">{stat.value}</p>
+                </div>
               </div>
-              <div>
-                <p className="text-[10px] lg:text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">{stat.label}</p>
-                <p className="text-2xl lg:text-3xl font-black text-slate-900">{stat.value}</p>
-              </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
 
         {/* Dynamic Content Area */}
         {activeTab === "approvals" && (
