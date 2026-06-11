@@ -23,8 +23,13 @@ export async function registerVendor(data: VendorRegistrationData) {
 
     // Check if user with this email exists
     let dbUser = await prisma.user.findUnique({
-      where: { email: validData.email }
+      where: { email: validData.email },
+      include: { vendorProfile: true }
     });
+
+    if (dbUser && dbUser.vendorProfile) {
+      return { success: false, error: "This email is already registered as a vendor. Please log in instead." };
+    }
 
     const bcrypt = require("bcrypt");
     const passwordHash = await bcrypt.hash(validData.password, 10);
