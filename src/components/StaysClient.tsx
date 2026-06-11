@@ -13,6 +13,7 @@ export interface PropertyItem {
   rating: number;
   reviews: number;
   image: string;
+  imageCount: number;
   featured: boolean;
 }
 
@@ -201,7 +202,7 @@ export default function StaysClient({ initialProperties, initialQuery = "" }: { 
                   {/* Photos Pill */}
                   <div className="absolute bottom-3 right-3 z-10">
                     <div className="bg-black/80 text-white text-xs font-bold px-3 py-1.5 rounded-full flex items-center gap-1">
-                      12 Photos & Videos &rarr;
+                      {property.imageCount} Photos & Videos &rarr;
                     </div>
                   </div>
 
