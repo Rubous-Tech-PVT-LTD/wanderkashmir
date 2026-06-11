@@ -111,18 +111,28 @@ async function getFeaturedProperties() {
 
 async function getDestinationCounts() {
   try {
-    const locations = await prisma.property.groupBy({
-      by: ['location'],
-      _count: {
-        location: true,
-      },
+    const properties = await prisma.property.findMany({
+      select: { location: true },
     });
     
-    const counts: Record<string, number> = {};
-    locations.forEach(loc => {
-      // Make it case-insensitive matching
-      counts[loc.location.trim().toLowerCase()] = loc._count.location;
+    const counts: Record<string, number> = {
+      srinagar: 0,
+      gulmarg: 0,
+      pahalgam: 0,
+      sonamarg: 0,
+      ladakh: 0,
+    };
+
+    properties.forEach(prop => {
+      const loc = prop.location.toLowerCase();
+      // Check if the vendor's location string contains our keywords
+      if (loc.includes('srinagar') || loc.includes('dal lake')) counts.srinagar++;
+      if (loc.includes('gulmarg') || loc.includes('tangmarg')) counts.gulmarg++;
+      if (loc.includes('pahalgam') || loc.includes('chandanwari') || loc.includes('aru')) counts.pahalgam++;
+      if (loc.includes('sonamarg') || loc.includes('gagangeer')) counts.sonamarg++;
+      if (loc.includes('ladakh') || loc.includes('leh')) counts.ladakh++;
     });
+    
     return counts;
   } catch (error) {
     console.error("Failed to fetch location counts:", error);
