@@ -171,7 +171,7 @@ const destinations = [
     subtitle: "Meadow of Gold",
     count: "60+ stays",
     image:
-      "https://images.unsplash.com/photo-1597733336794-12d05021d510?w=500&q=80",
+      "https://res.cloudinary.com/dcmoseix9/image/upload/q_auto/f_auto/v1781184714/ChatGPT_Image_Jun_11_2026_07_01_39_PM_lwcndk.png",
     href: "/stays/sonamarg",
   },
   {
