@@ -187,11 +187,11 @@ export default function StaysClient({ initialProperties, initialQuery = "" }: { 
           {/* ─── LISTINGS ────────────────────────── */}
           <div className="flex-1 space-y-6">
             {filtered.map((property) => (
-              <div key={property.id} className="bg-white border border-sky-200 rounded-lg shadow-sm hover:shadow-md transition-shadow flex flex-col md:flex-row">
+              <div key={property.id} className="bg-white border border-sky-200 rounded-lg shadow-sm hover:shadow-md transition-shadow flex flex-col md:flex-row md:h-[230px] overflow-hidden">
                 
                 {/* Left: Image */}
-                <div className="w-full md:w-[260px] md:min-w-[260px] h-64 md:h-auto relative flex-shrink-0 group">
-                  <img src={property.image} alt={property.name} className="w-full h-full object-cover md:rounded-l-lg rounded-t-lg md:rounded-tr-none" />
+                <div className="w-full md:w-[260px] md:min-w-[260px] h-64 md:h-full relative flex-shrink-0 group">
+                  <img src={property.image} alt={property.name} className="w-full h-full object-cover" />
                   
                   {/* Heart Icon */}
                   <button className="absolute top-3 right-3 w-8 h-8 rounded-full bg-white shadow-sm flex items-center justify-center text-slate-400 hover:text-red-500 transition-colors z-10">
