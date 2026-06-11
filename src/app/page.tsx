@@ -343,7 +343,7 @@ export default async function HomePage() {
         <HeroCarousel />
 
         {/* Hero Content */}
-        <div className="relative z-10 container-custom mt-[-15vh] md:mt-[-5vh] text-left">
+        <div className="relative z-10 container-custom mb-32 md:mb-12 text-left">
           <h1 className="text-[3rem] md:text-[4.5rem] font-bold text-white leading-[1.1] drop-shadow-xl tracking-tight mb-2">
             Discover <span className="text-orange-500">Paradise</span> <br className="hidden md:block" />
             <div className="font-['Dancing_Script'] text-[#38bdf8] font-normal drop-shadow-md mt-2 flex items-baseline justify-start gap-4">
