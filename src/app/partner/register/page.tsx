@@ -31,7 +31,6 @@ export default function VendorEntryPage() {
     setMounted(true);
   }, []);
 
-  const { isLoaded, isSignedIn } = useAuth();
 
   const vendorOptions = [
     { id: "hotel", title: "Hotel Owner", desc: "List your hotel or resort", icon: Building2 },
