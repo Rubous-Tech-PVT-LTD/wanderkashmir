@@ -1,7 +1,8 @@
 "use server";
 
 import prisma from "@/lib/prisma";
-import { auth, clerkClient } from "@clerk/nextjs/server";
+import { clerkClient } from "@clerk/nextjs/server";
+import { getCurrentUserId } from "@/lib/auth";
 import { ensureDbUser } from "@/lib/clerk-sync";
 import { revalidatePath } from "next/cache";
 import { VendorType } from "@prisma/client";
@@ -19,7 +20,7 @@ export async function registerVendor(data: VendorRegistrationData) {
     }
 
     const validData = parsedData.data;
-    const { userId } = await auth();
+    const userId = await getCurrentUserId();
     
     if (!userId) {
       return { success: false, error: "You must be logged in to register as a vendor." };
@@ -29,15 +30,22 @@ export async function registerVendor(data: VendorRegistrationData) {
 
     const dbUser = await prisma.user.findUnique({
       where: { id: userId },
-      select: { role: true }
+      select: { role: true, password: true }
     });
 
+    // Hash the password they provided during registration
+    const bcrypt = require("bcrypt");
+    const passwordHash = await bcrypt.hash(validData.password, 10);
+
+    const updateData: any = { password: passwordHash };
     if (dbUser && dbUser.role !== "ADMIN") {
-      await prisma.user.update({
-        where: { id: userId },
-        data: { role: "VENDOR" }
-      });
+      updateData.role = "VENDOR";
     }
+
+    await prisma.user.update({
+      where: { id: userId },
+      data: updateData
+    });
 
     const typeString = validData.vendorType;
     let type: VendorType = "HOTEL";
@@ -78,7 +86,7 @@ export async function registerVendor(data: VendorRegistrationData) {
 
 export async function approveVendor(vendorId: string) {
   try {
-    const { userId } = await auth();
+    const userId = await getCurrentUserId();
     if (!userId) {
       return { success: false, error: "Unauthorized" };
     }
@@ -171,7 +179,7 @@ export async function approveVendor(vendorId: string) {
 
 export async function rejectVendor(vendorId: string, reason: string) {
   try {
-    const { userId } = await auth();
+    const userId = await getCurrentUserId();
     if (!userId) {
       return { success: false, error: "Unauthorized" };
     }
@@ -204,7 +212,7 @@ export async function rejectVendor(vendorId: string, reason: string) {
 
 export async function updateSubscriptionPlan(newPlan: string) {
   try {
-    const { userId } = await auth();
+    const userId = await getCurrentUserId();
     if (!userId) {
       return { success: false, error: "Unauthorized" };
     }

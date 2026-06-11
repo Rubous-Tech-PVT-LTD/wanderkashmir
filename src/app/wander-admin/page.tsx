@@ -1,22 +1,17 @@
 import prisma from "@/lib/prisma";
 import AdminDashboardClient from "./AdminDashboardClient";
-import { auth } from "@clerk/nextjs/server";
+import { getAdminSession } from "@/lib/auth";
 import { redirect } from "next/navigation";
 
 // This is a Server Component. It fetches data directly from the DB on the server.
 export default async function AdminPage() {
-  const { userId } = await auth();
-  if (!userId) {
-    redirect("/sign-in?redirect_url=/wander-admin");
+  const session = await getAdminSession();
+  
+  if (!session || session.role !== "ADMIN") {
+    redirect("/wander-admin/login");
   }
 
-  const dbUser = await prisma.user.findUnique({
-    where: { id: userId },
-  });
-
-  if (!dbUser || dbUser.role !== "ADMIN") {
-    redirect("/");
-  }
+  const userId = session.userId;
 
   const vendors = await prisma.vendorProfile.findMany({
     include: {

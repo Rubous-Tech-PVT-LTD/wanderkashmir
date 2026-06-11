@@ -1,4 +1,4 @@
-import { auth } from "@clerk/nextjs/server";
+import { getVendorSession } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 import HotelDashboard from "../hotel/page";
 import HomeStaysDashboard from "../homeStays/page";
@@ -8,11 +8,13 @@ import { redirect } from "next/navigation";
 import { getVendorBookings } from "@/actions/bookings";
 
 export default async function DynamicVendorDashboard() {
-  const { userId } = await auth();
+  const session = await getVendorSession();
   
-  if (!userId) {
-    redirect("/partner");
+  if (!session || (session.role !== "VENDOR" && session.role !== "ADMIN")) {
+    redirect("/partner/login");
   }
+  
+  const userId = session.userId;
 
   const vendorProfile = await prisma.vendorProfile.findUnique({
     where: { userId },

@@ -1,12 +1,12 @@
 "use server";
 
 import prisma from "@/lib/prisma";
-import { auth } from "@clerk/nextjs/server";
+import { getCurrentUserId } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 
 export async function getPayoutsSummary() {
   try {
-    const { userId } = await auth();
+    const userId = await getCurrentUserId();
     if (!userId) return { success: false, error: "Unauthorized" };
 
     const dbUser = await prisma.user.findUnique({ where: { id: userId } });
@@ -109,7 +109,7 @@ export async function getPayoutsSummary() {
 
 export async function markVendorPaid(vendorId: string) {
   try {
-    const { userId } = await auth();
+    const userId = await getCurrentUserId();
     if (!userId) return { success: false, error: "Unauthorized" };
 
     const dbUser = await prisma.user.findUnique({ where: { id: userId } });

@@ -1,7 +1,7 @@
 "use server";
 
 import prisma from "@/lib/prisma";
-import { auth } from "@clerk/nextjs/server";
+import { getCurrentUserId } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 import { PropertyData, propertySchema, VehicleData, vehicleSchema } from "@/lib/validations";
 import { Resend } from "resend";
@@ -10,7 +10,7 @@ const resend = new Resend(process.env.RESEND_API_KEY);
 
 export async function addProperty(data: PropertyData) {
   try {
-    const { userId } = await auth();
+    const userId = await getCurrentUserId();
     if (!userId) {
       return { success: false, error: "Unauthorized" };
     }
@@ -54,7 +54,7 @@ export async function addProperty(data: PropertyData) {
 
 export async function updateProperty(propertyId: string, data: PropertyData) {
   try {
-    const { userId } = await auth();
+    const userId = await getCurrentUserId();
     if (!userId) return { success: false, error: "Unauthorized" };
 
     const parsedData = propertySchema.safeParse(data);
@@ -94,7 +94,7 @@ export async function updateProperty(propertyId: string, data: PropertyData) {
 
 export async function deleteProperty(propertyId: string) {
   try {
-    const { userId } = await auth();
+    const userId = await getCurrentUserId();
     if (!userId) return { success: false, error: "Unauthorized" };
 
     const vendorProfile = await prisma.vendorProfile.findUnique({ where: { userId } });
@@ -120,7 +120,7 @@ export async function deleteProperty(propertyId: string) {
 
 export async function addVehicle(data: VehicleData) {
   try {
-    const { userId } = await auth();
+    const userId = await getCurrentUserId();
     if (!userId) {
       return { success: false, error: "Unauthorized" };
     }
@@ -159,7 +159,7 @@ export async function addVehicle(data: VehicleData) {
 
 export async function approveListing(id: string, type: 'PROPERTY' | 'VEHICLE') {
   try {
-    const { userId } = await auth();
+    const userId = await getCurrentUserId();
     if (!userId) {
       return { success: false, error: "Unauthorized" };
     }
@@ -228,7 +228,7 @@ export async function approveListing(id: string, type: 'PROPERTY' | 'VEHICLE') {
 
 export async function rejectListing(id: string, type: 'PROPERTY' | 'VEHICLE', reason: string) {
   try {
-    const { userId } = await auth();
+    const userId = await getCurrentUserId();
     if (!userId) {
       return { success: false, error: "Unauthorized" };
     }

@@ -1,13 +1,13 @@
 "use server";
 
 import prisma from "@/lib/prisma";
-import { auth } from "@clerk/nextjs/server";
+import { getCurrentUserId } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 
 // VENDOR MANAGEMENT
 export async function suspendVendor(vendorId: string, reason: string) {
   try {
-    const { userId } = await auth();
+    const userId = await getCurrentUserId();
     if (!userId) return { success: false, error: "Unauthorized" };
 
     const dbUser = await prisma.user.findUnique({ where: { id: userId } });
@@ -28,7 +28,7 @@ export async function suspendVendor(vendorId: string, reason: string) {
 
 export async function activateVendor(vendorId: string) {
   try {
-    const { userId } = await auth();
+    const userId = await getCurrentUserId();
     if (!userId) return { success: false, error: "Unauthorized" };
 
     const dbUser = await prisma.user.findUnique({ where: { id: userId } });
@@ -50,7 +50,7 @@ export async function activateVendor(vendorId: string) {
 // LISTING MANAGEMENT
 export async function suspendListing(listingId: string, type: 'PROPERTY' | 'VEHICLE', reason: string) {
   try {
-    const { userId } = await auth();
+    const userId = await getCurrentUserId();
     if (!userId) return { success: false, error: "Unauthorized" };
 
     const dbUser = await prisma.user.findUnique({ where: { id: userId } });
@@ -78,7 +78,7 @@ export async function suspendListing(listingId: string, type: 'PROPERTY' | 'VEHI
 
 export async function activateListing(listingId: string, type: 'PROPERTY' | 'VEHICLE') {
   try {
-    const { userId } = await auth();
+    const userId = await getCurrentUserId();
     if (!userId) return { success: false, error: "Unauthorized" };
 
     const dbUser = await prisma.user.findUnique({ where: { id: userId } });
@@ -107,7 +107,7 @@ export async function activateListing(listingId: string, type: 'PROPERTY' | 'VEH
 // USER MANAGEMENT
 export async function banUser(targetUserId: string, reason: string) {
   try {
-    const { userId } = await auth();
+    const userId = await getCurrentUserId();
     if (!userId) return { success: false, error: "Unauthorized" };
 
     const dbUser = await prisma.user.findUnique({ where: { id: userId } });
@@ -128,7 +128,7 @@ export async function banUser(targetUserId: string, reason: string) {
 
 export async function unbanUser(targetUserId: string) {
   try {
-    const { userId } = await auth();
+    const userId = await getCurrentUserId();
     if (!userId) return { success: false, error: "Unauthorized" };
 
     const dbUser = await prisma.user.findUnique({ where: { id: userId } });

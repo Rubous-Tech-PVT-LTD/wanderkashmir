@@ -19,9 +19,8 @@ const ratelimit = new Ratelimit({
 });
 
 const isProtectedRoute = createRouteMatcher([
-  '/wander-admin(.*)',
-  '/wander-admin(.*)',
-  '/partner(.*)'
+  '/profile(.*)',
+  '/bookings(.*)'
 ]);
 
 export default clerkMiddleware(async (auth, request) => {
@@ -29,8 +28,25 @@ export default clerkMiddleware(async (auth, request) => {
     await auth.protect();
   }
 
+  // Subdomain Routing
+  const url = request.nextUrl.clone();
+  const hostname = request.headers.get('host') || '';
+  
+  let response = NextResponse.next();
+
+  if (hostname.startsWith('admin.')) {
+    if (!url.pathname.startsWith('/wander-admin') && !url.pathname.startsWith('/api')) {
+      url.pathname = `/wander-admin${url.pathname}`;
+      response = NextResponse.rewrite(url);
+    }
+  } else if (hostname.startsWith('vendor.')) {
+    if (!url.pathname.startsWith('/partner') && !url.pathname.startsWith('/api')) {
+      url.pathname = `/partner${url.pathname}`;
+      response = NextResponse.rewrite(url);
+    }
+  }
+
   // Basic Security Headers
-  const response = NextResponse.next();
   response.headers.set('X-DNS-Prefetch-Control', 'on');
   response.headers.set('Strict-Transport-Security', 'max-age=63072000; includeSubDomains; preload');
   response.headers.set('X-XSS-Protection', '1; mode=block');

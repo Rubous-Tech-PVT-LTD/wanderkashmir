@@ -3,7 +3,7 @@
 import prisma from "@/lib/prisma";
 import { ensureDbUser } from "@/lib/clerk-sync";
 import { revalidatePath } from "next/cache";
-import { auth } from "@clerk/nextjs/server";
+import { getCurrentUserId } from "@/lib/auth";
 
 export async function addReview({
   rating,
@@ -21,7 +21,7 @@ export async function addReview({
   bookingId?: string;
 }) {
   try {
-    const { userId } = await auth();
+    const userId = await getCurrentUserId();
     if (!userId) {
       return { success: false, error: "Unauthorized" };
     }
