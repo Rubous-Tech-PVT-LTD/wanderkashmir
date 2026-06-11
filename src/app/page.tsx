@@ -155,7 +155,7 @@ const destinations = [
     subtitle: "Meadow of Flowers",
     count: "85+ stays",
     image:
-      "https://images.unsplash.com/photo-1606115915090-be18fea23ec7?w=500&q=80",
+      "https://res.cloudinary.com/dcmoseix9/image/upload/q_auto/f_auto/v1781184317/ChatGPT_Image_Jun_11_2026_06_54_50_PM_rot3s8.png",
     href: "/stays/gulmarg",
   },
   {
