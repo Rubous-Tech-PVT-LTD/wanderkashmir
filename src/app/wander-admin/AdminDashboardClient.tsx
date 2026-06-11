@@ -751,7 +751,7 @@ export default function AdminDashboardClient({ vendors, properties = [], totalUs
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
-                  {filteredVendors.filter(v => v.isApproved || v.status === "SUSPENDED").map((vendor) => (
+                  {filteredVendors.filter(v => v.isApproved && v.status !== "SUSPENDED").map((vendor) => (
                     <tr key={vendor.id} className="hover:bg-slate-50 transition-colors">
                       <td className="px-6 py-4">
                         <div className="font-bold text-slate-900">{vendor.businessName}</div>
