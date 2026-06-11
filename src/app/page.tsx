@@ -296,6 +296,34 @@ export default async function HomePage() {
   const featuredProperties = await getFeaturedProperties();
   const locationCounts = await getDestinationCounts();
 
+  // Fetch tours from DB
+  let tours = await prisma.tour.findMany({
+    orderBy: { createdAt: 'desc' },
+    take: 3
+  });
+
+  // Seed static tours if empty
+  if (tours.length === 0) {
+    for (const tour of popularTours) {
+      await prisma.tour.create({
+        data: {
+          title: tour.title,
+          slug: tour.slug,
+          duration: tour.duration,
+          destinations: tour.destinations,
+          price: tour.price,
+          category: tour.category,
+          images: [tour.image],
+          maxPersons: 2,
+        }
+      });
+    }
+    tours = await prisma.tour.findMany({
+      orderBy: { createdAt: 'desc' },
+      take: 3
+    });
+  }
+
   // Merge dynamic counts into destinations
   const dynamicDestinations = destinations.map(dest => {
     const dbCount = locationCounts[dest.name.toLowerCase()] || 0;
@@ -412,10 +440,10 @@ export default async function HomePage() {
                 <h2 className="text-2xl font-bold text-slate-900">Popular Tour Packages</h2>
                 <p className="text-sm text-slate-500 mt-1">Curated packages for unforgettable experiences</p>
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {popularTours.slice(0, 3).map((tour) => (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {tours.map((tour) => (
                   <Link key={tour.id} href={`/tours/${tour.slug}`} className="group block relative h-72 overflow-hidden rounded-2xl shadow-sm hover:shadow-md transition-shadow">
-                    <img src={tour.image} alt={tour.title} className="object-cover w-full h-full transition-transform duration-500 group-hover:scale-105" />
+                    <img src={tour.images[0] || ""} alt={tour.title} className="object-cover w-full h-full transition-transform duration-500 group-hover:scale-105" />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
                     <div className="absolute top-3 left-3">
                       <span className="bg-slate-900/80 backdrop-blur-sm text-white text-xs font-semibold px-2.5 py-1 rounded-md">
