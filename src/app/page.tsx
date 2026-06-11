@@ -109,6 +109,28 @@ async function getFeaturedProperties() {
   return featuredPropertiesMock;
 }
 
+async function getDestinationCounts() {
+  try {
+    const locations = await prisma.property.groupBy({
+      by: ['location'],
+      _count: {
+        location: true,
+      },
+    });
+    
+    const counts: Record<string, number> = {};
+    locations.forEach(loc => {
+      // Make it case-insensitive matching
+      counts[loc.location.trim().toLowerCase()] = loc._count.location;
+    });
+    return counts;
+  } catch (error) {
+    console.error("Failed to fetch location counts:", error);
+    return {};
+  }
+}
+
+
 const destinations = [
   {
     name: "Srinagar",
@@ -262,6 +284,16 @@ const whyUs = [
 
 export default async function HomePage() {
   const featuredProperties = await getFeaturedProperties();
+  const locationCounts = await getDestinationCounts();
+
+  // Merge dynamic counts into destinations
+  const dynamicDestinations = destinations.map(dest => {
+    const dbCount = locationCounts[dest.name.toLowerCase()] || 0;
+    return {
+      ...dest,
+      count: dbCount > 0 ? `${dbCount} stays` : "Coming Soon",
+    };
+  });
 
   return (
     <main className="min-h-screen bg-white">
@@ -315,7 +347,7 @@ export default async function HomePage() {
           </div>
 
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
-            {destinations.slice(0, 4).map((dest) => (
+            {dynamicDestinations.slice(0, 4).map((dest) => (
               <Link key={dest.name} href={dest.href} className="group block relative h-64 overflow-hidden rounded-2xl shadow-sm hover:shadow-md transition-shadow">
                 <img src={dest.image} alt={dest.name} className="object-cover w-full h-full transition-transform duration-500 group-hover:scale-105" />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
