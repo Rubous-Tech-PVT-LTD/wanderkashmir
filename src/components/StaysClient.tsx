@@ -190,7 +190,7 @@ export default function StaysClient({ initialProperties, initialQuery = "" }: { 
               <div key={property.id} className="bg-white border border-sky-200 rounded-lg shadow-sm hover:shadow-md transition-shadow flex flex-col md:flex-row">
                 
                 {/* Left: Image */}
-                <div className="w-full md:w-80 h-64 md:h-auto relative flex-shrink-0 group">
+                <div className="w-full md:w-[260px] md:min-w-[260px] h-64 md:h-auto relative flex-shrink-0 group">
                   <img src={property.image} alt={property.name} className="w-full h-full object-cover md:rounded-l-lg rounded-t-lg md:rounded-tr-none" />
                   
                   {/* Heart Icon */}
@@ -242,16 +242,16 @@ export default function StaysClient({ initialProperties, initialQuery = "" }: { 
 
                     <div className="space-y-2 mt-4">
                       <div className="flex items-start gap-2 text-sm text-emerald-700 font-medium">
-                        <svg className="w-4 h-4 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <svg className="w-4 h-4 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 15.546c-.523 0-1.046.151-1.5.454a2.704 2.704 0 01-3 0 2.704 2.704 0 00-3 0 2.704 2.704 0 01-3 0 2.704 2.704 0 00-3 0 2.704 2.704 0 01-3 0 2.701 2.701 0 00-1.5-.454M9 6v2m3-2v2m3-2v2M9 3h.01M12 3h.01M15 3h.01M21 21v-7a2 2 0 00-2-2H5a2 2 0 00-2 2v7h18zm-3-9v-2a2 2 0 00-2-2H8a2 2 0 00-2 2v2h12z" />
                         </svg>
-                        Enjoy local Kashmiri Kahwa on arrival
+                        <span className="line-clamp-1">Enjoy local Kashmiri Kahwa on arrival</span>
                       </div>
                       <div className="flex items-start gap-2 text-sm text-blue-800">
-                        <svg className="w-4 h-4 mt-0.5 text-blue-500" fill="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-4 h-4 mt-0.5 text-blue-500 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24">
                           <path d="M12 2l2.4 7.4h7.6l-6 4.6 2.3 7.4-6.3-4.8-6.3 4.8 2.3-7.4-6-4.6h7.6z" />
                         </svg>
-                        Stunning ambiance, delightful local cuisine, family-friendly activities.
+                        <span className="line-clamp-1">Stunning ambiance, delightful local cuisine, family-friendly activities.</span>
                       </div>
                     </div>
                   </div>
