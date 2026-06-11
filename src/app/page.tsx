@@ -163,7 +163,7 @@ const destinations = [
     subtitle: "Valley of Shepherds",
     count: "140+ stays",
     image:
-      "https://images.unsplash.com/photo-1579952363873-27f3bade9f55?w=500&q=80",
+      "https://res.cloudinary.com/dcmoseix9/image/upload/q_auto/f_auto/v1781184496/ChatGPT_Image_Jun_11_2026_06_57_52_PM_ohjz8z.png",
     href: "/stays/pahalgam",
   },
   {
