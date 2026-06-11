@@ -271,7 +271,7 @@ export default async function HomePage() {
         {/* Background Image */}
         <div className="absolute inset-0 z-0">
           <img
-            src="/images/dal-lake-hero.png"
+            src="https://res.cloudinary.com/dcmoseix9/image/upload/q_auto/f_auto/v1781182033/ChatGPT_Image_Jun_11_2026_06_15_47_PM_npe0t1.png"
             alt="Houseboats on Dal Lake with Snow Mountains"
             className="w-full h-full object-cover"
           />
