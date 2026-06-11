@@ -3,6 +3,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import SearchBar from "@/components/SearchBar";
 import PropertyCard from "@/components/PropertyCard";
+import HeroCarousel from "@/components/HeroCarousel";
 import Link from "next/link";
 import {
   Star,
@@ -268,15 +269,8 @@ export default async function HomePage() {
 
       {/* ─── HERO ─────────────────────────────────────────── */}
       <section className="relative h-[85vh] flex flex-col justify-center items-center text-center overflow-visible">
-        {/* Background Image */}
-        <div className="absolute inset-0 z-0">
-          <img
-            src="https://res.cloudinary.com/dcmoseix9/image/upload/q_auto/f_auto/v1781182033/ChatGPT_Image_Jun_11_2026_06_15_47_PM_npe0t1.png"
-            alt="Houseboats on Dal Lake with Snow Mountains"
-            className="w-full h-full object-cover"
-          />
-          <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/30 to-black/60" />
-        </div>
+        {/* Background Image Carousel */}
+        <HeroCarousel />
 
         {/* Hero Content */}
         <div className="relative z-10 container-custom mt-[-5vh]">
