@@ -7,14 +7,24 @@ import { cookies } from "next/headers";
 export async function POST(request: Request) {
   try {
     const { email, password } = await request.json();
+    const identifier = email?.trim(); // could be email or vendorId like WK-75182
 
-    if (!email || !password) {
-      return NextResponse.json({ error: "Email and password are required" }, { status: 400 });
+    if (!identifier || !password) {
+      return NextResponse.json({ error: "Email / Vendor ID and password are required" }, { status: 400 });
     }
 
-    const user = await prisma.user.findUnique({
-      where: { email },
-    });
+    let user = null;
+
+    // Check if identifier looks like a Vendor ID (starts with WK-)
+    if (identifier.toUpperCase().startsWith("WK-")) {
+      const vendorProfile = await prisma.vendorProfile.findFirst({
+        where: { vendorId: identifier.toUpperCase() },
+        include: { user: true }
+      });
+      user = vendorProfile?.user ?? null;
+    } else {
+      user = await prisma.user.findUnique({ where: { email: identifier } });
+    }
 
     if (!user || (user.role !== "VENDOR" && user.role !== "ADMIN")) {
       return NextResponse.json({ error: "Invalid credentials or unauthorized" }, { status: 401 });
