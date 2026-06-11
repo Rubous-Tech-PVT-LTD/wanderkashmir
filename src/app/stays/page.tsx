@@ -48,6 +48,7 @@ export default async function StaysPage({ searchParams }: { searchParams: Promis
       rating: 4.5, // Default rating for now
       reviews: Math.floor(Math.random() * 50) + 10, // Random reviews between 10 and 60
       image: imageUrl,
+      images: propData.images && propData.images.length > 0 ? propData.images : [imageUrl],
       imageCount: propData.images ? propData.images.length : 1,
       featured: false,
     };

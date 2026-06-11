@@ -13,6 +13,7 @@ export interface PropertyItem {
   rating: number;
   reviews: number;
   image: string;
+  images: string[];
   imageCount: number;
   featured: boolean;
 }
@@ -24,6 +25,10 @@ export default function StaysClient({ initialProperties, initialQuery = "" }: { 
   const [minRating, setMinRating] = useState<number | null>(null);
   const [maxPrice, setMaxPrice] = useState<number>(10000);
   const [sortBy, setSortBy] = useState("Recommended");
+  
+  // Gallery Modal State
+  const [galleryImages, setGalleryImages] = useState<string[] | null>(null);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
   const types = ["Hotel", "Homestay", "Guest House", "Houseboat", "Villa"];
   const amenities = ["Free WiFi", "Parking", "Breakfast", "Room Service", "Pet Friendly"];
@@ -201,9 +206,12 @@ export default function StaysClient({ initialProperties, initialQuery = "" }: { 
                   
                   {/* Photos Pill */}
                   <div className="absolute bottom-3 right-3 z-10">
-                    <div className="bg-black/80 text-white text-xs font-bold px-3 py-1.5 rounded-full flex items-center gap-1">
+                    <button 
+                      onClick={() => { setGalleryImages(property.images); setCurrentImageIndex(0); }}
+                      className="bg-black/80 hover:bg-black text-white text-xs font-bold px-3 py-1.5 rounded-full flex items-center gap-1 transition-colors"
+                    >
                       {property.imageCount} Photos & Videos &rarr;
-                    </div>
+                    </button>
                   </div>
 
                   {/* Gradient Overlay for bottom text/pills */}
@@ -305,6 +313,52 @@ export default function StaysClient({ initialProperties, initialQuery = "" }: { 
           </div>
         </div>
       </div>
+
+      {/* Gallery Modal */}
+      {galleryImages && (
+        <div className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center p-4">
+          <button 
+            onClick={() => setGalleryImages(null)}
+            className="absolute top-6 right-6 text-white/70 hover:text-white"
+          >
+            <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+          
+          {galleryImages.length > 1 && (
+            <button 
+              onClick={() => setCurrentImageIndex(prev => prev === 0 ? galleryImages.length - 1 : prev - 1)}
+              className="absolute left-6 top-1/2 -translate-y-1/2 w-12 h-12 bg-white/10 hover:bg-white/20 rounded-full flex items-center justify-center text-white transition-colors"
+            >
+              <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
+            </button>
+          )}
+
+          <img 
+            src={galleryImages[currentImageIndex]} 
+            alt="Property view" 
+            className="max-w-full max-h-[85vh] object-contain"
+          />
+
+          {galleryImages.length > 1 && (
+            <button 
+              onClick={() => setCurrentImageIndex(prev => prev === galleryImages.length - 1 ? 0 : prev + 1)}
+              className="absolute right-6 top-1/2 -translate-y-1/2 w-12 h-12 bg-white/10 hover:bg-white/20 rounded-full flex items-center justify-center text-white transition-colors"
+            >
+              <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
+          )}
+          
+          <div className="absolute bottom-6 left-1/2 -translate-x-1/2 text-white/70 font-medium">
+            {currentImageIndex + 1} / {galleryImages.length}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
