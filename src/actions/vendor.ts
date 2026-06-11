@@ -86,9 +86,9 @@ export async function registerVendor(data: VendorRegistrationData) {
     revalidatePath("/partner");
 
     return { success: true, vendorId: vendorProfile.id };
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error registering vendor:", error);
-    return { success: false, error: "Failed to register vendor." };
+    return { success: false, error: "Failed to register vendor: " + error.message };
   }
 }
 
