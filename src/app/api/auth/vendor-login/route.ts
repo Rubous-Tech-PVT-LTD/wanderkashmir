@@ -48,7 +48,19 @@ export async function POST(request: Request) {
       path: "/",
     });
 
-    return NextResponse.json({ success: true });
+    const vendorProfile = await prisma.vendorProfile.findUnique({
+      where: { userId: user.id },
+      select: { isApproved: true, status: true, rejectionReason: true, businessName: true, email: true }
+    });
+
+    return NextResponse.json({ 
+      success: true,
+      isApproved: vendorProfile?.isApproved ?? false,
+      status: vendorProfile?.status ?? "PENDING",
+      rejectionReason: vendorProfile?.rejectionReason ?? null,
+      businessName: vendorProfile?.businessName ?? null,
+      vendorEmail: vendorProfile?.email ?? user.email,
+    });
   } catch (error) {
     console.error("Vendor Login Error:", error);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
