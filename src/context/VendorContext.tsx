@@ -10,6 +10,8 @@ interface VendorContextType {
   setVendorType: (type: VendorType) => void;
   vendorName: string | null;
   setVendorName: (name: string | null) => void;
+  vendorEmail: string | null;
+  setVendorEmail: (email: string | null) => void;
   isRegistered: boolean;
   setIsRegistered: (status: boolean) => void;
   isApproved: boolean;
@@ -29,6 +31,7 @@ const VendorContext = createContext<VendorContextType | undefined>(undefined);
 export interface InitialVendorProfile {
   vendorType: VendorType;
   businessName: string | null;
+  email: string | null;
   isApproved: boolean;
   subscriptionPlan: SubscriptionPlan;
   status: string;
@@ -39,6 +42,7 @@ export interface InitialVendorProfile {
 export function VendorProvider({ children, initialProfile }: { children: ReactNode, initialProfile?: InitialVendorProfile | null }) {
   const [vendorType, setVendorType] = useState<VendorType>(initialProfile?.vendorType || null);
   const [vendorName, setVendorName] = useState<string | null>(initialProfile?.businessName || null);
+  const [vendorEmail, setVendorEmail] = useState<string | null>(initialProfile?.email || null);
   const [isRegistered, setIsRegistered] = useState(!!initialProfile?.vendorType);
   const [isApproved, setIsApproved] = useState(initialProfile?.isApproved || false);
   const [subscriptionPlan, setSubscriptionPlan] = useState<SubscriptionPlan>(initialProfile?.subscriptionPlan || "Free");
@@ -50,6 +54,7 @@ export function VendorProvider({ children, initialProfile }: { children: ReactNo
   useEffect(() => {
     setVendorType(initialProfile?.vendorType || null);
     setVendorName(initialProfile?.businessName || null);
+    setVendorEmail(initialProfile?.email || null);
     setIsRegistered(!!initialProfile?.vendorType);
     setIsApproved(initialProfile?.isApproved || false);
     setSubscriptionPlan(initialProfile?.subscriptionPlan || "Free");
@@ -62,6 +67,7 @@ export function VendorProvider({ children, initialProfile }: { children: ReactNo
     <VendorContext.Provider value={{ 
       vendorType, setVendorType, 
       vendorName, setVendorName,
+      vendorEmail, setVendorEmail,
       isRegistered, setIsRegistered, 
       isApproved, setIsApproved,
       subscriptionPlan, setSubscriptionPlan,

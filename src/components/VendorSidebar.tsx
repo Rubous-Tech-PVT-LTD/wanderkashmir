@@ -3,12 +3,11 @@
 import Link from "next/link";
 import { Building2, Home, Car, UserCircle2, LayoutDashboard, LogOut, Settings } from "lucide-react";
 import { useVendor } from "@/context/VendorContext";
-import { useUser, useClerk } from "@clerk/nextjs";
+import { useClerk } from "@clerk/nextjs";
 import { useRouter, usePathname } from "next/navigation";
 
 export default function VendorSidebar() {
-  const { vendorType, isRegistered, setIsRegistered, setVendorType } = useVendor();
-  const { user } = useUser();
+  const { vendorType, isRegistered, setIsRegistered, setVendorType, vendorName, vendorEmail } = useVendor();
   const { signOut, openUserProfile } = useClerk();
   const router = useRouter();
   const pathname = usePathname();
@@ -95,18 +94,14 @@ export default function VendorSidebar() {
       <div className="p-4 border-t border-slate-800">
         <div className="flex items-center gap-3 px-3 py-2 mb-4">
           <div className="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center text-slate-300 font-bold border border-slate-700 capitalize overflow-hidden shrink-0">
-            {user?.imageUrl ? (
-              <img src={user.imageUrl} alt="Profile" className="w-full h-full object-cover" />
-            ) : (
-              user?.firstName ? user.firstName[0] : vendorType ? vendorType[0] : "V"
-            )}
+            {vendorName ? vendorName[0].toUpperCase() : vendorType ? vendorType[0].toUpperCase() : "V"}
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-white truncate capitalize">
-              {user?.fullName || `${vendorType} Owner`}
+            <p className="text-sm font-medium text-white truncate">
+              {vendorName || `${vendorType} Owner`}
             </p>
             <p className="text-xs text-slate-400 truncate">
-              {user?.primaryEmailAddress?.emailAddress || "vendor@wanderkashmir.com"}
+              {vendorEmail || "vendor@wanderkashmir.com"}
             </p>
           </div>
         </div>

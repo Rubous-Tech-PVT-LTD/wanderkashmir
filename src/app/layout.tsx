@@ -50,6 +50,7 @@ export default async function RootLayout({
           role: user.role,
           vendorType: profile ? (profile.type.toLowerCase() as VendorType) : null,
           businessName: profile ? profile.businessName : null,
+          email: profile ? (profile.email || user.email) : user.email,
           isApproved: profile ? profile.isApproved : false,
           subscriptionPlan: planMapping[dbPlan] as SubscriptionPlan,
           status: profile ? profile.status : "PENDING",
