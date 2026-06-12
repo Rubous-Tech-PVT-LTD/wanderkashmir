@@ -597,7 +597,6 @@ export default function AdminDashboardClient({ tours = [], vendors, properties =
             { id: "listings", label: "Listing Approvals", icon: Building2 },
             { id: "live_listings", label: "Live Listings", icon: MapPin },
             { id: "tours", label: "Tours", icon: Map },
-            { id: "taxis", label: "Taxis & Rates", icon: Car },
             { id: "payouts", label: "Payouts", icon: IndianRupee },
             { id: "rejected", label: "Rejected Vendors", icon: XCircle },
           ].map((item) => (
