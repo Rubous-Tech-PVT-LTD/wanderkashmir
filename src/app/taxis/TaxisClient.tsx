@@ -61,7 +61,9 @@ export default function TaxisClient({ rateCards, imagesMap = {}, verifiedDrivers
 
   const [providerPage, setProviderPage] = useState(1);
   const [isProviderDropdownOpen, setIsProviderDropdownOpen] = useState(false);
+  const [isVehicleDropdownOpen, setIsVehicleDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const vehicleDropdownRef = useRef<HTMLDivElement>(null);
   const providersPerPage = 5;
 
   const totalProviderPages = Math.max(1, Math.ceil(allProviders.length / providersPerPage));
@@ -72,11 +74,14 @@ export default function TaxisClient({ rateCards, imagesMap = {}, verifiedDrivers
     setProviderPage(1);
   }, [selectedVehicle]);
 
-  // Click outside to close dropdown
+  // Click outside to close dropdowns
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setIsProviderDropdownOpen(false);
+      }
+      if (vehicleDropdownRef.current && !vehicleDropdownRef.current.contains(event.target as Node)) {
+        setIsVehicleDropdownOpen(false);
       }
     }
     document.addEventListener("mousedown", handleClickOutside);
@@ -99,36 +104,60 @@ export default function TaxisClient({ rateCards, imagesMap = {}, verifiedDrivers
             1. Select Your Vehicle
           </h2>
           
-          <div className="flex overflow-x-auto pb-6 gap-4 snap-x hide-scrollbar">
-            {VEHICLE_TYPES.map(vt => (
-                <button
-                  key={vt}
-                  onClick={() => {
-                    setSelectedVehicle(vt);
-                    setSelectedProvider(null); // Reset provider when vehicle changes
-                  }}
-                  className={`flex-shrink-0 snap-start w-40 h-32 rounded-2xl border-2 transition-all relative overflow-hidden group ${
-                    selectedVehicle === vt ? 'border-orange-500 ring-4 ring-orange-500/20 scale-105 shadow-md z-10' : 'border-slate-200 hover:border-slate-300 opacity-90 hover:opacity-100 z-0'
-                  }`}
-                  style={{ transform: 'translateZ(0)' }} // Fixes Safari overflow-hidden bug with border-radius
-                >
-                  <img src={imagesMap[vt] || DEFAULT_IMAGES[vt]} alt={vt} className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
-                  
-                  {/* Dark gradient for text readability */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-slate-900/20 to-transparent transition-opacity"></div>
-                  
-                  {/* Vehicle Name Badge */}
-                  <div className="absolute bottom-3 left-0 right-0 flex justify-center">
-                    <div className={`px-4 py-1.5 rounded-full text-xs font-black tracking-widest backdrop-blur-md border shadow-sm transition-colors ${
-                      selectedVehicle === vt 
-                        ? 'bg-orange-500 text-white border-orange-400' 
-                        : 'bg-white/90 text-slate-800 border-white/50 group-hover:bg-white'
-                    }`}>
-                      {vt}
-                    </div>
+          <div className="relative w-full md:max-w-md lg:max-w-lg" ref={vehicleDropdownRef}>
+            <button 
+              onClick={() => setIsVehicleDropdownOpen(!isVehicleDropdownOpen)}
+              className="w-full bg-white border-2 border-slate-200 hover:border-orange-400 rounded-2xl p-4 flex items-center justify-between transition-colors focus:outline-none focus:ring-4 focus:ring-orange-500/10 shadow-sm"
+            >
+              <div className="flex items-center gap-3 text-left">
+                <div className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center shrink-0 border border-orange-200">
+                  <Car className="w-5 h-5 text-orange-600" />
+                </div>
+                <div>
+                  <div className="font-bold text-slate-900 truncate">
+                    {selectedVehicle}
                   </div>
-                </button>
-            ))}
+                  <div className="text-xs font-semibold text-slate-500">
+                    Selected Vehicle Type
+                  </div>
+                </div>
+              </div>
+              <ChevronDown className={`w-5 h-5 text-slate-400 transition-transform duration-300 ${isVehicleDropdownOpen ? 'rotate-180' : ''}`} />
+            </button>
+
+            {isVehicleDropdownOpen && (
+              <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-slate-200 rounded-2xl shadow-xl z-50 overflow-hidden flex flex-col animate-in fade-in slide-in-from-top-2 duration-200">
+                <div className="max-h-[320px] overflow-y-auto hide-scrollbar divide-y divide-slate-100">
+                  {VEHICLE_TYPES.map(vt => (
+                    <button
+                      key={vt}
+                      onClick={() => {
+                        setSelectedVehicle(vt);
+                        setSelectedProvider(null);
+                        setIsVehicleDropdownOpen(false);
+                      }}
+                      className={`w-full text-left p-4 hover:bg-slate-50 transition-colors flex items-center gap-4 ${selectedVehicle === vt ? 'bg-orange-50/50' : ''}`}
+                    >
+                      <div className="w-12 h-8 rounded shrink-0 overflow-hidden border border-slate-200 bg-slate-100 flex items-center justify-center">
+                        {imagesMap[vt] || DEFAULT_IMAGES[vt] ? (
+                           <img src={imagesMap[vt] || DEFAULT_IMAGES[vt]} alt={vt} className="w-full h-full object-cover" />
+                        ) : (
+                           <Car className="w-4 h-4 text-slate-400" />
+                        )}
+                      </div>
+                      
+                      <div className="flex-1 font-bold text-slate-800">
+                        {vt}
+                      </div>
+                      
+                      {selectedVehicle === vt && (
+                        <CheckCircle2 className="w-5 h-5 text-orange-500 shrink-0" />
+                      )}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
