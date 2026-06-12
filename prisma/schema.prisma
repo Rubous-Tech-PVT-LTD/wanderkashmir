@@ -98,6 +98,8 @@ model VendorProfile {
   subscriptionPlan  SubscriptionPlan @default(FREE)
   kycDocuments      String[]         @default([])
   address           String?
+  latitude          Float?
+  longitude         Float?
   email             String?
   phone             String?
   altContactPerson  String?
@@ -141,6 +143,8 @@ model Property {
   rejectionReason String?
   name            String
   location        String
+  latitude        Float?
+  longitude       Float?
   description     String?
   pricePerNight   Float
   availableRooms  Int           @default(1)

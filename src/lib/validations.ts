@@ -8,6 +8,8 @@ export const vendorRegistrationSchema = z.object({
   gstNumber: z.string().optional(),
   password: z.string().min(6, "Password must be at least 6 characters"),
   address: z.string().min(10, "Please provide a complete address"),
+  latitude: z.number().optional(),
+  longitude: z.number().optional(),
   email: z.string().email("Invalid email address"),
   phone: z.string().regex(/^[0-9]{10}$/, "Phone number must be exactly 10 digits"),
   altContactPerson: z.string().optional(),
@@ -74,6 +76,8 @@ export type VendorRegistrationData = z.infer<typeof vendorRegistrationSchema>;
 export const propertySchema = z.object({
   name: z.string().min(3, "Property name must be at least 3 characters"),
   location: z.string().min(5, "Please provide the full location"),
+  latitude: z.number().optional(),
+  longitude: z.number().optional(),
   description: z.string().min(20, "Description should be at least 20 characters").optional(),
   pricePerNight: z.number().min(0, "Price cannot be negative"),
   images: z.array(z.string()).optional(),

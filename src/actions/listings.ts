@@ -33,6 +33,8 @@ export async function addProperty(data: PropertyData) {
         vendorProfileId: vendorProfile.id,
         name: parsedData.data.name,
         location: parsedData.data.location,
+        latitude: parsedData.data.latitude,
+        longitude: parsedData.data.longitude,
         description: parsedData.data.description,
         pricePerNight: parsedData.data.pricePerNight,
         images: parsedData.data.images || [],
@@ -74,6 +76,8 @@ export async function updateProperty(propertyId: string, data: PropertyData) {
       data: {
         name: parsedData.data.name,
         location: parsedData.data.location,
+        latitude: parsedData.data.latitude,
+        longitude: parsedData.data.longitude,
         description: parsedData.data.description,
         pricePerNight: parsedData.data.pricePerNight,
         images: parsedData.data.images || [],

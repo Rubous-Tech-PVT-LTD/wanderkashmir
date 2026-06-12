@@ -79,6 +79,8 @@ export async function registerVendor(data: VendorRegistrationData) {
         subscriptionPlan: "FREE",
         kycDocuments: validData.kycDocuments || [],
         address: validData.address,
+        latitude: validData.latitude,
+        longitude: validData.longitude,
         email: validData.email,
         phone: validData.phone,
         altContactPerson: validData.altContactPerson,

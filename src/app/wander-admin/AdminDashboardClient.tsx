@@ -17,6 +17,8 @@ import toast from "react-hot-toast";
 import { LogOut } from "lucide-react";
 import AdminToursTab from "./AdminToursTab";
 import AdminTaxisTab from "./AdminTaxisTab";
+import dynamic from "next/dynamic";
+const AdminMapView = dynamic(() => import("./AdminMapView"), { ssr: false });
 
 // Define the type based on the props passed from Server
 type VendorProfile = {
@@ -580,6 +582,7 @@ export default function AdminDashboardClient({ tours = [], vendors, properties =
         <nav className="flex-1 space-y-2">
           {[
             { id: "dashboard", icon: LayoutDashboard, label: "Overview" },
+            { id: "map_view", icon: MapPin, label: "Map View" },
             { id: "manifest", icon: FileText, label: "Daily Operations" },
             { id: "approvals", icon: CheckCircle2, label: "Vendor Approvals" },
             { id: "live_vendors", label: "Live Vendors", icon: Users },
@@ -660,6 +663,11 @@ export default function AdminDashboardClient({ tours = [], vendors, properties =
               </div>
             ))}
           </div>
+        )}
+
+        {/* Map View */}
+        {activeTab === "map_view" && (
+          <AdminMapView vendors={vendors} />
         )}
 
         {/* Dynamic Content Area */}

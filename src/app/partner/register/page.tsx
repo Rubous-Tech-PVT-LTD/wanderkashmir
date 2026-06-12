@@ -379,6 +379,36 @@ export default function VendorEntryPage() {
                 </div>
 
                 <div className="mt-8 border-t border-slate-100 pt-8">
+                  <div className="mb-6">
+                    <h3 className="text-lg font-bold text-slate-900 mb-1">GPS Coordinates (Optional)</h3>
+                    <p className="text-sm text-slate-500">Provide latitude and longitude so your business appears on the map.</p>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6 mb-4">
+                    <div className="col-span-2 md:col-span-1">
+                      <label className="block text-sm font-medium text-slate-700 mb-1">Latitude</label>
+                      <input {...register("latitude", { valueAsNumber: true })} type="number" step="any" className={`w-full border rounded-lg px-4 py-2.5 outline-none border-slate-200 focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500`} placeholder="e.g. 34.0836" />
+                    </div>
+                    <div className="col-span-2 md:col-span-1">
+                      <label className="block text-sm font-medium text-slate-700 mb-1">Longitude</label>
+                      <input {...register("longitude", { valueAsNumber: true })} type="number" step="any" className={`w-full border rounded-lg px-4 py-2.5 outline-none border-slate-200 focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500`} placeholder="e.g. 74.7973" />
+                    </div>
+                  </div>
+                  <button type="button" onClick={() => {
+                    if(navigator.geolocation) {
+                      navigator.geolocation.getCurrentPosition((pos) => {
+                        setValue("latitude", pos.coords.latitude, { shouldValidate: true });
+                        setValue("longitude", pos.coords.longitude, { shouldValidate: true });
+                        toast.success("Location retrieved!");
+                      }, () => toast.error("Location access denied or unavailable."));
+                    } else {
+                      toast.error("Geolocation is not supported by your browser.");
+                    }
+                  }} className="text-sm bg-sky-50 text-sky-600 px-4 py-2 rounded-lg font-bold hover:bg-sky-100 transition-colors">
+                    Get My Current Location
+                  </button>
+                </div>
+
+                <div className="mt-8 border-t border-slate-100 pt-8">
                   <div className="flex items-center gap-2 mb-6">
                     <h3 className="text-lg font-bold text-slate-900">Bank Details for Payouts</h3>
                     <div className="bg-sky-50 text-sky-600 text-[10px] font-bold px-2 py-0.5 rounded flex items-center gap-1">
