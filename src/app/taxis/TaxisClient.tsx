@@ -49,23 +49,33 @@ export default function TaxisClient({ rateCards, imagesMap = {}, verifiedDrivers
           
           <div className="flex overflow-x-auto pb-6 gap-4 snap-x hide-scrollbar">
             {VEHICLE_TYPES.map(vt => (
-              <button
-                key={vt}
-                onClick={() => {
-                  setSelectedVehicle(vt);
-                  setSelectedProvider(null); // Reset provider when vehicle changes
-                }}
-                className={`flex-shrink-0 snap-start w-40 rounded-2xl border-2 transition-all overflow-hidden ${
-                  selectedVehicle === vt ? 'border-orange-500 ring-4 ring-orange-500/10 scale-105 shadow-md' : 'border-slate-200 hover:border-slate-300 bg-white opacity-80 hover:opacity-100'
-                }`}
-              >
-                <div className="h-28 w-full bg-slate-100 relative">
-                  <img src={imagesMap[vt] || DEFAULT_IMAGES[vt]} alt={vt} className="absolute inset-0 w-full h-full object-cover" />
-                </div>
-                <div className={`p-3 text-center font-bold text-sm ${selectedVehicle === vt ? 'bg-orange-50 text-orange-700' : 'bg-slate-50 text-slate-700'}`}>
-                  {vt}
-                </div>
-              </button>
+                <button
+                  key={vt}
+                  onClick={() => {
+                    setSelectedVehicle(vt);
+                    setSelectedProvider(null); // Reset provider when vehicle changes
+                  }}
+                  className={`flex-shrink-0 snap-start w-40 h-32 rounded-2xl border-2 transition-all relative overflow-hidden group ${
+                    selectedVehicle === vt ? 'border-orange-500 ring-4 ring-orange-500/20 scale-105 shadow-md z-10' : 'border-slate-200 hover:border-slate-300 opacity-90 hover:opacity-100 z-0'
+                  }`}
+                  style={{ transform: 'translateZ(0)' }} // Fixes Safari overflow-hidden bug with border-radius
+                >
+                  <img src={imagesMap[vt] || DEFAULT_IMAGES[vt]} alt={vt} className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
+                  
+                  {/* Dark gradient for text readability */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-slate-900/20 to-transparent transition-opacity"></div>
+                  
+                  {/* Vehicle Name Badge */}
+                  <div className="absolute bottom-3 left-0 right-0 flex justify-center">
+                    <div className={`px-4 py-1.5 rounded-full text-xs font-black tracking-widest backdrop-blur-md border shadow-sm transition-colors ${
+                      selectedVehicle === vt 
+                        ? 'bg-orange-500 text-white border-orange-400' 
+                        : 'bg-white/90 text-slate-800 border-white/50 group-hover:bg-white'
+                    }`}>
+                      {vt}
+                    </div>
+                  </div>
+                </button>
             ))}
           </div>
         </div>
