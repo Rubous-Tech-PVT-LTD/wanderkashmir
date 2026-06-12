@@ -568,6 +568,14 @@ export default function AdminDashboardClient({ tours = [], vendors, properties =
     downloadCSV(data, `Rejected_Vendors_${format(new Date(), "yyyy-MM-dd")}.csv`);
   };
 
+  if (activeTab === "map_view") {
+    return (
+      <div className="w-full h-screen overflow-hidden">
+        <AdminMapView vendors={vendors} onExit={() => handleTabChange("dashboard")} />
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-slate-50 flex">
       {/* Sidebar */}
@@ -663,11 +671,6 @@ export default function AdminDashboardClient({ tours = [], vendors, properties =
               </div>
             ))}
           </div>
-        )}
-
-        {/* Map View */}
-        {activeTab === "map_view" && (
-          <AdminMapView vendors={vendors} />
         )}
 
         {/* Dynamic Content Area */}

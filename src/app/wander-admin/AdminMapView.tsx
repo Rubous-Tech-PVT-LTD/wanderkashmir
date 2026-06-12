@@ -22,7 +22,7 @@ const homestayIcon = createCustomIcon("#8b5cf6"); // violet-500
 const taxiIcon = createCustomIcon("#f59e0b"); // amber-500
 const guideIcon = createCustomIcon("#10b981"); // emerald-500
 
-export default function AdminMapView({ vendors }: { vendors: any[] }) {
+export default function AdminMapView({ vendors, onExit }: { vendors: any[], onExit?: () => void }) {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -34,23 +34,50 @@ export default function AdminMapView({ vendors }: { vendors: any[] }) {
   // Center on Srinagar roughly
   const defaultCenter: [number, number] = [34.0836, 74.7973];
 
+  // Restrict map bounds to Jammu & Kashmir and Ladakh
+  const jkBounds: L.LatLngBoundsExpression = [
+    [32.0, 73.0], // South West roughly around Kathua/Pathankot border
+    [36.0, 80.5]  // North East roughly around Aksai Chin / Siachen
+  ];
+
   return (
-    <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
-      <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
-        <div>
-          <h2 className="text-xl font-bold text-slate-900">Vendor Map</h2>
-          <p className="text-sm text-slate-500 mt-1">Geographical distribution of registered vendors.</p>
+    <div className="w-full h-full relative bg-slate-900">
+      
+      {/* Overlay UI */}
+      <div className="absolute top-6 left-6 right-6 z-[1000] flex flex-wrap items-start justify-between gap-4 pointer-events-none">
+        <div className="bg-white/95 backdrop-blur-sm p-4 rounded-2xl shadow-lg border border-slate-200 pointer-events-auto flex items-center gap-6">
+          <div>
+            <h2 className="text-xl font-black text-slate-900">Platform Map</h2>
+            <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mt-0.5">Live Vendor Tracking</p>
+          </div>
+          <div className="h-8 w-px bg-slate-200 hidden sm:block"></div>
+          <div className="flex flex-wrap items-center gap-3 text-xs font-bold text-slate-700">
+            <div className="flex items-center gap-1.5"><div className="w-3 h-3 rounded-full bg-blue-500 shadow-sm shadow-blue-500/50"></div> Hotel</div>
+            <div className="flex items-center gap-1.5"><div className="w-3 h-3 rounded-full bg-violet-500 shadow-sm shadow-violet-500/50"></div> Homestay</div>
+            <div className="flex items-center gap-1.5"><div className="w-3 h-3 rounded-full bg-amber-500 shadow-sm shadow-amber-500/50"></div> Taxi</div>
+            <div className="flex items-center gap-1.5"><div className="w-3 h-3 rounded-full bg-emerald-500 shadow-sm shadow-emerald-500/50"></div> Guide</div>
+          </div>
         </div>
-        <div className="flex items-center gap-4 text-xs font-bold text-slate-600 bg-slate-50 px-4 py-2 rounded-xl border border-slate-200">
-          <div className="flex items-center gap-1.5"><div className="w-3 h-3 rounded-full bg-blue-500"></div> Hotel</div>
-          <div className="flex items-center gap-1.5"><div className="w-3 h-3 rounded-full bg-violet-500"></div> Homestay</div>
-          <div className="flex items-center gap-1.5"><div className="w-3 h-3 rounded-full bg-amber-500"></div> Taxi</div>
-          <div className="flex items-center gap-1.5"><div className="w-3 h-3 rounded-full bg-emerald-500"></div> Guide</div>
-        </div>
+
+        {onExit && (
+          <button 
+            onClick={onExit}
+            className="bg-slate-900 text-white px-5 py-3 rounded-xl font-bold shadow-lg shadow-slate-900/20 hover:bg-slate-800 transition-colors pointer-events-auto flex items-center gap-2"
+          >
+            Exit Map View
+          </button>
+        )}
       </div>
 
-      <div className="h-[600px] rounded-xl overflow-hidden border border-slate-200 shadow-inner relative z-0">
-        <MapContainer center={defaultCenter} zoom={9} style={{ height: "100%", width: "100%" }}>
+      <div className="w-full h-full relative z-0 bg-slate-100">
+        <MapContainer 
+          center={defaultCenter} 
+          zoom={8} 
+          minZoom={7}
+          maxBounds={jkBounds}
+          maxBoundsViscosity={1.0}
+          style={{ height: "100%", width: "100%" }}
+        >
           <TileLayer
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
