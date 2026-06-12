@@ -79,8 +79,8 @@ export default function AdminMapView({ vendors, onExit }: { vendors: any[], onEx
           style={{ height: "100%", width: "100%" }}
         >
           <TileLayer
-            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+            attribution='&copy; <a href="https://carto.com/attributions">CARTO</a>'
+            url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
           />
 
           {vendors.filter(v => v.isApproved && v.status !== "SUSPENDED").map((vendor) => {
