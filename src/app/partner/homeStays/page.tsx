@@ -5,6 +5,8 @@ import { Home, Save, Plus, MapPin, IndianRupee, CheckCircle2, AlertTriangle, Loc
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, LineChart, Line, AreaChart, Area, PieChart, Pie, Cell } from 'recharts';
 import { Download } from "lucide-react";
 import { useVendor } from "@/context/VendorContext";
+import dynamic from "next/dynamic";
+const ImageUpload = dynamic(() => import("@/components/ImageUpload"), { ssr: false });
 
 import { z } from "zod";
 import { useForm } from "react-hook-form";
@@ -31,7 +33,6 @@ type SubscriptionPlan = "Free" | "Growth Pro" | "Pro" | "Enterprise";
 export default function HomestayDashboard({ bookings = [], properties = [] }: { bookings?: any[], properties?: any[] }) {
   const { vendorName, isApproved, status, rejectionReason, subscriptionPlan, setSubscriptionPlan } = useVendor();
   const [activeTab, setActiveTab] = useState("overview");
-  const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
 
   const [timeRange, setTimeRange] = useState("7D");
@@ -75,7 +76,14 @@ export default function HomestayDashboard({ bookings = [], properties = [] }: { 
   ];
   const COLORS = ['#f43f5e', '#8b5cf6', '#0ea5e9', '#10b981'];
 
+  const [coverPhoto, setCoverPhoto] = useState<string>("");
   const [uploadedPhotos, setUploadedPhotos] = useState<string[]>([]);
+  const [selectedAmenities, setSelectedAmenities] = useState<string[]>([]);
+
+  const availableAmenities = [
+    "Mountain view", "Lake view", "Free WiFi", "Dedicated workspace",
+    "Room service", "Free parking on premises", "Heating", "AC", "Breakfast included"
+  ];
 
   // Feature Gating Logic
   const photoLimit = subscriptionPlan === "Free" ? 3 : 20;
@@ -159,9 +167,10 @@ export default function HomestayDashboard({ bookings = [], properties = [] }: { 
       maxGuests: 4,
       instantBooking: false
     });
+    setCoverPhoto("");
     setUploadedPhotos([]);
+    setSelectedAmenities([]);
     setEditingId(null);
-    setShowForm(true);
     setActiveTab("listings");
   };
 
@@ -171,12 +180,13 @@ export default function HomestayDashboard({ bookings = [], properties = [] }: { 
       description: property.description,
       location: property.location,
       basePrice: property.pricePerNight,
-      maxGuests: 4, // default mock
+      maxGuests: property.maxGuests || 4,
       instantBooking: false
     });
-    setUploadedPhotos(property.images || []);
+    setCoverPhoto(property.images?.[0] || "");
+    setUploadedPhotos(property.images?.slice(1) || []);
+    setSelectedAmenities(property.amenities || []);
     setEditingId(property.id);
-    setShowForm(true);
     setActiveTab("listings");
   };
 
@@ -200,6 +210,7 @@ export default function HomestayDashboard({ bookings = [], properties = [] }: { 
     }
     setIsSubmitting(true);
     try {
+      const allImages = coverPhoto ? [coverPhoto, ...uploadedPhotos] : uploadedPhotos;
       let res;
       if (editingId) {
         res = await updateProperty(editingId, {
@@ -207,8 +218,9 @@ export default function HomestayDashboard({ bookings = [], properties = [] }: { 
           description: data.description,
           location: data.location,
           pricePerNight: data.basePrice,
-          images: uploadedPhotos,
-          totalRooms: 1
+          images: allImages,
+          amenities: selectedAmenities,
+          totalRooms: 1 // homestays are single units usually
         });
       } else {
         if (hasReachedLimit) {
@@ -222,18 +234,20 @@ export default function HomestayDashboard({ bookings = [], properties = [] }: { 
           description: data.description,
           location: data.location,
           pricePerNight: data.basePrice,
-          images: uploadedPhotos,
-          totalRooms: 1
+          images: allImages,
+          amenities: selectedAmenities,
+          totalRooms: 1 // homestays are single units usually
         });
       }
 
       if (res.success) {
         toast.success(`Listing ${editingId ? "updated" : "published"} successfully!`);
         reset();
+        setCoverPhoto("");
         setUploadedPhotos([]);
+        setSelectedAmenities([]);
         setEditingId(null);
-        setShowForm(false);
-        setActiveTab("listings");
+        setActiveTab("overview");
       } else {
         toast.error(`Failed to ${editingId ? "update" : "publish"} listing: ` + res.error);
       }
@@ -772,74 +786,24 @@ export default function HomestayDashboard({ bookings = [], properties = [] }: { 
         </div>
       )}
 
+      {/* LISTINGS MODULE WITH ZOD VALIDATION */}
       {activeTab === "listings" && (
-        <div className="space-y-8">
-          
-          {!showForm && properties.length > 0 && (
-            <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
-              <div className="p-6 border-b border-slate-100 bg-slate-50 flex items-center justify-between">
-                <div>
-                  <h2 className="text-lg font-bold text-slate-900">Your Homestays</h2>
-                  <p className="text-sm text-slate-500 mt-1">Manage your properties.</p>
-                </div>
-                {hasReachedLimit && (
-                  <span className="bg-orange-100 text-orange-800 text-xs font-bold px-3 py-1 rounded-full border border-orange-200">
-                    Plan Limit Reached
-                  </span>
-                )}
-              </div>
-              <div className="p-6 grid gap-4 md:grid-cols-2">
-                {properties.map((p) => (
-                  <div key={p.id} className="border border-slate-200 rounded-xl p-4 flex flex-col justify-between">
-                    <div>
-                      <div className="flex items-center justify-between mb-2">
-                        <h3 className="font-bold text-slate-900">{p.name}</h3>
-                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${p.isApproved ? 'bg-emerald-100 text-emerald-700' : 'bg-orange-100 text-orange-700'}`}>
-                          {p.isApproved ? 'Approved' : 'Pending'}
-                        </span>
-                      </div>
-                      <p className="text-sm text-slate-500">{p.location}</p>
-                      <p className="text-xs text-slate-400 mt-1">₹{p.pricePerNight} / night</p>
-                    </div>
-                    <div className="mt-4 flex items-center gap-2 pt-4 border-t border-slate-100">
-                      <button onClick={() => handleEdit(p)} className="text-sm font-medium text-sky-600 hover:text-sky-700 flex-1 bg-sky-50 py-1.5 rounded-lg transition-colors">Edit</button>
-                      <button onClick={() => handleDelete(p.id)} className="text-sm font-medium text-red-600 hover:text-red-700 px-3 py-1.5 bg-red-50 rounded-lg transition-colors">Delete</button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {(!showForm && properties.length === 0) && (
-            <div className="text-center p-12 bg-white rounded-2xl border border-slate-100 shadow-sm">
-              <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Home className="w-8 h-8 text-slate-400" />
-              </div>
-              <h3 className="text-lg font-bold text-slate-900 mb-2">No Homestays Yet</h3>
-              <p className="text-slate-500 mb-6 max-w-md mx-auto">Add your first property to start accepting bookings from travelers.</p>
-              <button 
-                onClick={handleAddNewClick}
-                className="bg-sky-500 text-white px-6 py-2.5 rounded-lg font-medium hover:bg-sky-600 transition-colors shadow-sm"
-              >
-                Add Your First Homestay
-              </button>
-            </div>
-          )}
-
-          {showForm && (
         <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
-          <div className="p-6 border-b border-slate-100 bg-slate-50 flex items-center justify-between">
-            <h2 className="text-lg font-bold text-slate-900">{editingId ? 'Edit Homestay' : 'Your Homestay Listing'}</h2>
-            <button onClick={() => { setShowForm(false); setEditingId(null); }} className="text-sm font-medium text-slate-500 hover:text-slate-700">Cancel</button>
-          </div>
-          <div className="px-6 pb-2 pt-4">
+          <div className="p-6 border-b border-slate-100 bg-slate-50">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-lg font-bold text-slate-900">{editingId ? 'Edit Homestay' : 'Your First Homestay Listing'}</h2>
+                <p className="text-sm text-slate-500 mt-1">Fill out the details below to make your property live on WanderKashmir.</p>
+              </div>
+            </div>
+            
+            {/* APPROVAL WARNING */}
             {!isApproved && (
-              <div className="bg-orange-50 border border-orange-200 rounded-xl p-4 flex items-start gap-3">
+              <div className="mt-4 bg-orange-50 border border-orange-200 rounded-xl p-4 flex items-start gap-3">
                 <AlertTriangle className="w-5 h-5 text-orange-600 shrink-0 mt-0.5" />
                 <div>
                   <h3 className="font-bold text-orange-900 text-sm">Profile Pending Verification</h3>
-                  <p className="text-sm text-orange-700 mt-1">You can save a draft, but you <strong className="font-bold">cannot publish</strong> until your KYC documents are approved.</p>
+                  <p className="text-sm text-orange-700 mt-1">You can fill out the form and save it as a draft, but you <strong className="font-bold">cannot publish</strong> this listing until your KYC documents are approved by the Admin.</p>
                 </div>
               </div>
             )}
@@ -847,46 +811,59 @@ export default function HomestayDashboard({ bookings = [], properties = [] }: { 
           
           <div className="p-6">
             <form onSubmit={handleSubmit(onSubmit)} className="max-w-2xl space-y-8">
+              
               <div className="space-y-6">
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-2">Homestay Name</label>
-                  <input type="text" {...register("name")} className={`w-full border rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-sky-500/20 ${errors.name ? 'border-orange-500' : 'border-slate-200'}`} placeholder="e.g. Ali's Heritage House" />
+                  <input 
+                    type="text" 
+                    {...register("name")}
+                    className={`w-full border rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-sky-500/20 ${errors.name ? 'border-orange-500 focus:border-orange-500' : 'border-slate-200 focus:border-sky-500'}`} 
+                    placeholder="e.g. Ali's Heritage House" 
+                  />
                   {errors.name && <p className="text-orange-500 text-xs mt-1 font-medium">{errors.name.message}</p>}
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-2">Description</label>
-                  <textarea rows={4} {...register("description")} className={`w-full border rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-sky-500/20 ${errors.description ? 'border-orange-500' : 'border-slate-200'}`} placeholder="Describe the cultural experience..." />
+                  <textarea 
+                    rows={4} 
+                    {...register("description")}
+                    className={`w-full border rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-sky-500/20 ${errors.description ? 'border-orange-500 focus:border-orange-500' : 'border-slate-200 focus:border-sky-500'}`} 
+                    placeholder="Describe the cultural experience..." 
+                  />
                   {errors.description && <p className="text-orange-500 text-xs mt-1 font-medium">{errors.description.message}</p>}
                 </div>
               </div>
-              
+
               {/* PHOTO UPLOAD (FEATURE GATED) */}
               <div className="bg-slate-50 p-6 rounded-xl border border-slate-200">
+                <div className="mb-8 border-b border-slate-200 pb-8">
+                  <h3 className="font-bold text-slate-900 mb-2">Cover Photo (Required)</h3>
+                  <p className="text-sm text-slate-500 mb-4">This will be the main photo displayed on your listing card.</p>
+                  <ImageUpload 
+                    uploadedPhotos={coverPhoto ? [coverPhoto] : []} 
+                    setUploadedPhotos={(photos: any) => {
+                      const arr = typeof photos === 'function' ? photos(coverPhoto ? [coverPhoto] : []) : photos;
+                      setCoverPhoto(arr.length > 0 ? arr[arr.length - 1] : "");
+                    }} 
+                    photoLimit={1} 
+                  />
+                </div>
+
                 <div className="flex items-center justify-between mb-4">
                   <div>
-                    <h3 className="font-bold text-slate-900">Property Photos</h3>
-                    <p className="text-sm text-slate-500">Your {subscriptionPlan} plan allows up to <strong className="text-slate-900">{photoLimit}</strong> photos.</p>
+                    <h3 className="font-bold text-slate-900">Gallery Photos (Optional)</h3>
+                    <p className="text-sm text-slate-500">Your {subscriptionPlan} plan allows up to <strong className="text-slate-900">{photoLimit}</strong> additional photos.</p>
                   </div>
                   <span className="text-sm font-bold text-slate-400">{uploadedPhotos.length} / {photoLimit}</span>
                 </div>
                 
-                <div className="flex flex-wrap gap-4">
-                  {uploadedPhotos.map((photo, idx) => (
-                    <div key={idx} className="w-24 h-24 bg-slate-200 rounded-lg flex items-center justify-center border border-slate-300">
-                      <ImageIcon className="w-8 h-8 text-slate-400" />
-                    </div>
-                  ))}
-                  
-                  <button 
-                    type="button" 
-                    onClick={handlePhotoUpload}
-                    className="w-24 h-24 border-2 border-dashed border-slate-300 rounded-lg flex flex-col items-center justify-center text-slate-500 hover:bg-sky-50 hover:border-sky-300 hover:text-sky-600 transition-colors"
-                  >
-                    <Plus className="w-6 h-6 mb-1" />
-                    <span className="text-xs font-medium">Add Photo</span>
-                  </button>
-                </div>
+                <ImageUpload 
+                  uploadedPhotos={uploadedPhotos} 
+                  setUploadedPhotos={setUploadedPhotos} 
+                  photoLimit={photoLimit} 
+                />
                 
                 {uploadedPhotos.length >= photoLimit && subscriptionPlan === "Free" && (
                   <p className="text-orange-600 text-sm mt-4 font-medium flex items-center gap-1">
@@ -894,15 +871,45 @@ export default function HomestayDashboard({ bookings = [], properties = [] }: { 
                   </p>
                 )}
               </div>
+              
+              {/* Amenities */}
+              <div className="bg-slate-50 p-6 rounded-xl border border-slate-200">
+                <h3 className="font-bold text-slate-900 mb-4">What this place offers (Amenities)</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {availableAmenities.map(amenity => (
+                    <label key={amenity} className="flex items-center gap-3 cursor-pointer">
+                      <input 
+                        type="checkbox"
+                        checked={selectedAmenities.includes(amenity)}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setSelectedAmenities(prev => [...prev, amenity]);
+                          } else {
+                            setSelectedAmenities(prev => prev.filter(a => a !== amenity));
+                          }
+                        }}
+                        className="w-4 h-4 rounded text-sky-500 focus:ring-sky-500 accent-sky-500"
+                      />
+                      <span className="text-sm font-medium text-slate-700">{amenity}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
 
+              {/* Pricing & Commission Breakdown */}
               <div className="bg-slate-50 p-6 rounded-xl border border-slate-200">
                 <h3 className="font-bold text-slate-900 mb-4">Pricing & Earnings (Per Night)</h3>
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-2">Customer Pays</label>
+                    <label className="block text-sm font-medium text-slate-700 mb-2">Customer Pays (Base Price)</label>
                     <div className="relative">
                       <IndianRupee className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                      <input type="number" {...register("basePrice", { valueAsNumber: true })} className={`w-full border rounded-lg pl-10 pr-4 py-2.5 bg-white ${errors.basePrice ? 'border-orange-500' : 'border-slate-200'}`} />
+                      <input 
+                        type="number" 
+                        {...register("basePrice", { valueAsNumber: true })}
+                        className={`w-full border rounded-lg pl-10 pr-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-sky-500/20 bg-white ${errors.basePrice ? 'border-orange-500 focus:border-orange-500' : 'border-slate-200 focus:border-sky-500'}`} 
+                        placeholder="1500" 
+                      />
                     </div>
                     {errors.basePrice && <p className="text-orange-500 text-xs mt-1 font-medium">{errors.basePrice.message}</p>}
                   </div>
@@ -924,17 +931,27 @@ export default function HomestayDashboard({ bookings = [], properties = [] }: { 
                   <label className="block text-sm font-medium text-slate-700 mb-2">Location</label>
                   <div className="relative">
                     <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                    <input type="text" {...register("location")} className={`w-full border rounded-lg pl-10 pr-4 py-2.5 ${errors.location ? 'border-orange-500' : 'border-slate-200'}`} placeholder="Pahalgam Valley" />
+                    <input 
+                      type="text" 
+                      {...register("location")}
+                      className={`w-full border rounded-lg pl-10 pr-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-sky-500/20 ${errors.location ? 'border-orange-500 focus:border-orange-500' : 'border-slate-200 focus:border-sky-500'}`} 
+                      placeholder="Boulevard Road, Dal Lake" 
+                    />
                   </div>
                   {errors.location && <p className="text-orange-500 text-xs mt-1 font-medium">{errors.location.message}</p>}
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-2">Max Guests</label>
-                  <input type="number" {...register("maxGuests", { valueAsNumber: true })} className={`w-full border rounded-lg px-4 py-2.5 ${errors.maxGuests ? 'border-orange-500' : 'border-slate-200'}`} placeholder="4" />
+                  <input 
+                    type="number" 
+                    {...register("maxGuests", { valueAsNumber: true })}
+                    className={`w-full border rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-sky-500/20 ${errors.maxGuests ? 'border-orange-500 focus:border-orange-500' : 'border-slate-200 focus:border-sky-500'}`} 
+                    placeholder="4" 
+                  />
                   {errors.maxGuests && <p className="text-orange-500 text-xs mt-1 font-medium">{errors.maxGuests.message}</p>}
                 </div>
               </div>
-              
+
               {/* INSTANT BOOKING (FEATURE GATED) */}
               <div className={`p-6 rounded-xl border ${hasInstantBooking ? 'bg-sky-50 border-sky-200' : 'bg-slate-50 border-slate-200 opacity-70'}`}>
                 <div className="flex items-start gap-4">
@@ -946,14 +963,14 @@ export default function HomestayDashboard({ bookings = [], properties = [] }: { 
                       Enable Instant Booking
                       {!hasInstantBooking && <span className="bg-orange-100 text-orange-800 text-[10px] uppercase px-2 py-0.5 rounded font-bold">Pro Feature</span>}
                     </h3>
-                    <p className="text-sm text-slate-600 mt-1 mb-3">Allow travelers to book your rooms instantly without requiring manual approval.</p>
+                    <p className="text-sm text-slate-600 mt-1 mb-3">Allow travelers to book your rooms instantly without requiring manual approval. Properties with Instant Booking see a 30% increase in conversions.</p>
                     
                     <label className="flex items-center gap-2 cursor-pointer">
                       <input 
                         type="checkbox" 
-                        id="instantBooking"
-                        defaultChecked={false}
-                        className="w-4 h-4 rounded border-slate-300 text-sky-600 focus:ring-sky-600"
+                        {...register("instantBooking")}
+                        disabled={!hasInstantBooking}
+                        className="w-5 h-5 rounded text-sky-500 focus:ring-sky-500 disabled:opacity-50" 
                       />
                       <span className={`font-medium ${hasInstantBooking ? 'text-slate-900' : 'text-slate-400'}`}>
                         Yes, I want to enable Instant Booking
@@ -964,17 +981,30 @@ export default function HomestayDashboard({ bookings = [], properties = [] }: { 
               </div>
               
               <div className="pt-4 flex justify-end gap-3">
-                <button type="button" className="px-6 py-2.5 rounded-lg font-medium border border-slate-200 text-slate-700 hover:bg-slate-50">Save as Draft</button>
-                <button type="submit" disabled={!isApproved || isSubmitting} className={`flex items-center gap-2 px-6 py-2.5 rounded-lg font-medium ${isApproved ? 'bg-slate-900 text-white hover:bg-slate-800' : 'bg-slate-200 text-slate-400 cursor-not-allowed'}`}>
-                  <Save className="w-4 h-4" /> {isSubmitting ? "Publishing..." : "Publish Listing"}
+                <button 
+                  type="button" 
+                  className="px-6 py-2.5 rounded-lg font-medium border border-slate-200 text-slate-700 hover:bg-slate-50 transition-colors"
+                >
+                  Save as Draft
+                </button>
+                <button 
+                  type="submit" 
+                  disabled={!isApproved || isSubmitting}
+                  className={`flex items-center gap-2 px-6 py-2.5 rounded-lg font-medium transition-colors ${
+                    isApproved 
+                      ? 'bg-slate-900 text-white hover:bg-slate-800' 
+                      : 'bg-slate-200 text-slate-400 cursor-not-allowed'
+                  }`}
+                >
+                  <Save className="w-4 h-4" />
+                  {isSubmitting ? "Publishing..." : "Publish Listing"}
                 </button>
               </div>
             </form>
           </div>
         </div>
-          )}
-        </div>
       )}
+
       {/* BOOKINGS MODULE */}
       {activeTab === "bookings" && (
         <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
