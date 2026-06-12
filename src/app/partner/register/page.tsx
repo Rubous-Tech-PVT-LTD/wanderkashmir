@@ -37,7 +37,7 @@ export default function VendorEntryPage() {
   const vendorOptions = [
     { id: "hotel", title: "Hotel Owner", desc: "List your hotel or resort", icon: Building2 },
     { id: "homestay", title: "Homestay Host", desc: "Rent out your local Kashmiri home", icon: Home },
-    { id: "taxi", title: "Taxi Driver", desc: "Offer airport transfers & local trips", icon: Car },
+    { id: "taxi", title: "Taxis", desc: "Offer airport transfers & local trips", icon: Car },
     { id: "guide", title: "Travel Guide", desc: "Provide local expertise to tourists", icon: UserCircle2 },
   ];
 
@@ -48,6 +48,7 @@ export default function VendorEntryPage() {
   });
 
   const selectedType = watch("vendorType");
+  const selectedTaxiRole = watch("taxiRole");
 
   const nextStep = async () => {
     let fieldsToValidate: any[] = [];
@@ -62,7 +63,13 @@ export default function VendorEntryPage() {
       if (selectedType === 'hotel' || selectedType === 'homestay') {
         fieldsToValidate = [...baseFields, "gstNumber", "panNumber", "tradeLicense"];
       } else if (selectedType === 'taxi') {
-        fieldsToValidate = [...baseFields, "vehicleType", "vehicleRegistration", "drivingLicense"];
+        if (selectedTaxiRole === 'individual') {
+          fieldsToValidate = [...baseFields, "vehicleType", "vehicleRegistration", "drivingLicense"];
+        } else if (selectedTaxiRole === 'stand') {
+          fieldsToValidate = [...baseFields, "panNumber", "tradeLicense"];
+        } else {
+          fieldsToValidate = baseFields;
+        }
       } else if (selectedType === 'guide') {
         fieldsToValidate = [...baseFields, "languages", "experienceYears", "guideLicense"];
       } else {
@@ -181,7 +188,12 @@ export default function VendorEntryPage() {
                     return (
                       <div 
                         key={opt.id}
-                        onClick={() => setValue("vendorType", opt.id as any, { shouldValidate: true })}
+                        onClick={() => {
+                          setValue("vendorType", opt.id as any, { shouldValidate: true });
+                          if (opt.id !== 'taxi') {
+                            setValue("taxiRole", undefined);
+                          }
+                        }}
                         className={`p-6 rounded-xl border-2 cursor-pointer transition-all ${
                           selectedType === opt.id ? "border-sky-500 bg-sky-50" : "border-slate-200 hover:border-slate-300 hover:bg-slate-50"
                         }`}
@@ -195,8 +207,35 @@ export default function VendorEntryPage() {
                 </div>
                 {errors.vendorType && <p className="text-orange-500 text-sm mt-3 font-medium text-center">{errors.vendorType.message}</p>}
                 
+                {selectedType === 'taxi' && (
+                  <div className="mt-8 pt-6 border-t border-slate-200 animate-in fade-in slide-in-from-top-4">
+                    <h3 className="text-lg font-bold text-slate-900 mb-4 text-center">Are you an Individual Driver or a Taxi Stand?</h3>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-lg mx-auto">
+                      <div 
+                        onClick={() => setValue("taxiRole", "individual", { shouldValidate: true })}
+                        className={`p-4 rounded-xl border-2 cursor-pointer transition-all text-center ${
+                          selectedTaxiRole === 'individual' ? "border-sky-500 bg-sky-50" : "border-slate-200 hover:border-slate-300"
+                        }`}
+                      >
+                        <div className="font-bold text-slate-900">Individual Driver</div>
+                        <div className="text-xs text-slate-500 mt-1">I own and drive my own taxi</div>
+                      </div>
+                      <div 
+                        onClick={() => setValue("taxiRole", "stand", { shouldValidate: true })}
+                        className={`p-4 rounded-xl border-2 cursor-pointer transition-all text-center ${
+                          selectedTaxiRole === 'stand' ? "border-sky-500 bg-sky-50" : "border-slate-200 hover:border-slate-300"
+                        }`}
+                      >
+                        <div className="font-bold text-slate-900">Taxi Stand / Union</div>
+                        <div className="text-xs text-slate-500 mt-1">I manage a registered stand/union</div>
+                      </div>
+                    </div>
+                    {errors.taxiRole && <p className="text-orange-500 text-sm mt-3 font-medium text-center">{errors.taxiRole.message}</p>}
+                  </div>
+                )}
+                
                 <div className="mt-8 flex justify-end">
-                  <button type="button" onClick={nextStep} disabled={!selectedType} className="flex items-center gap-2 bg-slate-900 text-white px-6 py-2.5 rounded-lg font-medium hover:bg-slate-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                  <button type="button" onClick={nextStep} disabled={!selectedType || (selectedType === 'taxi' && !selectedTaxiRole)} className="flex items-center gap-2 bg-slate-900 text-white px-6 py-2.5 rounded-lg font-medium hover:bg-slate-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
                     Continue <ArrowRight className="w-4 h-4" />
                   </button>
                 </div>
@@ -235,22 +274,52 @@ export default function VendorEntryPage() {
                     </>
                   )}
 
-                  {selectedType === 'taxi' && (
+                  {(selectedType === 'taxi' && selectedTaxiRole === 'individual') && (
                     <>
                       <div className="col-span-2 md:col-span-1">
-                        <label className="block text-sm font-medium text-slate-700 mb-1">Vehicle Type / Model *</label>
-                        <input {...register("vehicleType")} className={`w-full border rounded-lg px-4 py-2.5 outline-none ${errors.vehicleType ? "border-orange-500" : "border-slate-200 focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500"}`} placeholder="e.g. INNOVA, CRYSTA" />
+                        <label className="block text-sm font-medium text-slate-700 mb-1">Vehicle Model / Type *</label>
+                        <select {...register("vehicleType")} className={`w-full border rounded-lg px-4 py-2.5 outline-none ${errors.vehicleType ? "border-orange-500" : "border-slate-200 focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500"}`}>
+                          <option value="">Select Vehicle</option>
+                          <option value="INNOVA">Toyota Innova</option>
+                          <option value="CRYSTA">Innova Crysta</option>
+                          <option value="ERTIGA">Maruti Ertiga</option>
+                          <option value="TAVERA">Chevrolet Tavera</option>
+                          <option value="ETIOS">Toyota Etios</option>
+                          <option value="SWIFT">Maruti Swift Dzire</option>
+                          <option value="ECCO">Maruti Eeco</option>
+                          <option value="ALTO">Alto K10</option>
+                          <option value="SUMO">Tata Sumo</option>
+                        </select>
                         {errors.vehicleType && <span className="text-orange-500 text-xs font-medium mt-1">{errors.vehicleType.message}</span>}
                       </div>
                       <div className="col-span-2 md:col-span-1">
                         <label className="block text-sm font-medium text-slate-700 mb-1">Vehicle Registration (RC) *</label>
-                        <input {...register("vehicleRegistration")} className={`w-full border rounded-lg px-4 py-2.5 outline-none uppercase ${errors.vehicleRegistration ? "border-orange-500" : "border-slate-200 focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500"}`} placeholder="e.g. JK01AB1234" />
+                        <input {...register("vehicleRegistration")} className={`w-full border rounded-lg px-4 py-2.5 outline-none uppercase ${errors.vehicleRegistration ? "border-orange-500" : "border-slate-200 focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500"}`} placeholder="e.g. JK-01-AB-1234" />
                         {errors.vehicleRegistration && <span className="text-orange-500 text-xs font-medium mt-1">{errors.vehicleRegistration.message}</span>}
                       </div>
                       <div className="col-span-2 md:col-span-1">
                         <label className="block text-sm font-medium text-slate-700 mb-1">Driving License Number *</label>
                         <input {...register("drivingLicense")} className={`w-full border rounded-lg px-4 py-2.5 outline-none uppercase ${errors.drivingLicense ? "border-orange-500" : "border-slate-200 focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500"}`} placeholder="e.g. JK-01-2010-XXXX" />
                         {errors.drivingLicense && <span className="text-orange-500 text-xs font-medium mt-1">{errors.drivingLicense.message}</span>}
+                      </div>
+                    </>
+                  )}
+
+                  {((selectedType === 'taxi' && selectedTaxiRole === 'stand') || selectedType === 'hotel' || selectedType === 'homestay') && (
+                    <>
+                      <div className="col-span-2 md:col-span-1">
+                        <label className="block text-sm font-medium text-slate-700 mb-1">GST Number (Optional)</label>
+                        <input {...register("gstNumber")} className="w-full border border-slate-200 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 outline-none uppercase" placeholder="e.g. 01AAAAA0000A1Z5" />
+                      </div>
+                      <div className="col-span-2 md:col-span-1">
+                        <label className="block text-sm font-medium text-slate-700 mb-1">PAN Number *</label>
+                        <input {...register("panNumber")} className={`w-full border rounded-lg px-4 py-2.5 outline-none uppercase ${errors.panNumber ? "border-orange-500" : "border-slate-200 focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500"}`} placeholder="e.g. ABCDE1234F" />
+                        {errors.panNumber && <span className="text-orange-500 text-xs font-medium mt-1">{errors.panNumber.message}</span>}
+                      </div>
+                      <div className="col-span-2 md:col-span-1">
+                        <label className="block text-sm font-medium text-slate-700 mb-1">Registration / Trade License *</label>
+                        <input {...register("tradeLicense")} className={`w-full border rounded-lg px-4 py-2.5 outline-none ${errors.tradeLicense ? "border-orange-500" : "border-slate-200 focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500"}`} placeholder="e.g. Govt. Reg No." />
+                        {errors.tradeLicense && <span className="text-orange-500 text-xs font-medium mt-1">{errors.tradeLicense.message}</span>}
                       </div>
                     </>
                   )}
@@ -386,11 +455,19 @@ export default function VendorEntryPage() {
                           </>
                         )}
 
-                        {selectedType === "taxi" && (
+                        {selectedType === "taxi" && selectedTaxiRole === "individual" && (
                           <>
                             <li><strong>Driving License</strong> (Valid HMV/LMV)</li>
                             <li><strong>Vehicle RC</strong> (Registration Certificate)</li>
                             <li><strong>Commercial Permit & Active Insurance</strong></li>
+                          </>
+                        )}
+
+                        {selectedType === "taxi" && selectedTaxiRole === "stand" && (
+                          <>
+                            <li><strong>Taxi Stand Registration / Trade License</strong> (Mandatory)</li>
+                            <li><strong>Union President / Manager ID Proof</strong></li>
+                            <li><strong>PAN Card (Stand/Union)</strong></li>
                           </>
                         )}
 

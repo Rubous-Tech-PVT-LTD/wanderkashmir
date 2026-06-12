@@ -88,6 +88,8 @@ export async function registerVendor(data: VendorRegistrationData) {
         gstNumber: validData.gstNumber,
         panNumber: validData.panNumber,
         tradeLicense: validData.tradeLicense,
+        
+        taxiRole: validData.taxiRole,
         drivingLicense: validData.drivingLicense,
         vehicleRegistration: validData.vehicleRegistration,
         vehicleType: validData.vehicleType,

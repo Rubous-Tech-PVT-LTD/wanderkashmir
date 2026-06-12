@@ -27,6 +27,7 @@ export const vendorRegistrationSchema = z.object({
   tradeLicense: z.string().optional(),
   
   // Taxi specific
+  taxiRole: z.string().optional(), // 'individual' or 'stand'
   vehicleType: z.string().optional(),
   vehicleRegistration: z.string().optional(),
   drivingLicense: z.string().optional(),
@@ -42,14 +43,27 @@ export const vendorRegistrationSchema = z.object({
     }
   }
   if (data.vendorType === 'taxi') {
-    if (!data.vehicleType || data.vehicleType.length < 2) {
-      ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Vehicle Type is required", path: ["vehicleType"] });
+    if (!data.taxiRole) {
+       ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Please select if you are an Individual or a Taxi Stand", path: ["taxiRole"] });
     }
-    if (!data.vehicleRegistration || data.vehicleRegistration.length < 4) {
-      ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Vehicle Registration (RC) is required", path: ["vehicleRegistration"] });
-    }
-    if (!data.drivingLicense || data.drivingLicense.length < 5) {
-      ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Driving License number is required", path: ["drivingLicense"] });
+    
+    if (data.taxiRole === 'individual') {
+      if (!data.vehicleType || data.vehicleType.length < 2) {
+        ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Vehicle Type is required", path: ["vehicleType"] });
+      }
+      if (!data.vehicleRegistration || data.vehicleRegistration.length < 4) {
+        ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Vehicle Registration (RC) is required", path: ["vehicleRegistration"] });
+      }
+      if (!data.drivingLicense || data.drivingLicense.length < 5) {
+        ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Driving License number is required", path: ["drivingLicense"] });
+      }
+    } else if (data.taxiRole === 'stand') {
+      if (!data.tradeLicense || data.tradeLicense.length < 3) {
+        ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Stand Registration or Trade License is required", path: ["tradeLicense"] });
+      }
+      if (!data.panNumber || data.panNumber.length < 10) {
+        ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Stand PAN Number is required", path: ["panNumber"] });
+      }
     }
   }
   if (data.vendorType === 'guide') {

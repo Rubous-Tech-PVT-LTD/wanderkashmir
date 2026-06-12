@@ -112,6 +112,7 @@ model VendorProfile {
   panNumber         String?
   tradeLicense      String?
   
+  taxiRole            String? // "INDIVIDUAL" or "STAND"
   drivingLicense      String?
   vehicleRegistration String?
   vehicleType         String?
