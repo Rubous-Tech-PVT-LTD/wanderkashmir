@@ -36,7 +36,7 @@ export default function TaxisClient({ rateCards, imagesMap = {}, verifiedDrivers
         {/* Header */}
         <div className="text-center max-w-3xl mx-auto mb-16">
           <h1 className="text-4xl md:text-5xl font-bold text-slate-900 mb-4 tracking-tight">Kashmir Taxi Rates</h1>
-          <p className="text-lg text-slate-600">Standard union rates for sightseeing, airport drops, and full-day tours across Kashmir. Select a vehicle to view its prices.</p>
+          <p className="text-lg text-slate-600">Official rate card of <strong>Green Valley Tourist Taxi Stand (Laddi Dehwatoo Awoora)</strong>. Select a vehicle to view its prices for sightseeing, airport drops, and full-day tours across Kashmir.</p>
         </div>
 
         {/* Vehicle Selection */}
@@ -128,7 +128,7 @@ export default function TaxisClient({ rateCards, imagesMap = {}, verifiedDrivers
           <div className="mt-6 flex items-start gap-2 text-sm text-slate-500 bg-sky-50 p-4 rounded-xl mb-12">
             <Info className="w-5 h-5 text-sky-600 flex-shrink-0 mt-0.5" />
             <p>
-              These are standard union rates. Actual booking prices may have slight variations depending on exact pickup/drop locations and seasonal demand. Tolls and parking are extra unless specified.
+              These are standard rates provided by the <strong>Green Valley Tourist Taxi Stand</strong>. Actual booking prices may have slight variations depending on exact pickup/drop locations and seasonal demand. Tolls and parking are extra unless specified.
             </p>
           </div>
           

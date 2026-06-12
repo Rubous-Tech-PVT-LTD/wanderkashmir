@@ -116,7 +116,7 @@ export async function GET() {
   try {
     const existing = await prisma.taxiRateCard.count();
     if (existing > 0) {
-      return NextResponse.json({ message: "Already seeded" });
+      await prisma.taxiRateCard.deleteMany();
     }
 
     for (const rate of TAXI_RATES) {
