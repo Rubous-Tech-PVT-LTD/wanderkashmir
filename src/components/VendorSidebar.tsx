@@ -57,8 +57,12 @@ export default function VendorSidebar() {
   const handleLogout = async () => {
     setIsRegistered(false);
     setVendorType(null);
-    await signOut();
-    router.push("/");
+    try {
+      await fetch('/api/auth/vendor-logout', { method: 'POST' });
+    } catch (e) {
+      console.error('Error logging out:', e);
+    }
+    window.location.href = "/partner";
   };
 
   return (
