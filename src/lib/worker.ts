@@ -115,6 +115,7 @@ export async function processBookingEmailInBackground(bookingId: string) {
     let serviceName = "your booking";
     if (booking.property) serviceName = booking.property.name;
     else if (booking.vehicle) serviceName = `${booking.vehicle.make} ${booking.vehicle.model}`;
+    else if (booking.guideProfile) serviceName = "Guide Service";
 
     await resend.emails.send({
       from: 'WanderKashmir <support@wanderkashmir.com>',

@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import Link from "next/link";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import {
@@ -325,9 +326,9 @@ export default function GuidesClient({ initialGuides }: { initialGuides: any[] }
                             </div>
                           </div>
                           <div className="flex flex-col gap-2 w-full mt-4">
-                            <button className="btn-primary w-full justify-center">
+                            <Link href={`/checkout?type=guide&guideId=${guide.id}`} className="btn-primary w-full justify-center text-center block">
                               Book Guide
-                            </button>
+                            </Link>
                             <button className="btn-secondary w-full justify-center text-sm px-4 py-2">
                               Message
                             </button>

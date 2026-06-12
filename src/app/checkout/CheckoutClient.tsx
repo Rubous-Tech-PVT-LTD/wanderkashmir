@@ -1,0 +1,270 @@
+"use client";
+
+import { useState, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
+import CheckoutButton from "@/components/CheckoutButton";
+import { CheckCircle2 } from "lucide-react";
+
+export default function CheckoutClient({ 
+  isLoggedIn, 
+  checkoutData 
+}: { 
+  isLoggedIn: boolean;
+  checkoutData: any;
+}) {
+  const searchParams = useSearchParams();
+  const isSuccess = searchParams.get("success") === "true";
+
+  // Guest Details
+  const [guestName, setGuestName] = useState("");
+  const [guestPhone, setGuestPhone] = useState("");
+  const [specialRequests, setSpecialRequests] = useState("");
+  
+  // Dates
+  const [checkIn, setCheckIn] = useState<string>("");
+  const [checkOut, setCheckOut] = useState<string>("");
+  const [nights, setNights] = useState<number>(1);
+  const [guests, setGuests] = useState<number>(1);
+
+  // Load from local storage
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const savedName = localStorage.getItem("wk_guest_name");
+      const savedPhone = localStorage.getItem("wk_guest_phone");
+      if (savedName) setGuestName(savedName);
+      if (savedPhone) setGuestPhone(savedPhone);
+    }
+  }, []);
+
+  // Set default dates
+  useEffect(() => {
+    const today = new Date();
+    const tmrw = new Date(today);
+    tmrw.setDate(tmrw.getDate() + 1);
+    
+    setCheckIn(tmrw.toISOString().split("T")[0]);
+    if (checkoutData?.type === "guide") {
+      const dayAfter = new Date(tmrw);
+      dayAfter.setDate(dayAfter.getDate() + 1);
+      setCheckOut(dayAfter.toISOString().split("T")[0]);
+    } else {
+      setCheckOut(tmrw.toISOString().split("T")[0]); // Same day for taxi by default
+    }
+  }, [checkoutData?.type]);
+
+  // Calculate nights/days
+  useEffect(() => {
+    if (checkIn && checkOut) {
+      const start = new Date(checkIn);
+      const end = new Date(checkOut);
+      const diffTime = Math.abs(end.getTime() - start.getTime());
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      setNights(diffDays > 0 ? diffDays : 1);
+    }
+  }, [checkIn, checkOut]);
+
+  if (isSuccess) {
+    return (
+      <div className="container-custom py-16 flex justify-center">
+        <div className="bg-white p-10 rounded-2xl shadow-sm border border-slate-100 text-center max-w-lg w-full">
+          <div className="w-20 h-20 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-6">
+            <CheckCircle2 className="w-10 h-10 text-emerald-500" />
+          </div>
+          <h1 className="text-3xl font-black text-slate-900 mb-4">Booking Confirmed!</h1>
+          <p className="text-slate-500 mb-8">
+            Thank you for booking with WanderKashmir. Your booking details have been sent to your email.
+          </p>
+          <a href="/dashboard" className="btn-primary w-full inline-block text-center py-3">
+            Go to My Dashboard
+          </a>
+        </div>
+      </div>
+    );
+  }
+
+  if (!checkoutData) {
+    return (
+      <div className="container-custom py-16 text-center">
+        <h1 className="text-2xl font-bold">Invalid Booking Request</h1>
+        <p className="text-slate-500 mt-2">Missing required parameters.</p>
+      </div>
+    );
+  }
+
+  const { type, price, vehicleType, route, driverId, guide } = checkoutData;
+  const isTaxi = type === "taxi";
+  const isGuide = type === "guide";
+  
+  // Price calculation
+  const basePrice = isGuide ? price * nights : price; 
+  const totalAmount = basePrice; // Addons not applicable here directly unless explicitly added
+
+  return (
+    <div className="container-custom py-10">
+      <h1 className="text-3xl font-black text-slate-900 mb-8">Secure Checkout</h1>
+
+      <div className="flex flex-col lg:flex-row gap-8">
+        <div className="flex-1 space-y-6">
+          {/* Guest Details Form */}
+          <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+            <h2 className="text-xl font-bold text-slate-900 mb-4">Guest Details</h2>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-bold text-slate-700 mb-1">Lead Guest Name <span className="text-red-500">*</span></label>
+                <input 
+                  type="text" 
+                  value={guestName}
+                  onChange={(e) => {
+                    setGuestName(e.target.value);
+                    localStorage.setItem("wk_guest_name", e.target.value);
+                  }}
+                  placeholder="e.g. John Doe"
+                  className="w-full border border-slate-200 rounded-xl p-3 focus:ring-2 focus:ring-sky-500 outline-none"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-bold text-slate-700 mb-1">Phone Number <span className="text-red-500">*</span></label>
+                <input 
+                  type="tel" 
+                  value={guestPhone}
+                  onChange={(e) => {
+                    setGuestPhone(e.target.value);
+                    localStorage.setItem("wk_guest_phone", e.target.value);
+                  }}
+                  placeholder="e.g. +91 9876543210"
+                  className="w-full border border-slate-200 rounded-xl p-3 focus:ring-2 focus:ring-sky-500 outline-none"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-bold text-slate-700 mb-1">Special Requests (Optional)</label>
+                <textarea 
+                  value={specialRequests}
+                  onChange={(e) => setSpecialRequests(e.target.value)}
+                  placeholder="e.g. Need a child seat, arriving late, etc."
+                  rows={3}
+                  className="w-full border border-slate-200 rounded-xl p-3 focus:ring-2 focus:ring-sky-500 outline-none"
+                />
+              </div>
+            </div>
+          </div>
+          
+          {/* Dates & Requirements */}
+          <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+            <h2 className="text-xl font-bold text-slate-900 mb-4">Booking Requirements</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-bold text-slate-700 mb-1">{isTaxi ? "Travel Date" : "Start Date"} <span className="text-red-500">*</span></label>
+                <input 
+                  type="date" 
+                  value={checkIn}
+                  onChange={(e) => setCheckIn(e.target.value)}
+                  min={new Date().toISOString().split("T")[0]}
+                  className="w-full border border-slate-200 rounded-xl p-3 focus:ring-2 focus:ring-sky-500 outline-none text-slate-600" 
+                />
+              </div>
+              {isGuide && (
+                <div>
+                  <label className="block text-sm font-bold text-slate-700 mb-1">End Date <span className="text-red-500">*</span></label>
+                  <input 
+                    type="date" 
+                    value={checkOut}
+                    onChange={(e) => setCheckOut(e.target.value)}
+                    min={checkIn}
+                    className="w-full border border-slate-200 rounded-xl p-3 focus:ring-2 focus:ring-sky-500 outline-none text-slate-600" 
+                  />
+                </div>
+              )}
+              <div className={isTaxi ? "md:col-span-1" : "md:col-span-2"}>
+                <label className="block text-sm font-bold text-slate-700 mb-1">{isTaxi ? "Passengers" : "People in Group"} <span className="text-red-500">*</span></label>
+                <select 
+                  value={guests}
+                  onChange={(e) => setGuests(Number(e.target.value))}
+                  className="w-full border border-slate-200 rounded-xl p-3 focus:ring-2 focus:ring-sky-500 outline-none text-slate-600 bg-white"
+                >
+                  {[1, 2, 3, 4, 5, 6, 7].map(num => (
+                    <option key={num} value={num}>{num} {num === 1 ? 'Person' : 'People'}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Booking Summary Sidebar */}
+        <aside className="w-full lg:w-96 flex-shrink-0">
+          <div className="bg-white rounded-2xl shadow-xl shadow-slate-200/50 border border-slate-200 p-6 sticky top-28">
+            <h2 className="text-lg font-bold text-slate-900 mb-4 pb-4 border-b border-slate-100">Booking Summary</h2>
+            
+            {/* Service Details */}
+            <div className="mb-6 space-y-3">
+              {isTaxi && (
+                <>
+                  <div>
+                    <span className="block text-slate-500 text-xs uppercase font-bold mb-1">Service Type</span>
+                    <span className="font-semibold text-slate-900">Taxi Booking ({vehicleType})</span>
+                  </div>
+                  <div>
+                    <span className="block text-slate-500 text-xs uppercase font-bold mb-1">Route</span>
+                    <span className="font-semibold text-slate-900">{route}</span>
+                  </div>
+                </>
+              )}
+              {isGuide && (
+                <>
+                  <div>
+                    <span className="block text-slate-500 text-xs uppercase font-bold mb-1">Service Type</span>
+                    <span className="font-semibold text-slate-900">Local Guide ({guide?.vendorProfile?.businessName})</span>
+                  </div>
+                  <div>
+                    <span className="block text-slate-500 text-xs uppercase font-bold mb-1">Duration</span>
+                    <span className="font-semibold text-slate-900">{nights} Day(s)</span>
+                  </div>
+                </>
+              )}
+              
+              <div className="pt-2 border-t border-slate-100 flex justify-between text-slate-600 text-sm">
+                <span>Base Price {isGuide && `x ${nights} days`}</span>
+                <span>₹{basePrice.toLocaleString('en-IN')}</span>
+              </div>
+            </div>
+
+            <div className="mt-4 pt-4 border-t border-slate-200 flex justify-between items-center font-bold text-slate-900 text-lg mb-6">
+              <span>Total Amount To Pay</span>
+              <span>₹{totalAmount.toLocaleString('en-IN')}</span>
+            </div>
+
+            {(!guestName || !guestPhone) ? (
+              <button 
+                disabled
+                className="w-full bg-slate-200 text-slate-400 font-bold py-3.5 rounded-xl transition-colors cursor-not-allowed"
+              >
+                Please fill guest details
+              </button>
+            ) : (
+              <CheckoutButton 
+                propertyId="" 
+                pricePerNight={0} 
+                isLoggedIn={isLoggedIn} 
+                checkIn={checkIn}
+                checkOut={checkOut}
+                guests={guests}
+                nights={nights}
+                guestName={guestName}
+                guestPhone={guestPhone}
+                specialRequests={specialRequests}
+                otherGuests={[]}
+                baseAmount={basePrice}
+                taxiAmount={isTaxi ? basePrice : 0}
+                guideAmount={isGuide ? basePrice : 0}
+                selectedTaxiId={isTaxi ? driverId || "generic" : ""}
+                selectedGuideId={isGuide ? checkoutData.guideId : ""}
+              />
+            )}
+            
+            <p className="text-center text-xs text-slate-500 mt-4">100% Secure Checkout via Razorpay</p>
+          </div>
+        </aside>
+      </div>
+    </div>
+  );
+}
