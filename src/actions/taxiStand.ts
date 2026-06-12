@@ -37,6 +37,63 @@ export async function addDriver(data: { name: string; phone: string; drivingLice
   }
 }
 
+export async function updateDriver(driverId: string, data: { name: string; phone: string; drivingLicense: string }) {
+  try {
+    const session = await getVendorSession();
+    if (!session || session.role !== "VENDOR") {
+      return { success: false, error: "Unauthorized" };
+    }
+
+    const vendorProfileId = session.vendorProfileId;
+    if (!vendorProfileId) return { success: false, error: "No vendor profile linked" };
+
+    const existing = await prisma.driver.findUnique({ where: { id: driverId } });
+    if (!existing || existing.vendorProfileId !== vendorProfileId) {
+      return { success: false, error: "Driver not found or access denied" };
+    }
+
+    const driver = await prisma.driver.update({
+      where: { id: driverId },
+      data: {
+        name: data.name,
+        phone: data.phone,
+        drivingLicense: data.drivingLicense,
+      }
+    });
+
+    revalidatePath("/partner/dashboard");
+    return { success: true, driver };
+  } catch (error: any) {
+    console.error("Failed to update driver", error);
+    return { success: false, error: error.message };
+  }
+}
+
+export async function deleteDriver(driverId: string) {
+  try {
+    const session = await getVendorSession();
+    if (!session || session.role !== "VENDOR") {
+      return { success: false, error: "Unauthorized" };
+    }
+
+    const vendorProfileId = session.vendorProfileId;
+    if (!vendorProfileId) return { success: false, error: "No vendor profile linked" };
+
+    const existing = await prisma.driver.findUnique({ where: { id: driverId } });
+    if (!existing || existing.vendorProfileId !== vendorProfileId) {
+      return { success: false, error: "Driver not found or access denied" };
+    }
+
+    await prisma.driver.delete({ where: { id: driverId } });
+
+    revalidatePath("/partner/dashboard");
+    return { success: true };
+  } catch (error: any) {
+    console.error("Failed to delete driver", error);
+    return { success: false, error: error.message };
+  }
+}
+
 export async function addRateOverride(data: { routePlace: string; customPrice: number }) {
   try {
     const session = await getVendorSession();

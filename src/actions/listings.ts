@@ -145,6 +145,7 @@ export async function addVehicle(data: VehicleData) {
         model: parsedData.data.model,
         registrationNum: parsedData.data.registrationNum,
         type: parsedData.data.type,
+        images: parsedData.data.images || [],
       }
     });
 
@@ -154,6 +155,66 @@ export async function addVehicle(data: VehicleData) {
   } catch (error) {
     console.error("Error adding vehicle:", error);
     return { success: false, error: "Failed to add vehicle." };
+  }
+}
+
+export async function updateVehicle(vehicleId: string, data: VehicleData) {
+  try {
+    const userId = await getCurrentUserId();
+    if (!userId) return { success: false, error: "Unauthorized" };
+
+    const parsedData = vehicleSchema.safeParse(data);
+    if (!parsedData.success) return { success: false, error: "Invalid data provided." };
+
+    const vendorProfile = await prisma.vendorProfile.findFirst({ where: { userId } });
+    if (!vendorProfile) return { success: false, error: "Vendor profile not found." };
+
+    const existing = await prisma.vehicle.findUnique({ where: { id: vehicleId } });
+    if (!existing || existing.vendorProfileId !== vendorProfile.id) {
+      return { success: false, error: "Vehicle not found or access denied." };
+    }
+
+    const vehicle = await prisma.vehicle.update({
+      where: { id: vehicleId },
+      data: {
+        make: parsedData.data.make,
+        model: parsedData.data.model,
+        registrationNum: parsedData.data.registrationNum,
+        type: parsedData.data.type,
+        images: parsedData.data.images || [],
+      }
+    });
+
+    revalidatePath("/partner/Taxi_Driver");
+
+    return { success: true, vehicleId: vehicle.id };
+  } catch (error) {
+    console.error("Error updating vehicle:", error);
+    return { success: false, error: "Failed to update vehicle." };
+  }
+}
+
+export async function deleteVehicle(vehicleId: string) {
+  try {
+    const userId = await getCurrentUserId();
+    if (!userId) return { success: false, error: "Unauthorized" };
+
+    const vendorProfile = await prisma.vendorProfile.findFirst({ where: { userId } });
+    if (!vendorProfile) return { success: false, error: "Vendor profile not found." };
+
+    const existing = await prisma.vehicle.findUnique({ where: { id: vehicleId } });
+    if (!existing || existing.vendorProfileId !== vendorProfile.id) {
+      return { success: false, error: "Vehicle not found or access denied." };
+    }
+
+    await prisma.vehicle.delete({ where: { id: vehicleId } });
+
+    revalidatePath("/partner/Taxi_Driver");
+
+    return { success: true };
+  } catch (error) {
+    console.error("Error deleting vehicle:", error);
+    return { success: false, error: "Failed to delete vehicle." };
   }
 }
 

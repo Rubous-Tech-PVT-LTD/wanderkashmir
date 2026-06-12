@@ -1,41 +1,88 @@
 "use client";
 
 import { useState } from "react";
-import { Plus, CheckCircle2, User, Phone, Save } from "lucide-react";
-import { addDriver } from "@/actions/taxiStand";
+import { Plus, CheckCircle2, User, Phone, Save, Edit, Trash2 } from "lucide-react";
+import { addDriver, updateDriver, deleteDriver } from "@/actions/taxiStand";
+import { useVendor } from "@/context/VendorContext";
 import toast from "react-hot-toast";
 
 export default function DriversTab({ drivers }: { drivers: any[] }) {
+  const { subscriptionPlan } = useVendor();
   const [isAdding, setIsAdding] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [drivingLicense, setDrivingLicense] = useState("");
   const [loading, setLoading] = useState(false);
 
+  const hasReachedDriverLimit = subscriptionPlan === "Free" && drivers.length >= 1;
+
+  const handleAddNewClick = () => {
+    if (hasReachedDriverLimit) {
+      toast.error("You have reached the maximum limit of 1 driver on the Free plan. Please upgrade to add more drivers.", { duration: 5000 });
+      return;
+    }
+    setEditingId(null);
+    setName("");
+    setPhone("");
+    setDrivingLicense("");
+    setIsAdding(true);
+  };
+
+  const handleEditClick = (driver: any) => {
+    setEditingId(driver.id);
+    setName(driver.name);
+    setPhone(driver.phone);
+    setDrivingLicense(driver.drivingLicense);
+    setIsAdding(true);
+  };
+
+  const handleDelete = async (id: string) => {
+    if (confirm("Are you sure you want to delete this driver?")) {
+      const res = await deleteDriver(id);
+      if (res.success) {
+        toast.success("Driver deleted successfully");
+      } else {
+        toast.error("Failed to delete driver: " + res.error);
+      }
+    }
+  };
+
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    const res = await addDriver({ name, phone, drivingLicense });
+    let res;
+    if (editingId) {
+      res = await updateDriver(editingId, { name, phone, drivingLicense });
+    } else {
+      res = await addDriver({ name, phone, drivingLicense });
+    }
     setLoading(false);
     
     if (res.success) {
-      toast.success("Driver added successfully!");
+      toast.success(`Driver ${editingId ? 'updated' : 'added'} successfully!`);
       setIsAdding(false);
+      setEditingId(null);
       setName("");
       setPhone("");
       setDrivingLicense("");
     } else {
-      toast.error(res.error || "Failed to add driver");
+      toast.error(res.error || `Failed to ${editingId ? 'update' : 'add'} driver`);
     }
   };
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h3 className="text-xl font-bold text-slate-900">Manage Drivers</h3>
+        <div>
+          <h3 className="text-xl font-bold text-slate-900">Manage Drivers</h3>
+          {hasReachedDriverLimit && !isAdding && (
+            <span className="text-xs font-bold text-orange-600 bg-orange-100 px-2 py-0.5 rounded uppercase mt-1 inline-block">Plan Limit Reached</span>
+          )}
+        </div>
         {!isAdding && (
           <button
-            onClick={() => setIsAdding(true)}
+            onClick={handleAddNewClick}
             className="px-4 py-2 bg-sky-600 text-white rounded-xl text-sm font-bold flex items-center gap-2 hover:bg-sky-700 transition-colors"
           >
             <Plus className="w-4 h-4" /> Add Driver
@@ -146,10 +193,18 @@ export default function DriversTab({ drivers }: { drivers: any[] }) {
                 <span className="text-slate-500">License: </span>
                 <span className="font-semibold">{driver.drivingLicense}</span>
               </div>
-              <div className="mt-3 flex items-center gap-2 text-sm">
+              <div className="mt-3 flex items-center gap-2 text-sm justify-between">
                 <span className={`px-2 py-1 rounded-full text-xs font-bold ${driver.status === 'ACTIVE' ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'}`}>
                   {driver.status}
                 </span>
+                <div className="flex items-center gap-2">
+                  <button onClick={() => handleEditClick(driver)} className="text-slate-500 hover:text-sky-600 transition-colors">
+                    <Edit className="w-4 h-4" />
+                  </button>
+                  <button onClick={() => handleDelete(driver.id)} className="text-slate-500 hover:text-red-600 transition-colors">
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
               </div>
             </div>
           ))}

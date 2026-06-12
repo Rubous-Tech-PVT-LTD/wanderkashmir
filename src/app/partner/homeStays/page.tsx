@@ -28,9 +28,11 @@ const homestayListingSchema = propertySchema.extend({
 type HomestayListingFormValues = z.infer<typeof homestayListingSchema>;
 type SubscriptionPlan = "Free" | "Growth Pro" | "Pro" | "Enterprise";
 
-export default function HomestayDashboard({ bookings = [] }: { bookings?: any[] }) {
+export default function HomestayDashboard({ bookings = [], properties = [] }: { bookings?: any[], properties?: any[] }) {
   const { isApproved, subscriptionPlan, setSubscriptionPlan } = useVendor();
   const [activeTab, setActiveTab] = useState("financials");
+  const [showForm, setShowForm] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
 
   const [timeRange, setTimeRange] = useState("7D");
   const [chartMetric, setChartMetric] = useState("views");
@@ -74,7 +76,6 @@ export default function HomestayDashboard({ bookings = [] }: { bookings?: any[] 
   const COLORS = ['#f43f5e', '#8b5cf6', '#0ea5e9', '#10b981'];
 
   const [uploadedPhotos, setUploadedPhotos] = useState<string[]>([]);
-  const [editingId, setEditingId] = useState<string | null>(null);
 
   // Feature Gating Logic
   const photoLimit = subscriptionPlan === "Free" ? 3 : 20;
@@ -141,6 +142,55 @@ export default function HomestayDashboard({ bookings = [] }: { bookings?: any[] 
     setUploadedPhotos([...uploadedPhotos, `photo-${uploadedPhotos.length + 1}.jpg`]);
   };
 
+  const hasReachedLimit = subscriptionPlan === "Free" && properties.length >= 1;
+
+  const handleAddNewClick = () => {
+    if (hasReachedLimit) {
+      toast.error("You have reached the maximum limit of 1 property on the Free plan. Please upgrade to add more properties.", { duration: 5000, id: 'limit-error' });
+      setActiveTab("financials");
+      return;
+    }
+
+    reset({
+      name: "",
+      description: "",
+      location: "",
+      basePrice: 1500,
+      maxGuests: 4,
+      instantBooking: false
+    });
+    setUploadedPhotos([]);
+    setEditingId(null);
+    setShowForm(true);
+    setActiveTab("listings");
+  };
+
+  const handleEdit = (property: any) => {
+    reset({
+      name: property.name,
+      description: property.description,
+      location: property.location,
+      basePrice: property.pricePerNight,
+      maxGuests: 4, // default mock
+      instantBooking: false
+    });
+    setUploadedPhotos(property.images || []);
+    setEditingId(property.id);
+    setShowForm(true);
+    setActiveTab("listings");
+  };
+
+  const handleDelete = async (id: string) => {
+    if (confirm("Are you sure you want to delete this property? This action cannot be undone.")) {
+      const res = await deleteProperty(id);
+      if (res.success) {
+        toast.success("Property deleted successfully.");
+      } else {
+        toast.error("Failed to delete property.");
+      }
+    }
+  };
+
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const onSubmit = async (data: HomestayListingFormValues) => {
@@ -150,19 +200,40 @@ export default function HomestayDashboard({ bookings = [] }: { bookings?: any[] 
     }
     setIsSubmitting(true);
     try {
-      const res = await addProperty({
-        name: data.name,
-        description: data.description,
-        location: data.location,
-        pricePerNight: data.basePrice,
-      });
+      let res;
+      if (editingId) {
+        res = await updateProperty(editingId, {
+          name: data.name,
+          description: data.description,
+          location: data.location,
+          pricePerNight: data.basePrice,
+          images: uploadedPhotos,
+          totalRooms: 1
+        });
+      } else {
+        if (hasReachedLimit) {
+          toast.error("You have reached the maximum limit of 1 property on the Free plan.");
+          setIsSubmitting(false);
+          setActiveTab("financials");
+          return;
+        }
+        res = await addProperty({
+          name: data.name,
+          description: data.description,
+          location: data.location,
+          pricePerNight: data.basePrice,
+          images: uploadedPhotos,
+          totalRooms: 1
+        });
+      }
 
       if (res.success) {
         toast.success(`Listing ${editingId ? "updated" : "published"} successfully!`);
         reset();
         setUploadedPhotos([]);
         setEditingId(null);
-        setActiveTab("overview");
+        setShowForm(false);
+        setActiveTab("listings");
       } else {
         toast.error(`Failed to ${editingId ? "update" : "publish"} listing: ` + res.error);
       }
@@ -201,6 +272,7 @@ export default function HomestayDashboard({ bookings = [] }: { bookings?: any[] 
           </div>
         </div>
         <button 
+          onClick={handleAddNewClick}
           disabled={!isApproved}
           className={`flex items-center gap-2 px-4 py-2.5 rounded-lg font-medium transition-colors shadow-sm ${
             isApproved ? 'bg-sky-500 text-white hover:bg-sky-600' : 'bg-slate-200 text-slate-400 cursor-not-allowed'
@@ -592,11 +664,69 @@ export default function HomestayDashboard({ bookings = [] }: { bookings?: any[] 
       )}
 
       {activeTab === "listings" && (
+        <div className="space-y-8">
+          
+          {!showForm && properties.length > 0 && (
+            <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+              <div className="p-6 border-b border-slate-100 bg-slate-50 flex items-center justify-between">
+                <div>
+                  <h2 className="text-lg font-bold text-slate-900">Your Homestays</h2>
+                  <p className="text-sm text-slate-500 mt-1">Manage your properties.</p>
+                </div>
+                {hasReachedLimit && (
+                  <span className="bg-orange-100 text-orange-800 text-xs font-bold px-3 py-1 rounded-full border border-orange-200">
+                    Plan Limit Reached
+                  </span>
+                )}
+              </div>
+              <div className="p-6 grid gap-4 md:grid-cols-2">
+                {properties.map((p) => (
+                  <div key={p.id} className="border border-slate-200 rounded-xl p-4 flex flex-col justify-between">
+                    <div>
+                      <div className="flex items-center justify-between mb-2">
+                        <h3 className="font-bold text-slate-900">{p.name}</h3>
+                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${p.isApproved ? 'bg-emerald-100 text-emerald-700' : 'bg-orange-100 text-orange-700'}`}>
+                          {p.isApproved ? 'Approved' : 'Pending'}
+                        </span>
+                      </div>
+                      <p className="text-sm text-slate-500">{p.location}</p>
+                      <p className="text-xs text-slate-400 mt-1">₹{p.pricePerNight} / night</p>
+                    </div>
+                    <div className="mt-4 flex items-center gap-2 pt-4 border-t border-slate-100">
+                      <button onClick={() => handleEdit(p)} className="text-sm font-medium text-sky-600 hover:text-sky-700 flex-1 bg-sky-50 py-1.5 rounded-lg transition-colors">Edit</button>
+                      <button onClick={() => handleDelete(p.id)} className="text-sm font-medium text-red-600 hover:text-red-700 px-3 py-1.5 bg-red-50 rounded-lg transition-colors">Delete</button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {(!showForm && properties.length === 0) && (
+            <div className="text-center p-12 bg-white rounded-2xl border border-slate-100 shadow-sm">
+              <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Home className="w-8 h-8 text-slate-400" />
+              </div>
+              <h3 className="text-lg font-bold text-slate-900 mb-2">No Homestays Yet</h3>
+              <p className="text-slate-500 mb-6 max-w-md mx-auto">Add your first property to start accepting bookings from travelers.</p>
+              <button 
+                onClick={handleAddNewClick}
+                className="bg-sky-500 text-white px-6 py-2.5 rounded-lg font-medium hover:bg-sky-600 transition-colors shadow-sm"
+              >
+                Add Your First Homestay
+              </button>
+            </div>
+          )}
+
+          {showForm && (
         <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
-          <div className="p-6 border-b border-slate-100 bg-slate-50">
-            <h2 className="text-lg font-bold text-slate-900">Your Homestay Listing</h2>
+          <div className="p-6 border-b border-slate-100 bg-slate-50 flex items-center justify-between">
+            <h2 className="text-lg font-bold text-slate-900">{editingId ? 'Edit Homestay' : 'Your Homestay Listing'}</h2>
+            <button onClick={() => { setShowForm(false); setEditingId(null); }} className="text-sm font-medium text-slate-500 hover:text-slate-700">Cancel</button>
+          </div>
+          <div className="px-6 pb-2 pt-4">
             {!isApproved && (
-              <div className="mt-4 bg-orange-50 border border-orange-200 rounded-xl p-4 flex items-start gap-3">
+              <div className="bg-orange-50 border border-orange-200 rounded-xl p-4 flex items-start gap-3">
                 <AlertTriangle className="w-5 h-5 text-orange-600 shrink-0 mt-0.5" />
                 <div>
                   <h3 className="font-bold text-orange-900 text-sm">Profile Pending Verification</h3>
@@ -732,6 +862,8 @@ export default function HomestayDashboard({ bookings = [] }: { bookings?: any[] 
               </div>
             </form>
           </div>
+        </div>
+          )}
         </div>
       )}
       {/* BOOKINGS MODULE */}

@@ -87,6 +87,7 @@ export const vehicleSchema = z.object({
   make: z.string().min(2, "Make is required (e.g. Toyota)"),
   model: z.string().min(2, "Model is required (e.g. Innova)"),
   registrationNum: z.string().min(4, "Registration number is required"),
+  images: z.array(z.string()).optional(),
   type: z.enum(["Sedan", "SUV", "Hatchback", "Traveller"], {
     message: "Please select a vehicle type",
   }),

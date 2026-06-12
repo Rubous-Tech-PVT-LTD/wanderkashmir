@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Car, Save, Plus, IndianRupee, CheckCircle2, AlertTriangle, Route, Lock, Zap, LineChart as LineChartIcon, MessageCircle, BookOpen, Camera, Users, Download } from "lucide-react";
+import { Car, Save, Plus, IndianRupee, CheckCircle2, AlertTriangle, Route, Lock, Zap, LineChart as LineChartIcon, MessageCircle, BookOpen, Camera, Users, Download, Award } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, LineChart, Line, AreaChart, Area, PieChart, Pie, Cell } from 'recharts';
 import { useVendor } from "@/context/VendorContext";
 import toast from "react-hot-toast";
@@ -10,12 +10,14 @@ import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { vehicleSchema, VehicleData } from "@/lib/validations";
-import { addVehicle } from "@/actions/listings";
+import { addVehicle, updateVehicle, deleteVehicle } from "@/actions/listings";
 import { calculateDashboardMetrics } from "@/lib/chartUtils";
 import { format } from "date-fns";
 import DriversTab from "@/components/vendor/TaxiStand/DriversTab";
 import RatesTab from "@/components/vendor/TaxiStand/RatesTab";
 import TripsTab from "@/components/vendor/TaxiStand/TripsTab";
+import dynamic from "next/dynamic";
+const ImageUpload = dynamic(() => import("@/components/ImageUpload"), { ssr: false });
 
 // Extend VehicleData with local UI fields that aren't in DB yet
 const taxiListingSchema = z.object({
@@ -47,6 +49,9 @@ export default function TaxiDashboard({
 }) {
   const { isApproved, subscriptionPlan, setSubscriptionPlan } = useVendor();
   const [activeTab, setActiveTab] = useState("overview");
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [showVehicleForm, setShowVehicleForm] = useState(false);
+  const [uploadedPhotos, setUploadedPhotos] = useState<string[]>([]);
   
   const isStand = taxiRole === "STAND";
   
@@ -95,6 +100,7 @@ export default function TaxiDashboard({
     register,
     handleSubmit,
     setValue,
+    reset,
     formState: { errors },
   } = useForm<TaxiListingFormValues>({
     resolver: zodResolver(taxiListingSchema),
@@ -109,10 +115,61 @@ export default function TaxiDashboard({
   });
 
   useEffect(() => {
-    if (hasInstantBooking) {
+    if (hasInstantBooking && !editingId) {
       setValue("instantBooking", true);
     }
-  }, [hasInstantBooking, setValue]);
+  }, [hasInstantBooking, setValue, editingId]);
+
+  const hasReachedVehicleLimit = subscriptionPlan === "Free" && vehicles.length >= 1;
+
+  const handleAddNewClick = () => {
+    if (hasReachedVehicleLimit) {
+      toast.error("You have reached the maximum limit of 1 vehicle on the Free plan. Please upgrade to add more vehicles.", { duration: 5000, id: 'limit-error' });
+      setActiveTab("financials");
+      return;
+    }
+
+    reset({
+      vehicleName: "",
+      vehicleType: "Sedan",
+      registrationNo: "",
+      baseRateLocal: 2500,
+      baseRateOutstation: 25,
+      acAvailable: true,
+      instantBooking: hasInstantBooking
+    });
+    setUploadedPhotos([]);
+    setEditingId(null);
+    setShowVehicleForm(true);
+    setActiveTab("vehicles");
+  };
+
+  const handleEditVehicle = (vehicle: any) => {
+    reset({
+      vehicleName: vehicle.model,
+      vehicleType: vehicle.type,
+      registrationNo: vehicle.registrationNum,
+      baseRateLocal: 2500, // mock mapping
+      baseRateOutstation: 25, // mock mapping
+      acAvailable: true,
+      instantBooking: false
+    });
+    setUploadedPhotos(vehicle.images || []);
+    setEditingId(vehicle.id);
+    setShowVehicleForm(true);
+    setActiveTab("vehicles");
+  };
+
+  const handleDeleteVehicle = async (id: string) => {
+    if (confirm("Are you sure you want to delete this vehicle? This action cannot be undone.")) {
+      const res = await deleteVehicle(id);
+      if (res.success) {
+        toast.success("Vehicle deleted successfully.");
+      } else {
+        toast.error("Failed to delete vehicle: " + res.error);
+      }
+    }
+  };
 
   // Business Model Logic: Dynamic commission for Taxis
   const getCommissionRate = (type: "airport" | "local" | "outstation") => {
@@ -137,18 +194,38 @@ export default function TaxiDashboard({
     
     setIsSubmitting(true);
     try {
-      const res = await addVehicle({
-        make: "Default", // In a real app we'd split the vehicleName or add a make field
-        model: data.vehicleName,
-        registrationNum: data.registrationNo,
-        type: data.vehicleType as any,
-      });
+      let res;
+      if (editingId) {
+        res = await updateVehicle(editingId, {
+          make: "Default",
+          model: data.vehicleName,
+          registrationNum: data.registrationNo,
+          type: data.vehicleType as any,
+          images: uploadedPhotos,
+        });
+      } else {
+        if (hasReachedVehicleLimit) {
+          toast.error("You have reached the maximum limit of 1 vehicle on the Free plan.");
+          setIsSubmitting(false);
+          setActiveTab("financials");
+          return;
+        }
+        res = await addVehicle({
+          make: "Default",
+          model: data.vehicleName,
+          registrationNum: data.registrationNo,
+          type: data.vehicleType as any,
+          images: uploadedPhotos,
+        });
+      }
 
       if (res.success) {
-        toast.success("Vehicle added successfully to the database!");
-        setActiveTab("trips");
+        toast.success(`Vehicle ${editingId ? 'updated' : 'added'} successfully!`);
+        setShowVehicleForm(false);
+        setUploadedPhotos([]);
+        setEditingId(null);
       } else {
-        toast.error("Failed to add vehicle: " + res.error);
+        toast.error(`Failed to ${editingId ? 'update' : 'add'} vehicle: ` + res.error);
       }
     } catch (e) {
       toast.error("Something went wrong");
@@ -172,6 +249,7 @@ export default function TaxiDashboard({
           </div>
         </div>
         <button 
+          onClick={handleAddNewClick}
           disabled={!isApproved}
           className={`flex items-center gap-2 px-4 py-2.5 rounded-lg font-medium transition-colors shadow-sm ${
             isApproved ? 'bg-sky-500 text-white hover:bg-sky-600' : 'bg-slate-200 text-slate-400 cursor-not-allowed'
@@ -351,47 +429,65 @@ export default function TaxiDashboard({
           </div>
 
           {/* PREMIUM SUPPORT HUB */}
-          <div className="bg-sky-50 rounded-2xl p-6 shadow-sm border border-sky-100 mt-6">
-            <div className="flex items-center gap-3 mb-6">
-              <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center shadow-sm">
-                <MessageCircle className="w-6 h-6 text-sky-500" />
+          {(subscriptionPlan === "Growth Pro" || subscriptionPlan === "Pro" || subscriptionPlan === "Enterprise") && (
+            <div className="bg-gradient-to-r from-slate-900 to-slate-800 rounded-2xl p-6 shadow-md text-white border border-slate-700 mt-6">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-12 h-12 bg-white/10 rounded-xl flex items-center justify-center">
+                  <Award className="w-6 h-6 text-orange-400" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-bold">Premium Support Hub</h2>
+                  <p className="text-slate-300 text-sm">{subscriptionPlan} privileges unlocked</p>
+                </div>
               </div>
-              <div>
-                <h2 className="text-xl font-bold">Premium Support Hub</h2>
-                <p className="text-slate-500 text-sm">Dedicated help for our active drivers</p>
+              
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <a href="https://wa.me/1234567890?text=Hi%20WanderKashmir%20Support,%20I%20am%20a%20Pro%20Vendor" target="_blank" rel="noopener noreferrer" className="bg-white/10 hover:bg-white/20 transition-colors p-4 rounded-xl flex items-center gap-3 border border-white/5">
+                  <div className="w-10 h-10 bg-emerald-500 rounded-full flex items-center justify-center shrink-0 shadow-sm">
+                    <MessageCircle className="w-5 h-5 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-sm">Onboarding Helpline</h3>
+                    <p className="text-xs text-slate-300 mt-0.5">WhatsApp support for queries</p>
+                  </div>
+                </a>
+                
+                <button onClick={() => toast.success("Help Center opening soon!")} className="bg-white/10 hover:bg-white/20 transition-colors p-4 rounded-xl flex items-center gap-3 border border-white/5 text-left">
+                  <div className="w-10 h-10 bg-sky-500 rounded-full flex items-center justify-center shrink-0 shadow-sm">
+                    <BookOpen className="w-5 h-5 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-sm">Help Center</h3>
+                    <p className="text-xs text-slate-300 mt-0.5">FAQ & Tutorials in Hindi/English</p>
+                  </div>
+                </button>
+
+                {subscriptionPlan === "Enterprise" && (
+                  <>
+                    <button onClick={() => toast.success("Request sent! Our photography team will contact you within 24 hours.", { icon: "📸" })} className="bg-white/10 hover:bg-white/20 transition-colors p-4 rounded-xl flex items-center gap-3 border border-white/5 text-left">
+                      <div className="w-10 h-10 bg-purple-500 rounded-full flex items-center justify-center shrink-0 shadow-sm">
+                        <Camera className="w-5 h-5 text-white" />
+                      </div>
+                      <div>
+                        <h3 className="font-bold text-sm">Photo Assistance</h3>
+                        <p className="text-xs text-slate-300 mt-0.5">Request free professional shoot</p>
+                      </div>
+                    </button>
+                    
+                    <a href="tel:+1234567890" className="bg-white/10 hover:bg-white/20 transition-colors p-4 rounded-xl flex items-center gap-3 border border-white/5">
+                      <div className="w-10 h-10 bg-orange-500 rounded-full flex items-center justify-center shrink-0 shadow-sm">
+                        <Users className="w-5 h-5 text-white" />
+                      </div>
+                      <div>
+                        <h3 className="font-bold text-sm">Dedicated Account Manager</h3>
+                        <p className="text-xs text-slate-300 mt-0.5">Trilingual (Kashmiri, Hindi, EN)</p>
+                      </div>
+                    </a>
+                  </>
+                )}
               </div>
             </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              <a href="#" className="bg-white rounded-xl p-4 border border-sky-100 flex items-start gap-3 hover:border-sky-300 hover:shadow-md transition-all group">
-                <div className="bg-emerald-100 p-2 rounded-lg text-emerald-600 group-hover:bg-emerald-500 group-hover:text-white transition-colors">
-                  <MessageCircle className="w-5 h-5" />
-                </div>
-                <div>
-                  <h3 className="font-bold text-sm text-slate-900">WhatsApp Onboarding</h3>
-                  <p className="text-xs text-slate-500 mt-0.5">Chat directly with your account manager</p>
-                </div>
-              </a>
-              <a href="#" className="bg-white rounded-xl p-4 border border-sky-100 flex items-start gap-3 hover:border-sky-300 hover:shadow-md transition-all group">
-                <div className="bg-sky-100 p-2 rounded-lg text-sky-600 group-hover:bg-sky-500 group-hover:text-white transition-colors">
-                  <BookOpen className="w-5 h-5" />
-                </div>
-                <div>
-                  <h3 className="font-bold text-sm text-slate-900">Driver Success Center</h3>
-                  <p className="text-xs text-slate-500 mt-0.5">Tutorials & tips in Hindi and English</p>
-                </div>
-              </a>
-              <a href="#" className="bg-white rounded-xl p-4 border border-sky-100 flex items-start gap-3 hover:border-sky-300 hover:shadow-md transition-all group">
-                <div className="bg-indigo-100 p-2 rounded-lg text-indigo-600 group-hover:bg-indigo-500 group-hover:text-white transition-colors">
-                  <Camera className="w-5 h-5" />
-                </div>
-                <div>
-                  <h3 className="font-bold text-sm text-slate-900">Request Photo Shoot</h3>
-                  <p className="text-xs text-slate-500 mt-0.5">Get professional photos for your vehicles</p>
-                </div>
-              </a>
-            </div>
-          </div>
+          )}
 
           {/* PRO & ENTERPRISE TOOLS HUB */}
           {(subscriptionPlan === "Pro" || subscriptionPlan === "Enterprise") && (
@@ -467,10 +563,64 @@ export default function TaxiDashboard({
       {activeTab === "vehicles" && (
         <div className="space-y-8">
           
-          <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
-            <div className="p-6 border-b border-slate-100 bg-slate-50">
-              <h2 className="text-lg font-bold text-slate-900">Register a Vehicle</h2>
+          {!showVehicleForm && vehicles.length > 0 && (
+            <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+              <div className="p-6 border-b border-slate-100 bg-slate-50 flex items-center justify-between">
+                <div>
+                  <h2 className="text-lg font-bold text-slate-900">Your Vehicles</h2>
+                  <p className="text-sm text-slate-500 mt-1">Manage your fleet.</p>
+                </div>
+                {hasReachedVehicleLimit && (
+                  <span className="bg-orange-100 text-orange-800 text-xs font-bold px-3 py-1 rounded-full border border-orange-200">
+                    Plan Limit Reached
+                  </span>
+                )}
+              </div>
+              <div className="p-6 grid gap-4 md:grid-cols-2">
+                {vehicles.map((v) => (
+                  <div key={v.id} className="border border-slate-200 rounded-xl p-4 flex flex-col justify-between">
+                    <div>
+                      <div className="flex items-center justify-between mb-2">
+                        <h3 className="font-bold text-slate-900">{v.model}</h3>
+                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${v.isApproved ? 'bg-emerald-100 text-emerald-700' : 'bg-orange-100 text-orange-700'}`}>
+                          {v.isApproved ? 'Approved' : 'Pending'}
+                        </span>
+                      </div>
+                      <p className="text-sm text-slate-500">{v.registrationNum}</p>
+                      <p className="text-xs text-slate-400 mt-1 capitalize">{v.type}</p>
+                    </div>
+                    <div className="mt-4 flex items-center gap-2 pt-4 border-t border-slate-100">
+                      <button onClick={() => handleEditVehicle(v)} className="text-sm font-medium text-sky-600 hover:text-sky-700 flex-1 bg-sky-50 py-1.5 rounded-lg transition-colors">Edit</button>
+                      <button onClick={() => handleDeleteVehicle(v.id)} className="text-sm font-medium text-red-600 hover:text-red-700 px-3 py-1.5 bg-red-50 rounded-lg transition-colors">Delete</button>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
+          )}
+
+          {(!showVehicleForm && vehicles.length === 0) && (
+            <div className="text-center p-12 bg-white rounded-2xl border border-slate-100 shadow-sm">
+              <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Car className="w-8 h-8 text-slate-400" />
+              </div>
+              <h3 className="text-lg font-bold text-slate-900 mb-2">No Vehicles Yet</h3>
+              <p className="text-slate-500 mb-6 max-w-md mx-auto">Add your first vehicle to start accepting bookings from travelers.</p>
+              <button 
+                onClick={handleAddNewClick}
+                className="bg-sky-500 text-white px-6 py-2.5 rounded-lg font-medium hover:bg-sky-600 transition-colors shadow-sm"
+              >
+                Add Your First Vehicle
+              </button>
+            </div>
+          )}
+
+          {showVehicleForm && (
+            <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+              <div className="p-6 border-b border-slate-100 bg-slate-50 flex items-center justify-between">
+                <h2 className="text-lg font-bold text-slate-900">{editingId ? 'Edit Vehicle' : 'Register a Vehicle'}</h2>
+                <button onClick={() => { setShowVehicleForm(false); setEditingId(null); }} className="text-sm font-medium text-slate-500 hover:text-slate-700">Cancel</button>
+              </div>
             
             <div className="p-6">
               <form onSubmit={handleSubmit(onSubmit)} className="max-w-2xl space-y-6">
@@ -497,7 +647,21 @@ export default function TaxiDashboard({
                   {errors.registrationNo && <p className="text-orange-500 text-xs mt-1 font-medium">{errors.registrationNo.message}</p>}
                 </div>
                 
-                <div className="grid grid-cols-2 gap-6">
+                {!isStand && (
+                  <div className="bg-slate-50 p-6 rounded-xl border border-slate-200 mt-6">
+                    <div className="mb-4">
+                      <h3 className="font-bold text-slate-900 mb-1">Vehicle Photo (Optional)</h3>
+                      <p className="text-sm text-slate-500">Add a high-quality photo of your vehicle to attract more bookings.</p>
+                    </div>
+                    <ImageUpload 
+                      uploadedPhotos={uploadedPhotos} 
+                      setUploadedPhotos={setUploadedPhotos} 
+                      photoLimit={1} 
+                    />
+                  </div>
+                )}
+                
+                <div className="grid grid-cols-2 gap-6 mt-6">
                   <div>
                     <label className="block text-sm font-medium text-slate-700 mb-2">Local Sightseeing Rate (Per Day)</label>
                     <div className="relative">
@@ -567,6 +731,7 @@ export default function TaxiDashboard({
               </form>
             </div>
           </div>
+          )}
 
         </div>
       )}

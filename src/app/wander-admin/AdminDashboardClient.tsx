@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { 
   Users, Building2, Car, Map, LayoutDashboard, 
-  CheckCircle2, Clock, IndianRupee, FileText, Eye, ShieldCheck,
+  CheckCircle2, Clock, IndianRupee, FileText, Eye, EyeOff, ShieldCheck,
   AlertCircle, MapPin, X, XCircle
 } from "lucide-react";
 import { approveVendor, rejectVendor } from "@/actions/vendor";
@@ -99,6 +99,7 @@ export default function AdminDashboardClient({ tours = [], vendors, properties =
   const [selectedVendorDetails, setSelectedVendorDetails] = useState<VendorProfile | null>(null);
   const [rejectingVendor, setRejectingVendor] = useState<VendorProfile | null>(null);
   const [rejectionRemarks, setRejectionRemarks] = useState("");
+  const [showRevenue, setShowRevenue] = useState(false);
   const [kycVendor, setKycVendor] = useState<VendorProfile | null>(null);
   const [payoutConfirmModal, setPayoutConfirmModal] = useState<{ isOpen: boolean, vendorId: string, businessName: string, amount: number } | null>(null);
   
@@ -640,8 +641,21 @@ export default function AdminDashboardClient({ tours = [], vendors, properties =
                   <stat.icon className={`w-5 h-5 lg:w-6 lg:h-6 ${stat.color}`} />
                 </div>
                 <div>
-                  <p className="text-[10px] lg:text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">{stat.label}</p>
-                  <p className="text-2xl lg:text-3xl font-black text-slate-900">{stat.value}</p>
+                  <p className="text-[10px] lg:text-xs font-bold text-slate-500 uppercase tracking-wider mb-1 flex items-center gap-2">
+                    {stat.label}
+                    {stat.label === "Total Platform Revenue" && (
+                      <button 
+                        type="button"
+                        onClick={(e) => { e.stopPropagation(); setShowRevenue(!showRevenue); }}
+                        className="text-slate-400 hover:text-slate-600 transition-colors"
+                      >
+                        {showRevenue ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                      </button>
+                    )}
+                  </p>
+                  <p className="text-2xl lg:text-3xl font-black text-slate-900">
+                    {stat.label === "Total Platform Revenue" && !showRevenue ? "₹••••••" : stat.value}
+                  </p>
                 </div>
               </div>
             ))}

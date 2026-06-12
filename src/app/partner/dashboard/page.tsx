@@ -168,7 +168,7 @@ export default async function DynamicVendorDashboard() {
     case "HOTEL":
       return <HotelDashboard properties={vendorProfile.properties} bookings={bookings} />;
     case "HOMESTAY":
-      return <HomeStaysDashboard bookings={bookings} />;
+      return <HomeStaysDashboard properties={vendorProfile.properties} bookings={bookings} />;
     case "TAXI":
       return (
         <TransportDashboard 
