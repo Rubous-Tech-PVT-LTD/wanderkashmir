@@ -201,7 +201,8 @@ export async function registerVendor(data: VendorRegistrationData) {
     return { success: true, vendorId: vendorProfile.id };
   } catch (error: any) {
     console.error("Error registering vendor:", error);
-    return { success: false, error: "Failed to register vendor: " + error.message };
+    // Show a professional error message instead of raw database errors
+    return { success: false, error: "Registration failed. An unexpected error occurred while setting up your account. Please try again or contact support." };
   }
 }
 
