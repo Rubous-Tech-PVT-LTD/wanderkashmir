@@ -44,13 +44,6 @@ export default function TaxisClient({ rateCards, imagesMap = {}, verifiedDrivers
 
   // Combine providers and paginate
   const allProviders: ProviderType[] = [
-    {
-      id: "union_green_valley",
-      name: "Green Valley Tourist Taxi Stand",
-      isOfficial: true,
-      description: "Official union rate card for all standard routes. Guaranteed availability.",
-      vehicleType: selectedVehicle,
-    },
     ...activeVerifiedDrivers
       .map((d, i) => {
         // Fallbacks if rating/trips are not yet in backend
