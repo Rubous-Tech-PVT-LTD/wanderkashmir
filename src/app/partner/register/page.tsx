@@ -42,7 +42,7 @@ export default function VendorEntryPage() {
   ];
 
   // Initialize React Hook Form
-  const { register, handleSubmit, trigger, watch, setValue, formState: { errors } } = useForm<VendorRegistrationData>({
+  const { register, handleSubmit, trigger, watch, setValue, setError, formState: { errors } } = useForm<VendorRegistrationData>({
     resolver: zodResolver(vendorRegistrationSchema),
     mode: "onChange",
   });
@@ -78,7 +78,31 @@ export default function VendorEntryPage() {
     }
 
     const isStepValid = await trigger(fieldsToValidate);
-    if (isStepValid) setStep((prev) => prev + 1);
+    
+    let manualValid = true;
+    if (step === 2) {
+      if (selectedType === 'hotel' || selectedType === 'homestay') {
+        const pan = watch("panNumber");
+        if (!pan || pan.length < 10) {
+           setError("panNumber", { type: "manual", message: "Valid PAN Number is required" });
+           manualValid = false;
+        }
+      }
+      if (selectedType === 'taxi' && selectedTaxiRole === 'individual') {
+        const vt = watch("vehicleType");
+        const vr = watch("vehicleRegistration");
+        const dl = watch("drivingLicense");
+        if (!vt || vt.length < 2) { setError("vehicleType", { type: "manual", message: "Vehicle Type is required" }); manualValid = false; }
+        if (!vr || vr.length < 4) { setError("vehicleRegistration", { type: "manual", message: "Vehicle Registration (RC) is required" }); manualValid = false; }
+        if (!dl || dl.length < 5) { setError("drivingLicense", { type: "manual", message: "Driving License number is required" }); manualValid = false; }
+      }
+      if (selectedType === 'taxi' && selectedTaxiRole === 'stand') {
+        const pan = watch("panNumber");
+        if (!pan || pan.length < 10) { setError("panNumber", { type: "manual", message: "Valid PAN Number is required" }); manualValid = false; }
+      }
+    }
+
+    if (isStepValid && manualValid) setStep((prev) => prev + 1);
   };
 
   const onSubmit = async (data: VendorRegistrationData) => {
