@@ -102,6 +102,9 @@ export default function AdminTaxisTab() {
         [vehicle]: Number(value) || 0
       }
     }));
+  };
+
+  const handleSaveImage = async (type: string, value: string) => {
     try {
       const res = await fetch("/api/admin/taxis/images", {
         method: "POST",
