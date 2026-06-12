@@ -14,7 +14,7 @@ import { markVendorPaid } from "@/actions/payouts";
 import { useRouter } from "next/navigation";
 import { format, isSameDay, addDays } from "date-fns";
 import toast from "react-hot-toast";
-import { LogOut, Car } from "lucide-react";
+import { LogOut } from "lucide-react";
 import AdminToursTab from "./AdminToursTab";
 import AdminTaxisTab from "./AdminTaxisTab";
 
