@@ -43,7 +43,7 @@ export default function VendorEntryPage() {
 
   // Initialize React Hook Form
   const { register, handleSubmit, trigger, watch, setValue, setError, formState: { errors } } = useForm<VendorRegistrationData>({
-    resolver: zodResolver(vendorRegistrationSchema),
+    resolver: zodResolver(vendorRegistrationSchema) as any,
     mode: "onChange",
   });
 
@@ -201,7 +201,7 @@ export default function VendorEntryPage() {
           </div>
 
           {/* Form Wrapper */}
-          <form onSubmit={handleSubmit(onSubmit)}>
+          <form onSubmit={handleSubmit(onSubmit as any)}>
             {/* Step 1: Vendor Type */}
             {step === 1 && (
               <div className="bg-white p-8 rounded-2xl shadow-sm border border-slate-200 max-w-3xl mx-auto">
