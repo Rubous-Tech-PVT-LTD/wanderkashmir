@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
-import { Car, MapPin, Info, ArrowRight, UserCircle2, ChevronDown, ChevronLeft, ChevronRight, CheckCircle2 } from "lucide-react";
+import { Car, MapPin, Info, ArrowRight, UserCircle2, ChevronDown, ChevronLeft, ChevronRight, CheckCircle2, Search } from "lucide-react";
 
 const DEFAULT_IMAGES: Record<string, string> = {
   "CRYSTA": "https://imgd.aeplcdn.com/664x374/n/cw/ec/139651/innova-crysta-exterior-right-front-three-quarter-2.jpeg?isig=0&q=80",
@@ -66,6 +66,19 @@ export default function TaxisClient({ rateCards, imagesMap = {}, verifiedDrivers
   const vehicleDropdownRef = useRef<HTMLDivElement>(null);
   const providersPerPage = 5;
 
+  const [vehiclePage, setVehiclePage] = useState(1);
+  const [searchVehicle, setSearchVehicle] = useState("");
+  const vehiclesPerPage = 5;
+
+  const filteredVehicles = VEHICLE_TYPES.filter(vt => vt.toLowerCase().includes(searchVehicle.toLowerCase()));
+  const totalVehiclePages = Math.max(1, Math.ceil(filteredVehicles.length / vehiclesPerPage));
+  const paginatedVehicles = filteredVehicles.slice((vehiclePage - 1) * vehiclesPerPage, vehiclePage * vehiclesPerPage);
+
+  // Reset page when search changes
+  useEffect(() => {
+    setVehiclePage(1);
+  }, [searchVehicle]);
+
   const totalProviderPages = Math.max(1, Math.ceil(allProviders.length / providersPerPage));
   const paginatedProviders = allProviders.slice((providerPage - 1) * providersPerPage, providerPage * providersPerPage);
 
@@ -127,8 +140,20 @@ export default function TaxisClient({ rateCards, imagesMap = {}, verifiedDrivers
 
             {isVehicleDropdownOpen && (
               <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-slate-200 rounded-2xl shadow-xl z-50 overflow-hidden flex flex-col animate-in fade-in slide-in-from-top-2 duration-200">
+                <div className="p-3 border-b border-slate-100">
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                    <input
+                      type="text"
+                      placeholder="Search vehicles..."
+                      value={searchVehicle}
+                      onChange={(e) => setSearchVehicle(e.target.value)}
+                      className="w-full pl-9 pr-4 py-2 bg-slate-50 border-none rounded-xl text-sm focus:ring-2 focus:ring-orange-500/20 focus:outline-none transition-shadow"
+                    />
+                  </div>
+                </div>
                 <div className="max-h-[320px] overflow-y-auto hide-scrollbar divide-y divide-slate-100">
-                  {VEHICLE_TYPES.map(vt => (
+                  {paginatedVehicles.map(vt => (
                     <button
                       key={vt}
                       onClick={() => {
@@ -155,7 +180,35 @@ export default function TaxisClient({ rateCards, imagesMap = {}, verifiedDrivers
                       )}
                     </button>
                   ))}
+                  {paginatedVehicles.length === 0 && (
+                     <div className="p-6 text-center text-slate-500 text-sm">
+                       No vehicles found matching "{searchVehicle}".
+                     </div>
+                  )}
                 </div>
+
+                {/* Pagination Controls */}
+                {totalVehiclePages > 1 && (
+                  <div className="p-3 bg-slate-50 border-t border-slate-200 flex items-center justify-between">
+                    <button 
+                      onClick={(e) => { e.preventDefault(); e.stopPropagation(); setVehiclePage(Math.max(1, vehiclePage - 1)) }}
+                      disabled={vehiclePage === 1}
+                      className="p-1.5 rounded-lg text-slate-500 hover:bg-slate-200 disabled:opacity-30 disabled:hover:bg-transparent transition-colors"
+                    >
+                      <ChevronLeft className="w-5 h-5" />
+                    </button>
+                    <span className="text-xs font-semibold text-slate-500">
+                      Page {vehiclePage} of {totalVehiclePages}
+                    </span>
+                    <button 
+                      onClick={(e) => { e.preventDefault(); e.stopPropagation(); setVehiclePage(Math.min(totalVehiclePages, vehiclePage + 1)) }}
+                      disabled={vehiclePage === totalVehiclePages}
+                      className="p-1.5 rounded-lg text-slate-500 hover:bg-slate-200 disabled:opacity-30 disabled:hover:bg-transparent transition-colors"
+                    >
+                      <ChevronRight className="w-5 h-5" />
+                    </button>
+                  </div>
+                )}
               </div>
             )}
           </div>
