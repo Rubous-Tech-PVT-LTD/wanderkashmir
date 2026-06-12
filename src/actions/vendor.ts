@@ -95,7 +95,7 @@ export async function registerVendor(data: VendorRegistrationData) {
         vehicleType: validData.vehicleType,
         guideLicense: validData.guideLicense,
         languages: validData.languages,
-        experienceYears: validData.experienceYears,
+        experienceYears: validData.experienceYears ? parseInt(validData.experienceYears, 10) : null,
       }
     });
 

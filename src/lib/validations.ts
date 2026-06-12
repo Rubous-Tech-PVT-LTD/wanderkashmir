@@ -35,7 +35,7 @@ export const vendorRegistrationSchema = z.object({
   // Guide specific
   guideLicense: z.string().optional(),
   languages: z.string().optional(),
-  experienceYears: z.coerce.number().optional(),
+  experienceYears: z.string().optional(),
 }).superRefine((data, ctx) => {
   if (data.vendorType === 'hotel' || data.vendorType === 'homestay') {
     if (!data.panNumber || data.panNumber.length < 10) {
