@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
-import { Car, MapPin, Info, ArrowRight, UserCircle2 } from "lucide-react";
+import { Car, MapPin, Info, ArrowRight, UserCircle2, ChevronDown, ChevronLeft, ChevronRight, CheckCircle2 } from "lucide-react";
 
 const DEFAULT_IMAGES: Record<string, string> = {
   "CRYSTA": "https://imgd.aeplcdn.com/664x374/n/cw/ec/139651/innova-crysta-exterior-right-front-three-quarter-2.jpeg?isig=0&q=80",
@@ -26,10 +26,62 @@ export default function TaxisClient({ rateCards, imagesMap = {}, verifiedDrivers
   const filteredRoutes = rateCards.filter(r => r.place.toLowerCase().includes(searchRoute.toLowerCase()));
   
   // Filter verified drivers for the selected vehicle type
-  // (Assuming vehicleType from vendor matches our VEHICLE_TYPES e.g., "INNOVA", "CRYSTA")
   const activeVerifiedDrivers = verifiedDrivers.filter(
     driver => driver.vehicleType && driver.vehicleType.toUpperCase().includes(selectedVehicle.toUpperCase())
   );
+
+  type ProviderType = {
+    id: string;
+    name: string;
+    isOfficial: boolean;
+    vehicleType: string;
+    description?: string;
+    vehicleRegistration?: string;
+    experienceYears?: number;
+  };
+
+  // Combine providers and paginate
+  const allProviders: ProviderType[] = [
+    {
+      id: "union_green_valley",
+      name: "Green Valley Tourist Taxi Stand",
+      isOfficial: true,
+      description: "Official union rate card for all standard routes. Guaranteed availability.",
+      vehicleType: selectedVehicle,
+    },
+    ...activeVerifiedDrivers.map(d => ({
+      id: d.id,
+      name: d.name || "Wander Verified Driver",
+      isOfficial: false,
+      vehicleType: d.vehicleType,
+      vehicleRegistration: d.vehicleRegistration,
+      experienceYears: d.experienceYears
+    }))
+  ];
+
+  const [providerPage, setProviderPage] = useState(1);
+  const [isProviderDropdownOpen, setIsProviderDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  const providersPerPage = 5;
+
+  const totalProviderPages = Math.max(1, Math.ceil(allProviders.length / providersPerPage));
+  const paginatedProviders = allProviders.slice((providerPage - 1) * providersPerPage, providerPage * providersPerPage);
+
+  // Reset page when vehicle changes
+  useEffect(() => {
+    setProviderPage(1);
+  }, [selectedVehicle]);
+
+  // Click outside to close dropdown
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsProviderDropdownOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   return (
     <div className="pt-24 pb-20">
@@ -87,69 +139,118 @@ export default function TaxisClient({ rateCards, imagesMap = {}, verifiedDrivers
             2. Choose a Provider for <span className="text-orange-600">{selectedVehicle}</span>
           </h2>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {/* Green Valley Official Stand */}
+          <div className="relative w-full md:max-w-md lg:max-w-lg" ref={dropdownRef}>
             <button 
-              onClick={() => setSelectedProvider("union_green_valley")}
-              className={`text-left border-2 rounded-2xl p-6 transition-all relative overflow-hidden group ${
-                selectedProvider === "union_green_valley" ? 'border-sky-500 ring-4 ring-sky-500/10 shadow-md bg-sky-50/30' : 'border-slate-200 hover:border-slate-300 bg-white hover:shadow-sm'
-              }`}
+              onClick={() => setIsProviderDropdownOpen(!isProviderDropdownOpen)}
+              className="w-full bg-white border-2 border-slate-200 hover:border-orange-400 rounded-2xl p-4 flex items-center justify-between transition-colors focus:outline-none focus:ring-4 focus:ring-orange-500/10 shadow-sm"
             >
-              <div className="absolute top-0 right-0 bg-sky-500 text-white text-[10px] font-bold px-3 py-1 rounded-bl-lg">
-                OFFICIAL STAND
-              </div>
-              <div className="flex items-center gap-4 mb-4">
-                <div className="w-16 h-16 bg-sky-100 rounded-full flex items-center justify-center border-2 border-sky-200">
-                  <MapPin className="w-8 h-8 text-sky-600" />
-                </div>
-                <div>
-                  <h3 className="font-bold text-slate-900 text-lg">Green Valley</h3>
-                  <div className="text-sm text-slate-500">Tourist Taxi Stand</div>
-                </div>
-              </div>
-              <div className="text-sm text-slate-600">
-                Official union rate card for all standard routes. Guaranteed availability.
-              </div>
-            </button>
-
-            {/* Wander Verified Drivers */}
-            {activeVerifiedDrivers.map((driver) => (
-              <button 
-                key={driver.id}
-                onClick={() => setSelectedProvider(driver.id)}
-                className={`text-left border-2 rounded-2xl p-6 transition-all relative overflow-hidden group ${
-                  selectedProvider === driver.id ? 'border-green-500 ring-4 ring-green-500/10 shadow-md bg-green-50/30' : 'border-slate-200 hover:border-slate-300 bg-white hover:shadow-sm'
-                }`}
-              >
-                <div className="absolute top-0 right-0 bg-green-500 text-white text-[10px] font-bold px-3 py-1 rounded-bl-lg flex items-center gap-1">
-                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
-                  VERIFIED
-                </div>
-                
-                <div className="flex items-center gap-4 mb-4">
-                  <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center overflow-hidden border-2 border-slate-100">
-                      <UserCircle2 className="w-10 h-10 text-slate-400" />
-                  </div>
+              {selectedProvider ? (
+                <div className="flex items-center gap-3 text-left">
+                  {allProviders.find(p => p.id === selectedProvider)?.isOfficial ? (
+                    <div className="w-10 h-10 bg-sky-100 rounded-full flex items-center justify-center shrink-0 border border-sky-200">
+                      <MapPin className="w-5 h-5 text-sky-600" />
+                    </div>
+                  ) : (
+                    <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center shrink-0 border border-green-200">
+                      <CheckCircle2 className="w-5 h-5 text-green-600" />
+                    </div>
+                  )}
                   <div>
-                    <h3 className="font-bold text-slate-900">Wander Verified Driver</h3>
-                    <div className="flex items-center gap-1 text-xs font-semibold text-slate-500 mt-1">
-                      <Car className="w-3.5 h-3.5" /> {driver.vehicleType?.toUpperCase()}
+                    <div className="font-bold text-slate-900 truncate max-w-[200px] sm:max-w-[250px]">
+                      {allProviders.find(p => p.id === selectedProvider)?.name}
+                    </div>
+                    <div className="text-xs font-semibold text-slate-500">
+                      {allProviders.find(p => p.id === selectedProvider)?.isOfficial ? 'Official Taxi Stand' : 'Verified Driver'}
                     </div>
                   </div>
                 </div>
-                
-                <div className="space-y-2 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-slate-500">Vehicle RC</span>
-                    <span className="font-semibold text-slate-700">{driver.vehicleRegistration || "Verified"}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-slate-500">Experience</span>
-                    <span className="font-semibold text-slate-700">{driver.experienceYears ? `${driver.experienceYears}+ Years` : "Experienced"}</span>
-                  </div>
+              ) : (
+                <span className="text-slate-500 font-medium pl-2">Select a provider...</span>
+              )}
+              <ChevronDown className={`w-5 h-5 text-slate-400 transition-transform duration-300 ${isProviderDropdownOpen ? 'rotate-180' : ''}`} />
+            </button>
+
+            {isProviderDropdownOpen && (
+              <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-slate-200 rounded-2xl shadow-xl z-50 overflow-hidden flex flex-col animate-in fade-in slide-in-from-top-2 duration-200">
+                <div className="max-h-[320px] overflow-y-auto hide-scrollbar divide-y divide-slate-100">
+                  {paginatedProviders.map(provider => (
+                    <button
+                      key={provider.id}
+                      onClick={() => {
+                        setSelectedProvider(provider.id);
+                        setIsProviderDropdownOpen(false);
+                      }}
+                      className={`w-full text-left p-4 hover:bg-slate-50 transition-colors flex items-start gap-4 ${selectedProvider === provider.id ? 'bg-orange-50/50' : ''}`}
+                    >
+                      {provider.isOfficial ? (
+                        <div className="w-10 h-10 mt-1 bg-sky-100 rounded-full flex items-center justify-center shrink-0 border border-sky-200">
+                          <MapPin className="w-5 h-5 text-sky-600" />
+                        </div>
+                      ) : (
+                        <div className="w-10 h-10 mt-1 bg-green-100 rounded-full flex items-center justify-center shrink-0 border border-green-200">
+                          <CheckCircle2 className="w-5 h-5 text-green-600" />
+                        </div>
+                      )}
+                      
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-start justify-between gap-2 mb-1">
+                          <div className={`font-bold truncate ${provider.isOfficial ? 'text-sky-700' : 'text-slate-800'}`}>
+                            {provider.name}
+                          </div>
+                          <span className={`shrink-0 text-[10px] font-bold px-2 py-0.5 rounded-full ${provider.isOfficial ? 'bg-sky-100 text-sky-700' : 'bg-green-100 text-green-700'}`}>
+                            {provider.isOfficial ? 'OFFICIAL' : 'VERIFIED'}
+                          </span>
+                        </div>
+                        {provider.isOfficial ? (
+                          <div className="text-xs text-slate-500 leading-relaxed pr-2">
+                            {provider.description}
+                          </div>
+                        ) : (
+                          <div className="space-y-1.5">
+                            <div className="flex items-center gap-1.5 text-xs text-slate-500">
+                              <Car className="w-3.5 h-3.5" /> 
+                              <span className="font-medium text-slate-700">{provider.vehicleType?.toUpperCase() || selectedVehicle}</span>
+                            </div>
+                            <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-500">
+                              <span>RC: <span className="font-medium text-slate-700">{provider.vehicleRegistration || 'Verified'}</span></span>
+                              <span>Exp: <span className="font-medium text-slate-700">{provider.experienceYears ? `${provider.experienceYears}+ Yrs` : 'Proven'}</span></span>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </button>
+                  ))}
+                  {paginatedProviders.length === 0 && (
+                     <div className="p-6 text-center text-slate-500 text-sm">
+                       No providers available for this vehicle.
+                     </div>
+                  )}
                 </div>
-              </button>
-            ))}
+                
+                {/* Pagination Controls */}
+                {totalProviderPages > 1 && (
+                  <div className="p-3 bg-slate-50 border-t border-slate-200 flex items-center justify-between">
+                    <button 
+                      onClick={(e) => { e.preventDefault(); e.stopPropagation(); setProviderPage(Math.max(1, providerPage - 1)) }}
+                      disabled={providerPage === 1}
+                      className="p-1.5 rounded-lg text-slate-500 hover:bg-slate-200 disabled:opacity-30 disabled:hover:bg-transparent transition-colors"
+                    >
+                      <ChevronLeft className="w-5 h-5" />
+                    </button>
+                    <span className="text-xs font-semibold text-slate-500">
+                      Page {providerPage} of {totalProviderPages}
+                    </span>
+                    <button 
+                      onClick={(e) => { e.preventDefault(); e.stopPropagation(); setProviderPage(Math.min(totalProviderPages, providerPage + 1)) }}
+                      disabled={providerPage === totalProviderPages}
+                      className="p-1.5 rounded-lg text-slate-500 hover:bg-slate-200 disabled:opacity-30 disabled:hover:bg-transparent transition-colors"
+                    >
+                      <ChevronRight className="w-5 h-5" />
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </div>
 
