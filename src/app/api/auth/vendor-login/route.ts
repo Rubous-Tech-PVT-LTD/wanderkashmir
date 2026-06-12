@@ -6,7 +6,7 @@ import { cookies } from "next/headers";
 
 export async function POST(request: Request) {
   try {
-    const { email, password } = await request.json();
+    const { email, password, profileId } = await request.json();
     const identifier = email?.trim(); // could be email or vendorId like WK-75182
 
     if (!identifier || !password) {
@@ -27,11 +27,15 @@ export async function POST(request: Request) {
     } else {
       user = await prisma.user.findUnique({ where: { email: identifier } });
       if (user) {
-        const profiles = await prisma.vendorProfile.findMany({ where: { userId: user.id } });
-        if (profiles.length > 1) {
-          return NextResponse.json({ error: "Multiple profiles found. Please login using your Vendor ID (WK-xxxxx)" }, { status: 400 });
-        } else if (profiles.length === 1) {
-          specificVendorProfileId = profiles[0].id;
+        if (profileId) {
+          specificVendorProfileId = profileId;
+        } else {
+          const profiles = await prisma.vendorProfile.findMany({ where: { userId: user.id } });
+          if (profiles.length > 1) {
+            return NextResponse.json({ error: "Multiple profiles found. Please login using your Vendor ID (WK-xxxxx)" }, { status: 400 });
+          } else if (profiles.length === 1) {
+            specificVendorProfileId = profiles[0].id;
+          }
         }
       }
     }

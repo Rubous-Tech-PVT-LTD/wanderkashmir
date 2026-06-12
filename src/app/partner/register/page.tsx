@@ -95,7 +95,7 @@ export default function VendorEntryPage() {
         await fetch("/api/auth/vendor-login", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email: data.email, password: data.password }),
+          body: JSON.stringify({ email: data.email, password: data.password, profileId: res.vendorId }),
         });
 
         setIsRegistered(true);
