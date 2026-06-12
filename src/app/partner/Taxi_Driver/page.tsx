@@ -182,13 +182,13 @@ export default function TaxiDashboard({
       </div>
 
       <div className="flex gap-6 border-b border-slate-200 mb-8 overflow-x-auto whitespace-nowrap">
-        {["overview", "vehicles", isStand && "drivers", isStand && "rates", "trips", "earnings"].filter(Boolean).map((tab) => (
+        {["overview", "vehicles", isStand && "drivers", "rates", "trips", "financials"].filter(Boolean).map((tab) => (
           <button
             key={tab as string}
             onClick={() => setActiveTab(tab as string)}
             className={`pb-4 text-sm font-semibold capitalize transition-colors relative ${activeTab === tab ? "text-sky-600" : "text-slate-500 hover:text-slate-800"}`}
           >
-            {tab as string}
+            {tab === "financials" ? "Financials & Subscription" : tab as string}
             {activeTab === tab && <span className="absolute bottom-0 left-0 w-full h-0.5 bg-sky-500 rounded-t-full" />}
           </button>
         ))}
@@ -198,230 +198,156 @@ export default function TaxiDashboard({
         <DriversTab drivers={drivers} />
       )}
 
-      {activeTab === "rates" && isStand && (
+      {activeTab === "rates" && (
         <RatesTab rateOverrides={rateOverrides} />
       )}
 
       {activeTab === "overview" && (
         <div className="space-y-8">
           
-          {/* SUBSCRIPTION UPGRADE PLANS */}
-          <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
-            <div className="p-6 border-b border-slate-100 bg-slate-50 flex items-center justify-between">
-              <div>
-                <h2 className="text-lg font-bold text-slate-900">Your Subscription Plan</h2>
-                <p className="text-sm text-slate-500 mt-1">Upgrade your plan to unlock premium seller tools and increase visibility.</p>
+          {/* ADVANCED ANALYTICS (FEATURE GATED) */ }
+          <div className={`relative bg-white rounded-2xl shadow-sm border border-slate-200 p-6 overflow-hidden mt-8 ${!hasAnalytics ? 'min-h-[350px] bg-slate-50 flex flex-col' : ''}`}>
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+              <div className="flex items-center gap-2">
+                <LineChartIcon className="w-6 h-6 text-sky-500" />
+                <h2 className="text-xl font-bold text-slate-900">Advanced Analytics</h2>
               </div>
-              <div className="bg-sky-100 text-sky-800 px-3 py-1 rounded-full text-sm font-bold border border-sky-200">
-                Current: {subscriptionPlan}
-              </div>
-            </div>
-            
-            <div className="p-6 grid grid-cols-1 md:grid-cols-4 gap-6">
-              {[
-                { name: "Free", price: "₹0/mo", description: "Basic listing features", features: ["1 Vehicle Listing", "Basic Analytics", "Standard Support"], isPopular: false },
-                { name: "Growth Pro", price: "₹499/mo", description: "Get more visibility", features: ["Priority Listing", "Advanced Analytics", "Onboarding Helpline"], isPopular: true },
-                { name: "Pro", price: "₹999/mo", description: "Max out your bookings", features: ["Instant Booking", "Promotional Offers", "Featured Placement"], isPopular: false },
-                { name: "Enterprise", price: "Custom", description: "For fleet operators", features: ["API Access", "Account Manager", "Custom Pricing"], isPopular: false },
-              ].map((plan) => (
-                <div key={plan.name} className={`relative rounded-2xl border-2 p-5 flex flex-col ${subscriptionPlan === plan.name ? 'border-sky-500 bg-sky-50/50' : plan.isPopular ? 'border-indigo-500 bg-indigo-50/10' : 'border-slate-100 bg-white'}`}>
-                  {plan.isPopular && <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-indigo-500 text-white text-[10px] font-bold uppercase tracking-wider py-1 px-3 rounded-full">Most Popular</div>}
-                  <h3 className="font-bold text-slate-900 text-lg">{plan.name}</h3>
-                  <div className="my-2">
-                    <span className="text-2xl font-black text-slate-900">{plan.price}</span>
-                  </div>
-                  <p className="text-xs text-slate-500 mb-4">{plan.description}</p>
-                  
-                  <ul className="space-y-2 mb-6 flex-1">
-                    {plan.features.map(f => (
-                      <li key={f} className="flex items-start gap-2 text-xs text-slate-600 font-medium">
-                        <CheckCircle2 className={`w-3.5 h-3.5 shrink-0 ${subscriptionPlan === plan.name ? 'text-sky-500' : 'text-slate-400'}`} /> {f}
-                      </li>
-                    ))}
-                  </ul>
-
-                  <button 
-                    onClick={() => handleSimulateUpgrade(plan.name, plan.price)}
-                    disabled={subscriptionPlan === plan.name}
-                    className={`w-full py-2 rounded-lg text-sm font-bold transition-colors ${
-                      subscriptionPlan === plan.name ? 'bg-sky-100 text-sky-700 cursor-default' : 
-                      plan.isPopular ? 'bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm' : 
-                      'bg-slate-900 hover:bg-slate-800 text-white shadow-sm'
-                    }`}
-                  >
-                    {subscriptionPlan === plan.name ? "Current Plan" : "Upgrade"}
-                  </button>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* ADVANCED ANALYTICS (FEATURE GATED) */}
-          <div className="relative bg-white rounded-2xl shadow-sm border border-slate-200 p-6 overflow-hidden mt-8">
-            <div className={`transition-all duration-500 ${!hasAnalytics ? 'blur-sm opacity-60 select-none' : ''}`}>
-              <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
-                <div>
-                  <h2 className="text-xl font-bold text-slate-900">Advanced Analytics</h2>
-                  <p className="text-slate-500 text-sm mt-1">Track your performance and conversion rates</p>
-                </div>
+              {hasAnalytics && (
                 <div className="flex items-center gap-3">
-                  <div className="flex bg-slate-100 p-1 rounded-lg">
-                    {["7D", "30D", "90D"].map(t => (
-                      <button key={t} onClick={() => setTimeRange(t)} className={`px-4 py-1.5 text-sm font-bold rounded-md transition-all ${timeRange === t ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>{t}</button>
-                    ))}
+                  <div className="bg-slate-100 p-1 rounded-lg flex items-center">
+                    <button onClick={() => setTimeRange("7D")} className={`px-3 py-1.5 text-xs font-bold rounded-md transition-all ${timeRange === "7D" ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>7D</button>
+                    <button onClick={() => setTimeRange("30D")} className={`px-3 py-1.5 text-xs font-bold rounded-md transition-all ${timeRange === "30D" ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>30D</button>
+                    <button onClick={() => setTimeRange("90D")} className={`px-3 py-1.5 text-xs font-bold rounded-md transition-all ${timeRange === "90D" ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>90D</button>
                   </div>
-                  <button className="p-2 border border-slate-200 rounded-lg hover:bg-slate-50 text-slate-600 transition-colors">
+                  <button onClick={() => toast.success("Analytics report downloaded successfully!")} className="p-2 bg-slate-50 border border-slate-200 rounded-lg text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition-colors" title="Export Data">
                     <Download className="w-4 h-4" />
                   </button>
                 </div>
-              </div>
-
-              {hasAnalytics && (() => {
-              // totalViews and others already mapped from component state via calculateDashboardMetrics above
-              return (
+              )}
+            </div>
+            
+            {!hasAnalytics && (
               <>
-                <div className="grid grid-cols-3 gap-4 mb-8 mt-4">
-                  <button onClick={() => setChartMetric("views")} className={`p-4 rounded-xl text-left border transition-all ${chartMetric === "views" ? 'border-sky-500 bg-sky-50 shadow-sm' : 'border-slate-100 bg-slate-50 hover:border-slate-200'}`}>
-                    <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Profile Views</p>
-                    <p className="text-2xl font-bold text-slate-900">{totalViews.toLocaleString()}</p>
-                    <p className="text-xs text-emerald-600 font-bold mt-1">+{growthViews}%</p>
-                  </button>
-                  <button onClick={() => setChartMetric("bookings")} className={`p-4 rounded-xl text-left border transition-all ${chartMetric === "bookings" ? 'border-indigo-500 bg-indigo-50 shadow-sm' : 'border-slate-100 bg-slate-50 hover:border-slate-200'}`}>
-                    <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Completed Trips</p>
-                    <p className="text-2xl font-bold text-slate-900">{totalTrips}</p>
-                    <p className="text-xs text-emerald-600 font-bold mt-1">+{growthTrips}%</p>
-                  </button>
-                  <button onClick={() => setChartMetric("revenue")} className={`p-4 rounded-xl text-left border transition-all ${chartMetric === "revenue" ? 'border-emerald-500 bg-emerald-50 shadow-sm' : 'border-slate-100 bg-slate-50 hover:border-slate-200'}`}>
-                    <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Taxi Earnings</p>
-                    <p className="text-2xl font-bold text-slate-900">₹{totalRevenue.toLocaleString()}</p>
-                    <p className="text-xs text-emerald-600 font-bold mt-1">+{growthRevenue}%</p>
+                <div className="absolute inset-0 bg-slate-50/80 backdrop-blur-sm z-10 flex flex-col items-center justify-center p-6 text-center">
+                  <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center shadow-md mb-4 ring-4 ring-slate-100">
+                    <Lock className="w-8 h-8 text-slate-400" />
+                  </div>
+                  <h3 className="text-2xl font-bold text-slate-900 mb-2">Analytics Locked</h3>
+                  <p className="text-slate-600 max-w-md mb-6">Upgrade to the Growth Pro or Enterprise plan to view detailed conversion rates, customer demographics, and search appearances.</p>
+                  <button onClick={() => setActiveTab("financials")} className="bg-sky-500 text-white px-6 py-2.5 rounded-lg font-bold hover:bg-sky-600 transition-colors shadow-sm">
+                    View Upgrade Plans
                   </button>
                 </div>
-
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                  <div className="lg:col-span-2">
-                    <h3 className="text-sm font-bold text-slate-700 mb-6">Performance Trend</h3>
-                    <div className="h-64 w-full -ml-4">
-                      <ResponsiveContainer width="100%" height="100%">
-                        {chartMetric === "views" ? (
-                          <BarChart data={getChartData()} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                            <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#94a3b8' }} />
-                            <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#94a3b8' }} />
-                            <RechartsTooltip cursor={{ fill: '#f8fafc' }} contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} />
-                            <Bar dataKey="views" fill="#0ea5e9" radius={[4, 4, 0, 0]} barSize={timeRange === "7D" ? 30 : 40} />
-                          </BarChart>
-                        ) : chartMetric === "bookings" ? (
-                          <AreaChart data={getChartData()} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                            <defs>
-                              <linearGradient id="colorTrips" x1="0" y1="0" x2="0" y2="1">
-                                <stop offset="5%" stopColor="#6366f1" stopOpacity={0.3}/>
-                                <stop offset="95%" stopColor="#6366f1" stopOpacity={0}/>
-                              </linearGradient>
-                            </defs>
-                            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                            <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#94a3b8' }} />
-                            <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#94a3b8' }} />
-                            <RechartsTooltip contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} />
-                            <Area type="monotone" dataKey="trips" stroke="#6366f1" strokeWidth={3} fillOpacity={1} fill="url(#colorTrips)" />
-                          </AreaChart>
-                        ) : (
-                          <LineChart data={getChartData()} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                            <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#94a3b8' }} />
-                            <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#94a3b8' }} tickFormatter={(val) => `₹${val/1000}k`} />
-                            <RechartsTooltip formatter={(value: any) => [`₹${Number(value).toLocaleString()}`, 'Revenue']} contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} />
-                            <Line type="monotone" dataKey="revenue" stroke="#10b981" strokeWidth={3} dot={{ r: 4, strokeWidth: 2 }} activeDot={{ r: 6 }} />
-                          </LineChart>
-                        )}
-                      </ResponsiveContainer>
-                    </div>
-                  </div>
-                  
-                  <div>
-                    <h3 className="text-sm font-bold text-slate-700 mb-2">Trip Demographics</h3>
-                    <div className="h-48 w-full">
-                      <ResponsiveContainer width="100%" height="100%">
-                        <PieChart>
-                          <Pie
-                            data={demographicData}
-                            cx="50%"
-                            cy="50%"
-                            innerRadius={40}
-                            outerRadius={70}
-                            paddingAngle={2}
-                            dataKey="value"
-                          >
-                            {demographicData.map((entry, index) => (
-                              <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                            ))}
-                          </Pie>
-                          <RechartsTooltip contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} />
-                        </PieChart>
-                      </ResponsiveContainer>
-                    </div>
-                    <div className="space-y-2 mt-2">
-                      {demographicData.map((item, i) => (
-                        <div key={i} className="flex items-center justify-between text-xs">
-                          <div className="flex items-center gap-2">
-                            <div className="w-2 h-2 rounded-full" style={{ backgroundColor: COLORS[i] }}></div>
-                            <span className="text-slate-600 font-medium">{item.name}</span>
-                          </div>
-                          <span className="font-bold text-slate-900">{item.value}%</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-8 pt-8 border-t border-slate-100">
-                  <div className="bg-slate-50 rounded-lg p-4 flex flex-col justify-center border border-slate-100">
-                    <p className="text-xs text-slate-500 font-medium mb-1">Search Appearance</p>
-                    <div className="flex items-end gap-2">
-                      <p className="text-xl font-bold text-slate-900">{totalViews.toLocaleString()}</p>
-                      <span className="text-emerald-500 text-xs font-bold mb-1">+{growthViews}%</span>
-                    </div>
-                  </div>
-                  <div className="bg-slate-50 rounded-lg p-4 flex flex-col justify-center border border-slate-100">
-                    <p className="text-xs text-slate-500 font-medium mb-1">Profile Click Rate</p>
-                    <div className="flex items-end gap-2">
-                      <p className="text-xl font-bold text-slate-900">14.2%</p>
-                      <span className="text-emerald-500 text-xs font-bold mb-1">+5.1%</span>
-                    </div>
-                  </div>
-                  <div className="bg-slate-50 rounded-lg p-4 flex flex-col justify-center border border-slate-100">
-                    <p className="text-xs text-slate-500 font-medium mb-1">Contact Initiated</p>
-                    <div className="flex items-end gap-2">
-                      <p className="text-xl font-bold text-slate-900">{totalTrips}</p>
-                      <span className="text-emerald-500 text-xs font-bold mb-1">+{growthTrips}%</span>
-                    </div>
-                  </div>
-                  <div className="bg-slate-50 rounded-lg p-4 flex flex-col justify-center border border-slate-100">
-                    <p className="text-xs text-slate-500 font-medium mb-1">Trip Conversion</p>
-                    <div className="flex items-end gap-2">
-                      <p className="text-xl font-bold text-slate-900">5.8%</p>
-                      <span className="text-orange-500 text-xs font-bold mb-1">-1.2%</span>
-                    </div>
-                  </div>
+                {/* Fake blurred background to give it shape */}
+                <div className="flex-1 opacity-20 pointer-events-none mt-4 flex items-end gap-2 px-8">
+                  <div className="w-1/6 h-24 bg-sky-200 rounded-t-lg"></div>
+                  <div className="w-1/6 h-32 bg-sky-300 rounded-t-lg"></div>
+                  <div className="w-1/6 h-16 bg-sky-200 rounded-t-lg"></div>
+                  <div className="w-1/6 h-40 bg-sky-400 rounded-t-lg"></div>
+                  <div className="w-1/6 h-28 bg-sky-300 rounded-t-lg"></div>
+                  <div className="w-1/6 h-48 bg-sky-500 rounded-t-lg"></div>
                 </div>
               </>
+            )}
+            {hasAnalytics && (() => {
+              return (
+                <>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+                    <button onClick={() => setChartMetric("views")} className={`p-4 rounded-xl border-2 transition-all text-left ${chartMetric === "views" ? 'border-sky-500 bg-sky-50' : 'border-slate-100 bg-white hover:border-slate-200'}`}>
+                      <div className="text-slate-500 text-sm font-medium mb-1">Profile Views</div>
+                      <div className="text-2xl font-black text-slate-900">{totalViews.toLocaleString()}</div>
+                      <div className="text-xs text-emerald-600 font-bold mt-2 flex items-center gap-1">+{growthViews}%</div>
+                    </button>
+                    <button onClick={() => setChartMetric("bookings")} className={`p-4 rounded-xl border-2 transition-all text-left ${chartMetric === "bookings" ? 'border-indigo-500 bg-indigo-50' : 'border-slate-100 bg-white hover:border-slate-200'}`}>
+                      <div className="text-slate-500 text-sm font-medium mb-1">Completed Trips</div>
+                      <div className="text-2xl font-black text-slate-900">{totalTrips}</div>
+                      <div className="text-xs text-emerald-600 font-bold mt-2 flex items-center gap-1">+{growthTrips}%</div>
+                    </button>
+                    <button onClick={() => setChartMetric("revenue")} className={`p-4 rounded-xl border-2 transition-all text-left ${chartMetric === "revenue" ? 'border-emerald-500 bg-emerald-50' : 'border-slate-100 bg-white hover:border-slate-200'}`}>
+                      <div className="text-slate-500 text-sm font-medium mb-1">Net Earnings</div>
+                      <div className="text-2xl font-black text-slate-900">₹{totalRevenue.toLocaleString()}</div>
+                      <div className="text-xs text-emerald-600 font-bold mt-2 flex items-center gap-1">+{growthRevenue}%</div>
+                    </button>
+                  </div>
+
+                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <div className="lg:col-span-2">
+                      <h3 className="text-sm font-bold text-slate-700 mb-6">Performance Trend</h3>
+                      <div className="h-64 w-full -ml-4">
+                        <ResponsiveContainer width="100%" height="100%">
+                          {chartMetric === "views" ? (
+                            <BarChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                              <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#94a3b8' }} />
+                              <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#94a3b8' }} />
+                              <RechartsTooltip cursor={{ fill: '#f8fafc' }} contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} />
+                              <Bar dataKey="views" fill="#0ea5e9" radius={[4, 4, 0, 0]} barSize={timeRange === "7D" ? 30 : 40} />
+                            </BarChart>
+                          ) : chartMetric === "bookings" ? (
+                            <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                              <defs>
+                                <linearGradient id="colorBookings" x1="0" y1="0" x2="0" y2="1">
+                                  <stop offset="5%" stopColor="#6366f1" stopOpacity={0.3}/>
+                                  <stop offset="95%" stopColor="#6366f1" stopOpacity={0}/>
+                                </linearGradient>
+                              </defs>
+                              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                              <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#94a3b8' }} />
+                              <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#94a3b8' }} />
+                              <RechartsTooltip contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} />
+                              <Area type="monotone" dataKey="trips" stroke="#6366f1" strokeWidth={3} fillOpacity={1} fill="url(#colorBookings)" />
+                            </AreaChart>
+                          ) : (
+                            <LineChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                              <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#94a3b8' }} />
+                              <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#94a3b8' }} tickFormatter={(val) => `₹${val/1000}k`} />
+                              <RechartsTooltip formatter={(value: any) => [`₹${Number(value).toLocaleString()}`, 'Revenue']} contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} />
+                              <Line type="monotone" dataKey="revenue" stroke="#10b981" strokeWidth={3} dot={{ r: 4, strokeWidth: 2 }} activeDot={{ r: 6 }} />
+                            </LineChart>
+                          )}
+                        </ResponsiveContainer>
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <h3 className="text-sm font-bold text-slate-700 mb-2">Trip Demographics</h3>
+                      <div className="h-48 w-full">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <PieChart>
+                            <Pie
+                              data={demographicData}
+                              cx="50%"
+                              cy="50%"
+                              innerRadius={40}
+                              outerRadius={70}
+                              paddingAngle={2}
+                              dataKey="value"
+                            >
+                              {demographicData.map((entry, index) => (
+                                <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                              ))}
+                            </Pie>
+                            <RechartsTooltip contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} />
+                          </PieChart>
+                        </ResponsiveContainer>
+                      </div>
+                      <div className="space-y-2 mt-2">
+                        {demographicData.map((item, i) => (
+                          <div key={i} className="flex items-center justify-between text-xs">
+                            <div className="flex items-center gap-2">
+                              <div className="w-2 h-2 rounded-full" style={{ backgroundColor: COLORS[i] }}></div>
+                              <span className="text-slate-600 font-medium">{item.name}</span>
+                            </div>
+                            <span className="font-bold text-slate-900">{item.value}%</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </>
               );
             })()}
-            </div>
-
-            {/* Paywall Overlay */}
-            {!hasAnalytics && (
-              <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-white/40 backdrop-blur-sm">
-                <div className="w-16 h-16 bg-white rounded-full shadow-lg flex items-center justify-center mb-4">
-                  <Lock className="w-6 h-6 text-indigo-500" />
-                </div>
-                <h3 className="text-xl font-bold text-slate-900 mb-2">Unlock Advanced Analytics</h3>
-                <p className="text-slate-600 text-sm max-w-md text-center mb-6">Upgrade to Growth Pro or higher to see who is viewing your vehicles, track conversion rates, and optimize your earnings.</p>
-                <button onClick={() => window.scrollTo({top: 0, behavior: 'smooth'})} className="bg-slate-900 text-white px-6 py-2.5 rounded-lg font-bold hover:bg-slate-800 transition-colors shadow-md">
-                  View Upgrade Plans
-                </button>
-              </div>
-            )}
           </div>
 
           {/* PREMIUM SUPPORT HUB */}
@@ -544,15 +470,6 @@ export default function TaxiDashboard({
           <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
             <div className="p-6 border-b border-slate-100 bg-slate-50">
               <h2 className="text-lg font-bold text-slate-900">Register a Vehicle</h2>
-              {!isApproved && (
-                <div className="mt-4 bg-orange-50 border border-orange-200 rounded-xl p-4 flex items-start gap-3">
-                  <AlertTriangle className="w-5 h-5 text-orange-600 shrink-0 mt-0.5" />
-                  <div>
-                    <h3 className="font-bold text-orange-900 text-sm">Documents Pending Verification</h3>
-                    <p className="text-sm text-orange-700 mt-1">You can add your vehicle details, but you <strong className="font-bold">cannot receive bookings</strong> until your RC and Permits are approved.</p>
-                  </div>
-                </div>
-              )}
             </div>
             
             <div className="p-6">
@@ -599,6 +516,16 @@ export default function TaxiDashboard({
                   </div>
                 </div>
 
+                <div className="bg-sky-50 border border-sky-100 rounded-xl p-5 flex flex-col sm:flex-row items-center justify-between gap-4 mt-6 mb-2">
+                  <div>
+                    <h3 className="font-bold text-sky-900 text-sm">Want to add specific routes?</h3>
+                    <p className="text-sky-700 text-xs mt-1">You can create custom routes (e.g. Srinagar Airport to Gulmarg) and set specific prices for them.</p>
+                  </div>
+                  <button type="button" onClick={() => setActiveTab("rates")} className="whitespace-nowrap px-4 py-2 bg-white text-sky-600 border border-sky-200 rounded-lg text-sm font-bold shadow-sm hover:bg-sky-50 transition-colors">
+                    Create Custom Routes
+                  </button>
+                </div>
+
                 <div className="flex items-center gap-2">
                   <input type="checkbox" id="ac" {...register("acAvailable")} className="w-4 h-4 text-sky-500 rounded border-slate-300" />
                   <label htmlFor="ac" className="text-sm font-medium text-slate-700">AC Available</label>
@@ -638,6 +565,63 @@ export default function TaxiDashboard({
                   </button>
                 </div>
               </form>
+            </div>
+          </div>
+
+        </div>
+      )}
+      
+      {activeTab === "financials" && (
+        <div className="space-y-8">
+          
+          {/* SUBSCRIPTION UPGRADE PLANS */}
+          <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+            <div className="p-6 border-b border-slate-100 bg-slate-50 flex items-center justify-between">
+              <div>
+                <h2 className="text-lg font-bold text-slate-900">Your Subscription Plan</h2>
+                <p className="text-sm text-slate-500 mt-1">Upgrade your plan to unlock premium seller tools and increase visibility.</p>
+              </div>
+              <div className="bg-sky-100 text-sky-800 px-3 py-1 rounded-full text-sm font-bold border border-sky-200">
+                Current: {subscriptionPlan}
+              </div>
+            </div>
+            
+            <div className="p-6 grid grid-cols-1 md:grid-cols-4 gap-6">
+              {[
+                { name: "Free", price: "₹0/mo", description: "Basic listing features", features: ["1 Vehicle Listing", "Basic Analytics", "Standard Support"], isPopular: false },
+                { name: "Growth Pro", price: "₹499/mo", description: "Get more visibility", features: ["Priority Listing", "Advanced Analytics", "Onboarding Helpline"], isPopular: true },
+                { name: "Pro", price: "₹999/mo", description: "Max out your bookings", features: ["Instant Booking", "Promotional Offers", "Featured Placement"], isPopular: false },
+                { name: "Enterprise", price: "Custom", description: "For fleet operators", features: ["API Access", "Account Manager", "Custom Pricing"], isPopular: false },
+              ].map((plan) => (
+                <div key={plan.name} className={`relative rounded-2xl border-2 p-5 flex flex-col ${subscriptionPlan === plan.name ? 'border-sky-500 bg-sky-50/50' : plan.isPopular ? 'border-indigo-500 bg-indigo-50/10' : 'border-slate-100 bg-white'}`}>
+                  {plan.isPopular && <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-indigo-500 text-white text-[10px] font-bold uppercase tracking-wider py-1 px-3 rounded-full">Most Popular</div>}
+                  <h3 className="font-bold text-slate-900 text-lg">{plan.name}</h3>
+                  <div className="my-2">
+                    <span className="text-2xl font-black text-slate-900">{plan.price}</span>
+                  </div>
+                  <p className="text-xs text-slate-500 mb-4">{plan.description}</p>
+                  
+                  <ul className="space-y-2 mb-6 flex-1">
+                    {plan.features.map(f => (
+                      <li key={f} className="flex items-start gap-2 text-xs text-slate-600 font-medium">
+                        <CheckCircle2 className={`w-3.5 h-3.5 shrink-0 ${subscriptionPlan === plan.name ? 'text-sky-500' : 'text-slate-400'}`} /> {f}
+                      </li>
+                    ))}
+                  </ul>
+
+                  <button 
+                    onClick={() => handleSimulateUpgrade(plan.name, plan.price)}
+                    disabled={subscriptionPlan === plan.name}
+                    className={`w-full py-2 rounded-lg text-sm font-bold transition-colors ${
+                      subscriptionPlan === plan.name ? 'bg-sky-100 text-sky-700 cursor-default' : 
+                      plan.isPopular ? 'bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm' : 
+                      'bg-slate-900 hover:bg-slate-800 text-white shadow-sm'
+                    }`}
+                  >
+                    {subscriptionPlan === plan.name ? "Current Plan" : "Upgrade"}
+                  </button>
+                </div>
+              ))}
             </div>
           </div>
 

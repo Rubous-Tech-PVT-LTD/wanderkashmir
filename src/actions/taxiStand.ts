@@ -90,16 +90,16 @@ export async function assignDriverAndVehicle(bookingId: string, driverId: string
       },
       include: {
         driver: true,
-        vehicle: true,
-        user: true,
-        vendorProfile: true
+        vehicle: {
+          include: { vendorProfile: true }
+        },
+        user: true
       }
     });
 
     // Send dispatch confirmation email to customer
-    if (booking.user?.email || booking.guestEmail) {
-      const customerEmail = booking.user?.email || booking.guestEmail;
-      if (customerEmail) {
+    const customerEmail = booking.user?.email;
+    if (customerEmail) {
         try {
           await resend.emails.send({
             from: 'WanderKashmir <support@wanderkashmir.com>',
@@ -111,12 +111,12 @@ export async function assignDriverAndVehicle(bookingId: string, driverId: string
                 <p>Your taxi has been successfully dispatched for your upcoming trip!</p>
                 <div style="background-color: #f8fafc; padding: 16px; border-radius: 8px; margin: 20px 0;">
                   <h3 style="margin-top: 0;">Driver Details</h3>
-                  <p><strong>Name:</strong> ${booking.driver?.name}</p>
-                  <p><strong>Phone:</strong> ${booking.driver?.phone}</p>
+                  <p><strong>Name:</strong> ${booking.driver?.name || 'N/A'}</p>
+                  <p><strong>Phone:</strong> ${booking.driver?.phone || 'N/A'}</p>
                   <h3 style="margin-bottom: 0;">Vehicle Details</h3>
-                  <p><strong>Car:</strong> ${booking.vehicle?.make} ${booking.vehicle?.model}</p>
-                  <p><strong>Registration:</strong> ${booking.vehicle?.registrationNum}</p>
-                  <p><strong>Stand:</strong> ${booking.vendorProfile?.businessName}</p>
+                  <p><strong>Car:</strong> ${booking.vehicle?.make || ''} ${booking.vehicle?.model || ''}</p>
+                  <p><strong>Registration:</strong> ${booking.vehicle?.registrationNum || 'N/A'}</p>
+                  <p><strong>Stand:</strong> ${booking.vehicle?.vendorProfile?.businessName || 'N/A'}</p>
                 </div>
                 <p>Have a safe and wonderful journey!</p>
                 <p>Best Regards,<br/><strong>The WanderKashmir Team</strong></p>
@@ -128,7 +128,6 @@ export async function assignDriverAndVehicle(bookingId: string, driverId: string
           // Don't fail the assignment if email fails
         }
       }
-    }
 
     revalidatePath("/partner/dashboard");
     return { success: true, booking };

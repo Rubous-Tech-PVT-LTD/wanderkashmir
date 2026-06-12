@@ -27,6 +27,7 @@ export default async function DynamicVendorDashboard() {
       })
     : await prisma.vendorProfile.findFirst({
         where: { userId },
+        orderBy: { createdAt: 'desc' },
         include: {
           properties: true,
           vehicles: true,
