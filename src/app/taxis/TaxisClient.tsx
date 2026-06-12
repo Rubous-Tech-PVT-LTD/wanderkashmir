@@ -59,8 +59,8 @@ export default function TaxisClient({ rateCards, imagesMap = {}, verifiedDrivers
                   selectedVehicle === vt ? 'border-orange-500 ring-4 ring-orange-500/10 scale-105 shadow-md' : 'border-slate-200 hover:border-slate-300 bg-white opacity-80 hover:opacity-100'
                 }`}
               >
-                <div className="h-24 bg-slate-100 p-2 flex items-center justify-center">
-                  <img src={imagesMap[vt] || DEFAULT_IMAGES[vt]} alt={vt} className="max-w-full max-h-full object-contain mix-blend-multiply" />
+                <div className="h-28 w-full bg-slate-100 relative">
+                  <img src={imagesMap[vt] || DEFAULT_IMAGES[vt]} alt={vt} className="absolute inset-0 w-full h-full object-cover" />
                 </div>
                 <div className={`p-3 text-center font-bold text-sm ${selectedVehicle === vt ? 'bg-orange-50 text-orange-700' : 'bg-slate-50 text-slate-700'}`}>
                   {vt}
