@@ -22,7 +22,6 @@ export const vendorRegistrationSchema = z.object({
   }),
   
   // Conditional Fields
-  gstNumber: z.string().optional(),
   panNumber: z.string().optional(),
   tradeLicense: z.string().optional(),
   
