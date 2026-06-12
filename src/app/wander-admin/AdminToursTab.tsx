@@ -144,8 +144,8 @@ export default function AdminToursTab({ initialTours }: { initialTours: any[] })
             <input required type="text" className="w-full border rounded-lg p-2" placeholder="Srinagar, Gulmarg" value={formData.destinations} onChange={e => setFormData({ ...formData, destinations: e.target.value })} />
           </div>
           <div>
-            <label className="block text-sm font-semibold mb-1">Images URLs (comma separated)</label>
-            <input required type="text" className="w-full border rounded-lg p-2" value={formData.images} onChange={e => setFormData({ ...formData, images: e.target.value })} />
+            <label className="block text-sm font-semibold mb-1">Multiple Image URLs (comma separated)</label>
+            <input required type="text" className="w-full border rounded-lg p-2" placeholder="url1.jpg, url2.jpg" value={formData.images} onChange={e => setFormData({ ...formData, images: e.target.value })} />
           </div>
           <div>
             <label className="block text-sm font-semibold mb-1">Price (₹)</label>

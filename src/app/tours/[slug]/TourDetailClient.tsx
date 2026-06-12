@@ -46,6 +46,18 @@ export default function TourDetailClient({ initialTour }: { initialTour: any }) 
 
   const tour = initialTour;
 
+  const nextImage = () => {
+    if (tour.images?.length) {
+      setActiveImage((prev) => (prev + 1) % tour.images.length);
+    }
+  };
+
+  const prevImage = () => {
+    if (tour.images?.length) {
+      setActiveImage((prev) => (prev - 1 + tour.images.length) % tour.images.length);
+    }
+  };
+
   const totalPrice = tour.price * persons;
   const savings = tour.originalPrice - tour.price;
 
@@ -94,20 +106,24 @@ export default function TourDetailClient({ initialTour }: { initialTour: any }) 
                       <Share2 className="w-5 h-5 text-slate-400" />
                     </button>
                   </div>
-                </div>
-                {/* Thumbnails */}
-                <div className="flex gap-2 p-3">
-                  {tour.images.map((img: string, i: number) => (
-                    <button
-                      key={i}
-                      onClick={() => setActiveImage(i)}
-                      className={`flex-1 h-16 rounded-xl overflow-hidden border-2 transition-all ${
-                        activeImage === i ? "border-orange-500" : "border-transparent"
-                      }`}
-                    >
-                      <img src={img} alt="" className="w-full h-full object-cover" />
-                    </button>
-                  ))}
+                  
+                  {/* Navigation Arrows */}
+                  {tour.images?.length > 1 && (
+                    <>
+                      <button 
+                        onClick={prevImage}
+                        className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/80 hover:bg-white rounded-full flex items-center justify-center shadow-lg transition-all"
+                      >
+                        <ChevronRight className="w-6 h-6 text-slate-800 rotate-180" />
+                      </button>
+                      <button 
+                        onClick={nextImage}
+                        className="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/80 hover:bg-white rounded-full flex items-center justify-center shadow-lg transition-all"
+                      >
+                        <ChevronRight className="w-6 h-6 text-slate-800" />
+                      </button>
+                    </>
+                  )}
                 </div>
               </div>
 
