@@ -107,6 +107,19 @@ model VendorProfile {
   accountNumber     String?
   ifscCode          String?
   
+  // Specific KYC Fields
+  gstNumber         String?
+  panNumber         String?
+  tradeLicense      String?
+  
+  drivingLicense      String?
+  vehicleRegistration String?
+  vehicleType         String?
+  
+  guideLicense      String?
+  languages         String?
+  experienceYears   Int?
+  
   // Relations
   properties       Property[]
   vehicles         Vehicle[]

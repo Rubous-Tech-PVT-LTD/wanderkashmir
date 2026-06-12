@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Car, MapPin, Info, ArrowRight } from "lucide-react";
+import { Car, MapPin, Info, ArrowRight, UserCircle2 } from "lucide-react";
 
 const DEFAULT_IMAGES: Record<string, string> = {
   "CRYSTA": "https://imgd.aeplcdn.com/664x374/n/cw/ec/139651/innova-crysta-exterior-right-front-three-quarter-2.jpeg?isig=0&q=80",
@@ -18,11 +18,17 @@ const DEFAULT_IMAGES: Record<string, string> = {
 
 const VEHICLE_TYPES = Object.keys(DEFAULT_IMAGES);
 
-export default function TaxisClient({ rateCards, imagesMap = {} }: { rateCards: any[], imagesMap?: Record<string, string> }) {
+export default function TaxisClient({ rateCards, imagesMap = {}, verifiedDrivers = [] }: { rateCards: any[], imagesMap?: Record<string, string>, verifiedDrivers?: any[] }) {
   const [selectedVehicle, setSelectedVehicle] = useState<string>("INNOVA");
   const [searchRoute, setSearchRoute] = useState("");
 
   const filteredRoutes = rateCards.filter(r => r.place.toLowerCase().includes(searchRoute.toLowerCase()));
+  
+  // Filter verified drivers for the selected vehicle type
+  // (Assuming vehicleType from vendor matches our VEHICLE_TYPES e.g., "INNOVA", "CRYSTA")
+  const activeVerifiedDrivers = verifiedDrivers.filter(
+    driver => driver.vehicleType && driver.vehicleType.toUpperCase().includes(selectedVehicle.toUpperCase())
+  );
 
   return (
     <div className="pt-24 pb-20">
@@ -119,12 +125,68 @@ export default function TaxisClient({ rateCards, imagesMap = {} }: { rateCards: 
             </table>
           </div>
           
-          <div className="mt-6 flex items-start gap-2 text-sm text-slate-500 bg-sky-50 p-4 rounded-xl">
+          <div className="mt-6 flex items-start gap-2 text-sm text-slate-500 bg-sky-50 p-4 rounded-xl mb-12">
             <Info className="w-5 h-5 text-sky-600 flex-shrink-0 mt-0.5" />
             <p>
               These are standard union rates. Actual booking prices may have slight variations depending on exact pickup/drop locations and seasonal demand. Tolls and parking are extra unless specified.
             </p>
           </div>
+          
+          {/* Wander Verified Drivers Section */}
+          {activeVerifiedDrivers.length > 0 && (
+            <div className="mt-12 border-t border-slate-200 pt-12">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="bg-green-100 p-2 rounded-full">
+                  <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
+                </div>
+                <h2 className="text-2xl font-bold text-slate-900">
+                  Wander Verified Drivers for <span className="text-orange-600">{selectedVehicle}</span>
+                </h2>
+              </div>
+              <p className="text-slate-600 mb-8 max-w-3xl">
+                These are independent, verified drivers registered directly with WanderKashmir. Their identity, driving license, and vehicle documents have been officially vetted for your safety and comfort.
+              </p>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {activeVerifiedDrivers.map((driver) => (
+                  <div key={driver.id} className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group">
+                    <div className="absolute top-0 right-0 bg-green-500 text-white text-[10px] font-bold px-3 py-1 rounded-bl-lg flex items-center gap-1">
+                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
+                      VERIFIED
+                    </div>
+                    
+                    <div className="flex items-center gap-4 mb-4">
+                      <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center overflow-hidden border-2 border-slate-100">
+                         {/* If they have KYC photos, just show a generic driver icon to protect privacy as requested */}
+                         <UserCircle2 className="w-10 h-10 text-slate-400" />
+                      </div>
+                      <div>
+                        <h3 className="font-bold text-slate-900">Wander Verified Driver</h3>
+                        <div className="flex items-center gap-1 text-xs font-semibold text-slate-500 mt-1">
+                          <Car className="w-3.5 h-3.5" /> {driver.vehicleType?.toUpperCase()}
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-2 mb-6">
+                      <div className="flex justify-between text-sm">
+                        <span className="text-slate-500">Vehicle RC</span>
+                        <span className="font-semibold text-slate-700">{driver.vehicleRegistration || "Verified"}</span>
+                      </div>
+                      <div className="flex justify-between text-sm">
+                        <span className="text-slate-500">Experience</span>
+                        <span className="font-semibold text-slate-700">{driver.experienceYears ? `${driver.experienceYears}+ Years` : "Experienced"}</span>
+                      </div>
+                    </div>
+                    
+                    <Link href={`/checkout?type=taxi&vehicle=${selectedVehicle}&driverId=${driver.id}`} className="block w-full py-2.5 text-center bg-slate-900 text-white font-semibold rounded-lg hover:bg-slate-800 transition-colors">
+                      Request this Driver
+                    </Link>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
 
       </div>

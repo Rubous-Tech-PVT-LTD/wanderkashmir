@@ -21,10 +21,25 @@ export default async function TaxisPage() {
   const imagesMap: Record<string, string> = {};
   imagesData.forEach(img => imagesMap[img.type] = img.imageUrl);
 
+  // Fetch verified drivers
+  const verifiedDrivers = await prisma.vendorProfile.findMany({
+    where: { 
+      type: 'TAXI',
+      isApproved: true
+    },
+    select: {
+      id: true,
+      vehicleType: true,
+      vehicleRegistration: true,
+      experienceYears: true,
+      kycDocuments: true // to get a profile pic if any
+    }
+  });
+
   return (
     <main className="min-h-screen bg-slate-50">
       <Navbar />
-      <TaxisClient rateCards={ratesData} imagesMap={imagesMap} />
+      <TaxisClient rateCards={ratesData} imagesMap={imagesMap} verifiedDrivers={verifiedDrivers} />
       <Footer />
     </main>
   );

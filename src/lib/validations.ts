@@ -20,6 +20,43 @@ export const vendorRegistrationSchema = z.object({
   agreeToTerms: z.literal(true, {
     error: "You must agree to the terms of service"
   }),
+  
+  // Conditional Fields
+  gstNumber: z.string().optional(),
+  panNumber: z.string().optional(),
+  tradeLicense: z.string().optional(),
+  
+  // Taxi specific
+  vehicleType: z.string().optional(),
+  vehicleRegistration: z.string().optional(),
+  drivingLicense: z.string().optional(),
+  
+  // Guide specific
+  guideLicense: z.string().optional(),
+  languages: z.string().optional(),
+  experienceYears: z.coerce.number().optional(),
+}).superRefine((data, ctx) => {
+  if (data.vendorType === 'hotel' || data.vendorType === 'homestay') {
+    if (!data.panNumber || data.panNumber.length < 10) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Valid PAN Number is required", path: ["panNumber"] });
+    }
+  }
+  if (data.vendorType === 'taxi') {
+    if (!data.vehicleType || data.vehicleType.length < 2) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Vehicle Type is required", path: ["vehicleType"] });
+    }
+    if (!data.vehicleRegistration || data.vehicleRegistration.length < 4) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Vehicle Registration (RC) is required", path: ["vehicleRegistration"] });
+    }
+    if (!data.drivingLicense || data.drivingLicense.length < 5) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Driving License number is required", path: ["drivingLicense"] });
+    }
+  }
+  if (data.vendorType === 'guide') {
+    if (!data.languages || data.languages.length < 3) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Please specify languages spoken", path: ["languages"] });
+    }
+  }
 });
 
 export type VendorRegistrationData = z.infer<typeof vendorRegistrationSchema>;

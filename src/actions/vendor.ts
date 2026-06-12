@@ -84,6 +84,16 @@ export async function registerVendor(data: VendorRegistrationData) {
         bankName: validData.bankName,
         accountNumber: validData.accountNumber,
         ifscCode: validData.ifscCode,
+        
+        gstNumber: validData.gstNumber,
+        panNumber: validData.panNumber,
+        tradeLicense: validData.tradeLicense,
+        drivingLicense: validData.drivingLicense,
+        vehicleRegistration: validData.vehicleRegistration,
+        vehicleType: validData.vehicleType,
+        guideLicense: validData.guideLicense,
+        languages: validData.languages,
+        experienceYears: validData.experienceYears,
       }
     });
 

@@ -53,11 +53,22 @@ export default function VendorEntryPage() {
     let fieldsToValidate: any[] = [];
     
     if (step === 1) fieldsToValidate = ["vendorType"];
-    if (step === 2) fieldsToValidate = [
-      "businessName", "password", "address", "email", "phone", 
-      "accountHolderName", "bankName", "accountNumber", "ifscCode",
-      "altPhone", "altContactPerson", "gstNumber"
-    ];
+    if (step === 2) {
+      const baseFields = [
+        "businessName", "password", "address", "email", "phone", 
+        "accountHolderName", "bankName", "accountNumber", "ifscCode",
+        "altPhone", "altContactPerson"
+      ];
+      if (selectedType === 'hotel' || selectedType === 'homestay') {
+        fieldsToValidate = [...baseFields, "gstNumber", "panNumber", "tradeLicense"];
+      } else if (selectedType === 'taxi') {
+        fieldsToValidate = [...baseFields, "vehicleType", "vehicleRegistration", "drivingLicense"];
+      } else if (selectedType === 'guide') {
+        fieldsToValidate = [...baseFields, "languages", "experienceYears", "guideLicense"];
+      } else {
+        fieldsToValidate = baseFields;
+      }
+    }
 
     const isStepValid = await trigger(fieldsToValidate);
     if (isStepValid) setStep((prev) => prev + 1);
@@ -199,15 +210,68 @@ export default function VendorEntryPage() {
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
                   <div className="col-span-2 md:col-span-1">
-                    <label className="block text-sm font-medium text-slate-700 mb-1">Legal Business Name / Owner Name *</label>
-                    <input {...register("businessName")} className={`w-full border rounded-lg px-4 py-2.5 outline-none ${errors.businessName ? "border-orange-500" : "border-slate-200 focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500"}`} placeholder="e.g. Tariq Ahmad / Grand Royal Hotel" />
+                    <label className="block text-sm font-medium text-slate-700 mb-1">
+                      {selectedType === 'taxi' ? 'Driver / Owner Name *' : selectedType === 'guide' ? 'Full Name *' : 'Legal Business / Property Name *'}
+                    </label>
+                    <input {...register("businessName")} className={`w-full border rounded-lg px-4 py-2.5 outline-none ${errors.businessName ? "border-orange-500" : "border-slate-200 focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500"}`} placeholder={selectedType === 'taxi' || selectedType === 'guide' ? "e.g. Tariq Ahmad" : "e.g. Grand Royal Hotel"} />
                     {errors.businessName && <span className="text-orange-500 text-xs font-medium mt-1">{errors.businessName.message}</span>}
                   </div>
                   
-                  <div className="col-span-2 md:col-span-1">
-                    <label className="block text-sm font-medium text-slate-700 mb-1">GST Number (Optional)</label>
-                    <input {...register("gstNumber")} className="w-full border border-slate-200 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 outline-none uppercase" placeholder="e.g. 01AAAAA0000A1Z5" />
-                  </div>
+                  {(selectedType === 'hotel' || selectedType === 'homestay') && (
+                    <>
+                      <div className="col-span-2 md:col-span-1">
+                        <label className="block text-sm font-medium text-slate-700 mb-1">GST Number (Optional)</label>
+                        <input {...register("gstNumber")} className="w-full border border-slate-200 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 outline-none uppercase" placeholder="e.g. 01AAAAA0000A1Z5" />
+                      </div>
+                      <div className="col-span-2 md:col-span-1">
+                        <label className="block text-sm font-medium text-slate-700 mb-1">PAN Number *</label>
+                        <input {...register("panNumber")} className={`w-full border rounded-lg px-4 py-2.5 outline-none uppercase ${errors.panNumber ? "border-orange-500" : "border-slate-200 focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500"}`} placeholder="e.g. ABCDE1234F" />
+                        {errors.panNumber && <span className="text-orange-500 text-xs font-medium mt-1">{errors.panNumber.message}</span>}
+                      </div>
+                      <div className="col-span-2 md:col-span-1">
+                        <label className="block text-sm font-medium text-slate-700 mb-1">Trade License / Govt Registration</label>
+                        <input {...register("tradeLicense")} className="w-full border border-slate-200 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 outline-none uppercase" placeholder="Registration ID" />
+                      </div>
+                    </>
+                  )}
+
+                  {selectedType === 'taxi' && (
+                    <>
+                      <div className="col-span-2 md:col-span-1">
+                        <label className="block text-sm font-medium text-slate-700 mb-1">Vehicle Type / Model *</label>
+                        <input {...register("vehicleType")} className={`w-full border rounded-lg px-4 py-2.5 outline-none ${errors.vehicleType ? "border-orange-500" : "border-slate-200 focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500"}`} placeholder="e.g. INNOVA, CRYSTA" />
+                        {errors.vehicleType && <span className="text-orange-500 text-xs font-medium mt-1">{errors.vehicleType.message}</span>}
+                      </div>
+                      <div className="col-span-2 md:col-span-1">
+                        <label className="block text-sm font-medium text-slate-700 mb-1">Vehicle Registration (RC) *</label>
+                        <input {...register("vehicleRegistration")} className={`w-full border rounded-lg px-4 py-2.5 outline-none uppercase ${errors.vehicleRegistration ? "border-orange-500" : "border-slate-200 focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500"}`} placeholder="e.g. JK01AB1234" />
+                        {errors.vehicleRegistration && <span className="text-orange-500 text-xs font-medium mt-1">{errors.vehicleRegistration.message}</span>}
+                      </div>
+                      <div className="col-span-2 md:col-span-1">
+                        <label className="block text-sm font-medium text-slate-700 mb-1">Driving License Number *</label>
+                        <input {...register("drivingLicense")} className={`w-full border rounded-lg px-4 py-2.5 outline-none uppercase ${errors.drivingLicense ? "border-orange-500" : "border-slate-200 focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500"}`} placeholder="e.g. JK-01-2010-XXXX" />
+                        {errors.drivingLicense && <span className="text-orange-500 text-xs font-medium mt-1">{errors.drivingLicense.message}</span>}
+                      </div>
+                    </>
+                  )}
+
+                  {selectedType === 'guide' && (
+                    <>
+                      <div className="col-span-2 md:col-span-1">
+                        <label className="block text-sm font-medium text-slate-700 mb-1">Guide License Number (Optional)</label>
+                        <input {...register("guideLicense")} className="w-full border border-slate-200 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 outline-none uppercase" placeholder="e.g. TR-GD-1234" />
+                      </div>
+                      <div className="col-span-2 md:col-span-1">
+                        <label className="block text-sm font-medium text-slate-700 mb-1">Languages Spoken *</label>
+                        <input {...register("languages")} className={`w-full border rounded-lg px-4 py-2.5 outline-none ${errors.languages ? "border-orange-500" : "border-slate-200 focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500"}`} placeholder="e.g. English, Hindi, Kashmiri" />
+                        {errors.languages && <span className="text-orange-500 text-xs font-medium mt-1">{errors.languages.message}</span>}
+                      </div>
+                      <div className="col-span-2 md:col-span-1">
+                        <label className="block text-sm font-medium text-slate-700 mb-1">Years of Experience</label>
+                        <input type="number" {...register("experienceYears")} className="w-full border border-slate-200 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 outline-none" placeholder="e.g. 5" />
+                      </div>
+                    </>
+                  )}
 
                   <div className="col-span-2">
                     <label className="block text-sm font-medium text-slate-700 mb-1">Complete Business Address *</label>
