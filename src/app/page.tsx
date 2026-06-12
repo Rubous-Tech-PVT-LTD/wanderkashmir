@@ -338,12 +338,12 @@ export default async function HomePage() {
       <Navbar />
 
       {/* ─── HERO ─────────────────────────────────────────── */}
-      <section className="relative h-[100vh] md:h-[85vh] flex flex-col justify-center overflow-visible">
+      <section className="relative h-[100vh] md:h-[95vh] flex flex-col justify-center overflow-visible">
         {/* Background Image Carousel */}
         <HeroCarousel />
 
         {/* Hero Content */}
-        <div className="relative z-10 container-custom mb-32 md:mb-0 pt-16 md:pt-0 md:mt-24 text-left">
+        <div className="relative z-10 container-custom mb-32 md:mb-0 pt-16 md:pt-0 md:mt-12 text-left">
           <h1 className="text-[3rem] md:text-[4.5rem] font-bold text-white leading-[1.1] drop-shadow-xl tracking-tight mb-2">
             Discover <span className="text-orange-500">Paradise</span> <br className="hidden md:block" />
             <div className="font-['Dancing_Script'] text-[#38bdf8] font-normal drop-shadow-md mt-2 flex items-baseline justify-start gap-4">
