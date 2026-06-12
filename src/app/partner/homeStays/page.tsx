@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Home, Save, Plus, MapPin, IndianRupee, CheckCircle2, AlertTriangle, Lock, Award, Image as ImageIcon, LineChart as LineChartIcon, Zap, MessageCircle, BookOpen, Camera, Users } from "lucide-react";
+import { Home, Save, Plus, MapPin, IndianRupee, CheckCircle2, AlertTriangle, Lock, Award, Image as ImageIcon, LineChart as LineChartIcon, Zap, MessageCircle, BookOpen, Camera, Users, Edit, Trash2 } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, LineChart, Line, AreaChart, Area, PieChart, Pie, Cell } from 'recharts';
 import { Download } from "lucide-react";
 import { useVendor } from "@/context/VendorContext";
@@ -29,8 +29,8 @@ type HomestayListingFormValues = z.infer<typeof homestayListingSchema>;
 type SubscriptionPlan = "Free" | "Growth Pro" | "Pro" | "Enterprise";
 
 export default function HomestayDashboard({ bookings = [], properties = [] }: { bookings?: any[], properties?: any[] }) {
-  const { isApproved, subscriptionPlan, setSubscriptionPlan } = useVendor();
-  const [activeTab, setActiveTab] = useState("financials");
+  const { vendorName, isApproved, status, rejectionReason, subscriptionPlan, setSubscriptionPlan } = useVendor();
+  const [activeTab, setActiveTab] = useState("overview");
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
 
@@ -255,7 +255,7 @@ export default function HomestayDashboard({ bookings = [], properties = [] }: { 
       <div className="flex items-center justify-between mb-8">
         <div>
           <div className="flex items-center gap-3">
-            <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Homestay Dashboard</h1>
+            <h1 className="text-3xl font-bold text-slate-900 tracking-tight">{vendorName || "Homestay"} Dashboard</h1>
             {subscriptionPlan !== "Free" && (
               <span className="bg-gradient-to-r from-sky-200 to-sky-400 text-sky-900 text-xs font-bold px-3 py-1 rounded-full flex items-center gap-1 uppercase tracking-wider shadow-sm">
                 <Award className="w-4 h-4" /> {subscriptionPlan} Host
@@ -264,29 +264,68 @@ export default function HomestayDashboard({ bookings = [], properties = [] }: { 
           </div>
           <div className="flex items-center gap-2 mt-1">
             <p className="text-slate-500">Manage your homestay listings and bookings.</p>
-            {!isApproved && (
+            {!isApproved && status === "PENDING" && (
               <span className="bg-orange-100 text-orange-700 text-[10px] font-bold px-2 py-0.5 rounded flex items-center gap-1 uppercase tracking-wider">
                 <AlertTriangle className="w-3 h-3" /> Pending Approval
+              </span>
+            )}
+            {!isApproved && status === "REJECTED" && (
+              <span className="bg-red-100 text-red-700 text-[10px] font-bold px-2 py-0.5 rounded flex items-center gap-1 uppercase tracking-wider">
+                <AlertTriangle className="w-3 h-3" /> Application Rejected
+              </span>
+            )}
+            {status === "SUSPENDED" && (
+              <span className="bg-red-100 text-red-700 text-[10px] font-bold px-2 py-0.5 rounded flex items-center gap-1 uppercase tracking-wider">
+                <Lock className="w-3 h-3" /> Suspended
               </span>
             )}
           </div>
         </div>
         <button 
           onClick={handleAddNewClick}
-          disabled={!isApproved}
+          disabled={!isApproved || status === "SUSPENDED"}
           className={`flex items-center gap-2 px-4 py-2.5 rounded-lg font-medium transition-colors shadow-sm ${
-            isApproved ? 'bg-sky-500 text-white hover:bg-sky-600' : 'bg-slate-200 text-slate-400 cursor-not-allowed'
+            (!isApproved || status === "SUSPENDED")
+              ? 'bg-slate-200 text-slate-400 cursor-not-allowed' 
+              : hasReachedLimit 
+                ? 'bg-orange-100 text-orange-700 hover:bg-orange-200' 
+                : 'bg-sky-500 text-white hover:bg-sky-600'
           }`}
         >
-          <Plus className="w-5 h-5" /> Add New Homestay
+          <Plus className="w-5 h-5" />
+          <span>Add New Homestay</span>
         </button>
       </div>
 
+      {status === "SUSPENDED" && (
+        <div className="bg-red-50 border border-red-200 rounded-xl p-4 mb-8 flex items-start gap-4">
+          <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0">
+            <Lock className="w-5 h-5 text-red-600" />
+          </div>
+          <div>
+            <h3 className="font-bold text-red-900 text-lg">Your account has been suspended by the Admin</h3>
+            <p className="text-red-700 mt-1">Reason: <span className="font-semibold">{rejectionReason || "Policy violation."}</span></p>
+            <p className="text-red-600 text-sm mt-2">Your listings are currently hidden from tourists and you cannot add new listings. Please contact support.</p>
+          </div>
+        </div>
+      )}
+
+      {/* Tabs */}
       <div className="flex gap-6 border-b border-slate-200 mb-8 overflow-x-auto whitespace-nowrap">
         {["overview", "listings", "bookings", "financials"].map((tab) => (
           <button
             key={tab}
-            onClick={() => setActiveTab(tab)}
+            onClick={() => {
+              if (tab === "listings" && hasReachedLimit && !editingId) {
+                toast.error("You have reached the maximum limit of 1 property on the Free plan. Please upgrade to add more properties.", { duration: 5000, id: 'limit-error-tab' });
+                setActiveTab("financials");
+              } else {
+                if (tab === "listings" && !editingId) {
+                  handleAddNewClick();
+                }
+                setActiveTab(tab);
+              }
+            }}
             className={`pb-4 text-sm font-semibold capitalize transition-colors relative ${activeTab === tab ? "text-sky-600" : "text-slate-500 hover:text-slate-800"}`}
           >
             {tab === "financials" ? "Financials & Subscription" : tab}
@@ -357,12 +396,82 @@ export default function HomestayDashboard({ bookings = [], properties = [] }: { 
             <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex flex-col">
               <span className="text-slate-500 text-sm font-medium mb-2">Total Earnings</span>
               <span className="text-3xl font-bold text-slate-900">₹0</span>
+              <span className="text-slate-400 text-sm font-medium mt-2">New Account</span>
             </div>
             <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex flex-col">
-              <span className="text-slate-500 text-sm font-medium mb-2">Active Bookings</span>
+              <span className="text-slate-500 text-sm font-medium mb-2">Active Properties</span>
+              <span className="text-3xl font-bold text-slate-900">{properties.length}</span>
+            </div>
+            <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex flex-col">
+              <span className="text-slate-500 text-sm font-medium mb-2">Total Views</span>
               <span className="text-3xl font-bold text-slate-900">0</span>
             </div>
           </div>
+
+          {/* Display Properties List */}
+          {properties.length > 0 && (
+            <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+              <div className="p-6 border-b border-slate-100 bg-slate-50">
+                <h2 className="text-lg font-bold text-slate-900">Your Properties</h2>
+              </div>
+              
+              {hasReachedLimit && (
+                <div className="bg-orange-50 border-b border-orange-100 p-4 px-6 flex items-start sm:items-center justify-between flex-col sm:flex-row gap-4">
+                  <div className="flex gap-3">
+                    <AlertTriangle className="w-5 h-5 text-orange-500 flex-shrink-0 mt-0.5 sm:mt-0" />
+                    <div>
+                      <p className="text-orange-900 font-bold text-sm">Property Limit Reached</p>
+                      <p className="text-orange-700 text-sm mt-0.5">Upgrade your plan to add more properties and get priority listings.</p>
+                    </div>
+                  </div>
+                  <button onClick={() => setActiveTab("financials")} className="whitespace-nowrap bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg font-bold text-sm shadow-sm transition-colors flex-shrink-0">
+                    Upgrade Plan
+                  </button>
+                </div>
+              )}
+              <div className="divide-y divide-slate-100">
+                {properties.map((prop: any) => (
+                  <div key={prop.id} className="p-6 flex items-center justify-between hover:bg-slate-50 transition-colors">
+                    <div>
+                      <h3 className="font-bold text-slate-900 text-lg">{prop.name}</h3>
+                      <p className="text-slate-500 text-sm flex items-center gap-1 mt-1">
+                        <MapPin className="w-3 h-3" /> {prop.location}
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <p className="font-bold text-slate-900 text-lg">₹{prop.pricePerNight} <span className="text-sm font-normal text-slate-500">/ night</span></p>
+                      <p className="text-xs font-semibold text-sky-600 mt-1">Up to {prop.totalRooms * 2} Guests</p>
+                      <div className="flex items-center justify-end gap-2 mt-2">
+                        {!prop.isApproved ? (
+                          prop.status === "REJECTED" ? (
+                            <div className="flex flex-col items-end">
+                              <span className="inline-block bg-red-100 text-red-700 text-xs font-bold px-2 py-1 rounded-full">Rejected</span>
+                              {prop.rejectionReason && <span className="text-[10px] text-red-500 mt-1 max-w-[150px] truncate" title={prop.rejectionReason}>{prop.rejectionReason}</span>}
+                            </div>
+                          ) : prop.status === "SUSPENDED" ? (
+                            <div className="flex flex-col items-end">
+                              <span className="inline-block bg-red-100 text-red-700 text-xs font-bold px-2 py-1 rounded-full flex items-center gap-1"><Lock className="w-3 h-3" /> Suspended</span>
+                              {prop.rejectionReason && <span className="text-[10px] text-red-500 mt-1 max-w-[150px] truncate" title={prop.rejectionReason}>{prop.rejectionReason}</span>}
+                            </div>
+                          ) : (
+                            <span className="inline-block bg-orange-100 text-orange-700 text-xs font-bold px-2 py-1 rounded-full">Pending Approval</span>
+                          )
+                        ) : (
+                          <span className="inline-block bg-emerald-100 text-emerald-700 text-xs font-bold px-2 py-1 rounded-full">Live</span>
+                        )}
+                        <button onClick={() => handleEdit(prop)} className="p-1.5 text-slate-400 hover:text-sky-600 hover:bg-sky-50 rounded-lg transition-colors" title="Edit Property">
+                          <Edit className="w-4 h-4" />
+                        </button>
+                        <button onClick={() => handleDelete(prop.id)} className="p-1.5 text-slate-400 hover:text-orange-600 hover:bg-orange-50 rounded-lg transition-colors" title="Delete Property">
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* ADVANCED ANALYTICS (FEATURE GATED) */}
           <div className="relative bg-white rounded-2xl shadow-sm border border-slate-200 p-6 overflow-hidden mt-8">
