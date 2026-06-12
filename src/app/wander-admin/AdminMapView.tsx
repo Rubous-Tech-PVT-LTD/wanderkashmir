@@ -1,6 +1,6 @@
 "use client";
 
-import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, Popup, Tooltip } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 import { useEffect, useState } from "react";
@@ -128,23 +128,23 @@ export default function AdminMapView({ vendors, onExit }: { vendors: any[], onEx
 
             return (
               <Marker key={vendor.id} position={[lat, lng] as [number, number]} icon={icon}>
-                <Popup className="rounded-xl font-sans">
-                  <div className="min-w-[180px]">
+                <Tooltip direction="top" offset={[0, -12]} opacity={1} className="custom-leaflet-tooltip !p-0 !border-none !bg-transparent !shadow-none">
+                  <div className="bg-white rounded-xl shadow-xl border border-slate-200 p-3 min-w-[180px] font-sans">
                     <h3 className="font-bold text-slate-900 text-base leading-tight mb-1">{title}</h3>
                     <p className="text-xs text-slate-500 uppercase tracking-wider font-bold mb-2">{typeLabel}</p>
                     
                     <div className="bg-slate-50 rounded p-2 text-sm border border-slate-100">
-                      <div className="flex justify-between items-center mb-1">
+                      <div className="flex justify-between items-center mb-1 gap-4">
                         <span className="text-slate-500">Rate:</span>
                         <span className="font-bold text-slate-900">{rate}</span>
                       </div>
-                      <div className="flex justify-between items-center">
+                      <div className="flex justify-between items-center gap-4">
                         <span className="text-slate-500">Owner:</span>
-                        <span className="font-medium text-slate-700">{vendor.user?.name || "N/A"}</span>
+                        <span className="font-medium text-slate-700 truncate max-w-[100px]">{vendor.user?.name || "N/A"}</span>
                       </div>
                     </div>
                   </div>
-                </Popup>
+                </Tooltip>
               </Marker>
             );
           })}
