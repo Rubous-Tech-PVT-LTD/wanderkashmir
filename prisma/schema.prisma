@@ -151,11 +151,25 @@ model Vehicle {
   registrationNum String
   type            String        // e.g., Sedan, SUV
   
+  capacity               Int           @default(4)
+  images                 String[]      @default([])
+  platformCommissionRate Float         @default(10) 
+  isCommissionPercentage Boolean       @default(true)
+  
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
 
   bookings        Booking[]
   reviews         Review[]
+}
+
+model TaxiRateCard {
+  id        String   @id @default(cuid())
+  place     String   // e.g., "LOCAL PAHALGAM FULL DAY", "SRINAGAR TRC DROP"
+  rates     Json     // Stores rates as JSON: { "CRYSTA": 4900, "INNOVA": 4700, "ERTIGA": 4100, "TAVERA": 4400, "ETIOS": 4100, "SWIFT": 4000, "ECCO": 3900, "ALTO": 3800, "SUMO": 4100 }
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model GuideProfile {
