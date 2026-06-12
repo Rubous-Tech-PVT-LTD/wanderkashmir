@@ -15,13 +15,21 @@ export default async function DynamicVendorDashboard() {
   }
   const userId = session.userId;
 
-  const vendorProfile = await prisma.vendorProfile.findUnique({
-    where: { userId },
-    include: {
-      properties: true,
-      vehicles: true
-    }
-  });
+  const vendorProfile = session.vendorProfileId
+    ? await prisma.vendorProfile.findUnique({
+        where: { id: session.vendorProfileId },
+        include: {
+          properties: true,
+          vehicles: true
+        }
+      })
+    : await prisma.vendorProfile.findFirst({
+        where: { userId },
+        include: {
+          properties: true,
+          vehicles: true
+        }
+      });
 
   if (!vendorProfile) {
     redirect("/partner");

@@ -250,7 +250,7 @@ export default function VendorEntryPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
                   <div className="col-span-2 md:col-span-1">
                     <label className="block text-sm font-medium text-slate-700 mb-1">
-                      {selectedType === 'taxi' ? 'Driver / Owner Name *' : selectedType === 'guide' ? 'Full Name *' : 'Legal Business / Property Name *'}
+                      {selectedType === 'taxi' ? (selectedTaxiRole === 'stand' ? 'President Name *' : 'Driver / Owner Name *') : selectedType === 'guide' ? 'Full Name *' : 'Legal Business / Property Name *'}
                     </label>
                     <input {...register("businessName")} className={`w-full border rounded-lg px-4 py-2.5 outline-none ${errors.businessName ? "border-orange-500" : "border-slate-200 focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500"}`} placeholder={selectedType === 'taxi' || selectedType === 'guide' ? "e.g. Tariq Ahmad" : "e.g. Grand Royal Hotel"} />
                     {errors.businessName && <span className="text-orange-500 text-xs font-medium mt-1">{errors.businessName.message}</span>}

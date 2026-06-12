@@ -14,6 +14,7 @@ export async function POST(request: Request) {
     }
 
     let user = null;
+    let specificVendorProfileId = null;
 
     // Check if identifier looks like a Vendor ID (starts with WK-)
     if (identifier.toUpperCase().startsWith("WK-")) {
@@ -22,8 +23,17 @@ export async function POST(request: Request) {
         include: { user: true }
       });
       user = vendorProfile?.user ?? null;
+      specificVendorProfileId = vendorProfile?.id ?? null;
     } else {
       user = await prisma.user.findUnique({ where: { email: identifier } });
+      if (user) {
+        const profiles = await prisma.vendorProfile.findMany({ where: { userId: user.id } });
+        if (profiles.length > 1) {
+          return NextResponse.json({ error: "Multiple profiles found. Please login using your Vendor ID (WK-xxxxx)" }, { status: 400 });
+        } else if (profiles.length === 1) {
+          specificVendorProfileId = profiles[0].id;
+        }
+      }
     }
 
     if (!user || (user.role !== "VENDOR" && user.role !== "ADMIN")) {
@@ -42,6 +52,7 @@ export async function POST(request: Request) {
 
     const sessionData = {
       userId: user.id,
+      vendorProfileId: specificVendorProfileId,
       email: user.email,
       role: user.role,
     };
@@ -58,10 +69,15 @@ export async function POST(request: Request) {
       path: "/",
     });
 
-    const vendorProfile = await prisma.vendorProfile.findUnique({
-      where: { userId: user.id },
-      select: { isApproved: true, status: true, rejectionReason: true, businessName: true, email: true }
-    });
+    const vendorProfile = specificVendorProfileId 
+      ? await prisma.vendorProfile.findUnique({
+          where: { id: specificVendorProfileId },
+          select: { isApproved: true, status: true, rejectionReason: true, businessName: true, email: true }
+        })
+      : await prisma.vendorProfile.findFirst({
+          where: { userId: user.id },
+          select: { isApproved: true, status: true, rejectionReason: true, businessName: true, email: true }
+        });
 
     return NextResponse.json({ 
       success: true,

@@ -42,7 +42,7 @@ model User {
   // Relations
   accounts      Account[]
   sessions      Session[]
-  vendorProfile VendorProfile?
+  vendorProfiles VendorProfile[]
   bookings      Booking[]
   reviews       Review[]
 
@@ -87,7 +87,7 @@ model VerificationToken {
 
 model VendorProfile {
   id               String           @id @default(cuid())
-  userId           String           @unique
+  userId           String
   user             User             @relation(fields: [userId], references: [id], onDelete: Cascade)
   vendorId         String?          @unique
   type             VendorType

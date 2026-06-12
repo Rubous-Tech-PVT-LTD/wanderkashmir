@@ -60,9 +60,6 @@ export const vendorRegistrationSchema = z.object({
       if (!data.tradeLicense || data.tradeLicense.length < 3) {
         ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Stand Registration or Trade License is required", path: ["tradeLicense"] });
       }
-      if (!data.panNumber || data.panNumber.length < 10) {
-        ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Stand PAN Number is required", path: ["panNumber"] });
-      }
     }
   }
   if (data.vendorType === 'guide') {
