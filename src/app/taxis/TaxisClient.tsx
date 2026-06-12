@@ -49,14 +49,16 @@ export default function TaxisClient({ rateCards, imagesMap = {}, verifiedDrivers
       description: "Official union rate card for all standard routes. Guaranteed availability.",
       vehicleType: selectedVehicle,
     },
-    ...activeVerifiedDrivers.map(d => ({
-      id: d.id,
-      name: d.name || "Wander Verified Driver",
-      isOfficial: false,
-      vehicleType: d.vehicleType,
-      vehicleRegistration: d.vehicleRegistration,
-      experienceYears: d.experienceYears
-    }))
+    ...activeVerifiedDrivers
+      .map(d => ({
+        id: d.id,
+        name: d.name || "Wander Verified Driver",
+        isOfficial: false,
+        vehicleType: d.vehicleType,
+        vehicleRegistration: d.vehicleRegistration,
+        experienceYears: d.experienceYears || 0
+      }))
+      .sort((a, b) => (b.experienceYears || 0) - (a.experienceYears || 0))
   ];
 
   const [providerPage, setProviderPage] = useState(1);
