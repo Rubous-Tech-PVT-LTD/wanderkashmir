@@ -166,7 +166,16 @@ model Vehicle {
 model TaxiRateCard {
   id        String   @id @default(cuid())
   place     String   // e.g., "LOCAL PAHALGAM FULL DAY", "SRINAGAR TRC DROP"
-  rates     Json     // Stores rates as JSON: { "CRYSTA": 4900, "INNOVA": 4700, "ERTIGA": 4100, "TAVERA": 4400, "ETIOS": 4100, "SWIFT": 4000, "ECCO": 3900, "ALTO": 3800, "SUMO": 4100 }
+  rates     Json     // Stores rates as JSON
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model TaxiTypeImage {
+  id        String   @id @default(cuid())
+  type      String   @unique // e.g., "CRYSTA", "INNOVA"
+  imageUrl  String
   
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

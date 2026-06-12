@@ -17,10 +17,14 @@ export default async function TaxisPage() {
     orderBy: { place: 'asc' }
   });
 
+  const imagesData = await prisma.taxiTypeImage.findMany();
+  const imagesMap: Record<string, string> = {};
+  imagesData.forEach(img => imagesMap[img.type] = img.imageUrl);
+
   return (
     <main className="min-h-screen bg-slate-50">
       <Navbar />
-      <TaxisClient rateCards={ratesData} />
+      <TaxisClient rateCards={ratesData} imagesMap={imagesMap} />
       <Footer />
     </main>
   );

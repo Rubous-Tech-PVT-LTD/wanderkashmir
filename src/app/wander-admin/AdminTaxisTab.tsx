@@ -7,7 +7,7 @@ const VEHICLE_TYPES = ["CRYSTA", "INNOVA", "ERTIGA", "TAVERA", "ETIOS", "SWIFT",
 export default function AdminTaxisTab() {
   const [activeSubTab, setActiveSubTab] = useState("rates");
   const [rates, setRates] = useState<any[]>([]);
-  const [vehicles, setVehicles] = useState<any[]>([]);
+  const [taxiImages, setTaxiImages] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
 
   // Form State for Rate Card
@@ -17,7 +17,20 @@ export default function AdminTaxisTab() {
 
   useEffect(() => {
     fetchRates();
+    fetchImages();
   }, []);
+
+  const fetchImages = async () => {
+    try {
+      const res = await fetch("/api/admin/taxis/images");
+      const data = await res.json();
+      const map: Record<string, string> = {};
+      data.forEach((img: any) => map[img.type] = img.imageUrl);
+      setTaxiImages(map);
+    } catch (e) {
+      console.error(e);
+    }
+  };
 
   const fetchRates = async () => {
     try {
@@ -89,6 +102,21 @@ export default function AdminTaxisTab() {
         [vehicle]: Number(value) || 0
       }
     }));
+    try {
+      const res = await fetch("/api/admin/taxis/images", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ type, imageUrl: value }),
+      });
+      if (res.ok) {
+        toast.success(`Image updated for ${type}`);
+        fetchImages();
+      } else {
+        toast.error("Failed to update image");
+      }
+    } catch (e) {
+      toast.error("Error saving image");
+    }
   };
 
   if (loading) return <div className="p-8 text-center text-slate-500">Loading...</div>;
@@ -102,6 +130,12 @@ export default function AdminTaxisTab() {
           onClick={() => setActiveSubTab('rates')}
         >
           Rate Card Master
+        </button>
+        <button 
+          className={`pb-3 px-2 font-medium border-b-2 transition-colors ${activeSubTab === 'images' ? 'border-orange-500 text-orange-600' : 'border-transparent text-slate-500 hover:text-slate-800'}`}
+          onClick={() => setActiveSubTab('images')}
+        >
+          Car Images (Cloudinary URLs)
         </button>
         <button 
           className={`pb-3 px-2 font-medium border-b-2 transition-colors ${activeSubTab === 'commission' ? 'border-orange-500 text-orange-600' : 'border-transparent text-slate-500 hover:text-slate-800'}`}
@@ -195,6 +229,41 @@ export default function AdminTaxisTab() {
               </table>
             </div>
           )}
+        </div>
+      )}
+
+      {activeSubTab === "images" && (
+        <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+          <div className="p-6 border-b border-slate-100 bg-slate-50">
+            <h3 className="text-xl font-bold text-slate-900">Manage Car Images</h3>
+            <p className="text-sm text-slate-500">Paste Cloudinary or any direct image URL for each vehicle type. These images will be shown on the public Taxis page.</p>
+          </div>
+          <div className="p-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {VEHICLE_TYPES.map(vt => (
+                <div key={vt} className="border border-slate-200 rounded-xl p-4 flex flex-col">
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="font-bold text-slate-800">{vt}</span>
+                  </div>
+                  <div className="h-32 bg-slate-100 rounded-lg mb-4 flex items-center justify-center overflow-hidden">
+                    {taxiImages[vt] ? (
+                      <img src={taxiImages[vt]} alt={vt} className="max-h-full object-contain mix-blend-multiply" />
+                    ) : (
+                      <Car className="w-8 h-8 text-slate-300" />
+                    )}
+                  </div>
+                  <input
+                    type="url"
+                    placeholder="https://res.cloudinary.com/..."
+                    defaultValue={taxiImages[vt] || ""}
+                    onBlur={(e) => handleSaveImage(vt, e.target.value)}
+                    className="w-full border rounded-lg px-3 py-2 text-sm"
+                  />
+                  <p className="text-[10px] text-slate-400 mt-1">Paste URL and click outside to save</p>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       )}
 

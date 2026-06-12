@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { Car, MapPin, Info, ArrowRight } from "lucide-react";
 
-const VEHICLE_IMAGES: Record<string, string> = {
+const DEFAULT_IMAGES: Record<string, string> = {
   "CRYSTA": "https://imgd.aeplcdn.com/664x374/n/cw/ec/139651/innova-crysta-exterior-right-front-three-quarter-2.jpeg?isig=0&q=80",
   "INNOVA": "https://imgd.aeplcdn.com/664x374/n/cw/ec/140809/innova-hycross-exterior-right-front-three-quarter-2.jpeg?isig=0&q=80",
   "ERTIGA": "https://imgd.aeplcdn.com/664x374/n/cw/ec/115025/ertiga-exterior-right-front-three-quarter-3.jpeg?isig=0&q=80",
@@ -16,9 +16,9 @@ const VEHICLE_IMAGES: Record<string, string> = {
   "SUMO": "https://imgd.aeplcdn.com/664x374/ec/14/C8/10410/img/m/Tata-Sumo-Gold-Right-Front-Three-Quarter-51206_ol.jpg?v=201711021421&q=80"
 };
 
-const VEHICLE_TYPES = Object.keys(VEHICLE_IMAGES);
+const VEHICLE_TYPES = Object.keys(DEFAULT_IMAGES);
 
-export default function TaxisClient({ rateCards }: { rateCards: any[] }) {
+export default function TaxisClient({ rateCards, imagesMap = {} }: { rateCards: any[], imagesMap?: Record<string, string> }) {
   const [selectedVehicle, setSelectedVehicle] = useState<string>("INNOVA");
   const [searchRoute, setSearchRoute] = useState("");
 
@@ -50,7 +50,7 @@ export default function TaxisClient({ rateCards }: { rateCards: any[] }) {
                 }`}
               >
                 <div className="h-24 bg-slate-100 p-2 flex items-center justify-center">
-                  <img src={VEHICLE_IMAGES[vt]} alt={vt} className="max-w-full max-h-full object-contain mix-blend-multiply" />
+                  <img src={imagesMap[vt] || DEFAULT_IMAGES[vt]} alt={vt} className="max-w-full max-h-full object-contain mix-blend-multiply" />
                 </div>
                 <div className={`p-3 text-center font-bold text-sm ${selectedVehicle === vt ? 'bg-orange-50 text-orange-700' : 'bg-slate-50 text-slate-700'}`}>
                   {vt}
