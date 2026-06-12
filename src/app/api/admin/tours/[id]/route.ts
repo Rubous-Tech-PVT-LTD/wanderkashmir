@@ -4,52 +4,38 @@ import { getAdminSession } from "@/lib/auth";
 
 export async function PUT(
   request: Request,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await context.params;
   try {
     const session = await getAdminSession();
     if (!session || session.role !== "ADMIN") {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const id = params.id;
-    const body = await request.json();
-    
-    // Extract fields
-    const {
-      title,
-      slug,
-      duration,
-      destinations,
-      price,
-      originalPrice,
-      category,
-      maxPersons,
-      images,
-      overview,
-    } = body;
+    const data = await request.json();
 
-    const tour = await prisma.tour.update({
+    const updatedTour = await prisma.tour.update({
       where: { id },
       data: {
-        title,
-        slug,
-        duration,
-        destinations: Array.isArray(destinations) ? destinations : [],
-        price: parseFloat(price),
-        originalPrice: originalPrice ? parseFloat(originalPrice) : null,
-        category,
-        maxPersons: parseInt(maxPersons),
-        images: Array.isArray(images) ? images : [],
-        overview,
-      },
+        title: data.title,
+        slug: data.slug,
+        duration: data.duration,
+        destinations: Array.isArray(data.destinations) ? data.destinations : [],
+        price: Number(data.price),
+        originalPrice: data.originalPrice ? Number(data.originalPrice) : null,
+        category: data.category,
+        maxPersons: parseInt(data.maxPersons) || 1,
+        images: Array.isArray(data.images) ? data.images : [],
+        overview: data.overview,
+      }
     });
 
-    return NextResponse.json(tour);
+    return NextResponse.json(updatedTour);
   } catch (error: any) {
     console.error("Error updating tour:", error);
     return NextResponse.json(
-      { error: "Failed to update tour" },
+      { error: error.message || "Failed to update tour" },
       { status: 500 }
     );
   }
@@ -57,15 +43,14 @@ export async function PUT(
 
 export async function DELETE(
   request: Request,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await context.params;
   try {
     const session = await getAdminSession();
     if (!session || session.role !== "ADMIN") {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
-
-    const id = params.id;
     await prisma.tour.delete({
       where: { id },
     });

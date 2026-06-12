@@ -1,11 +1,12 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 
-export async function PUT(request: Request, { params }: { params: { id: string } }) {
+export async function PUT(request: Request, context: { params: Promise<{ id: string }> }) {
+  const { id } = await context.params;
   try {
     const body = await request.json();
     const rateCard = await prisma.taxiRateCard.update({
-      where: { id: params.id },
+      where: { id },
       data: {
         place: body.place,
         rates: body.rates,
@@ -17,10 +18,11 @@ export async function PUT(request: Request, { params }: { params: { id: string }
   }
 }
 
-export async function DELETE(request: Request, { params }: { params: { id: string } }) {
+export async function DELETE(request: Request, context: { params: Promise<{ id: string }> }) {
+  const { id } = await context.params;
   try {
     await prisma.taxiRateCard.delete({
-      where: { id: params.id }
+      where: { id }
     });
     return NextResponse.json({ success: true });
   } catch (error) {

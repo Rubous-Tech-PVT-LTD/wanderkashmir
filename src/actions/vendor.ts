@@ -2,7 +2,7 @@
 
 import prisma from "@/lib/prisma";
 import { clerkClient } from "@clerk/nextjs/server";
-import { getCurrentUserId } from "@/lib/auth";
+import { getCurrentUserId, getVendorSession } from "@/lib/auth";
 import { ensureDbUser } from "@/lib/clerk-sync";
 import { revalidatePath } from "next/cache";
 import { VendorType } from "@prisma/client";
@@ -21,14 +21,17 @@ export async function registerVendor(data: VendorRegistrationData) {
 
     const validData = parsedData.data;
 
-    // Check if user with this email exists
     let dbUser = await prisma.user.findUnique({
       where: { email: validData.email },
-      include: { vendorProfile: true }
+      include: { vendorProfiles: true }
     });
 
-    if (dbUser && dbUser.vendorProfile) {
-      return { success: false, error: "Email id is already registered as a vendor please use different email" };
+    if (dbUser && dbUser.vendorProfiles && dbUser.vendorProfiles.length > 0) {
+      // Allow registering another profile, just check if they are trying to register exactly the same type
+      const hasSameType = dbUser.vendorProfiles.some(p => p.type === validData.vendorType.toUpperCase() as VendorType);
+      if (hasSameType) {
+        return { success: false, error: `You already have a registered ${validData.vendorType} profile with this email.` };
+      }
     }
 
     const bcrypt = require("bcrypt");
@@ -347,10 +350,22 @@ export async function updateSubscriptionPlan(newPlan: string) {
       return { success: false, error: "Invalid plan selected." };
     }
 
-    await prisma.vendorProfile.update({
-      where: { userId },
-      data: { subscriptionPlan: enumPlan }
-    });
+    const session = await getVendorSession();
+    if (session?.vendorProfileId) {
+      await prisma.vendorProfile.update({
+        where: { id: session.vendorProfileId },
+        data: { subscriptionPlan: enumPlan }
+      });
+    } else {
+      // Fallback update first profile if no specific profile selected
+      const firstProfile = await prisma.vendorProfile.findFirst({ where: { userId } });
+      if (firstProfile) {
+        await prisma.vendorProfile.update({
+          where: { id: firstProfile.id },
+          data: { subscriptionPlan: enumPlan }
+        });
+      }
+    }
 
     revalidatePath("/partner");
     return { success: true };

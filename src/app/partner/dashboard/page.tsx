@@ -20,14 +20,18 @@ export default async function DynamicVendorDashboard() {
         where: { id: session.vendorProfileId },
         include: {
           properties: true,
-          vehicles: true
+          vehicles: true,
+          drivers: true,
+          rateOverrides: true
         }
       })
     : await prisma.vendorProfile.findFirst({
         where: { userId },
         include: {
           properties: true,
-          vehicles: true
+          vehicles: true,
+          drivers: true,
+          rateOverrides: true
         }
       });
 
@@ -165,7 +169,16 @@ export default async function DynamicVendorDashboard() {
     case "HOMESTAY":
       return <HomeStaysDashboard bookings={bookings} />;
     case "TAXI":
-      return <TransportDashboard bookings={bookings} />;
+      return (
+        <TransportDashboard 
+          bookings={bookings} 
+          vehicles={vendorProfile.vehicles} 
+          drivers={vendorProfile.drivers}
+          rateOverrides={vendorProfile.rateOverrides}
+          taxiRole={vendorProfile.taxiRole}
+          vendorProfileId={vendorProfile.id}
+        />
+      );
     case "GUIDE":
       return <GuideDashboard bookings={bookings} />;
     default:

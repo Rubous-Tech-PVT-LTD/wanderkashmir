@@ -24,6 +24,8 @@ interface VendorContextType {
   setRejectionReason: (reason: string | null) => void;
   role: string;
   setRole: (role: string) => void;
+  taxiRole: string | null;
+  setTaxiRole: (role: string | null) => void;
 }
 
 const VendorContext = createContext<VendorContextType | undefined>(undefined);
@@ -37,6 +39,7 @@ export interface InitialVendorProfile {
   status: string;
   rejectionReason: string | null;
   role: string;
+  taxiRole: string | null;
 }
 
 export function VendorProvider({ children, initialProfile }: { children: ReactNode, initialProfile?: InitialVendorProfile | null }) {
@@ -49,6 +52,7 @@ export function VendorProvider({ children, initialProfile }: { children: ReactNo
   const [status, setStatus] = useState(initialProfile?.status || "PENDING");
   const [rejectionReason, setRejectionReason] = useState<string | null>(initialProfile?.rejectionReason || null);
   const [role, setRole] = useState<string>(initialProfile?.role || "CUSTOMER");
+  const [taxiRole, setTaxiRole] = useState<string | null>(initialProfile?.taxiRole || null);
 
   // Sync state when initialProfile changes (e.g., after router.refresh() on login)
   useEffect(() => {
@@ -61,6 +65,7 @@ export function VendorProvider({ children, initialProfile }: { children: ReactNo
     setStatus(initialProfile?.status || "PENDING");
     setRejectionReason(initialProfile?.rejectionReason || null);
     setRole(initialProfile?.role || "CUSTOMER");
+    setTaxiRole(initialProfile?.taxiRole || null);
   }, [initialProfile]);
 
   return (
@@ -73,7 +78,8 @@ export function VendorProvider({ children, initialProfile }: { children: ReactNo
       subscriptionPlan, setSubscriptionPlan,
       status, setStatus,
       rejectionReason, setRejectionReason,
-      role, setRole
+      role, setRole,
+      taxiRole, setTaxiRole
     }}>
       {children}
     </VendorContext.Provider>

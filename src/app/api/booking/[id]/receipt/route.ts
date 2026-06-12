@@ -3,14 +3,14 @@ import { auth } from "@clerk/nextjs/server";
 import prisma from "@/lib/prisma";
 import { generateInvoicePDF } from "@/lib/worker";
 
-export async function GET(req: Request, { params }: { params: { id: string } }) {
+export async function GET(req: Request, context: { params: Promise<{ id: string }> }) {
   try {
     const { userId } = await auth();
     if (!userId) {
       return new NextResponse("Unauthorized", { status: 401 });
     }
 
-    const bookingId = params.id;
+    const { id: bookingId } = await context.params;
 
     // Fetch booking details and verify ownership
     const booking = await prisma.booking.findUnique({

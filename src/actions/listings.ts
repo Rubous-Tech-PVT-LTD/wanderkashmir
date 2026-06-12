@@ -20,7 +20,7 @@ export async function addProperty(data: PropertyData) {
       return { success: false, error: "Invalid data provided." };
     }
 
-    const vendorProfile = await prisma.vendorProfile.findUnique({
+    const vendorProfile = await prisma.vendorProfile.findFirst({
       where: { userId: userId }
     });
 
@@ -60,7 +60,7 @@ export async function updateProperty(propertyId: string, data: PropertyData) {
     const parsedData = propertySchema.safeParse(data);
     if (!parsedData.success) return { success: false, error: "Invalid data provided." };
 
-    const vendorProfile = await prisma.vendorProfile.findUnique({ where: { userId } });
+    const vendorProfile = await prisma.vendorProfile.findFirst({ where: { userId } });
     if (!vendorProfile) return { success: false, error: "Vendor profile not found." };
 
     // Verify ownership
@@ -97,7 +97,7 @@ export async function deleteProperty(propertyId: string) {
     const userId = await getCurrentUserId();
     if (!userId) return { success: false, error: "Unauthorized" };
 
-    const vendorProfile = await prisma.vendorProfile.findUnique({ where: { userId } });
+    const vendorProfile = await prisma.vendorProfile.findFirst({ where: { userId } });
     if (!vendorProfile) return { success: false, error: "Vendor profile not found." };
 
     // Verify ownership
@@ -130,7 +130,7 @@ export async function addVehicle(data: VehicleData) {
       return { success: false, error: "Invalid data provided." };
     }
 
-    const vendorProfile = await prisma.vendorProfile.findUnique({
+    const vendorProfile = await prisma.vendorProfile.findFirst({
       where: { userId: userId }
     });
 

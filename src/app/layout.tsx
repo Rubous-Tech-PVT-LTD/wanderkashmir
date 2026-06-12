@@ -39,11 +39,16 @@ export default async function RootLayout({
     try {
       const user = await prisma.user.findUnique({
         where: { id: userId },
-        include: { vendorProfile: true }
       });
       
       if (user) {
-        const profile = user.vendorProfile;
+        let profile = null;
+        if (vendorSession?.vendorProfileId) {
+          profile = await prisma.vendorProfile.findUnique({ where: { id: vendorSession.vendorProfileId } });
+        } else {
+          profile = await prisma.vendorProfile.findFirst({ where: { userId } });
+        }
+        
         const dbPlan = profile?.subscriptionPlan || "FREE";
         const planMapping: Record<string, string> = {
           "FREE": "Free",
@@ -61,6 +66,7 @@ export default async function RootLayout({
           subscriptionPlan: planMapping[dbPlan] as SubscriptionPlan,
           status: profile ? profile.status : "PENDING",
           rejectionReason: profile ? profile.rejectionReason : null,
+          taxiRole: profile ? profile.taxiRole : null,
         };
       }
     } catch (error) {
