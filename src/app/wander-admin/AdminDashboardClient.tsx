@@ -14,8 +14,9 @@ import { markVendorPaid } from "@/actions/payouts";
 import { useRouter } from "next/navigation";
 import { format, isSameDay, addDays } from "date-fns";
 import toast from "react-hot-toast";
-import { LogOut } from "lucide-react";
+import { LogOut, Car } from "lucide-react";
 import AdminToursTab from "./AdminToursTab";
+import AdminTaxisTab from "./AdminTaxisTab";
 
 // Define the type based on the props passed from Server
 type VendorProfile = {
@@ -584,6 +585,7 @@ export default function AdminDashboardClient({ tours = [], vendors, properties =
             { id: "listings", label: "Listing Approvals", icon: Building2 },
             { id: "live_listings", label: "Live Listings", icon: MapPin },
             { id: "tours", label: "Tours", icon: Map },
+            { id: "taxis", label: "Taxis & Rates", icon: Car },
             { id: "payouts", label: "Payouts", icon: IndianRupee },
             { id: "rejected", label: "Rejected Vendors", icon: XCircle },
           ].map((item) => (
@@ -648,6 +650,7 @@ export default function AdminDashboardClient({ tours = [], vendors, properties =
 
         {/* Dynamic Content Area */}
         {activeTab === "tours" && <AdminToursTab initialTours={tours} />}
+        {activeTab === "taxis" && <AdminTaxisTab />}
 
         {activeTab === "approvals" && (
           <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
