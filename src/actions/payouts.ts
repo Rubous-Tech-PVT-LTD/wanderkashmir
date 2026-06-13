@@ -14,6 +14,8 @@ export async function getPayoutsSummary() {
 
     // Fetch all vendors who have confirmed bookings
     const vendors = await prisma.vendorProfile.findMany({
+      take: 100,
+      orderBy: { createdAt: 'desc' },
       include: {
         properties: {
           include: {

@@ -9,8 +9,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   
   try {
     const properties = await prisma.property.findMany({
-      where: { isApproved: true },
-      select: { id: true, updatedAt: true }
+      where: { isApproved: true, status: 'APPROVED' },
+      select: { id: true, updatedAt: true },
+      take: 5000
     })
 
     propertyUrls = properties.map((property) => ({
@@ -29,7 +30,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   try {
     const tours = await prisma.tour.findMany({
-      select: { slug: true, updatedAt: true }
+      select: { slug: true, updatedAt: true },
+      take: 5000
     })
 
     tourUrls = tours.map((tour: any) => ({
@@ -44,8 +46,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   try {
     const vehicles = await prisma.vehicle.findMany({
-      where: { isApproved: true },
-      select: { id: true, updatedAt: true }
+      where: { isApproved: true, status: 'APPROVED' },
+      select: { id: true, updatedAt: true },
+      take: 5000
     })
 
     vehicleUrls = vehicles.map((vehicle) => ({
@@ -60,8 +63,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   try {
     const guides = await prisma.guideProfile.findMany({
-      where: { isApproved: true },
-      select: { id: true, updatedAt: true }
+      where: { isApproved: true, status: 'APPROVED' },
+      select: { id: true, updatedAt: true },
+      take: 5000
     })
 
     guideUrls = guides.map((guide) => ({

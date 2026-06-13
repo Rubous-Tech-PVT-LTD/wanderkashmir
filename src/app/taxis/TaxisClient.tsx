@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { Car, MapPin, Info, ArrowRight, UserCircle2, ChevronDown, ChevronLeft, ChevronRight, CheckCircle2, Search, Star } from "lucide-react";
 
 const DEFAULT_IMAGES: Record<string, string> = {
@@ -172,11 +173,11 @@ export default function TaxisClient({ rateCards, imagesMap = {}, verifiedDrivers
                       }}
                       className={`w-full text-left p-4 hover:bg-slate-50 transition-colors flex items-center gap-4 ${selectedVehicle === vt ? 'bg-orange-50/50' : ''}`}
                     >
-                      <div className="w-12 h-8 rounded shrink-0 overflow-hidden border border-slate-200 bg-slate-100 flex items-center justify-center">
+                      <div className="w-12 h-8 rounded shrink-0 overflow-hidden border border-slate-200 bg-slate-100 flex items-center justify-center relative">
                         {imagesMap[vt] || DEFAULT_IMAGES[vt] ? (
-                           <img src={imagesMap[vt] || DEFAULT_IMAGES[vt]} alt={vt} className="w-full h-full object-cover" />
+                           <Image src={imagesMap[vt] || DEFAULT_IMAGES[vt]} alt={vt} fill className="object-cover" sizes="48px" />
                         ) : (
-                           <Car className="w-4 h-4 text-slate-400" />
+                           <Car className="w-4 h-4 text-slate-400 z-10" />
                         )}
                       </div>
                       

@@ -24,15 +24,19 @@ export async function POST(req: Request) {
 
     // Payment is valid, update Booking status
     const booking = await prisma.booking.update({
-      where: { razorpayOrderId: razorpay_order_id } as any,
+      where: { razorpayOrderId: razorpay_order_id },
       data: {
         status: "CONFIRMED",
         razorpayPaymentId: razorpay_payment_id,
-      } as any,
+      },
     });
 
-    // Fire and forget background worker to process email & PDF
-    processBookingEmailInBackground(booking.id).catch(console.error);
+    // Run the email process, but wait for it so Serverless environments don't kill it prematurely
+    try {
+      await processBookingEmailInBackground(booking.id);
+    } catch (emailError) {
+      console.error("Failed to process booking email in background:", emailError);
+    }
 
     return NextResponse.json({ success: true, message: "Payment verified successfully" });
   } catch (error: any) {

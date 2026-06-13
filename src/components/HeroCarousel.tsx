@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Image from "next/image";
 
 const images = [
   "https://res.cloudinary.com/dcmoseix9/image/upload/q_auto/f_auto/v1781182033/ChatGPT_Image_Jun_11_2026_06_15_47_PM_npe0t1.png",
@@ -28,10 +29,12 @@ export default function HeroCarousel() {
             index === currentIndex ? "opacity-100" : "opacity-0"
           }`}
         >
-          <img
+          <Image
             src={img}
             alt={`Hero Background ${index + 1}`}
-            className="w-full h-full object-cover"
+            fill
+            priority={index === 0}
+            className="object-cover"
           />
         </div>
       ))}

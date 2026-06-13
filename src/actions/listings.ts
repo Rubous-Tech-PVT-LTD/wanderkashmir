@@ -20,13 +20,16 @@ export async function addProperty(data: PropertyData) {
       return { success: false, error: "Invalid data provided." };
     }
 
-    const vendorProfile = await prisma.vendorProfile.findFirst({
-      where: { userId: userId }
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      include: { vendorProfiles: true }
     });
 
-    if (!vendorProfile) {
-      return { success: false, error: "Vendor profile not found." };
+    if (!user || user.role !== "VENDOR" || !user.vendorProfiles || user.vendorProfiles.length === 0) {
+      return { success: false, error: "Forbidden: Vendor access required." };
     }
+    
+    const vendorProfile = user.vendorProfiles[0];
 
     const property = await prisma.property.create({
       data: {
@@ -62,8 +65,14 @@ export async function updateProperty(propertyId: string, data: PropertyData) {
     const parsedData = propertySchema.safeParse(data);
     if (!parsedData.success) return { success: false, error: "Invalid data provided." };
 
-    const vendorProfile = await prisma.vendorProfile.findFirst({ where: { userId } });
-    if (!vendorProfile) return { success: false, error: "Vendor profile not found." };
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      include: { vendorProfiles: true }
+    });
+    if (!user || user.role !== "VENDOR" || !user.vendorProfiles || user.vendorProfiles.length === 0) {
+      return { success: false, error: "Forbidden: Vendor access required." };
+    }
+    const vendorProfile = user.vendorProfiles[0];
 
     // Verify ownership
     const existing = await prisma.property.findUnique({ where: { id: propertyId } });
@@ -101,8 +110,14 @@ export async function deleteProperty(propertyId: string) {
     const userId = await getCurrentUserId();
     if (!userId) return { success: false, error: "Unauthorized" };
 
-    const vendorProfile = await prisma.vendorProfile.findFirst({ where: { userId } });
-    if (!vendorProfile) return { success: false, error: "Vendor profile not found." };
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      include: { vendorProfiles: true }
+    });
+    if (!user || user.role !== "VENDOR" || !user.vendorProfiles || user.vendorProfiles.length === 0) {
+      return { success: false, error: "Forbidden: Vendor access required." };
+    }
+    const vendorProfile = user.vendorProfiles[0];
 
     // Verify ownership
     const existing = await prisma.property.findUnique({ where: { id: propertyId } });
@@ -134,13 +149,16 @@ export async function addVehicle(data: VehicleData) {
       return { success: false, error: "Invalid data provided." };
     }
 
-    const vendorProfile = await prisma.vendorProfile.findFirst({
-      where: { userId: userId }
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      include: { vendorProfiles: true }
     });
 
-    if (!vendorProfile) {
-      return { success: false, error: "Vendor profile not found." };
+    if (!user || user.role !== "VENDOR" || !user.vendorProfiles || user.vendorProfiles.length === 0) {
+      return { success: false, error: "Forbidden: Vendor access required." };
     }
+    
+    const vendorProfile = user.vendorProfiles[0];
 
     const vehicle = await prisma.vehicle.create({
       data: {
@@ -170,8 +188,14 @@ export async function updateVehicle(vehicleId: string, data: VehicleData) {
     const parsedData = vehicleSchema.safeParse(data);
     if (!parsedData.success) return { success: false, error: "Invalid data provided." };
 
-    const vendorProfile = await prisma.vendorProfile.findFirst({ where: { userId } });
-    if (!vendorProfile) return { success: false, error: "Vendor profile not found." };
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      include: { vendorProfiles: true }
+    });
+    if (!user || user.role !== "VENDOR" || !user.vendorProfiles || user.vendorProfiles.length === 0) {
+      return { success: false, error: "Forbidden: Vendor access required." };
+    }
+    const vendorProfile = user.vendorProfiles[0];
 
     const existing = await prisma.vehicle.findUnique({ where: { id: vehicleId } });
     if (!existing || existing.vendorProfileId !== vendorProfile.id) {
@@ -203,8 +227,14 @@ export async function deleteVehicle(vehicleId: string) {
     const userId = await getCurrentUserId();
     if (!userId) return { success: false, error: "Unauthorized" };
 
-    const vendorProfile = await prisma.vendorProfile.findFirst({ where: { userId } });
-    if (!vendorProfile) return { success: false, error: "Vendor profile not found." };
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      include: { vendorProfiles: true }
+    });
+    if (!user || user.role !== "VENDOR" || !user.vendorProfiles || user.vendorProfiles.length === 0) {
+      return { success: false, error: "Forbidden: Vendor access required." };
+    }
+    const vendorProfile = user.vendorProfiles[0];
 
     const existing = await prisma.vehicle.findUnique({ where: { id: vehicleId } });
     if (!existing || existing.vendorProfileId !== vendorProfile.id) {

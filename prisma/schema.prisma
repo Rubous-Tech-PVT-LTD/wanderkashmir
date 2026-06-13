@@ -132,6 +132,9 @@ model VendorProfile {
   
   createdAt        DateTime         @default(now())
   updatedAt        DateTime         @updatedAt
+
+  @@index([userId])
+  @@index([type, status])
 }
 
 model Property {
@@ -157,6 +160,10 @@ model Property {
 
   bookings        Booking[]
   reviews         Review[]
+
+  @@index([status, isApproved])
+  @@index([location])
+  @@index([vendorProfileId])
 }
 
 model Vehicle {
@@ -302,6 +309,9 @@ model Booking {
   updatedAt DateTime @updatedAt
   
   reviews   Review[]
+
+  @@index([propertyId, status])
+  @@index([userId])
 }
 
 model Review {

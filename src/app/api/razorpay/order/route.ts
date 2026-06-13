@@ -39,8 +39,36 @@ export async function POST(req: Request) {
 
     const amountInPaise = Math.round(amount * 100);
 
-    // Ensure Clerk user exists in Prisma DB before booking
-    await ensureDbUser(userId);
+    // Final Availability Check for Properties
+    if (propertyId && checkIn && checkOut) {
+      const property = await prisma.property.findUnique({
+        where: { id: propertyId },
+        select: { totalRooms: true }
+      });
+      
+      if (!property) {
+        return NextResponse.json({ error: "Property not found" }, { status: 404 });
+      }
+
+      const fifteenMinutesAgo = new Date(Date.now() - 15 * 60 * 1000);
+      const overlappingBookings = await prisma.booking.count({
+        where: {
+          propertyId,
+          OR: [
+            { status: "CONFIRMED" },
+            { status: "PENDING", createdAt: { gt: fifteenMinutesAgo } }
+          ],
+          AND: [
+            { checkIn: { lt: new Date(checkOut) } },
+            { checkOut: { gt: new Date(checkIn) } }
+          ]
+        }
+      });
+      
+      if (property.totalRooms - overlappingBookings <= 0) {
+        return NextResponse.json({ error: "Dates are no longer available. Please try different dates." }, { status: 400 });
+      }
+    }
 
     // 2. Create Razorpay Order
     const order = await razorpay.orders.create({

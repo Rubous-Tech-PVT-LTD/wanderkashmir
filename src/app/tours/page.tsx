@@ -13,7 +13,8 @@ export default async function ToursPage() {
   const tours = await prisma.tour.findMany({
     orderBy: {
       createdAt: 'desc'
-    }
+    },
+    take: 100
   });
 
   return <ToursClient initialTours={tours} />;

@@ -21,7 +21,8 @@ export default async function AdminPage() {
     },
     orderBy: {
       createdAt: 'desc'
-    }
+    },
+    take: 1000
   });
 
   const usersCount = await prisma.user.count();
@@ -31,7 +32,8 @@ export default async function AdminPage() {
       property: { select: { name: true, vendorProfile: { select: { businessName: true } } } },
       vehicle: { select: { make: true, model: true, vendorProfile: { select: { businessName: true } } } },
     },
-    orderBy: { createdAt: 'desc' }
+    orderBy: { createdAt: 'desc' },
+    take: 1000
   });
   
   const properties = await prisma.property.findMany({
@@ -46,10 +48,15 @@ export default async function AdminPage() {
     },
     orderBy: {
       createdAt: 'desc'
-    }
+    },
+    take: 1000
   });
 
-  const totalRevenue = bookings.filter(b => b.status === "CONFIRMED").reduce((acc, curr) => acc + curr.amount, 0);
+  const revenueAgg = await prisma.booking.aggregate({
+    where: { status: "CONFIRMED" },
+    _sum: { amount: true }
+  });
+  const totalRevenue = revenueAgg._sum.amount || 0;
 
   // Import dynamically or fetch directly
   const { getPayoutsSummary } = await import('@/actions/payouts');
@@ -60,11 +67,13 @@ export default async function AdminPage() {
     where: { 
       role: { not: "ADMIN" } 
     },
-    orderBy: { createdAt: 'desc' }
+    orderBy: { createdAt: 'desc' },
+    take: 1000
   });
 
   const tours = await prisma.tour.findMany({
-    orderBy: { createdAt: 'desc' }
+    orderBy: { createdAt: 'desc' },
+    take: 1000
   });
 
   return <AdminDashboardClient tours={tours} vendors={vendors} properties={properties as any} totalUsers={usersCount} totalRevenue={totalRevenue} payouts={payouts} users={users} bookings={bookings as any} />;

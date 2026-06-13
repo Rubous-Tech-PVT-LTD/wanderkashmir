@@ -11,6 +11,10 @@ export const revalidate = 60;
 
 export default async function GuidesPage() {
   const guidesData = await prisma.guideProfile.findMany({
+    where: {
+      isApproved: true,
+      status: "APPROVED"
+    },
     include: {
       vendorProfile: {
         include: { user: true }
@@ -18,7 +22,8 @@ export default async function GuidesPage() {
     },
     orderBy: {
       createdAt: 'desc'
-    }
+    },
+    take: 100
   });
 
   const formattedGuides = guidesData.map((guide) => {

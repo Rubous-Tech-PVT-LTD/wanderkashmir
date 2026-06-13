@@ -5,6 +5,7 @@ import SearchBar from "@/components/SearchBar";
 import PropertyCard from "@/components/PropertyCard";
 import HeroCarousel from "@/components/HeroCarousel";
 import Link from "next/link";
+import Image from "next/image";
 import {
   Star,
   ArrowRight,
@@ -109,31 +110,53 @@ async function getFeaturedProperties() {
   return featuredPropertiesMock;
 }
 
-async function getDestinationCounts() {
+async function getDestinationCounts(): Promise<Record<string, number>> {
   try {
-    const properties = await prisma.property.findMany({
-      select: { location: true },
-    });
-    
-    const counts: Record<string, number> = {
-      srinagar: 0,
-      gulmarg: 0,
-      pahalgam: 0,
-      sonamarg: 0,
-      ladakh: 0,
-    };
+    const [srinagar, gulmarg, pahalgam, sonamarg, ladakh] = await Promise.all([
+      prisma.property.count({
+        where: {
+          OR: [
+            { location: { contains: 'srinagar', mode: 'insensitive' } },
+            { location: { contains: 'dal lake', mode: 'insensitive' } }
+          ]
+        }
+      }),
+      prisma.property.count({
+        where: {
+          OR: [
+            { location: { contains: 'gulmarg', mode: 'insensitive' } },
+            { location: { contains: 'tangmarg', mode: 'insensitive' } }
+          ]
+        }
+      }),
+      prisma.property.count({
+        where: {
+          OR: [
+            { location: { contains: 'pahalgam', mode: 'insensitive' } },
+            { location: { contains: 'chandanwari', mode: 'insensitive' } },
+            { location: { contains: 'aru', mode: 'insensitive' } }
+          ]
+        }
+      }),
+      prisma.property.count({
+        where: {
+          OR: [
+            { location: { contains: 'sonamarg', mode: 'insensitive' } },
+            { location: { contains: 'gagangeer', mode: 'insensitive' } }
+          ]
+        }
+      }),
+      prisma.property.count({
+        where: {
+          OR: [
+            { location: { contains: 'ladakh', mode: 'insensitive' } },
+            { location: { contains: 'leh', mode: 'insensitive' } }
+          ]
+        }
+      })
+    ]);
 
-    properties.forEach(prop => {
-      const loc = prop.location.toLowerCase();
-      // Check if the vendor's location string contains our keywords
-      if (loc.includes('srinagar') || loc.includes('dal lake')) counts.srinagar++;
-      if (loc.includes('gulmarg') || loc.includes('tangmarg')) counts.gulmarg++;
-      if (loc.includes('pahalgam') || loc.includes('chandanwari') || loc.includes('aru')) counts.pahalgam++;
-      if (loc.includes('sonamarg') || loc.includes('gagangeer')) counts.sonamarg++;
-      if (loc.includes('ladakh') || loc.includes('leh')) counts.ladakh++;
-    });
-    
-    return counts;
+    return { srinagar, gulmarg, pahalgam, sonamarg, ladakh };
   } catch (error) {
     console.error("Failed to fetch location counts:", error);
     return {};
@@ -302,28 +325,6 @@ export default async function HomePage() {
     take: 3
   });
 
-  // Seed static tours if empty
-  if (tours.length === 0) {
-    for (const tour of popularTours) {
-      await prisma.tour.create({
-        data: {
-          title: tour.title,
-          slug: tour.slug,
-          duration: tour.duration,
-          destinations: tour.destinations,
-          price: tour.price,
-          category: tour.category,
-          images: [tour.image],
-          maxPersons: 2,
-        }
-      });
-    }
-    tours = await prisma.tour.findMany({
-      orderBy: { createdAt: 'desc' },
-      take: 3
-    });
-  }
-
   // Merge dynamic counts into destinations
   const dynamicDestinations = destinations.map(dest => {
     const dbCount = locationCounts[dest.name.toLowerCase()] || 0;
@@ -394,7 +395,13 @@ export default async function HomePage() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
             {dynamicDestinations.slice(0, 4).map((dest) => (
               <Link key={dest.name} href={dest.href} className="group block relative h-64 overflow-hidden rounded-2xl shadow-sm hover:shadow-md transition-shadow">
-                <img src={dest.image} alt={dest.name} className="object-cover w-full h-full transition-transform duration-500 group-hover:scale-105" />
+                <Image 
+                  src={dest.image} 
+                  alt={dest.name} 
+                  fill 
+                  className="object-cover transition-transform duration-500 group-hover:scale-105" 
+                  sizes="(max-width: 768px) 50vw, 25vw"
+                />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
                 <div className="absolute bottom-0 left-0 p-5">
                   <h3 className="font-bold text-white text-xl">{dest.name}</h3>
@@ -443,7 +450,13 @@ export default async function HomePage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {tours.map((tour) => (
                   <Link key={tour.id} href={`/tours/${tour.slug}`} className="group block relative h-72 overflow-hidden rounded-2xl shadow-sm hover:shadow-md transition-shadow">
-                    <img src={tour.images[0] || ""} alt={tour.title} className="object-cover w-full h-full transition-transform duration-500 group-hover:scale-105" />
+                    <Image 
+                      src={tour.images[0] || "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=500&q=80"} 
+                      alt={tour.title} 
+                      fill 
+                      className="object-cover transition-transform duration-500 group-hover:scale-105" 
+                      sizes="(max-width: 768px) 100vw, 33vw"
+                    />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
                     <div className="absolute top-3 left-3">
                       <span className="bg-slate-900/80 backdrop-blur-sm text-white text-xs font-semibold px-2.5 py-1 rounded-md">

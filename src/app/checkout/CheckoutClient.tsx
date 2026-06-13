@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import CheckoutButton from "@/components/CheckoutButton";
 import { CheckCircle2 } from "lucide-react";
+import CustomDatePicker from "@/components/CustomDatePicker";
 
 export default function CheckoutClient({ 
   isLoggedIn, 
@@ -21,8 +22,8 @@ export default function CheckoutClient({
   const [specialRequests, setSpecialRequests] = useState("");
   
   // Dates
-  const [checkIn, setCheckIn] = useState<string>("");
-  const [checkOut, setCheckOut] = useState<string>("");
+  const [checkIn, setCheckIn] = useState<Date | null>(null);
+  const [checkOut, setCheckOut] = useState<Date | null>(null);
   const [nights, setNights] = useState<number>(1);
   const [guests, setGuests] = useState<number>(1);
 
@@ -42,21 +43,21 @@ export default function CheckoutClient({
     const tmrw = new Date(today);
     tmrw.setDate(tmrw.getDate() + 1);
     
-    setCheckIn(tmrw.toISOString().split("T")[0]);
+    setCheckIn(tmrw);
     if (checkoutData?.type === "guide") {
       const dayAfter = new Date(tmrw);
       dayAfter.setDate(dayAfter.getDate() + 1);
-      setCheckOut(dayAfter.toISOString().split("T")[0]);
+      setCheckOut(dayAfter);
     } else {
-      setCheckOut(tmrw.toISOString().split("T")[0]); // Same day for taxi by default
+      setCheckOut(tmrw); // Same day for taxi by default
     }
   }, [checkoutData?.type]);
 
   // Calculate nights/days
   useEffect(() => {
     if (checkIn && checkOut) {
-      const start = new Date(checkIn);
-      const end = new Date(checkOut);
+      const start = checkIn;
+      const end = checkOut;
       const diffTime = Math.abs(end.getTime() - start.getTime());
       const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
       setNights(diffDays > 0 ? diffDays : 1);
@@ -154,23 +155,30 @@ export default function CheckoutClient({
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-bold text-slate-700 mb-1">{isTaxi ? "Travel Date" : "Start Date"} <span className="text-red-500">*</span></label>
-                <input 
-                  type="date" 
-                  value={checkIn}
-                  onChange={(e) => setCheckIn(e.target.value)}
-                  min={new Date().toISOString().split("T")[0]}
-                  className="w-full border border-slate-200 rounded-xl p-3 focus:ring-2 focus:ring-sky-500 outline-none text-slate-600" 
+                <CustomDatePicker 
+                  selected={checkIn}
+                  onChange={(date) => {
+                    setCheckIn(date);
+                    if (date && isGuide && checkOut && date >= checkOut) {
+                      const newOut = new Date(date);
+                      newOut.setDate(newOut.getDate() + 1);
+                      setCheckOut(newOut);
+                    } else if (date && isTaxi) {
+                      setCheckOut(date);
+                    }
+                  }}
+                  minDate={new Date()}
+                  className="w-full border border-slate-200 rounded-xl p-3 focus:ring-2 focus:ring-sky-500 outline-none text-slate-600 bg-transparent cursor-pointer" 
                 />
               </div>
               {isGuide && (
                 <div>
                   <label className="block text-sm font-bold text-slate-700 mb-1">End Date <span className="text-red-500">*</span></label>
-                  <input 
-                    type="date" 
-                    value={checkOut}
-                    onChange={(e) => setCheckOut(e.target.value)}
-                    min={checkIn}
-                    className="w-full border border-slate-200 rounded-xl p-3 focus:ring-2 focus:ring-sky-500 outline-none text-slate-600" 
+                  <CustomDatePicker 
+                    selected={checkOut}
+                    onChange={(date) => setCheckOut(date)}
+                    minDate={checkIn ? new Date(checkIn.getTime() + 86400000) : new Date()}
+                    className="w-full border border-slate-200 rounded-xl p-3 focus:ring-2 focus:ring-sky-500 outline-none text-slate-600 bg-transparent cursor-pointer" 
                   />
                 </div>
               )}
@@ -245,8 +253,8 @@ export default function CheckoutClient({
                 propertyId="" 
                 pricePerNight={0} 
                 isLoggedIn={isLoggedIn} 
-                checkIn={checkIn}
-                checkOut={checkOut}
+                checkIn={checkIn?.toISOString().split("T")[0] || ""}
+                checkOut={checkOut?.toISOString().split("T")[0] || ""}
                 guests={guests}
                 nights={nights}
                 guestName={guestName}

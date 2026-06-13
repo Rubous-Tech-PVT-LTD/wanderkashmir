@@ -11,6 +11,7 @@ export async function GET(request: Request) {
 
     const tours = await prisma.tour.findMany({
       orderBy: { createdAt: "desc" },
+      take: 1000
     });
 
     return NextResponse.json(tours);

@@ -5,6 +5,7 @@ import Navbar from "@/components/Navbar";
 import dynamic from "next/dynamic";
 import { MapPin, Star, Users, Home, ShieldCheck, CheckCircle2 } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
 import { auth } from "@clerk/nextjs/server";
 import { getAvailableAddons } from "@/actions/addons";
 
@@ -131,7 +132,7 @@ export default async function PropertyDetailPage({
       <div className="container-custom mb-12">
         <div className={`grid gap-4 ${images.length > 1 ? 'grid-cols-1 md:grid-cols-4 md:grid-rows-2 h-[50vh]' : 'h-[60vh]'}`}>
           <div className={`relative rounded-l-2xl overflow-hidden group cursor-pointer ${images.length > 1 ? 'md:col-span-2 md:row-span-2' : 'w-full h-full rounded-r-2xl'}`}>
-            <img src={mainImage} alt={property.name} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
+            <Image src={mainImage} alt={property.name} fill className="object-cover transition-transform duration-700 group-hover:scale-105" />
             <div className="absolute inset-0 bg-black/5 group-hover:bg-transparent transition-colors" />
           </div>
           
@@ -143,7 +144,7 @@ export default async function PropertyDetailPage({
             } ${
               idx === 3 ? 'rounded-br-2xl' : ''
             }`}>
-              <img src={img} alt={`${property.name} - ${idx + 2}`} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
+              <Image src={img} alt={`${property.name} - ${idx + 2}`} fill className="object-cover transition-transform duration-700 group-hover:scale-105" />
               <div className="absolute inset-0 bg-black/5 group-hover:bg-transparent transition-colors" />
             </div>
           ))}

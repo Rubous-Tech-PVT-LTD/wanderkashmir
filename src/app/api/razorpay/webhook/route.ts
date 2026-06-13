@@ -38,23 +38,24 @@ export async function POST(req: Request) {
       const paymentId = paymentEntity.id;
 
       if (orderId) {
-        // Find the booking before updating to get user email and property name
-        const booking = await prisma.booking.findFirst({
-          where: { razorpayOrderId: orderId },
-          include: { 
-            user: true,
-            property: true
-          }
-        });
-
-        // Update the booking status in the database
-        await prisma.booking.updateMany({
-          where: { razorpayOrderId: orderId },
-          data: {
-            status: "CONFIRMED",
-            razorpayPaymentId: paymentId,
-          },
-        });
+        // Update the booking status and fetch related data
+        let booking;
+        try {
+          booking = await prisma.booking.update({
+            where: { razorpayOrderId: orderId },
+            data: {
+              status: "CONFIRMED",
+              razorpayPaymentId: paymentId,
+            },
+            include: { 
+              user: true,
+              property: true
+            }
+          });
+        } catch (dbError) {
+          console.error("Booking update failed. Order ID:", orderId, dbError);
+          return NextResponse.json({ error: "Booking not found or update failed" }, { status: 404 });
+        }
 
 
         // Send Email Notification
@@ -65,17 +66,22 @@ export async function POST(req: Request) {
           const checkInStr = booking.checkIn ? new Date(booking.checkIn).toLocaleDateString() : undefined;
           const checkOutStr = booking.checkOut ? new Date(booking.checkOut).toLocaleDateString() : undefined;
           
-          await sendBookingConfirmation(
-            email,
-            booking.user.name || booking.guestName || "Guest",
-            {
-              bookingId: booking.id,
-              propertyName: booking.property?.name,
-              checkIn: checkInStr,
-              checkOut: checkOutStr,
-              amount: booking.amount
-            }
-          );
+          try {
+            await sendBookingConfirmation(
+              email,
+              booking.user.name || booking.guestName || "Guest",
+              {
+                bookingId: booking.id,
+                propertyName: booking.property?.name,
+                checkIn: checkInStr,
+                checkOut: checkOutStr,
+                amount: booking.amount
+              }
+            );
+          } catch (emailError) {
+            // Do not fail the webhook if the email fails to send
+            console.error("Failed to send booking confirmation email:", emailError);
+          }
 
         }
       }

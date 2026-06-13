@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Search, MapPin, Calendar, Users } from "lucide-react";
 import { useRouter } from "next/navigation";
+import CustomDatePicker from "./CustomDatePicker";
 
 export default function SearchBar() {
   const router = useRouter();
@@ -10,16 +11,16 @@ export default function SearchBar() {
   const tabs = ["Stays", "Homestays", "Taxis", "Tour Packages"];
 
   const [destination, setDestination] = useState("");
-  const [checkIn, setCheckIn] = useState("");
-  const [checkOut, setCheckOut] = useState("");
+  const [checkIn, setCheckIn] = useState<Date | null>(null);
+  const [checkOut, setCheckOut] = useState<Date | null>(null);
   const [guests, setGuests] = useState("2 Guests, 1 Room");
 
   const handleSearch = () => {
     // Implement GTM-style search routing logic
     const queryParams = new URLSearchParams();
     if (destination) queryParams.append("q", destination);
-    if (checkIn) queryParams.append("checkIn", checkIn);
-    if (checkOut) queryParams.append("checkOut", checkOut);
+    if (checkIn) queryParams.append("checkIn", checkIn.toISOString().split("T")[0]);
+    if (checkOut) queryParams.append("checkOut", checkOut.toISOString().split("T")[0]);
     if (guests) queryParams.append("guests", guests);
 
     let route = "/stays";
@@ -73,20 +74,25 @@ export default function SearchBar() {
             </div>
             <div className="flex-1 w-full p-2 hover:bg-slate-50 rounded-xl transition-colors cursor-pointer px-4">
               <label className="block text-[11px] font-bold text-slate-800 mb-1">Check-in</label>
-              <input
-                type="date"
-                value={checkIn}
-                onChange={(e) => setCheckIn(e.target.value)}
-                className="w-full text-sm font-medium text-slate-500 bg-transparent focus:outline-none cursor-pointer"
+              <CustomDatePicker
+                selected={checkIn}
+                onChange={(date) => {
+                  setCheckIn(date);
+                  if (date && checkOut && date > checkOut) setCheckOut(null);
+                }}
+                minDate={new Date()}
+                placeholderText="Add date"
+                className="w-full text-sm font-medium text-slate-500 bg-transparent focus:outline-none cursor-pointer placeholder-slate-400"
               />
             </div>
             <div className="flex-1 w-full p-2 hover:bg-slate-50 rounded-xl transition-colors cursor-pointer px-4">
               <label className="block text-[11px] font-bold text-slate-800 mb-1">Check-out</label>
-              <input
-                type="date"
-                value={checkOut}
-                onChange={(e) => setCheckOut(e.target.value)}
-                className="w-full text-sm font-medium text-slate-500 bg-transparent focus:outline-none cursor-pointer"
+              <CustomDatePicker
+                selected={checkOut}
+                onChange={(date) => setCheckOut(date)}
+                minDate={checkIn || new Date()}
+                placeholderText="Add date"
+                className="w-full text-sm font-medium text-slate-500 bg-transparent focus:outline-none cursor-pointer placeholder-slate-400"
               />
             </div>
             <div className="flex-[1.6] w-full p-2 flex items-center justify-between hover:bg-slate-50 rounded-xl transition-colors px-4">
@@ -137,11 +143,12 @@ export default function SearchBar() {
             </div>
             <div className="flex-1 w-full p-2 hover:bg-slate-50 rounded-xl transition-colors cursor-pointer px-4">
               <label className="block text-[11px] font-bold text-slate-800 mb-1">Pick-up Date</label>
-              <input
-                type="date"
-                value={checkIn}
-                onChange={(e) => setCheckIn(e.target.value)}
-                className="w-full text-sm font-medium text-slate-500 bg-transparent focus:outline-none cursor-pointer"
+              <CustomDatePicker
+                selected={checkIn}
+                onChange={(date) => setCheckIn(date)}
+                minDate={new Date()}
+                placeholderText="Add date"
+                className="w-full text-sm font-medium text-slate-500 bg-transparent focus:outline-none cursor-pointer placeholder-slate-400"
               />
             </div>
             <div className="flex-[1] w-full p-2 flex items-center justify-between hover:bg-slate-50 rounded-xl transition-colors px-4">

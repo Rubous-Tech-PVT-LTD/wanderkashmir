@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { MapPin, Search, Star, Heart } from "lucide-react";
 
 export interface PropertyItem {
@@ -197,7 +198,13 @@ export default function StaysClient({ initialProperties, initialQuery = "" }: { 
                 
                 {/* Left: Image */}
                 <div className="w-full md:w-[260px] md:min-w-[260px] h-64 md:h-full relative flex-shrink-0 group">
-                  <img src={property.image} alt={property.name} className="w-full h-full object-cover" />
+                  <Image 
+                    src={property.image} 
+                    alt={property.name} 
+                    fill 
+                    className="object-cover" 
+                    sizes="(max-width: 768px) 100vw, 260px"
+                  />
                   
                   {/* Heart Icon */}
                   <button className="absolute top-3 right-3 w-8 h-8 rounded-full bg-white shadow-sm flex items-center justify-center text-slate-400 hover:text-red-500 transition-colors z-10">
@@ -337,11 +344,14 @@ export default function StaysClient({ initialProperties, initialQuery = "" }: { 
             </button>
           )}
 
-          <img 
-            src={galleryImages[currentImageIndex]} 
-            alt="Property view" 
-            className="max-w-full max-h-[85vh] object-contain"
-          />
+          <div className="relative w-full max-w-5xl h-[85vh]">
+            <Image 
+              src={galleryImages[currentImageIndex]} 
+              alt="Property view" 
+              fill
+              className="object-contain"
+            />
+          </div>
 
           {galleryImages.length > 1 && (
             <button 

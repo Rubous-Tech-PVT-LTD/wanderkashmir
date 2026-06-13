@@ -6,6 +6,7 @@ import { Star, X, CheckCircle2 } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import CheckoutButton from "./CheckoutButton";
 import { useBookingStore } from "@/store/bookingStore";
+import CustomDatePicker from "./CustomDatePicker";
 
 interface BookingSidebarProps {
   propertyId: string;
@@ -15,8 +16,8 @@ interface BookingSidebarProps {
 }
 
 export default function BookingSidebar({ propertyId, pricePerNight, rating, isLoggedIn }: BookingSidebarProps) {
-  const [checkIn, setCheckIn] = useState<string>("");
-  const [checkOut, setCheckOut] = useState<string>("");
+  const [checkIn, setCheckIn] = useState<Date | null>(null);
+  const [checkOut, setCheckOut] = useState<Date | null>(null);
   const [guests, setGuests] = useState<number>(1);
   const [nights, setNights] = useState<number>(1);
   const [isAvailable, setIsAvailable] = useState<boolean | null>(null);
@@ -71,15 +72,15 @@ export default function BookingSidebar({ propertyId, pricePerNight, rating, isLo
     const dayAfter = new Date(tmrw);
     dayAfter.setDate(dayAfter.getDate() + 2); // 2 nights default
 
-    setCheckIn(tmrw.toISOString().split("T")[0]);
-    setCheckOut(dayAfter.toISOString().split("T")[0]);
+    setCheckIn(tmrw);
+    setCheckOut(dayAfter);
   }, []);
 
   // Calculate nights
   useEffect(() => {
     if (checkIn && checkOut) {
-      const start = new Date(checkIn);
-      const end = new Date(checkOut);
+      const start = checkIn;
+      const end = checkOut;
       const diffTime = Math.abs(end.getTime() - start.getTime());
       const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
       if (diffDays > 0) {
@@ -96,7 +97,9 @@ export default function BookingSidebar({ propertyId, pricePerNight, rating, isLo
       if (!checkIn || !checkOut) return;
       setIsChecking(true);
       try {
-        const res = await fetch(`/api/stays/${propertyId}/check?in=${checkIn}&out=${checkOut}`);
+        const inStr = checkIn.toISOString().split("T")[0];
+        const outStr = checkOut.toISOString().split("T")[0];
+        const res = await fetch(`/api/stays/${propertyId}/check?in=${inStr}&out=${outStr}`);
         const data = await res.json();
         setIsAvailable(data.available);
       } catch (error) {
@@ -130,22 +133,29 @@ export default function BookingSidebar({ propertyId, pricePerNight, rating, isLo
         <div className="flex divide-x divide-slate-300">
           <div className="flex-1 p-3">
             <label className="block text-[10px] font-bold uppercase text-slate-900 mb-1">Check-in</label>
-            <input 
-              type="date" 
-              value={checkIn}
-              onChange={(e) => setCheckIn(e.target.value)}
-              min={new Date().toISOString().split("T")[0]}
-              className="w-full text-sm outline-none text-slate-600" 
+            <CustomDatePicker 
+              selected={checkIn}
+              onChange={(date) => {
+                setCheckIn(date);
+                if (date && checkOut && date >= checkOut) {
+                  const newOut = new Date(date);
+                  newOut.setDate(newOut.getDate() + 1);
+                  setCheckOut(newOut);
+                }
+              }}
+              minDate={new Date()}
+              placeholderText="Check-in"
+              className="w-full text-sm outline-none text-slate-600 bg-transparent cursor-pointer" 
             />
           </div>
           <div className="flex-1 p-3">
             <label className="block text-[10px] font-bold uppercase text-slate-900 mb-1">Check-out</label>
-            <input 
-              type="date" 
-              value={checkOut}
-              onChange={(e) => setCheckOut(e.target.value)}
-              min={checkIn}
-              className="w-full text-sm outline-none text-slate-600" 
+            <CustomDatePicker 
+              selected={checkOut}
+              onChange={(date) => setCheckOut(date)}
+              minDate={checkIn ? new Date(checkIn.getTime() + 86400000) : new Date()}
+              placeholderText="Check-out"
+              className="w-full text-sm outline-none text-slate-600 bg-transparent cursor-pointer" 
             />
           </div>
         </div>
@@ -330,11 +340,11 @@ export default function BookingSidebar({ propertyId, pricePerNight, rating, isLo
                     <div className="grid grid-cols-2 gap-4 text-sm">
                       <div>
                         <span className="block text-slate-500 text-xs uppercase font-bold mb-1">Check-in</span>
-                        <span className="font-semibold text-slate-900">{new Date(checkIn).toLocaleDateString()}</span>
+                        <span className="font-semibold text-slate-900">{checkIn?.toLocaleDateString()}</span>
                       </div>
                       <div>
                         <span className="block text-slate-500 text-xs uppercase font-bold mb-1">Check-out</span>
-                        <span className="font-semibold text-slate-900">{new Date(checkOut).toLocaleDateString()}</span>
+                        <span className="font-semibold text-slate-900">{checkOut?.toLocaleDateString()}</span>
                       </div>
                       <div>
                         <span className="block text-slate-500 text-xs uppercase font-bold mb-1">Duration</span>
@@ -368,8 +378,8 @@ export default function BookingSidebar({ propertyId, pricePerNight, rating, isLo
                       propertyId={propertyId} 
                       pricePerNight={pricePerNight} 
                       isLoggedIn={isLoggedIn} 
-                      checkIn={checkIn}
-                      checkOut={checkOut}
+                      checkIn={checkIn?.toISOString().split("T")[0] || ""}
+                      checkOut={checkOut?.toISOString().split("T")[0] || ""}
                       guests={guests}
                       nights={nights}
                       guestName={guestName}

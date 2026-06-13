@@ -30,10 +30,18 @@ export async function GET(
     // Find overlapping bookings for this property
     // An overlapping booking is one where the checkIn is before the requested checkOut
     // AND the checkOut is after the requested checkIn
+    const fifteenMinutesAgo = new Date(Date.now() - 15 * 60 * 1000);
+
     const overlappingBookings = await prisma.booking.count({
       where: {
         propertyId: id,
-        status: { in: ["CONFIRMED", "PENDING"] },
+        OR: [
+          { status: "CONFIRMED" },
+          { 
+            status: "PENDING",
+            createdAt: { gt: fifteenMinutesAgo } 
+          }
+        ],
         AND: [
           { checkIn: { lt: checkOut } },
           { checkOut: { gt: checkIn } }

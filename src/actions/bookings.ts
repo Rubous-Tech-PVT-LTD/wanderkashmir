@@ -17,6 +17,7 @@ export async function getVendorBookings(vendorProfileId: string, vendorType: str
     const bookings = await prisma.booking.findMany({
       where: whereClause,
       orderBy: { createdAt: "desc" },
+      take: 500,
       include: {
         property: { select: { name: true } },
         vehicle: { select: { make: true, model: true } },

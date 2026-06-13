@@ -3,6 +3,7 @@ import { useState } from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import Link from "next/link";
+import Image from "next/image";
 import {
   Star,
   MapPin,
@@ -26,6 +27,7 @@ import {
   Compass,
   AlertCircle,
 } from "lucide-react";
+import CustomDatePicker from "@/components/CustomDatePicker";
 
 // Removed static tour variable
 
@@ -41,7 +43,7 @@ export default function TourDetailClient({ initialTour }: { initialTour: any }) 
   const [activeImage, setActiveImage] = useState(0);
   const [openDay, setOpenDay] = useState<number | null>(1);
   const [persons, setPersons] = useState(2);
-  const [travelDate, setTravelDate] = useState("");
+  const [travelDate, setTravelDate] = useState<Date | null>(null);
   const [isWishlisted, setIsWishlisted] = useState(false);
 
   const tour = initialTour;
@@ -81,10 +83,11 @@ export default function TourDetailClient({ initialTour }: { initialTour: any }) 
               {/* Image Gallery */}
               <div className="bg-white rounded-2xl overflow-hidden shadow-sm">
                 <div className="relative h-80 md:h-[420px]">
-                  <img
+                  <Image
                     src={tour.images[activeImage] || "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=900&q=80"}
                     alt={tour.title}
-                    className="w-full h-full object-cover transition-all duration-500"
+                    fill
+                    className="object-cover transition-all duration-500"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
                   {/* Badges */}
@@ -356,11 +359,12 @@ export default function TourDetailClient({ initialTour }: { initialTour: any }) 
                     </label>
                     <div className="border-2 border-slate-200 rounded-xl px-3 py-3 focus-within:border-orange-400 transition-colors flex items-center gap-2">
                       <Calendar className="w-4 h-4 text-orange-500 flex-shrink-0" />
-                      <input
-                        type="date"
-                        value={travelDate}
-                        onChange={(e) => setTravelDate(e.target.value)}
-                        className="flex-1 text-sm font-medium text-slate-800 focus:outline-none bg-transparent"
+                      <CustomDatePicker
+                        selected={travelDate}
+                        onChange={(date) => setTravelDate(date)}
+                        minDate={new Date()}
+                        placeholderText="Select Date"
+                        className="flex-1 text-sm font-medium text-slate-800 focus:outline-none bg-transparent cursor-pointer w-full"
                       />
                     </div>
                   </div>

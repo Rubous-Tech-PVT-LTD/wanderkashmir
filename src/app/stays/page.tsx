@@ -17,12 +17,17 @@ export default async function StaysPage({ searchParams }: { searchParams: Promis
   const initialQuery = typeof resolvedParams.q === 'string' ? resolvedParams.q : "";
   // Fetch real properties from the database
   const propertiesData = await prisma.property.findMany({
+    where: {
+      isApproved: true,
+      status: "APPROVED"
+    },
     include: {
       vendorProfile: true, // Needed to get the type (Hotel, Homestay, etc)
     },
     orderBy: {
       createdAt: 'desc'
-    }
+    },
+    take: 100
   });
 
   // Map database properties to the PropertyItem format expected by StaysClient
