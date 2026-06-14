@@ -114,6 +114,16 @@ export default function GuideDashboard({ bookings = [], vendorProfileId, initial
   const onSubmit = async (data: GuideProfileFormValues) => {
     if (!vendorProfileId) return;
 
+    if (!avatar || avatar.length === 0 || !avatar[0]) {
+      toast.error("Please upload a Profile Picture (Avatar)", { id: "save-guide" });
+      return;
+    }
+
+    if (!coverPhoto || coverPhoto.length === 0 || !coverPhoto[0]) {
+      toast.error("Please upload a Cover Photo", { id: "save-guide" });
+      return;
+    }
+
     setIsSaving(true);
     toast.loading("Saving profile...", { id: "save-guide" });
     
@@ -636,7 +646,7 @@ export default function GuideDashboard({ bookings = [], vendorProfileId, initial
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-2">Profile Picture (Avatar)</label>
+                    <label className="block text-sm font-medium text-slate-700 mb-2">Profile Picture (Avatar) <span className="text-red-500">*</span></label>
                     <div className="bg-slate-50 border border-slate-200 rounded-xl p-4">
                       <ImageUpload 
                         uploadedPhotos={avatar} 
@@ -647,7 +657,7 @@ export default function GuideDashboard({ bookings = [], vendorProfileId, initial
                     </div>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-2">Cover Photo</label>
+                    <label className="block text-sm font-medium text-slate-700 mb-2">Cover Photo <span className="text-red-500">*</span></label>
                     <div className="bg-slate-50 border border-slate-200 rounded-xl p-4">
                       <ImageUpload 
                         uploadedPhotos={coverPhoto} 
