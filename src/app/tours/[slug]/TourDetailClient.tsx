@@ -4,30 +4,13 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import Link from "next/link";
 import Image from "next/image";
-import {
-  Star,
-  MapPin,
-  Clock,
-  Users,
-  CheckCircle2,
-  XCircle,
-  ChevronDown,
-  ChevronUp,
-  Heart,
-  Share2,
-  Phone,
-  MessageCircle,
-  Calendar,
-  ChevronRight,
-  Shield,
-  Camera,
-  Utensils,
-  Car,
-  Hotel,
-  Compass,
-  AlertCircle,
+import { 
+  Star, Clock, Users, MapPin, CheckCircle2, 
+  Heart, Share2, ChevronRight, Calendar, Info, Shield, Phone, MessageCircle, Utensils, Hotel, ChevronDown, ChevronUp, XCircle, FileText, User, UserCheck, Car, Compass, Camera, AlertCircle
 } from "lucide-react";
 import CustomDatePicker from "@/components/CustomDatePicker";
+import CheckoutButton from "@/components/CheckoutButton";
+import { useUser } from "@clerk/nextjs";
 
 // Removed static tour variable
 
@@ -45,6 +28,15 @@ export default function TourDetailClient({ initialTour }: { initialTour: any }) 
   const [persons, setPersons] = useState(2);
   const [travelDate, setTravelDate] = useState<Date | null>(null);
   const [isWishlisted, setIsWishlisted] = useState(false);
+  const { isLoaded, isSignedIn, user } = useUser();
+  
+  // Booking Flow State
+  const [showBookingFlow, setShowBookingFlow] = useState(false);
+  const [bookingStep, setBookingStep] = useState(1);
+  const [guestName, setGuestName] = useState("");
+  const [guestPhone, setGuestPhone] = useState("");
+  const [specialRequests, setSpecialRequests] = useState("");
+  const [agreedToPolicy, setAgreedToPolicy] = useState(false);
 
   const tour = initialTour;
 
@@ -417,14 +409,112 @@ export default function TourDetailClient({ initialTour }: { initialTour: any }) 
                     </div>
                   </div>
 
-                  <a 
-                    href={`https://wa.me/916005888754?text=${encodeURIComponent(`Hello WanderKashmir, I want to book the tour: *${tour.title}* for ${persons} person(s)${travelDate ? ` on ${travelDate.toDateString()}` : ''}.`)}`} 
-                    target="_blank" 
-                    rel="noopener noreferrer" 
-                    className="w-full btn-primary justify-center text-base py-3.5 rounded-xl mb-3 flex items-center"
-                  >
-                    Book This Tour
-                  </a>
+                  {!showBookingFlow ? (
+                    <button 
+                      onClick={() => {
+                        if (!isSignedIn) {
+                          alert("Please sign in to book a tour.");
+                          // Note: In a real app we'd redirect to /sign-in, but alert works for now.
+                        }
+                        setShowBookingFlow(true);
+                      }}
+                      className="w-full btn-primary justify-center text-base py-3.5 rounded-xl mb-3 flex items-center"
+                    >
+                      Book This Tour
+                    </button>
+                  ) : (
+                    <div className="bg-white border-2 border-sky-100 p-4 rounded-2xl mb-4 space-y-4 shadow-sm relative overflow-hidden">
+                      <div className="absolute top-0 left-0 w-full h-1 bg-slate-100">
+                        <div className="h-full bg-sky-500 transition-all duration-300" style={{ width: bookingStep === 1 ? '50%' : '100%' }}></div>
+                      </div>
+                      
+                      <div className="flex items-center justify-between mb-2 mt-1">
+                        <h4 className="font-bold text-slate-800 flex items-center gap-1.5">
+                          {bookingStep === 1 ? <User className="w-4 h-4 text-sky-500" /> : <Shield className="w-4 h-4 text-emerald-500" />}
+                          {bookingStep === 1 ? "Traveller Details" : "Review & Pay"}
+                        </h4>
+                        <button onClick={() => setShowBookingFlow(false)} className="text-slate-400 hover:text-slate-600">
+                          <XCircle className="w-5 h-5" />
+                        </button>
+                      </div>
+
+                      {bookingStep === 1 && (
+                        <div className="space-y-3 animate-in fade-in slide-in-from-right-4 duration-300">
+                          <div>
+                            <label className="block text-xs font-semibold text-slate-600 mb-1">Lead Guest Name *</label>
+                            <input type="text" value={guestName} onChange={e => setGuestName(e.target.value)} placeholder="John Doe" className="w-full border border-slate-200 rounded-lg p-2.5 text-sm outline-none focus:border-sky-500" />
+                          </div>
+                          <div>
+                            <label className="block text-xs font-semibold text-slate-600 mb-1">Phone Number *</label>
+                            <input type="tel" value={guestPhone} onChange={e => setGuestPhone(e.target.value)} placeholder="+91 9876543210" className="w-full border border-slate-200 rounded-lg p-2.5 text-sm outline-none focus:border-sky-500" />
+                          </div>
+                          <div>
+                            <label className="block text-xs font-semibold text-slate-600 mb-1">Special Requests</label>
+                            <textarea value={specialRequests} onChange={e => setSpecialRequests(e.target.value)} placeholder="e.g. Dietary requirements..." className="w-full border border-slate-200 rounded-lg p-2.5 text-sm outline-none focus:border-sky-500 h-16" />
+                          </div>
+                          <button 
+                            disabled={!guestName || !guestPhone || !travelDate}
+                            onClick={() => setBookingStep(2)}
+                            className="w-full bg-slate-900 text-white font-semibold py-3 rounded-xl hover:bg-slate-800 transition-colors disabled:opacity-50 mt-2"
+                          >
+                            Continue
+                          </button>
+                          {!travelDate && <p className="text-xs text-red-500 text-center mt-1">Please select a travel date above.</p>}
+                        </div>
+                      )}
+
+                      {bookingStep === 2 && (
+                        <div className="space-y-4 animate-in fade-in slide-in-from-right-4 duration-300">
+                          <div className="bg-slate-50 p-3 rounded-lg border border-slate-100 text-sm">
+                            <p className="flex justify-between mb-1"><span className="text-slate-500">Tour:</span> <span className="font-semibold text-slate-800 text-right">{tour.title}</span></p>
+                            <p className="flex justify-between mb-1"><span className="text-slate-500">Date:</span> <span className="font-semibold text-slate-800">{travelDate?.toDateString()}</span></p>
+                            <p className="flex justify-between"><span className="text-slate-500">Guest:</span> <span className="font-semibold text-slate-800">{guestName}</span></p>
+                          </div>
+
+                          <div className="flex items-start gap-2.5 bg-orange-50/50 p-3 rounded-lg border border-orange-100">
+                            <input 
+                              type="checkbox" 
+                              id="policy" 
+                              checked={agreedToPolicy} 
+                              onChange={(e) => setAgreedToPolicy(e.target.checked)}
+                              className="mt-1 flex-shrink-0 w-4 h-4 text-orange-600 rounded border-orange-300 focus:ring-orange-500" 
+                            />
+                            <label htmlFor="policy" className="text-xs text-slate-600 leading-relaxed cursor-pointer">
+                              I agree to the <span className="text-orange-600 font-medium">Cancellation & Date Change Policy</span>. 
+                              (Free cancellation up to 7 days before travel. Changes subject to availability.)
+                            </label>
+                          </div>
+
+                          <div className="flex gap-2 mt-4">
+                            <button onClick={() => setBookingStep(1)} className="px-4 py-3 rounded-xl border border-slate-200 font-medium text-slate-600 hover:bg-slate-50">
+                              Back
+                            </button>
+                            <div className="flex-1">
+                              {!agreedToPolicy ? (
+                                <button disabled className="w-full bg-slate-200 text-slate-400 font-bold py-3.5 rounded-xl">
+                                  Agree to continue
+                                </button>
+                              ) : (
+                                <CheckoutButton 
+                                  propertyId=""
+                                  tourId={tour.id}
+                                  isLoggedIn={isSignedIn || false}
+                                  checkIn={travelDate?.toISOString() || new Date().toISOString()}
+                                  checkOut={travelDate ? new Date(travelDate.getTime() + (parseInt(tour.duration.split(' ')[0]) || 1) * 86400000).toISOString() : new Date().toISOString()}
+                                  guests={persons}
+                                  nights={parseInt(tour.duration.split(' ')[0]) || 1}
+                                  guestName={guestName}
+                                  guestPhone={guestPhone}
+                                  specialRequests={specialRequests}
+                                  baseAmount={Math.round(totalPrice * 1.05)}
+                                />
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
                   <a 
                     href={`https://wa.me/916005888754?text=${encodeURIComponent(`Hello WanderKashmir, I would like to request a custom quote for the tour: *${tour.title}*.`)}`} 
                     target="_blank" 

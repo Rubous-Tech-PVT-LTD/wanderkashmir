@@ -22,12 +22,13 @@ interface CheckoutButtonProps {
   guideAmount?: number;
   selectedTaxiId?: string;
   selectedGuideId?: string;
+  tourId?: string;
 }
 
 export default function CheckoutButton({ 
   propertyId, pricePerNight, isLoggedIn, checkIn, checkOut, guests, nights, 
   guestName, guestPhone, specialRequests, otherGuests,
-  baseAmount, taxiAmount, guideAmount, selectedTaxiId, selectedGuideId
+  baseAmount, taxiAmount, guideAmount, selectedTaxiId, selectedGuideId, tourId
 }: CheckoutButtonProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [isVerifying, setIsVerifying] = useState(false);
@@ -51,6 +52,7 @@ export default function CheckoutButton({
           propertyId,
           vehicleId: selectedTaxiId,
           guideProfileId: selectedGuideId,
+          tourId,
           checkIn,
           checkOut,
           guests,

@@ -21,12 +21,12 @@ export async function POST(req: Request) {
 
     const body = await req.json();
     const { 
-      propertyId, vehicleId, guideProfileId, 
+      propertyId, vehicleId, guideProfileId, tourId,
       checkIn, checkOut, guests, amount,
       baseAmount, taxiAmount, guideAmount
     } = body;
 
-    if (!propertyId && !vehicleId && !guideProfileId) {
+    if (!propertyId && !vehicleId && !guideProfileId && !tourId) {
       return NextResponse.json({ error: "Missing required booking entity" }, { status: 400 });
     }
     
@@ -79,6 +79,7 @@ export async function POST(req: Request) {
         propertyId: propertyId || "",
         vehicleId: vehicleId || "",
         guideProfileId: guideProfileId || "",
+        tourId: tourId || "",
         userId: userId,
         checkIn: checkIn || "",
         checkOut: checkOut || "",
@@ -93,6 +94,7 @@ export async function POST(req: Request) {
         propertyId: propertyId || null,
         vehicleId: vehicleId || null,
         guideProfileId: guideProfileId || null,
+        tourId: tourId || null,
         amount: amount,
         baseAmount: baseAmount || amount,
         taxiAmount: taxiAmount || 0,
