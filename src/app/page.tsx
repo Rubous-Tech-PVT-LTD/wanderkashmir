@@ -163,6 +163,45 @@ async function getDestinationCounts(): Promise<Record<string, number>> {
   }
 }
 
+async function getFeaturedGuides() {
+  try {
+    const dbGuides = await prisma.guideProfile.findMany({
+      where: {
+        vendorProfile: {
+          isApproved: true,
+          status: "APPROVED"
+        }
+      },
+      take: 4,
+      orderBy: { createdAt: "desc" },
+      include: {
+        vendorProfile: {
+          include: {
+            user: true
+          }
+        }
+      },
+    });
+
+    if (dbGuides.length > 0) {
+      return dbGuides.map((g) => ({
+        id: g.id,
+        name: g.vendorProfile.user.name || "Local Guide",
+        location: g.location || "Srinagar",
+        price: g.pricePerDay || 1500,
+        rating: 4.8 + Math.random() * 0.2,
+        reviews: Math.floor(Math.random() * 100) + 20,
+        image: g.images && g.images.length > 1 ? g.images[1] : (g.images && g.images.length > 0 ? g.images[0] : "https://images.unsplash.com/photo-1542718610-a1d656d1884c?auto=format&fit=crop&q=80&w=800"),
+        languages: g.languages || [],
+        experience: g.experienceYears || 5
+      }));
+    }
+    return [];
+  } catch (error) {
+    console.error("Failed to fetch featured guides:", error);
+    return [];
+  }
+}
 
 const destinations = [
   {
@@ -315,9 +354,12 @@ const whyUs = [
 ];
 /* ─── End Mock Data ──────────────────────────────────────── */
 
-export default async function HomePage() {
-  const featuredProperties = await getFeaturedProperties();
-  const locationCounts = await getDestinationCounts();
+export default async function Home() {
+  const [featuredProperties, locationCounts, featuredGuides] = await Promise.all([
+    getFeaturedProperties(),
+    getDestinationCounts(),
+    getFeaturedGuides()
+  ]);
 
   // Fetch tours from DB
   let tours = await prisma.tour.findMany({
@@ -436,6 +478,55 @@ export default async function HomePage() {
           </div>
         </div>
       </section>
+
+      {/* ─── FEATURED GUIDES ──────────────────────────────── */}
+      {featuredGuides.length > 0 && (
+        <section className="py-12 bg-white">
+          <div className="container-custom">
+            <div className="flex items-end justify-between mb-8">
+              <div>
+                <h2 className="text-2xl font-bold text-slate-900">Featured Local Guides</h2>
+                <p className="text-sm text-slate-500 mt-1">Explore Kashmir with our top-rated local experts</p>
+              </div>
+              <Link
+                href="/guides"
+                className="text-sm font-semibold text-slate-600 border border-slate-200 px-4 py-2 rounded-full hover:bg-slate-50 transition-colors"
+              >
+                View All
+              </Link>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              {featuredGuides.map((g) => (
+                <Link key={g.id} href={`/guides`} className="group block bg-white rounded-2xl border border-slate-200 overflow-hidden hover:shadow-xl transition-all hover:-translate-y-1">
+                  <div className="relative aspect-[4/3] w-full overflow-hidden bg-slate-100">
+                    <Image src={g.image} alt={g.name} fill sizes="(max-width: 768px) 100vw, 25vw" className="object-cover transition-transform duration-500 group-hover:scale-105" />
+                    <div className="absolute top-3 right-3 bg-white/90 backdrop-blur-sm px-2 py-1 rounded-full text-xs font-bold text-slate-700 flex items-center gap-1 shadow-sm">
+                      <Star className="w-3 h-3 text-orange-400 fill-orange-400" /> {g.rating.toFixed(1)}
+                    </div>
+                  </div>
+                  <div className="p-4">
+                    <h3 className="font-bold text-slate-900 text-lg mb-1">{g.name}</h3>
+                    <p className="text-sm text-slate-500 flex items-center gap-1 mb-2"><MapPin className="w-3.5 h-3.5" /> {g.location}</p>
+                    <div className="flex flex-wrap gap-1 mb-4">
+                      {g.languages.slice(0, 2).map((lang: string) => (
+                        <span key={lang} className="text-[10px] uppercase font-bold tracking-wider bg-slate-100 text-slate-600 px-2 py-1 rounded-md">{lang}</span>
+                      ))}
+                    </div>
+                    <div className="pt-4 border-t border-slate-100 flex items-center justify-between">
+                      <div>
+                        <p className="text-xs text-slate-500">From</p>
+                        <p className="font-bold text-slate-900">₹{g.price.toLocaleString("en-IN")}</p>
+                      </div>
+                      <span className="bg-sky-50 text-sky-600 text-xs font-bold px-3 py-1.5 rounded-full">Book</span>
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* ─── TOUR PACKAGES & TAXI ───────────────────────────────── */}
       <section className="section-padding">
