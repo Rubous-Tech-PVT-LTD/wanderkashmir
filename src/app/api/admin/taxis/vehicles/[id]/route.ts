@@ -2,8 +2,9 @@ import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getAdminSession } from "@/lib/auth";
 
-export async function PATCH(req: Request, { params }: { params: { id: string } }) {
+export async function PATCH(req: Request, context: { params: Promise<{ id: string }> }) {
   try {
+    const { id } = await context.params;
     const session = await getAdminSession();
     if (!session || session.role !== "ADMIN") {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -36,7 +37,7 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
     }
 
     const vehicle = await prisma.vehicle.update({
-      where: { id: params.id },
+      where: { id },
       data: updatedData,
     });
 
