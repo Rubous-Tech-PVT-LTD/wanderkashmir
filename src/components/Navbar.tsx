@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { SignInButton, UserButton, useAuth } from '@clerk/nextjs';
 import { Menu, X, Mountain, Phone, ChevronDown, User, Heart } from "lucide-react";
 import { useVendor } from "@/context/VendorContext";
@@ -18,6 +18,7 @@ export default function Navbar() {
   const { isSignedIn } = useAuth();
   const { isRegistered, role } = useVendor();
   const router = useRouter();
+  const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const prevAuth = useRef(isSignedIn);
@@ -178,15 +179,17 @@ export default function Navbar() {
       )}
 
       {/* Floating Become a Partner Button */}
-      <Link
-        href="/partner/register"
-        className="fixed bottom-6 right-6 z-50 flex items-center gap-2 bg-gradient-to-r from-sky-500 to-indigo-600 text-white font-bold px-6 py-3.5 rounded-full shadow-xl shadow-sky-500/30 hover:scale-105 hover:shadow-2xl hover:shadow-sky-500/40 transition-all duration-300 group animate-bounce-slow"
-      >
-        <span>Become a Partner</span>
-        <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
-        </svg>
-      </Link>
+      {pathname === "/" && (
+        <Link
+          href="/partner/register"
+          className="fixed bottom-6 right-6 z-50 flex items-center gap-2 bg-gradient-to-r from-sky-500 to-indigo-600 text-white font-bold px-6 py-3.5 rounded-full shadow-xl shadow-sky-500/30 hover:scale-105 hover:shadow-2xl hover:shadow-sky-500/40 transition-all duration-300 group animate-bounce-slow"
+        >
+          <span>Become a Partner</span>
+          <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+          </svg>
+        </Link>
+      )}
     </>
   );
 }
