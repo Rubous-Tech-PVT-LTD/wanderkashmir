@@ -126,17 +126,33 @@ export default function ToursClient({ initialTours }: { initialTours: any[] }) {
                       sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                    <div className="absolute top-3 left-3 flex gap-2">
+                    <div className="absolute top-3 left-3 flex gap-2 flex-wrap pr-12">
                       {tour.badge && (
-                        <span className="badge bg-orange-500 text-white text-xs px-2 py-1 rounded-lg font-semibold">
+                        <span className="badge bg-orange-500 text-white text-xs px-2 py-1 rounded-lg font-semibold shadow-sm">
                           {tour.badge}
                         </span>
                       )}
-                      {tour.category?.split(',').map((cat: string, idx: number) => (
-                        <span key={idx} className="badge bg-sky-600 text-white text-xs px-2 py-1 rounded-lg font-semibold">
-                          {cat.trim()}
-                        </span>
-                      ))}
+                      {(() => {
+                        const categories = tour.category ? tour.category.split(',').map((c: string) => c.trim()).filter(Boolean) : [];
+                        const maxCats = tour.badge ? 1 : 2;
+                        const visibleCats = categories.slice(0, maxCats);
+                        const hiddenCount = categories.length - maxCats;
+                        
+                        return (
+                          <>
+                            {visibleCats.map((cat: string, idx: number) => (
+                              <span key={idx} className="badge bg-sky-600 text-white text-xs px-2 py-1 rounded-lg font-semibold shadow-sm">
+                                {cat}
+                              </span>
+                            ))}
+                            {hiddenCount > 0 && (
+                              <span className="badge bg-slate-900/60 backdrop-blur-sm text-white text-xs px-2 py-1 rounded-lg font-semibold shadow-sm" title={categories.slice(maxCats).join(', ')}>
+                                +{hiddenCount}
+                              </span>
+                            )}
+                          </>
+                        );
+                      })()}
                     </div>
                     <button className="absolute top-3 right-3 w-8 h-8 bg-white/90 rounded-full flex items-center justify-center shadow">
                       <Heart className="w-4 h-4 text-slate-400" />

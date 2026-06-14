@@ -150,11 +150,26 @@ export default function TourDetailClient({ initialTour }: { initialTour: any }) 
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
                   {/* Badges */}
-                  <div className="absolute top-4 left-4 flex gap-2">
-                    <span className="badge bg-orange-500 text-white">Best Seller</span>
-                    {tour.category?.split(',').map((cat: string, idx: number) => (
-                      <span key={idx} className="badge bg-sky-600 text-white">{cat.trim()}</span>
-                    ))}
+                  <div className="absolute top-4 left-4 flex gap-2 flex-wrap pr-24">
+                    <span className="badge bg-orange-500 text-white shadow-sm">Best Seller</span>
+                    {(() => {
+                      const categories = tour.category ? tour.category.split(',').map((c: string) => c.trim()).filter(Boolean) : [];
+                      const visibleCats = categories.slice(0, 2);
+                      const hiddenCount = categories.length - 2;
+                      
+                      return (
+                        <>
+                          {visibleCats.map((cat: string, idx: number) => (
+                            <span key={idx} className="badge bg-sky-600 text-white shadow-sm">{cat}</span>
+                          ))}
+                          {hiddenCount > 0 && (
+                            <span className="badge bg-slate-900/60 backdrop-blur-sm text-white shadow-sm" title={categories.slice(2).join(', ')}>
+                              +{hiddenCount}
+                            </span>
+                          )}
+                        </>
+                      );
+                    })()}
                   </div>
                   {/* Actions */}
                   <div className="absolute top-4 right-4 flex gap-2">
