@@ -646,7 +646,7 @@ export default function TourDetailClient({ initialTour }: { initialTour: any }) 
                         <h4 className="font-bold text-slate-900 line-clamp-1">{tour.title}</h4>
                         <div className="text-sm text-slate-500 mt-1 space-y-0.5">
                           <p className="flex items-center gap-1.5"><Calendar className="w-3.5 h-3.5" /> {travelDate?.toDateString()}</p>
-                          <p className="flex items-center gap-1.5"><Users className="w-3.5 h-3.5" /> {persons} Person{persons > 1 ? 's' : ''}</p>
+                          <p className="flex items-center gap-1.5"><Users className="w-3.5 h-3.5" /> {activePersons} Person{activePersons > 1 ? 's' : ''}</p>
                         </div>
                       </div>
                     </div>
@@ -695,7 +695,7 @@ export default function TourDetailClient({ initialTour }: { initialTour: any }) 
                           isLoggedIn={isSignedIn || false}
                           checkIn={travelDate?.toISOString() || new Date().toISOString()}
                           checkOut={travelDate ? new Date(travelDate.getTime() + (parseInt(tour.duration.split(' ')[0]) || 1) * 86400000).toISOString() : new Date().toISOString()}
-                          guests={persons}
+                          guests={activePersons}
                           nights={parseInt(tour.duration.split(' ')[0]) || 1}
                           guestName={guestName}
                           guestPhone={guestPhone}
