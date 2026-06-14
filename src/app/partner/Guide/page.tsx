@@ -124,8 +124,9 @@ export default function GuideDashboard({ bookings = [], vendorProfileId, initial
     setIsSaving(false);
     
     if (res.success) {
-      toast.success("Profile published successfully!", { id: "save-guide" });
+      toast.success("Profile saved successfully!", { id: "save-guide" });
       router.refresh();
+      setActiveTab("overview");
     } else {
       toast.error(res.error || "Failed to save profile", { id: "save-guide" });
     }
