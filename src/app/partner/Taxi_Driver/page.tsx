@@ -37,6 +37,7 @@ export default function TaxiDashboard({
   vehicles = [],
   drivers = [],
   rateOverrides = [],
+  standardRates = [],
   taxiRole = "INDIVIDUAL",
   vendorProfileId
 }: { 
@@ -44,6 +45,7 @@ export default function TaxiDashboard({
   vehicles?: any[];
   drivers?: any[];
   rateOverrides?: any[];
+  standardRates?: any[];
   taxiRole?: string | null;
   vendorProfileId?: string;
 }) {

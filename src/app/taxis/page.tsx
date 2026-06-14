@@ -32,7 +32,9 @@ export default async function TaxisPage() {
       vehicleType: true,
       vehicleRegistration: true,
       experienceYears: true,
-      kycDocuments: true // to get a profile pic if any
+      kycDocuments: true, // to get a profile pic if any
+      rateOverrides: true,
+      vehicles: true
     }
   });
 

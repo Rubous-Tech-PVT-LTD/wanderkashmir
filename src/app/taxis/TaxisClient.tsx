@@ -27,9 +27,17 @@ export default function TaxisClient({ rateCards, imagesMap = {}, verifiedDrivers
   const filteredRoutes = rateCards.filter(r => r.place.toLowerCase().includes(searchRoute.toLowerCase()));
   
   // Filter verified drivers for the selected vehicle type
-  const activeVerifiedDrivers = verifiedDrivers.filter(
-    driver => driver.vehicleType && driver.vehicleType.toUpperCase().includes(selectedVehicle.toUpperCase())
-  );
+  const activeVerifiedDrivers = verifiedDrivers.filter(driver => {
+    const matchVehicle = selectedVehicle.toUpperCase();
+    if (driver.vehicleType && driver.vehicleType.toUpperCase().includes(matchVehicle)) return true;
+    
+    if (driver.vehicles && driver.vehicles.some((v: any) => 
+      (v.model && v.model.toUpperCase().includes(matchVehicle)) || 
+      (v.type && v.type.toUpperCase() === matchVehicle)
+    )) return true;
+    
+    return false;
+  });
 
   type ProviderType = {
     id: string;
@@ -41,6 +49,7 @@ export default function TaxisClient({ rateCards, imagesMap = {}, verifiedDrivers
     experienceYears?: number;
     rating?: number;
     trips?: number;
+    rateOverrides?: any[];
   };
 
   const allProviders: ProviderType[] = [
@@ -56,15 +65,19 @@ export default function TaxisClient({ rateCards, imagesMap = {}, verifiedDrivers
         // Fallbacks if rating/trips are not yet in backend
         const mockRating = parseFloat((4.5 + (i % 5) * 0.1).toFixed(1));
         const mockTrips = 50 + (i * 23) % 200;
+        
+        const primaryVehicle = d.vehicles && d.vehicles.length > 0 ? d.vehicles[0] : null;
+        
         return {
           id: d.id,
           name: d.name || "Wander Verified Driver",
           isOfficial: false,
-          vehicleType: d.vehicleType,
-          vehicleRegistration: d.vehicleRegistration,
+          vehicleType: d.vehicleType || primaryVehicle?.model || selectedVehicle,
+          vehicleRegistration: d.vehicleRegistration || primaryVehicle?.registrationNum,
           experienceYears: d.experienceYears || 0,
           rating: d.rating || mockRating,
-          trips: d.trips || mockTrips
+          trips: d.trips || mockTrips,
+          rateOverrides: d.rateOverrides
         };
       })
       .sort((a, b) => {
@@ -387,17 +400,26 @@ export default function TaxisClient({ rateCards, imagesMap = {}, verifiedDrivers
                 </thead>
                 <tbody className="divide-y divide-slate-100">
                   {filteredRoutes.map((rate) => {
-                    const price = rate.rates[selectedVehicle];
+                    const standardPrice = rate.rates[selectedVehicle];
+                    
+                    const provider = allProviders.find(p => p.id === selectedProvider);
+                    let displayPrice = standardPrice;
+                    
+                    if (provider && provider.rateOverrides) {
+                       const override = provider.rateOverrides.find((ro: any) => ro.routePlace === rate.place);
+                       if (override) displayPrice = override.customPrice;
+                    }
+                    
                     return (
                       <tr key={rate.id} className="hover:bg-slate-50/50 transition-colors group">
                         <td className="px-6 py-4 font-semibold text-slate-800 text-sm md:text-base">
                           {rate.place}
                         </td>
                         <td className="px-6 py-4 text-right font-bold text-slate-900">
-                          {price && price > 0 ? `₹${price.toLocaleString('en-IN')}` : <span className="text-slate-400 font-normal">N/A</span>}
+                          {displayPrice && displayPrice > 0 ? `₹${displayPrice.toLocaleString('en-IN')}` : <span className="text-slate-400 font-normal">N/A</span>}
                         </td>
                         <td className="px-6 py-4 text-right">
-                          {price && price > 0 && (
+                          {displayPrice && displayPrice > 0 && (
                             <Link 
                               href={`/checkout?type=taxi&vehicle=${selectedVehicle}&route=${encodeURIComponent(rate.place)}${selectedProvider !== "wanderkashmir_official" ? `&driverId=${selectedProvider}` : ''}`} 
                               className="inline-flex items-center gap-1 text-sm font-bold text-orange-600 opacity-0 group-hover:opacity-100 transition-opacity"

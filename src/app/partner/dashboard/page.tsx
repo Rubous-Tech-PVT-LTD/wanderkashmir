@@ -170,12 +170,14 @@ export default async function DynamicVendorDashboard() {
     case "HOMESTAY":
       return <HomeStaysDashboard properties={vendorProfile.properties} bookings={bookings} />;
     case "TAXI":
+      const standardRates = await prisma.taxiRateCard.findMany({ orderBy: { createdAt: 'asc' } });
       return (
         <TransportDashboard 
           bookings={bookings} 
           vehicles={vendorProfile.vehicles} 
           drivers={vendorProfile.drivers}
           rateOverrides={vendorProfile.rateOverrides}
+          standardRates={standardRates}
           taxiRole={vendorProfile.taxiRole}
           vendorProfileId={vendorProfile.id}
         />
