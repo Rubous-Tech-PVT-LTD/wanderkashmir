@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { VendorProvider, InitialVendorProfile, VendorType, SubscriptionPlan } from "@/context/VendorContext";
 import { ClerkProvider } from '@clerk/nextjs'
-import { auth } from "@clerk/nextjs/server";
+import { auth, currentUser } from "@clerk/nextjs/server";
 import prisma from "@/lib/prisma";
 import ToasterProvider from "@/components/ToasterProvider";
 import { getVendorSession } from "@/lib/auth";
@@ -37,9 +37,27 @@ export default async function RootLayout({
 
   if (userId) {
     try {
-      const user = await prisma.user.findUnique({
+      let user = await prisma.user.findUnique({
         where: { id: userId },
       });
+
+      // Lazy sync for local development where webhooks might not fire
+      if (!user && clerkUserId && clerkUserId === userId) {
+        const clerkUser = await currentUser();
+        if (clerkUser) {
+          const email = clerkUser.emailAddresses[0]?.emailAddress;
+          const name = `${clerkUser.firstName || ''} ${clerkUser.lastName || ''}`.trim() || 'WanderKashmir User';
+          
+          user = await prisma.user.create({
+            data: {
+              id: clerkUser.id,
+              email: email || `user_${clerkUser.id}@example.com`,
+              name: name,
+              role: 'CUSTOMER'
+            }
+          });
+        }
+      }
       
       if (user) {
         let profile = null;

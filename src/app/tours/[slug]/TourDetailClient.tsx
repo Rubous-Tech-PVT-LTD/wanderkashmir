@@ -25,7 +25,8 @@ const inclusionIcons: Record<string, React.ReactNode> = {
 export default function TourDetailClient({ initialTour }: { initialTour: any }) {
   const [activeImage, setActiveImage] = useState(0);
   const [openDay, setOpenDay] = useState<number | null>(1);
-  const [persons, setPersons] = useState(2);
+  const [persons, setPersons] = useState<number | string>(2);
+  const activePersons = Math.max(1, Number(persons) || 1);
   const [travelDate, setTravelDate] = useState<Date | null>(null);
   const [isWishlisted, setIsWishlisted] = useState(false);
   const { isLoaded, isSignedIn, user } = useUser();
@@ -43,7 +44,7 @@ export default function TourDetailClient({ initialTour }: { initialTour: any }) 
 
   // Keep otherGuests array in sync with persons - 1
   useEffect(() => {
-    const requiredLength = Math.max(0, persons - 1);
+    const requiredLength = Math.max(0, activePersons - 1);
     if (otherGuests.length !== requiredLength) {
       const newGuests = [...otherGuests];
       if (newGuests.length < requiredLength) {
@@ -55,7 +56,7 @@ export default function TourDetailClient({ initialTour }: { initialTour: any }) 
       }
       setOtherGuests(newGuests);
     }
-  }, [persons, otherGuests]);
+  }, [activePersons, otherGuests]);
 
   const tour = initialTour;
 
@@ -71,7 +72,7 @@ export default function TourDetailClient({ initialTour }: { initialTour: any }) 
     }
   };
 
-  const totalPrice = tour.price * persons;
+  const totalPrice = tour.price * activePersons;
   const savings = tour.originalPrice - tour.price;
 
   return (
@@ -408,7 +409,10 @@ export default function TourDetailClient({ initialTour }: { initialTour: any }) 
                         min="1"
                         max="100"
                         value={persons}
-                        onChange={(e) => setPersons(Math.max(1, Number(e.target.value)))}
+                        onChange={(e) => setPersons(e.target.value)}
+                        onBlur={() => {
+                          if (!persons || Number(persons) < 1) setPersons(1);
+                        }}
                         className="flex-1 text-sm font-medium text-slate-800 focus:outline-none bg-transparent"
                       />
                     </div>
@@ -417,7 +421,7 @@ export default function TourDetailClient({ initialTour }: { initialTour: any }) 
                   {/* Price Breakdown */}
                   <div className="bg-slate-50 rounded-xl p-3 mb-4 space-y-2">
                     <div className="flex justify-between text-sm">
-                      <span className="text-slate-500">₹{tour.price.toLocaleString("en-IN")} × {persons} person{persons > 1 ? "s" : ""}</span>
+                      <span className="text-slate-500">₹{tour.price.toLocaleString("en-IN")} × {activePersons} person{activePersons > 1 ? "s" : ""}</span>
                       <span className="font-medium text-slate-900">₹{totalPrice.toLocaleString("en-IN")}</span>
                     </div>
                     <div className="flex justify-between text-sm">
