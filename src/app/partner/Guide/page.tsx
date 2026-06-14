@@ -248,8 +248,7 @@ export default function GuideDashboard({ bookings = [] }: { bookings?: any[] }) 
                 </div>
               </div>
 
-            {hasAnalytics && (() => {
-              return (
+            {/* ALWAYS RENDER CHARTS SO CONTAINER HAS HEIGHT FOR PAYWALL */}
               <>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
                   <button onClick={() => setChartMetric("views")} className={`p-4 rounded-xl border-2 transition-all text-left ${chartMetric === "views" ? 'border-sky-500 bg-sky-50' : 'border-slate-100 bg-white hover:border-slate-200'}`}>
@@ -376,19 +375,17 @@ export default function GuideDashboard({ bookings = [] }: { bookings?: any[] }) 
                   </div>
                 </div>
               </>
-              );
-            })()}
             </div>
 
             {/* Paywall Overlay */}
             {!hasAnalytics && (
-              <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-white/40 backdrop-blur-sm">
-                <div className="w-16 h-16 bg-white rounded-full shadow-lg flex items-center justify-center mb-4">
+              <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-slate-50/80 backdrop-blur-[2px]">
+                <div className="w-16 h-16 bg-white rounded-full shadow-md flex items-center justify-center mb-4 ring-4 ring-slate-100">
                   <Lock className="w-6 h-6 text-indigo-500" />
                 </div>
                 <h3 className="text-xl font-bold text-slate-900 mb-2">Unlock Advanced Analytics</h3>
                 <p className="text-slate-600 text-sm max-w-md text-center mb-6">Upgrade to Growth Pro or higher to see who is viewing your profile, track conversion rates, and optimize your earnings.</p>
-                <button onClick={() => window.scrollTo({top: 0, behavior: 'smooth'})} className="bg-slate-900 text-white px-6 py-2.5 rounded-lg font-bold hover:bg-slate-800 transition-colors shadow-md">
+                <button onClick={() => { setActiveTab('financials'); window.scrollTo({top: 0, behavior: 'smooth'}); }} className="bg-slate-900 text-white px-6 py-2.5 rounded-lg font-bold hover:bg-slate-800 transition-colors shadow-md">
                   View Upgrade Plans
                 </button>
               </div>
