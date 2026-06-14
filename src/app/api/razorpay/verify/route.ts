@@ -22,13 +22,39 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Transaction is not legit!" }, { status: 400 });
     }
 
-    // Payment is valid, update Booking status
-    const booking = await prisma.booking.update({
-      where: { razorpayOrderId: razorpay_order_id },
-      data: {
-        status: "CONFIRMED",
-        razorpayPaymentId: razorpay_payment_id,
-      },
+    // Payment is valid, check for addons and update Booking status
+    const booking = await prisma.booking.findUnique({
+      where: { razorpayOrderId: razorpay_order_id }
+    });
+
+    if (!booking) {
+      return NextResponse.json({ error: "Booking not found" }, { status: 404 });
+    }
+
+    let updatedData: any = {
+      status: "CONFIRMED",
+      razorpayPaymentId: razorpay_payment_id,
+    };
+
+    // Automatic Assignment for Tour Addons
+    if (booking.tourId) {
+      if (booking.guideAmount > 0 && !booking.guideProfileId) {
+        const availableGuide = await prisma.guideProfile.findFirst({
+          where: { isApproved: true, status: "APPROVED" }
+        });
+        if (availableGuide) updatedData.guideProfileId = availableGuide.id;
+      }
+      if (booking.taxiAmount > 0 && !booking.vehicleId) {
+        const availableTaxi = await prisma.vehicle.findFirst({
+          where: { isApproved: true, status: "APPROVED" }
+        });
+        if (availableTaxi) updatedData.vehicleId = availableTaxi.id;
+      }
+    }
+
+    const updatedBooking = await prisma.booking.update({
+      where: { id: booking.id },
+      data: updatedData,
     });
 
     // Run the email process, but wait for it so Serverless environments don't kill it prematurely

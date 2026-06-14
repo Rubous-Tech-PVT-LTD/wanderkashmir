@@ -84,6 +84,7 @@ export async function POST(req: Request) {
         checkIn: checkIn || "",
         checkOut: checkOut || "",
         guests: guests ? guests.toString() : "0",
+        addons: body.addons ? JSON.stringify(body.addons) : "",
       },
     });
 

@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import CheckoutButton from "@/components/CheckoutButton";
-import { CheckCircle2 } from "lucide-react";
+import { CheckCircle2, ChevronRight, Car, UserCircle2, Info } from "lucide-react";
 import CustomDatePicker from "@/components/CustomDatePicker";
 
 export default function CheckoutClient({ 
@@ -96,13 +96,26 @@ export default function CheckoutClient({
     );
   }
 
-  const { type, price, vehicleType, route, driverId, guide } = checkoutData;
+  const { type, price, vehicleType, route, driverId, guide, tour, tourId, guideRate, taxiRate } = checkoutData;
   const isTaxi = type === "taxi";
   const isGuide = type === "guide";
+  const isTour = type === "tour";
+
+  const [needsTaxi, setNeedsTaxi] = useState(false);
+  const [needsGuide, setNeedsGuide] = useState(false);
+  
+  // Extract days for tour
+  const tourDaysMatch = isTour ? tour?.duration?.match(/(\d+)\s*Days?/i) : null;
+  const tourDays = tourDaysMatch ? parseInt(tourDaysMatch[1]) : nights;
   
   // Price calculation
-  const basePrice = isGuide ? price * nights : price; 
-  const totalAmount = basePrice; // Addons not applicable here directly unless explicitly added
+  const basePrice = (isGuide || isTour) ? price * (isTour ? guests : nights) : price; 
+  
+  let totalAmount = basePrice;
+  if (isTour) {
+    if (needsTaxi) totalAmount += (taxiRate * tourDays);
+    if (needsGuide) totalAmount += (guideRate * tourDays);
+  }
 
   let placeholderText = "e.g. Arriving late, ground floor room, etc.";
   if (isTaxi) {
@@ -209,6 +222,59 @@ export default function CheckoutClient({
               </div>
             </div>
           </div>
+
+          {/* Tour Addons Section */}
+          {isTour && (
+            <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+              <h2 className="text-xl font-bold text-slate-900 mb-2">Enhance Your Tour</h2>
+              <p className="text-sm text-slate-500 mb-6">Customize your trip by adding these exclusive services.</p>
+              
+              <div className="space-y-4">
+                <label className={`flex items-start gap-4 p-4 rounded-xl border-2 cursor-pointer transition-all ${needsTaxi ? 'border-sky-500 bg-sky-50' : 'border-slate-100 bg-white hover:border-slate-200'}`}>
+                  <div className="flex items-center h-5 mt-1">
+                    <input type="checkbox" className="w-5 h-5 text-sky-600 rounded border-slate-300 focus:ring-sky-500" checked={needsTaxi} onChange={(e) => setNeedsTaxi(e.target.checked)} />
+                  </div>
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-1">
+                      <Car className={`w-5 h-5 ${needsTaxi ? 'text-sky-600' : 'text-slate-400'}`} />
+                      <h3 className="font-bold text-slate-900">Dedicated Private Taxi</h3>
+                    </div>
+                    <p className="text-sm text-slate-500">Get a private SUV/Sedan exclusively for your group for the entire {tourDays}-day trip.</p>
+                  </div>
+                  <div className="text-right">
+                    <span className="block font-bold text-slate-900">+₹{taxiRate.toLocaleString('en-IN')}</span>
+                    <span className="text-xs text-slate-500">per day</span>
+                  </div>
+                </label>
+
+                <label className={`flex items-start gap-4 p-4 rounded-xl border-2 cursor-pointer transition-all ${needsGuide ? 'border-sky-500 bg-sky-50' : 'border-slate-100 bg-white hover:border-slate-200'}`}>
+                  <div className="flex items-center h-5 mt-1">
+                    <input type="checkbox" className="w-5 h-5 text-sky-600 rounded border-slate-300 focus:ring-sky-500" checked={needsGuide} onChange={(e) => setNeedsGuide(e.target.checked)} />
+                  </div>
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-1">
+                      <UserCircle2 className={`w-5 h-5 ${needsGuide ? 'text-sky-600' : 'text-slate-400'}`} />
+                      <h3 className="font-bold text-slate-900">Certified Local Guide</h3>
+                    </div>
+                    <p className="text-sm text-slate-500">A local expert to guide you through history, culture, and hidden spots.</p>
+                  </div>
+                  <div className="text-right">
+                    <span className="block font-bold text-slate-900">+₹{guideRate.toLocaleString('en-IN')}</span>
+                    <span className="text-xs text-slate-500">per day</span>
+                  </div>
+                </label>
+              </div>
+
+              {(needsTaxi || needsGuide) && (
+                <div className="mt-4 p-3 bg-orange-50 border border-orange-100 rounded-lg flex items-start gap-2 text-sm text-orange-800">
+                  <Info className="w-5 h-5 text-orange-500 flex-shrink-0 mt-0.5" />
+                  <p>
+                    <strong>Note:</strong> We will automatically assign an available {needsTaxi && needsGuide ? "Taxi and Guide" : needsTaxi ? "Taxi" : "Guide"} for your tour. Details will be shared with you within 2 hours of booking confirmation.
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Booking Summary Sidebar */}
@@ -243,10 +309,42 @@ export default function CheckoutClient({
                 </>
               )}
               
+              {isTour && (
+                <>
+                  <div>
+                    <span className="block text-slate-500 text-xs uppercase font-bold mb-1">Service Type</span>
+                    <span className="font-semibold text-slate-900">Tour Package ({tour?.title})</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <span className="block text-slate-500 text-xs uppercase font-bold mb-1">Duration</span>
+                      <span className="font-semibold text-slate-900">{tour?.duration}</span>
+                    </div>
+                    <div className="text-right">
+                      <span className="block text-slate-500 text-xs uppercase font-bold mb-1">Guests</span>
+                      <span className="font-semibold text-slate-900">{guests}</span>
+                    </div>
+                  </div>
+                </>
+              )}
+              
               <div className="pt-2 border-t border-slate-100 flex justify-between text-slate-600 text-sm">
-                <span>Base Price {isGuide && `x ${nights} days`}</span>
+                <span>Base Price {isGuide ? `x ${nights} days` : isTour ? `x ${guests} person(s)` : ''}</span>
                 <span>₹{basePrice.toLocaleString('en-IN')}</span>
               </div>
+              
+              {isTour && needsTaxi && (
+                <div className="flex justify-between text-slate-600 text-sm text-sky-700 font-medium">
+                  <span>Taxi Add-on ({tourDays} days)</span>
+                  <span>+₹{(taxiRate * tourDays).toLocaleString('en-IN')}</span>
+                </div>
+              )}
+              {isTour && needsGuide && (
+                <div className="flex justify-between text-slate-600 text-sm text-sky-700 font-medium">
+                  <span>Guide Add-on ({tourDays} days)</span>
+                  <span>+₹{(guideRate * tourDays).toLocaleString('en-IN')}</span>
+                </div>
+              )}
             </div>
 
             <div className="mt-4 pt-4 border-t border-slate-200 flex justify-between items-center font-bold text-slate-900 text-lg mb-6">

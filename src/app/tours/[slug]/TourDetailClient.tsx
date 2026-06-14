@@ -9,7 +9,7 @@ import {
   Heart, Share2, ChevronRight, Calendar, Info, Shield, Phone, MessageCircle, Utensils, Hotel, ChevronDown, ChevronUp, XCircle, FileText, User, UserCheck, Car, Compass, Camera, AlertCircle
 } from "lucide-react";
 import CustomDatePicker from "@/components/CustomDatePicker";
-import CheckoutButton from "@/components/CheckoutButton";
+import { useRouter } from "next/navigation";
 import { useUser } from "@clerk/nextjs";
 
 // Removed static tour variable
@@ -23,6 +23,7 @@ const inclusionIcons: Record<string, React.ReactNode> = {
 };
 
 export default function TourDetailClient({ initialTour }: { initialTour: any }) {
+  const router = useRouter();
   const [activeImage, setActiveImage] = useState(0);
   const [openDay, setOpenDay] = useState<number | null>(1);
   const [persons, setPersons] = useState<number | string>(2);
@@ -552,13 +553,8 @@ export default function TourDetailClient({ initialTour }: { initialTour: any }) 
                     onClick={() => {
                       if (!isSignedIn) {
                         setBookingError("Please sign in to book a tour.");
-                      } else if (!travelDate) {
-                        setBookingError("Please select a travel date first.");
-                        setShakeDate(true);
-                        setTimeout(() => setShakeDate(false), 600);
                       } else {
-                        setBookingError("");
-                        setShowBookingFlow(true);
+                        router.push(`/checkout?type=tour&tourId=${tour.id}`);
                       }
                     }}
                     className="w-full btn-primary justify-center text-base py-3.5 rounded-xl mb-3 flex items-center"
