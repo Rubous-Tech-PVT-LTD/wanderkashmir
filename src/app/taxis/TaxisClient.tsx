@@ -29,12 +29,16 @@ export default function TaxisClient({ rateCards, imagesMap = {}, verifiedDrivers
   // Filter verified drivers for the selected vehicle type
   const activeVerifiedDrivers = verifiedDrivers.filter(driver => {
     const matchVehicle = selectedVehicle.toUpperCase();
-    if (driver.vehicleType && driver.vehicleType.toUpperCase().includes(matchVehicle)) return true;
+    const dType = driver.vehicleType?.toUpperCase() || "";
     
-    if (driver.vehicles && driver.vehicles.some((v: any) => 
-      (v.model && v.model.toUpperCase().includes(matchVehicle)) || 
-      (v.type && v.type.toUpperCase() === matchVehicle)
-    )) return true;
+    if (dType && (dType.includes(matchVehicle) || matchVehicle.includes(dType))) return true;
+    
+    if (driver.vehicles && driver.vehicles.some((v: any) => {
+      const vModel = v.model?.toUpperCase() || "";
+      const vType = v.type?.toUpperCase() || "";
+      return vModel.includes(matchVehicle) || matchVehicle.includes(vModel) || 
+             vType === matchVehicle || matchVehicle.includes(vType);
+    })) return true;
     
     return false;
   });
