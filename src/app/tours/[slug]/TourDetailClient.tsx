@@ -11,6 +11,7 @@ import {
 import CustomDatePicker from "@/components/CustomDatePicker";
 import { useRouter } from "next/navigation";
 import { useUser } from "@clerk/nextjs";
+import CheckoutButton from "@/components/CheckoutButton";
 
 // Removed static tour variable
 

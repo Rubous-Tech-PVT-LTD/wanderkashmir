@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Edit2, Trash2, Plus, Percent, Car, CheckCircle2, XCircle, AlertCircle } from "lucide-react";
 import toast from "react-hot-toast";
 
-const VEHICLE_TYPES = ["CRYSTA", "INNOVA", "ERTIGA", "TAVERA", "ETIOS", "SWIFT", "ECCO", "ALTO", "SUMO"];
+const VEHICLE_TYPES = ["CRYSTA", "INNOVA", "ERTIGA", "TAVEERA", "ETIOS GLANZA", "SWIFT DZIRE", "ECCO", "ALTO K10", "SUMO"];
 
 export default function AdminTaxisTab() {
   const [activeSubTab, setActiveSubTab] = useState("rates");

@@ -9,11 +9,11 @@ const DEFAULT_IMAGES: Record<string, string> = {
   "CRYSTA": "https://imgd.aeplcdn.com/664x374/n/cw/ec/139651/innova-crysta-exterior-right-front-three-quarter-2.jpeg?isig=0&q=80",
   "INNOVA": "https://imgd.aeplcdn.com/664x374/n/cw/ec/140809/innova-hycross-exterior-right-front-three-quarter-2.jpeg?isig=0&q=80",
   "ERTIGA": "https://imgd.aeplcdn.com/664x374/n/cw/ec/115025/ertiga-exterior-right-front-three-quarter-3.jpeg?isig=0&q=80",
-  "TAVERA": "https://imgd.aeplcdn.com/664x374/ec/30/16/10271/img/m/Chevrolet-Tavera-Neo-3-Right-Front-Three-Quarter-48419_ol.jpg?v=201711021421&q=80",
-  "ETIOS": "https://imgd.aeplcdn.com/664x374/ec/4B/7D/10398/img/m/Toyota-Platinum-Etios-Right-Front-Three-Quarter-83344_ol.jpg?v=201711021421&q=80",
-  "SWIFT": "https://imgd.aeplcdn.com/664x374/n/cw/ec/170173/swift-exterior-right-front-three-quarter-2.jpeg?isig=0&q=80",
+  "TAVEERA": "https://imgd.aeplcdn.com/664x374/ec/30/16/10271/img/m/Chevrolet-Tavera-Neo-3-Right-Front-Three-Quarter-48419_ol.jpg?v=201711021421&q=80",
+  "ETIOS GLANZA": "https://imgd.aeplcdn.com/664x374/ec/4B/7D/10398/img/m/Toyota-Platinum-Etios-Right-Front-Three-Quarter-83344_ol.jpg?v=201711021421&q=80",
+  "SWIFT DZIRE": "https://imgd.aeplcdn.com/664x374/n/cw/ec/170173/swift-exterior-right-front-three-quarter-2.jpeg?isig=0&q=80",
   "ECCO": "https://imgd.aeplcdn.com/664x374/n/cw/ec/131151/eeco-exterior-right-front-three-quarter-2.jpeg?isig=0&q=80",
-  "ALTO": "https://imgd.aeplcdn.com/664x374/n/cw/ec/127563/alto-k10-exterior-right-front-three-quarter-2.jpeg?isig=0&q=80",
+  "ALTO K10": "https://imgd.aeplcdn.com/664x374/n/cw/ec/127563/alto-k10-exterior-right-front-three-quarter-2.jpeg?isig=0&q=80",
   "SUMO": "https://imgd.aeplcdn.com/664x374/ec/14/C8/10410/img/m/Tata-Sumo-Gold-Right-Front-Three-Quarter-51206_ol.jpg?v=201711021421&q=80"
 };
 
