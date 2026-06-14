@@ -76,6 +76,9 @@ export default async function CheckoutPage({
     };
   }
 
+  // Serialize checkoutData to avoid Next.js serialization error with Prisma Date objects
+  const serializedCheckoutData = checkoutData ? JSON.parse(JSON.stringify(checkoutData)) : null;
+
   return (
     <main className="min-h-screen flex flex-col bg-slate-50">
       <Navbar />
@@ -83,7 +86,7 @@ export default async function CheckoutPage({
         <Suspense fallback={<div className="container-custom py-10">Loading checkout...</div>}>
           <CheckoutClient 
             isLoggedIn={!!userId} 
-            checkoutData={checkoutData} 
+            checkoutData={serializedCheckoutData} 
           />
         </Suspense>
       </div>
