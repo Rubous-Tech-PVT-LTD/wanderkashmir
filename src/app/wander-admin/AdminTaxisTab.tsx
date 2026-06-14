@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Edit2, Trash2, Plus, Percent, Car } from "lucide-react";
+import { Edit2, Trash2, Plus, Percent, Car, CheckCircle2, XCircle, AlertCircle } from "lucide-react";
 import toast from "react-hot-toast";
 
 const VEHICLE_TYPES = ["CRYSTA", "INNOVA", "ERTIGA", "TAVERA", "ETIOS", "SWIFT", "ECCO", "ALTO", "SUMO"];
@@ -8,7 +8,9 @@ export default function AdminTaxisTab() {
   const [activeSubTab, setActiveSubTab] = useState("rates");
   const [rates, setRates] = useState<any[]>([]);
   const [taxiImages, setTaxiImages] = useState<Record<string, string>>({});
+  const [vehicles, setVehicles] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isProcessing, setIsProcessing] = useState<string | null>(null);
 
   // Form State for Rate Card
   const [isAddingRate, setIsAddingRate] = useState(false);
@@ -18,7 +20,41 @@ export default function AdminTaxisTab() {
   useEffect(() => {
     fetchRates();
     fetchImages();
+    fetchVehicles();
   }, []);
+
+  const fetchVehicles = async () => {
+    try {
+      const res = await fetch("/api/admin/taxis/vehicles");
+      if (res.ok) {
+        const data = await res.json();
+        setVehicles(data);
+      }
+    } catch (e) {
+      console.error("Failed to fetch vehicles", e);
+    }
+  };
+
+  const handleVehicleAction = async (id: string, action: string, reason?: string) => {
+    setIsProcessing(id);
+    try {
+      const res = await fetch(`/api/admin/taxis/vehicles/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action, reason })
+      });
+      if (res.ok) {
+        toast.success(`Vehicle ${action.toLowerCase()} successfully`);
+        fetchVehicles();
+      } else {
+        toast.error("Failed to update vehicle");
+      }
+    } catch (e) {
+      toast.error("Error updating vehicle");
+    } finally {
+      setIsProcessing(null);
+    }
+  };
 
   const fetchImages = async () => {
     try {
@@ -145,6 +181,17 @@ export default function AdminTaxisTab() {
           onClick={() => setActiveSubTab('commission')}
         >
           Vehicle & Commissions
+        </button>
+        <button 
+          className={`pb-3 px-2 font-medium border-b-2 transition-colors flex items-center gap-2 ${activeSubTab === 'vehicles' ? 'border-orange-500 text-orange-600' : 'border-transparent text-slate-500 hover:text-slate-800'}`}
+          onClick={() => setActiveSubTab('vehicles')}
+        >
+          Vehicle Approvals
+          {vehicles.filter(v => v.status === "PENDING").length > 0 && (
+            <span className="bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
+              {vehicles.filter(v => v.status === "PENDING").length}
+            </span>
+          )}
         </button>
       </div>
 
@@ -280,6 +327,128 @@ export default function AdminTaxisTab() {
           <p className="text-sm text-slate-400">
             * Note: Vehicle list fetching is available from the Live Vendors tab.
           </p>
+        </div>
+      )}
+      {activeSubTab === "vehicles" && (
+        <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+          <div className="p-6 border-b border-slate-100 bg-slate-50">
+            <h3 className="text-xl font-bold text-slate-900">Vehicle Approvals</h3>
+            <p className="text-sm text-slate-500">Approve or reject vehicles added by Taxi Vendors.</p>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="bg-white border-b border-slate-100">
+                  <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Vehicle Details</th>
+                  <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Vendor Info</th>
+                  <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Features</th>
+                  <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Status</th>
+                  <th className="px-6 py-4 text-right text-xs font-bold text-slate-500 uppercase tracking-wider">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {vehicles.map((vehicle) => (
+                  <tr key={vehicle.id} className="hover:bg-slate-50 transition-colors">
+                    <td className="px-6 py-4">
+                      <div className="font-bold text-slate-900">{vehicle.make} {vehicle.model}</div>
+                      <div className="text-sm font-mono text-slate-500 mt-1 uppercase">{vehicle.registrationNumber}</div>
+                      <div className="text-xs text-slate-400 mt-0.5">{vehicle.category || "Sedan"}</div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="font-medium text-slate-900">{vehicle.vendorProfile?.businessName || "Unknown Vendor"}</div>
+                      <div className="text-sm text-slate-500">{vehicle.vendorProfile?.user?.name}</div>
+                      <div className="text-xs text-slate-400">{vehicle.vendorProfile?.user?.phone}</div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="flex flex-wrap gap-1">
+                        <span className="bg-slate-100 text-slate-600 text-[10px] px-2 py-0.5 rounded-full font-medium">
+                          {vehicle.seatingCapacity} Seats
+                        </span>
+                        {vehicle.hasAc && (
+                          <span className="bg-blue-50 text-blue-600 text-[10px] px-2 py-0.5 rounded-full font-medium">
+                            AC
+                          </span>
+                        )}
+                        {vehicle.hasCarrier && (
+                          <span className="bg-orange-50 text-orange-600 text-[10px] px-2 py-0.5 rounded-full font-medium">
+                            Carrier
+                          </span>
+                        )}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      {vehicle.status === "LIVE" || vehicle.isApproved ? (
+                        <span className="bg-emerald-100 text-emerald-700 text-xs font-bold px-3 py-1 rounded-full flex items-center gap-1 w-max">
+                          <CheckCircle2 className="w-3 h-3" /> Approved
+                        </span>
+                      ) : vehicle.status === "REJECTED" ? (
+                        <span className="bg-red-100 text-red-700 text-xs font-bold px-3 py-1 rounded-full flex items-center gap-1 w-max">
+                          <XCircle className="w-3 h-3" /> Rejected
+                        </span>
+                      ) : vehicle.status === "SUSPENDED" ? (
+                        <span className="bg-orange-100 text-orange-700 text-xs font-bold px-3 py-1 rounded-full flex items-center gap-1 w-max">
+                          <AlertCircle className="w-3 h-3" /> Suspended
+                        </span>
+                      ) : (
+                        <span className="bg-amber-100 text-amber-700 text-xs font-bold px-3 py-1 rounded-full flex items-center gap-1 w-max">
+                          <AlertCircle className="w-3 h-3" /> Pending
+                        </span>
+                      )}
+                      {vehicle.rejectionReason && (
+                        <div className="text-[10px] text-red-500 mt-1 max-w-[150px] truncate" title={vehicle.rejectionReason}>
+                          {vehicle.rejectionReason}
+                        </div>
+                      )}
+                    </td>
+                    <td className="px-6 py-4 text-right">
+                      <div className="flex items-center justify-end gap-2">
+                        {vehicle.status !== "LIVE" && !vehicle.isApproved && (
+                          <button 
+                            onClick={() => handleVehicleAction(vehicle.id, "APPROVE")}
+                            disabled={isProcessing === vehicle.id}
+                            className="bg-emerald-50 hover:bg-emerald-100 text-emerald-600 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors disabled:opacity-50"
+                          >
+                            Approve
+                          </button>
+                        )}
+                        {vehicle.status === "PENDING" && (
+                          <button 
+                            onClick={() => {
+                              const reason = prompt("Enter rejection reason:");
+                              if (reason) handleVehicleAction(vehicle.id, "REJECT", reason);
+                            }}
+                            disabled={isProcessing === vehicle.id}
+                            className="bg-red-50 hover:bg-red-100 text-red-600 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors disabled:opacity-50"
+                          >
+                            Reject
+                          </button>
+                        )}
+                        {(vehicle.status === "LIVE" || vehicle.isApproved) && (
+                          <button 
+                            onClick={() => {
+                              const reason = prompt("Enter suspension reason:");
+                              if (reason) handleVehicleAction(vehicle.id, "SUSPEND", reason);
+                            }}
+                            disabled={isProcessing === vehicle.id}
+                            className="text-orange-600 bg-orange-50 hover:bg-orange-100 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors disabled:opacity-50"
+                          >
+                            Suspend
+                          </button>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+                {vehicles.length === 0 && (
+                  <tr>
+                    <td colSpan={5} className="px-6 py-12 text-center text-slate-500">
+                      No vehicles found.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
     </div>
