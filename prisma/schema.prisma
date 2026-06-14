@@ -251,6 +251,7 @@ model GuideProfile {
   location        String        @default("Srinagar")
   pricePerDay     Float         @default(0)
   bio             String?       @db.Text
+  profileViews    Int           @default(0)
   specialties     String[]      @default([])
   images          String[]      @default([])
   

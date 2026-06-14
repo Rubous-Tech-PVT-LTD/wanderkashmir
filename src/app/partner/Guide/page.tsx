@@ -40,7 +40,9 @@ export default function GuideDashboard({ bookings = [], vendorProfileId, initial
   const [timeRange, setTimeRange] = useState("7D");
   const [chartMetric, setChartMetric] = useState("views");
 
-  const { totalRevenue, totalBookings: totalTours, totalViews, chartData, growthRevenue, growthBookings: growthTours, growthViews } = calculateDashboardMetrics(bookings, "GUIDE", timeRange);
+  const { totalRevenue, totalBookings: totalTours, totalViews: simulatedViews, chartData, growthRevenue, growthBookings: growthTours, growthViews } = calculateDashboardMetrics(bookings, "GUIDE", timeRange);
+  
+  const totalViews = initialGuideProfile?.profileViews || 0;
 
   const getChartData = () => {
     return chartData.map(d => ({ ...d, tours: d.bookings })); // Rename bookings to tours for chart tooltips
@@ -609,6 +611,16 @@ export default function GuideDashboard({ bookings = [], vendorProfileId, initial
                   <div>
                     <h3 className="font-bold text-orange-900 text-sm">Profile Pending Verification</h3>
                     <p className="text-sm text-orange-700 mt-1">You can save your bio and rates, but you <strong className="font-bold">cannot receive bookings</strong> until your Guide License is verified.</p>
+                  </div>
+                </div>
+              )}
+              {isApproved && subscriptionPlan === "Free" && (
+                <div className="mt-4 bg-sky-50 border border-sky-100 rounded-xl p-4 flex items-start gap-3">
+                  <Award className="w-5 h-5 text-sky-500 shrink-0 mt-0.5" />
+                  <div>
+                    <h3 className="font-bold text-sky-900 text-sm">Boost your visibility and get more bookings!</h3>
+                    <p className="text-sm text-sky-700 mt-1">You are currently on the Free plan. Upgrade to Growth Pro to get <strong className="font-bold">priority ranking</strong> in search results.</p>
+                    <button type="button" onClick={() => setActiveTab("financials")} className="text-xs font-bold text-sky-600 hover:text-sky-700 mt-2 underline">View Upgrade Plans</button>
                   </div>
                 </div>
               )}
