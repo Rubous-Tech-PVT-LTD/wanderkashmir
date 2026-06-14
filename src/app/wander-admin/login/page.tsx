@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 export default function AdminLoginPage() {
   const [email, setEmail] = useState("");
@@ -72,6 +73,12 @@ export default function AdminLoginPage() {
               className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-[var(--primary)] focus:border-transparent outline-none transition-all"
               required
             />
+          </div>
+          
+          <div className="flex justify-end">
+            <Link href="/forgot-password" className="text-sm font-medium text-[var(--primary)] hover:underline">
+              Forgot your password?
+            </Link>
           </div>
 
           <button
