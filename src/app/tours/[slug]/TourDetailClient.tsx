@@ -37,6 +37,7 @@ export default function TourDetailClient({ initialTour }: { initialTour: any }) 
   const [guestPhone, setGuestPhone] = useState("");
   const [specialRequests, setSpecialRequests] = useState("");
   const [agreedToPolicy, setAgreedToPolicy] = useState(false);
+  const [bookingError, setBookingError] = useState("");
   const [otherGuests, setOtherGuests] = useState<{name: string, age: string}[]>([]);
 
   // Keep otherGuests array in sync with persons - 1
@@ -379,7 +380,10 @@ export default function TourDetailClient({ initialTour }: { initialTour: any }) 
                       <Calendar className="w-4 h-4 text-orange-500 flex-shrink-0" />
                       <CustomDatePicker
                         selected={travelDate}
-                        onChange={(date) => setTravelDate(date)}
+                        onChange={(date) => {
+                          setTravelDate(date);
+                          if (date) setBookingError("");
+                        }}
                         minDate={new Date()}
                         placeholderText="Select Date"
                         className="flex-1 text-sm font-medium text-slate-800 focus:outline-none bg-transparent cursor-pointer w-full"
@@ -421,13 +425,21 @@ export default function TourDetailClient({ initialTour }: { initialTour: any }) 
                     </div>
                   </div>
 
+                  {bookingError && (
+                    <div className="mb-3 p-2.5 bg-red-50 border border-red-100 text-red-600 text-sm font-medium rounded-xl flex items-center gap-2 animate-in fade-in zoom-in-95 duration-200">
+                      <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                      {bookingError}
+                    </div>
+                  )}
+
                   <button 
                     onClick={() => {
                       if (!isSignedIn) {
-                        alert("Please sign in to book a tour.");
+                        setBookingError("Please sign in to book a tour.");
                       } else if (!travelDate) {
-                        alert("Please select a travel date first.");
+                        setBookingError("Please select a travel date first.");
                       } else {
+                        setBookingError("");
                         setShowBookingFlow(true);
                       }
                     }}
