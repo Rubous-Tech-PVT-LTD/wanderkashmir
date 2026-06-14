@@ -4,6 +4,7 @@ import Footer from "@/components/Footer";
 import SearchBar from "@/components/SearchBar";
 import PropertyCard from "@/components/PropertyCard";
 import HeroCarousel from "@/components/HeroCarousel";
+import ComingSoonButton from "@/components/ComingSoonButton";
 import Link from "next/link";
 import Image from "next/image";
 import {
@@ -592,10 +593,9 @@ export default async function Home() {
                     </div>
                   </div>
                 </div>
-                
-                <button className="w-full bg-[var(--primary)] text-white font-semibold py-3 rounded-xl mt-6 hover:bg-[var(--primary-hover)] transition-colors">
+                <ComingSoonButton className="w-full bg-[var(--primary)] text-white font-semibold py-3 rounded-xl mt-6 hover:bg-[var(--primary-hover)] transition-colors">
                   Search Taxi
-                </button>
+                </ComingSoonButton>
               </div>
             </div>
 
