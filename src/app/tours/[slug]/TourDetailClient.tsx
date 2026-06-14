@@ -38,6 +38,7 @@ export default function TourDetailClient({ initialTour }: { initialTour: any }) 
   const [specialRequests, setSpecialRequests] = useState("");
   const [agreedToPolicy, setAgreedToPolicy] = useState(false);
   const [bookingError, setBookingError] = useState("");
+  const [shakeDate, setShakeDate] = useState(false);
   const [otherGuests, setOtherGuests] = useState<{name: string, age: string}[]>([]);
 
   // Keep otherGuests array in sync with persons - 1
@@ -376,7 +377,11 @@ export default function TourDetailClient({ initialTour }: { initialTour: any }) 
                     <label className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5 block">
                       Travel Date
                     </label>
-                    <div className="border-2 border-slate-200 rounded-xl px-3 py-3 focus-within:border-orange-400 transition-colors flex items-center gap-2">
+                    <div className={`border-2 rounded-xl px-3 py-3 transition-colors flex items-center gap-2 ${
+                      shakeDate ? 'animate-shake border-red-500 bg-red-50' : 
+                      (bookingError === 'Please select a travel date first.' && !travelDate) ? 'border-red-500 bg-red-50' : 
+                      'border-slate-200 focus-within:border-orange-400'
+                    }`}>
                       <Calendar className="w-4 h-4 text-orange-500 flex-shrink-0" />
                       <CustomDatePicker
                         selected={travelDate}
@@ -438,6 +443,8 @@ export default function TourDetailClient({ initialTour }: { initialTour: any }) 
                         setBookingError("Please sign in to book a tour.");
                       } else if (!travelDate) {
                         setBookingError("Please select a travel date first.");
+                        setShakeDate(true);
+                        setTimeout(() => setShakeDate(false), 600);
                       } else {
                         setBookingError("");
                         setShowBookingFlow(true);
