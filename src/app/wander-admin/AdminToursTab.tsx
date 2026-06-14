@@ -16,6 +16,10 @@ export default function AdminToursTab({ initialTours }: { initialTours: any[] })
   const [customCategories, setCustomCategories] = useState<string[]>([]);
   const router = useRouter();
 
+  const generateSlug = (text: string) => {
+    return text.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
+  };
+
   const [formData, setFormData] = useState({
     title: "",
     slug: "",
@@ -165,7 +169,16 @@ export default function AdminToursTab({ initialTours }: { initialTours: any[] })
         <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-semibold mb-1">Title</label>
-            <input required type="text" className="w-full border rounded-lg p-2" value={formData.title} onChange={e => setFormData({ ...formData, title: e.target.value })} />
+            <input 
+              required 
+              type="text" 
+              className="w-full border rounded-lg p-2" 
+              value={formData.title} 
+              onChange={e => {
+                const title = e.target.value;
+                setFormData({ ...formData, title, slug: generateSlug(title) });
+              }} 
+            />
           </div>
           <div>
             <label className="block text-sm font-semibold mb-1">Slug (URL friendly)</label>
