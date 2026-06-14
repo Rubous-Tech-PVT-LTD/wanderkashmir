@@ -16,6 +16,30 @@ const AddonsSelectorClient = dynamic(() => import("@/components/AddonsSelectorCl
 const ReviewList = dynamic(() => import("@/components/ReviewList"));
 const ReviewForm = dynamic(() => import("@/components/ReviewForm"));
 import { getReviews, getReviewStats } from "@/actions/reviews";
+import { Metadata } from "next";
+
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
+  const { id } = await params;
+  const property = await prisma.property.findUnique({ 
+    where: { id },
+    include: { vendorProfile: true }
+  });
+  
+  if (!property) return { title: "Property Not Found | WanderKashmir" };
+  
+  const typeLabel = property.vendorProfile?.type 
+      ? property.vendorProfile.type.charAt(0).toUpperCase() + property.vendorProfile.type.slice(1).toLowerCase()
+      : "Stay";
+
+  return {
+    title: `${property.name} - ${typeLabel} in ${property.location} | WanderKashmir`,
+    description: property.description 
+      ? `${property.description.substring(0, 150)}...` 
+      : `Book ${property.name}, a beautiful ${typeLabel} located in ${property.location} with WanderKashmir.`,
+  };
+}
+
+export const revalidate = 60;
 
 export default async function PropertyDetailPage({ 
   params,
