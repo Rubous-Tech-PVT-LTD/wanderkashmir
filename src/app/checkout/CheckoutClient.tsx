@@ -45,9 +45,7 @@ export default function CheckoutClient({
     
     setCheckIn(tmrw);
     if (checkoutData?.type === "guide") {
-      const dayAfter = new Date(tmrw);
-      dayAfter.setDate(dayAfter.getDate() + 1);
-      setCheckOut(dayAfter);
+      setCheckOut(tmrw); // Same day by default for 1-day guide booking
     } else {
       setCheckOut(tmrw); // Same day for taxi by default
     }
@@ -56,13 +54,19 @@ export default function CheckoutClient({
   // Calculate nights/days
   useEffect(() => {
     if (checkIn && checkOut) {
-      const start = checkIn;
-      const end = checkOut;
+      const start = new Date(checkIn.toDateString()); // Reset time
+      const end = new Date(checkOut.toDateString());
       const diffTime = Math.abs(end.getTime() - start.getTime());
-      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      let diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      
+      if (checkoutData?.type === "guide") {
+        // Inclusive days for guides: Start 10th, End 10th = 1 day. 10th to 11th = 2 days.
+        diffDays += 1;
+      }
+      
       setNights(diffDays > 0 ? diffDays : 1);
     }
-  }, [checkIn, checkOut]);
+  }, [checkIn, checkOut, checkoutData?.type]);
 
   if (isSuccess) {
     return (
@@ -166,7 +170,9 @@ export default function CheckoutClient({
                   selected={checkIn}
                   onChange={(date) => {
                     setCheckIn(date);
-                    if (date && isGuide && checkOut && date >= checkOut) {
+                    if (date && isGuide && checkOut && date > checkOut) {
+                      setCheckOut(date);
+                    } else if (date && !isGuide && checkOut && date >= checkOut) {
                       const newOut = new Date(date);
                       newOut.setDate(newOut.getDate() + 1);
                       setCheckOut(newOut);
@@ -184,7 +190,7 @@ export default function CheckoutClient({
                   <CustomDatePicker 
                     selected={checkOut}
                     onChange={(date) => setCheckOut(date)}
-                    minDate={checkIn ? new Date(checkIn.getTime() + 86400000) : new Date()}
+                    minDate={checkIn ? (isGuide ? checkIn : new Date(checkIn.getTime() + 86400000)) : new Date()}
                     className="w-full border border-slate-200 rounded-xl p-3 focus:ring-2 focus:ring-sky-500 outline-none text-slate-600 bg-transparent cursor-pointer" 
                   />
                 </div>
