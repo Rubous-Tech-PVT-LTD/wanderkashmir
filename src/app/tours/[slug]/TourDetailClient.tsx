@@ -206,12 +206,18 @@ export default function TourDetailClient({ initialTour }: { initialTour: any }) 
                     <Clock className="w-4 h-4 text-orange-500" />
                     {tour.duration}
                   </div>
-                  <div className="flex flex-wrap gap-1.5">
-                    {tour.destinations?.map((d: string) => (
+                  <div className="flex flex-wrap gap-1.5 mt-2">
+                    {tour.destinations?.slice(0, 3).map((d: string) => (
                       <span key={d} className="flex items-center gap-1 badge badge-saffron">
-                        <MapPin className="w-3 h-3" /> {d}
+                        <MapPin className="w-3 h-3 flex-shrink-0" /> 
+                        <span className="truncate max-w-[180px]">{d}</span>
                       </span>
                     ))}
+                    {tour.destinations?.length > 3 && (
+                      <span className="flex items-center gap-1 badge bg-slate-100 text-slate-600 border border-slate-200" title={tour.destinations.slice(3).join(', ')}>
+                        +{tour.destinations.length - 3} more
+                      </span>
+                    )}
                   </div>
                 </div>
 
