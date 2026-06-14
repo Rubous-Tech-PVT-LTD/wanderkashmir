@@ -13,6 +13,7 @@ export default function AdminToursTab({ initialTours }: { initialTours: any[] })
   const [isEditing, setIsEditing] = useState<any>(null);
   const [isAdding, setIsAdding] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [customCategories, setCustomCategories] = useState<string[]>([]);
   const router = useRouter();
 
   const [formData, setFormData] = useState({
@@ -176,8 +177,8 @@ export default function AdminToursTab({ initialTours }: { initialTours: any[] })
           </div>
           <div className="md:col-span-2">
             <label className="block text-sm font-semibold mb-2">Category (Select multiple)</label>
-            <div className="flex flex-wrap gap-3">
-              {TOUR_CATEGORIES.map(cat => {
+            <div className="flex flex-wrap gap-3 mb-3">
+              {Array.from(new Set([...TOUR_CATEGORIES, ...customCategories, ...formData.category.split(',').map(c => c.trim()).filter(Boolean)])).map(cat => {
                 const isSelected = formData.category.split(',').map(c => c.trim()).includes(cat);
                 return (
                   <label key={cat} className="flex items-center gap-2 bg-slate-50 border border-slate-200 px-3 py-2 rounded-lg cursor-pointer hover:bg-slate-100 transition-colors">
@@ -200,6 +201,46 @@ export default function AdminToursTab({ initialTours }: { initialTours: any[] })
                   </label>
                 )
               })}
+            </div>
+            <div className="flex items-center gap-2">
+              <input 
+                type="text" 
+                id="customCategoryInput"
+                placeholder="Add custom category..." 
+                className="border border-slate-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:border-sky-500"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    const val = e.currentTarget.value.trim();
+                    if (val) {
+                      const currentCats = formData.category.split(',').map(c => c.trim()).filter(Boolean);
+                      setCustomCategories(prev => Array.from(new Set([...prev, val])));
+                      if (!currentCats.includes(val)) {
+                        setFormData({ ...formData, category: [...currentCats, val].join(', ') });
+                      }
+                      e.currentTarget.value = "";
+                    }
+                  }
+                }}
+              />
+              <button 
+                type="button"
+                className="bg-sky-50 text-sky-600 px-3 py-1.5 rounded-lg text-sm font-semibold hover:bg-sky-100 transition-colors border border-sky-100"
+                onClick={(e) => {
+                  const input = document.getElementById('customCategoryInput') as HTMLInputElement;
+                  const val = input.value.trim();
+                  if (val) {
+                    const currentCats = formData.category.split(',').map(c => c.trim()).filter(Boolean);
+                    setCustomCategories(prev => Array.from(new Set([...prev, val])));
+                    if (!currentCats.includes(val)) {
+                      setFormData({ ...formData, category: [...currentCats, val].join(', ') });
+                    }
+                    input.value = "";
+                  }
+                }}
+              >
+                Add
+              </button>
             </div>
           </div>
           <div>
