@@ -60,6 +60,53 @@ export default function TourDetailClient({ initialTour }: { initialTour: any }) 
 
   const tour = initialTour;
 
+  // Review State
+  const [localReviews, setLocalReviews] = useState<any[]>(tour.reviewsList || []);
+  const [reviewRating, setReviewRating] = useState(5);
+  const [reviewComment, setReviewComment] = useState("");
+  const [isSubmittingReview, setIsSubmittingReview] = useState(false);
+  const [localRatingAvg, setLocalRatingAvg] = useState(tour.rating || "0.0");
+  const [localReviewsCount, setLocalReviewsCount] = useState(tour.reviews || 0);
+
+  const submitReview = async () => {
+    if (!isSignedIn) {
+      import("react-hot-toast").then(mod => mod.default.error("Please login to write a review"));
+      return;
+    }
+    if (!reviewRating) return;
+    setIsSubmittingReview(true);
+    try {
+      const res = await fetch("/api/reviews", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ tourId: tour.id, rating: reviewRating, comment: reviewComment })
+      });
+      if (res.ok) {
+        import("react-hot-toast").then(mod => mod.default.success("Review submitted!"));
+        const newReview = {
+          name: user?.fullName || "Anonymous",
+          avatar: user?.imageUrl || "https://ui-avatars.com/api/?name=" + (user?.fullName || "A"),
+          location: "India",
+          date: new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' }),
+          rating: reviewRating,
+          text: reviewComment
+        };
+        const updatedReviews = [newReview, ...localReviews];
+        setLocalReviews(updatedReviews);
+        setLocalReviewsCount(updatedReviews.length);
+        const newAvg = (updatedReviews.reduce((acc, r) => acc + r.rating, 0) / updatedReviews.length).toFixed(1);
+        setLocalRatingAvg(newAvg);
+        setReviewComment("");
+      } else {
+        import("react-hot-toast").then(mod => mod.default.error("Failed to submit review"));
+      }
+    } catch (e) {
+      import("react-hot-toast").then(mod => mod.default.error("Something went wrong"));
+    } finally {
+      setIsSubmittingReview(false);
+    }
+  };
+
   const nextImage = () => {
     if (tour.images?.length) {
       setActiveImage((prev) => (prev + 1) % tour.images.length);
@@ -315,42 +362,81 @@ export default function TourDetailClient({ initialTour }: { initialTour: any }) 
                       style={{ background: "rgba(232,99,26,0.12)" }}
                     >
                       <Star className="w-4 h-4 fill-orange-500 text-orange-500" />
-                      <span className="font-bold text-orange-700">{tour.rating}</span>
+                      <span className="font-bold text-orange-700">{localRatingAvg}</span>
                     </div>
-                    <span className="text-sm text-slate-400">({tour.reviews} reviews)</span>
+                    <span className="text-sm text-slate-400">({localReviewsCount} reviews)</span>
                   </div>
                 </div>
+                
+                {/* Write Review Form */}
+                <div className="bg-slate-50 p-4 rounded-xl mb-6">
+                  <h3 className="font-semibold text-sm mb-3">Write a Review</h3>
+                  {!isSignedIn ? (
+                    <p className="text-sm text-slate-500 mb-2">Please sign in to write a review.</p>
+                  ) : (
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-1">
+                        {[1, 2, 3, 4, 5].map((star) => (
+                          <Star 
+                            key={star} 
+                            onClick={() => setReviewRating(star)}
+                            className={`w-5 h-5 cursor-pointer transition-colors ${star <= reviewRating ? 'fill-orange-400 text-orange-400' : 'text-slate-300'}`} 
+                          />
+                        ))}
+                      </div>
+                      <textarea 
+                        className="w-full text-sm border border-slate-200 rounded-lg p-3 focus:outline-none focus:border-sky-500"
+                        placeholder="Share your experience..."
+                        rows={3}
+                        value={reviewComment}
+                        onChange={(e) => setReviewComment(e.target.value)}
+                      ></textarea>
+                      <button 
+                        onClick={submitReview}
+                        disabled={isSubmittingReview}
+                        className="bg-sky-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-sky-700 transition-colors disabled:opacity-70"
+                      >
+                        {isSubmittingReview ? "Submitting..." : "Submit Review"}
+                      </button>
+                    </div>
+                  )}
+                </div>
+
                 <div className="space-y-5">
-                  {tour.reviewsList?.map((r: any, i: number) => (
-                    <div
-                      key={i}
-                      className="pb-5 border-b border-slate-100 last:border-0 last:pb-0"
-                    >
-                      <div className="flex items-start gap-3">
-                        <img
-                          src={r.avatar}
-                          alt={r.name}
-                          className="w-10 h-10 rounded-full object-cover flex-shrink-0"
-                        />
-                        <div className="flex-1">
-                          <div className="flex items-start justify-between">
-                            <div>
-                              <p className="font-semibold text-slate-900 text-sm">{r.name}</p>
-                              <p className="text-xs text-slate-400">{r.location} · {r.date}</p>
+                  {localReviews.length === 0 ? (
+                    <p className="text-sm text-slate-500 italic text-center py-4">No reviews yet. Be the first to review!</p>
+                  ) : (
+                    localReviews.map((r: any, i: number) => (
+                      <div
+                        key={i}
+                        className="pb-5 border-b border-slate-100 last:border-0 last:pb-0"
+                      >
+                        <div className="flex items-start gap-3">
+                          <img
+                            src={r.avatar}
+                            alt={r.name}
+                            className="w-10 h-10 rounded-full object-cover flex-shrink-0"
+                          />
+                          <div className="flex-1">
+                            <div className="flex items-start justify-between">
+                              <div>
+                                <p className="font-semibold text-slate-900 text-sm">{r.name}</p>
+                                <p className="text-xs text-slate-400">{r.location} · {r.date}</p>
+                              </div>
+                              <div className="flex gap-0.5">
+                                {Array.from({ length: r.rating }).map((_, j) => (
+                                  <Star key={j} className="w-3.5 h-3.5 fill-orange-400 text-orange-400" />
+                                ))}
+                              </div>
                             </div>
-                            <div className="flex gap-0.5">
-                              {Array.from({ length: r.rating }).map((_, j) => (
-                                <Star key={j} className="w-3.5 h-3.5 fill-orange-400 text-orange-400" />
-                              ))}
-                            </div>
+                            <p className="text-sm text-slate-600 leading-relaxed mt-2 italic">
+                              &ldquo;{r.text}&rdquo;
+                            </p>
                           </div>
-                          <p className="text-sm text-slate-600 leading-relaxed mt-2 italic">
-                            &ldquo;{r.text}&rdquo;
-                          </p>
                         </div>
                       </div>
-                    </div>
-                  ))}
+                    ))
+                  )}
                 </div>
               </div>
             </div>
