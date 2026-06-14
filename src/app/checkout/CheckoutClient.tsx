@@ -100,6 +100,13 @@ export default function CheckoutClient({
   const basePrice = isGuide ? price * nights : price; 
   const totalAmount = basePrice; // Addons not applicable here directly unless explicitly added
 
+  let placeholderText = "e.g. Arriving late, ground floor room, etc.";
+  if (isTaxi) {
+    placeholderText = "e.g. Need a child seat, lots of luggage, etc.";
+  } else if (isGuide) {
+    placeholderText = "e.g. Traveling with elderly, prefer historical sites, language preference, etc.";
+  }
+
   return (
     <div className="container-custom py-10">
       <h1 className="text-3xl font-black text-slate-900 mb-8">Secure Checkout</h1>
@@ -141,7 +148,7 @@ export default function CheckoutClient({
                 <textarea 
                   value={specialRequests}
                   onChange={(e) => setSpecialRequests(e.target.value)}
-                  placeholder="e.g. Need a child seat, arriving late, etc."
+                  placeholder={placeholderText}
                   rows={3}
                   className="w-full border border-slate-200 rounded-xl p-3 focus:ring-2 focus:ring-sky-500 outline-none"
                 />
