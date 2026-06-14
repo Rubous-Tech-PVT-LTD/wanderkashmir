@@ -248,6 +248,7 @@ model GuideProfile {
   
   languages       String[]      @default([])
   experienceYears Int           @default(0)
+  location        String        @default("Srinagar")
   pricePerDay     Float         @default(0)
   bio             String?       @db.Text
   specialties     String[]      @default([])

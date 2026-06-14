@@ -31,7 +31,7 @@ export default async function GuidesPage() {
       id: guide.id,
       name: guide.vendorProfile.user.name || "Local Guide",
       avatar: guide.vendorProfile.user.image || "https://randomuser.me/api/portraits/men/41.jpg",
-      location: "Srinagar", // Can be dynamic if location added to schema
+      location: guide.location || "Srinagar",
       rating: 4.9, // Can be from reviews
       reviews: Math.floor(Math.random() * 100) + 10,
       experience: guide.experienceYears || 5,

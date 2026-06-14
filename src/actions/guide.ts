@@ -35,6 +35,7 @@ export async function saveGuideProfile(vendorProfileId: string, data: any) {
         data: {
           bio: data.bio,
           languages: languagesArray,
+          location: data.location,
           specialties: specialtiesArray,
           pricePerDay: data.dailyRate,
           experienceYears: data.experienceYears,
@@ -49,6 +50,7 @@ export async function saveGuideProfile(vendorProfileId: string, data: any) {
           isApproved: vendor.isApproved, 
           status: vendor.status,
           bio: data.bio,
+          location: data.location,
           languages: languagesArray,
           specialties: specialtiesArray,
           pricePerDay: data.dailyRate,

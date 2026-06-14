@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { UserCircle2, Save, IndianRupee, CheckCircle2, AlertTriangle, Languages, Award, Lock, Zap, LineChart as LineChartIcon, MessageCircle, BookOpen, Camera, Users, Download } from "lucide-react";
+import { UserCircle2, Save, IndianRupee, CheckCircle2, AlertTriangle, Languages, Award, Lock, Zap, LineChart as LineChartIcon, MessageCircle, BookOpen, Camera, Users, Download, MapPin } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, LineChart, Line, AreaChart, Area, PieChart, Pie, Cell } from 'recharts';
 import { useVendor } from "@/context/VendorContext";
 import toast from "react-hot-toast";
@@ -20,6 +20,7 @@ import { useRouter } from "next/navigation";
 const guideProfileSchema = z.object({
   bio: z.string().min(50, "Bio must be at least 50 characters to build trust").max(1000),
   languages: z.string().min(3, "Please list languages spoken (e.g., English, Hindi, Kashmiri)"),
+  location: z.string().min(2, "Please enter your primary operating location"),
   specializations: z.string().min(5, "Please list specializations (e.g., Trekking, History)"),
   dailyRate: z.number().min(500, "Daily rate must be at least ₹500").max(10000),
   experienceYears: z.number().min(0, "Experience cannot be negative").max(50),
@@ -81,6 +82,7 @@ export default function GuideDashboard({ bookings = [], vendorProfileId, initial
     defaultValues: {
       bio: initialGuideProfile?.bio || "",
       languages: initialGuideProfile?.languages?.join(", ") || "",
+      location: initialGuideProfile?.location || "Srinagar",
       specializations: initialGuideProfile?.specialties?.join(", ") || "",
       dailyRate: initialGuideProfile?.pricePerDay || 1500,
       experienceYears: initialGuideProfile?.experienceYears || 2,
@@ -263,7 +265,19 @@ export default function GuideDashboard({ bookings = [], vendorProfileId, initial
                 <div>
                    <h3 className="font-bold text-slate-900 text-lg mb-1">Public Listing is Active</h3>
                    <p className="text-slate-500 text-sm">Tourists can find and book your services directly from the public listing.</p>
-                   <div className="flex gap-4 mt-3">
+                   
+                   {subscriptionPlan === "Free" && (
+                     <div className="mt-3 bg-sky-50 border border-sky-100 rounded-lg p-3 flex items-start gap-3 max-w-lg">
+                       <Award className="w-5 h-5 text-sky-500 shrink-0 mt-0.5" />
+                       <div>
+                         <p className="text-sm text-sky-900 font-semibold">Boost your visibility and get more bookings!</p>
+                         <p className="text-xs text-sky-700 mt-0.5">You are currently on the Free plan. Upgrade to Growth Pro to get priority ranking.</p>
+                         <button onClick={() => setActiveTab("financials")} className="text-xs font-bold text-sky-600 hover:text-sky-700 mt-2 underline">View Upgrade Plans</button>
+                       </div>
+                     </div>
+                   )}
+
+                   <div className="flex gap-4 mt-4">
                      <p className="font-semibold text-slate-900 text-sm">Rate: <span className="font-normal text-slate-600">₹{initialGuideProfile.pricePerDay}/day</span></p>
                      <p className="font-semibold text-slate-900 text-sm">Exp: <span className="font-normal text-slate-600">{initialGuideProfile.experienceYears} Years</span></p>
                    </div>
@@ -631,13 +645,24 @@ export default function GuideDashboard({ bookings = [], vendorProfileId, initial
                     </div>
                   </div>
                 </div>
-
+                
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-2">Location / Base City</label>
+                    <div className="relative">
+                      <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                      <input type="text" {...register("location")} className={`w-full border rounded-lg pl-10 pr-4 py-3 focus:outline-none focus:ring-2 focus:ring-sky-500/20 ${errors.location ? 'border-orange-500' : 'border-slate-200'}`} placeholder="e.g. Srinagar, Gulmarg" />
+                    </div>
+                    {errors.location && <p className="text-orange-500 text-xs mt-1 font-medium">{errors.location.message}</p>}
+                  </div>
                   <div>
                     <label className="block text-sm font-medium text-slate-700 mb-2 flex items-center gap-1"><Languages className="w-4 h-4" /> Languages Spoken</label>
                     <input type="text" {...register("languages")} className={`w-full border rounded-lg px-4 py-2.5 ${errors.languages ? 'border-orange-500' : 'border-slate-200'}`} placeholder="e.g. English, Hindi, Kashmiri" />
                     {errors.languages && <p className="text-orange-500 text-xs mt-1 font-medium">{errors.languages.message}</p>}
                   </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
                     <label className="block text-sm font-medium text-slate-700 mb-2">Years of Experience</label>
                     <input type="number" {...register("experienceYears", { valueAsNumber: true })} className={`w-full border rounded-lg px-4 py-2.5 ${errors.experienceYears ? 'border-orange-500' : 'border-slate-200'}`} placeholder="5" />
