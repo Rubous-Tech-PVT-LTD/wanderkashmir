@@ -6,12 +6,31 @@ import Image from "next/image";
 import { useState } from "react";
 import { Star, Clock, Users, MapPin, CheckCircle2, Heart, Filter } from "lucide-react";
 
-const categories = ["All", "Family", "Honeymoon", "Adventure", "Pilgrimage", "Group"];
+// Categories are now generated dynamically in the component
 
 // Removed hardcoded tours array
 
 export default function ToursClient({ initialTours }: { initialTours: any[] }) {
   const [selectedCat, setSelectedCat] = useState("All");
+
+  // Extract all unique categories from the tours to handle any custom categories added by admin
+  const usedCategories = new Set<string>();
+  initialTours.forEach(tour => {
+    if (tour.category) {
+      tour.category.split(',').forEach((c: string) => {
+        const trimmed = c.trim();
+        if (trimmed) usedCategories.add(trimmed);
+      });
+    }
+  });
+
+  const baseCategories = [
+    "Honeymoon", "Family", "Adventure", "Pilgrimage", "Nature",
+    "Culture", "Skiing", "Trekking", "Wildlife", "Luxury", "Budget", "Group"
+  ];
+  
+  // Combine "All" + base categories + any extra custom categories used by tours
+  const categories = ["All", ...Array.from(new Set([...baseCategories, ...Array.from(usedCategories)]))];
   const [sortBy, setSortBy] = useState("Recommended");
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 6;
@@ -148,9 +167,6 @@ export default function ToursClient({ initialTours }: { initialTours: any[] }) {
                         <span className="text-xs font-bold text-orange-700">4.8</span>
                       </div>
                       <span className="text-xs text-slate-400">(412 reviews)</span>
-                      <div className="ml-auto flex items-center gap-1 text-xs text-slate-500">
-                        <Users className="w-3.5 h-3.5" /> Max {tour.maxPersons}
-                      </div>
                     </div>
 
                     {/* Inclusions */}
