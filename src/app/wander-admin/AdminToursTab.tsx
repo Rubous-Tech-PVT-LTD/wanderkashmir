@@ -190,9 +190,27 @@ export default function AdminToursTab({ initialTours }: { initialTours: any[] })
           </div>
           <div>
             <label className="block text-sm font-semibold mb-1">Tour Status</label>
-            <div className="flex items-center gap-2 mt-2">
-              <input type="checkbox" id="isLive" className="w-5 h-5 accent-sky-600 rounded border-slate-300" checked={formData.isLive} onChange={e => setFormData({ ...formData, isLive: e.target.checked })} />
-              <label htmlFor="isLive" className="font-medium text-slate-700 cursor-pointer">{formData.isLive ? "Live (Visible)" : "Coming Soon"}</label>
+            <div className="flex items-center gap-6 mt-2">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input 
+                  type="radio" 
+                  name="tourStatus" 
+                  className="w-5 h-5 accent-sky-600 border-slate-300" 
+                  checked={formData.isLive === true} 
+                  onChange={() => setFormData({ ...formData, isLive: true })} 
+                />
+                <span className="font-medium text-slate-700">Live (Visible)</span>
+              </label>
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input 
+                  type="radio" 
+                  name="tourStatus" 
+                  className="w-5 h-5 accent-sky-600 border-slate-300" 
+                  checked={formData.isLive === false} 
+                  onChange={() => setFormData({ ...formData, isLive: false })} 
+                />
+                <span className="font-medium text-slate-700">Coming Soon</span>
+              </label>
             </div>
           </div>
           <div>
