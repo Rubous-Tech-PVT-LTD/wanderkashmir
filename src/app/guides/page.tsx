@@ -30,7 +30,7 @@ export default async function GuidesPage() {
     return {
       id: guide.id,
       name: guide.vendorProfile.user.name || "Local Guide",
-      avatar: guide.vendorProfile.user.image || "https://randomuser.me/api/portraits/men/41.jpg",
+      avatar: guide.images?.[1] || guide.vendorProfile.user.image || "https://randomuser.me/api/portraits/men/41.jpg",
       location: guide.location || "Srinagar",
       rating: 4.9, // Can be from reviews
       reviews: Math.floor(Math.random() * 100) + 10,
@@ -43,8 +43,10 @@ export default async function GuidesPage() {
       verified: guide.isApproved,
       featured: false,
       availability: "Available",
-      image: guide.images && guide.images.length > 0 ? guide.images[0] : "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=500&q=80",
+      image: guide.images?.[0] || "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=500&q=80",
       totalTours: Math.floor(Math.random() * 500) + 50,
+      phone: guide.vendorProfile.phone || guide.vendorProfile.user.phone || "",
+      email: guide.vendorProfile.email || guide.vendorProfile.user.email || "",
     };
   });
 

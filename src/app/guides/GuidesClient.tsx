@@ -329,9 +329,14 @@ export default function GuidesClient({ initialGuides }: { initialGuides: any[] }
                             <Link href={`/checkout?type=guide&guideId=${guide.id}`} className="btn-primary w-full justify-center text-center block">
                               Book Guide
                             </Link>
-                            <button className="btn-secondary w-full justify-center text-sm px-4 py-2">
+                            <a 
+                              href={guide.phone ? `https://wa.me/${guide.phone.replace(/\D/g,'')}?text=Hi%20${encodeURIComponent(guide.name)},%20I%20saw%20your%20profile%20on%20WanderKashmir%20and%20would%20like%20to%20discuss%20a%20tour.` : `mailto:${guide.email}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="btn-secondary w-full justify-center text-center text-sm px-4 py-2 block"
+                            >
                               Message
-                            </button>
+                            </a>
                           </div>
                         </div>
                       </div>
