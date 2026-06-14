@@ -196,6 +196,7 @@ export default function AdminToursTab({ initialTours }: { initialTours: any[] })
                         }
                         setFormData({ ...formData, category: newCats.join(', ') });
                       }}
+                    />
                     <span className="text-sm font-medium text-slate-700 select-none">{cat}</span>
                     {!TOUR_CATEGORIES.includes(cat) && (
                       <div className="flex items-center gap-1.5 ml-1" onClick={e => { e.preventDefault(); e.stopPropagation(); }}>
