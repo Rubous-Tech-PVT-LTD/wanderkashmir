@@ -78,30 +78,17 @@ export default async function CheckoutPage({
   } else if (type === "tour") {
     const tourId = typeof params.tourId === "string" ? params.tourId : null;
     let tour = null;
-    let guideRate = 1500;
-    let taxiRate = 2500;
+    let availableGuides: any[] = [];
 
     if (tourId) {
       tour = await prisma.tour.findUnique({
         where: { id: tourId }
       });
       
-      // Fetch dynamic rates
-      const lowestGuide = await prisma.guideProfile.findFirst({
+      availableGuides = await prisma.guideProfile.findMany({
         where: { isApproved: true, status: "APPROVED" },
-        orderBy: { pricePerDay: "asc" }
+        include: { vendorProfile: true }
       });
-      if (lowestGuide && lowestGuide.pricePerDay > 0) {
-        guideRate = lowestGuide.pricePerDay;
-      }
-
-      const taxiRateCard = await prisma.taxiRateCard.findFirst({
-        where: { place: "LOCAL PAHALGAM FULL DAY" }
-      });
-      if (taxiRateCard && taxiRateCard.rates) {
-        const rates = taxiRateCard.rates as any;
-        if (rates["INNOVA"]) taxiRate = rates["INNOVA"];
-      }
     }
 
     checkoutData = {
@@ -109,8 +96,7 @@ export default async function CheckoutPage({
       tourId,
       tour,
       price: tour ? tour.price : 0,
-      guideRate,
-      taxiRate
+      availableGuides
     };
   }
 

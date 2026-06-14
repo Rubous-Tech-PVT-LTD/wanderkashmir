@@ -36,22 +36,6 @@ export async function POST(req: Request) {
       razorpayPaymentId: razorpay_payment_id,
     };
 
-    // Automatic Assignment for Tour Addons
-    if (booking.tourId) {
-      if (booking.guideAmount > 0 && !booking.guideProfileId) {
-        const availableGuide = await prisma.guideProfile.findFirst({
-          where: { isApproved: true, status: "APPROVED" }
-        });
-        if (availableGuide) updatedData.guideProfileId = availableGuide.id;
-      }
-      if (booking.taxiAmount > 0 && !booking.vehicleId) {
-        const availableTaxi = await prisma.vehicle.findFirst({
-          where: { isApproved: true, status: "APPROVED" }
-        });
-        if (availableTaxi) updatedData.vehicleId = availableTaxi.id;
-      }
-    }
-
     const updatedBooking = await prisma.booking.update({
       where: { id: booking.id },
       data: updatedData,
