@@ -54,6 +54,8 @@ export default function GuideDashboard({ bookings = [], vendorProfileId, initial
     if (!initialGuideProfile.location) missingFields.push("Location");
   }
 
+  const isProfileLocked = subscriptionPlan === "Free" && initialGuideProfile !== null && missingFields.length === 0;
+
   const getChartData = () => {
     return chartData.map(d => ({ ...d, tours: d.bookings })); // Rename bookings to tours for chart tooltips
   };
@@ -663,17 +665,28 @@ export default function GuideDashboard({ bookings = [], vendorProfileId, initial
             </div>
             
             <div className="p-6">
+              {isProfileLocked && (
+                <div className="bg-sky-50 border border-sky-200 rounded-xl p-5 mb-8 flex items-start gap-3">
+                  <Lock className="w-5 h-5 text-sky-600 mt-0.5 shrink-0" />
+                  <div>
+                    <h3 className="font-bold text-sky-900 text-sm">Profile Locked (Free Plan)</h3>
+                    <p className="text-sm text-sky-800 mt-1">Your profile is complete and has been saved! On the Free plan, profiles cannot be edited after completion. Please upgrade to Growth Pro to unlock unlimited profile edits and priority ranking.</p>
+                    <button type="button" onClick={() => setActiveTab("financials")} className="mt-3 text-xs font-bold text-white bg-sky-600 px-4 py-2 rounded-lg hover:bg-sky-700 transition-colors">View Upgrade Plans</button>
+                  </div>
+                </div>
+              )}
+
               <form onSubmit={handleSubmit(onSubmit)} className="max-w-2xl space-y-6">
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-2">About Me (Bio)</label>
-                  <textarea rows={5} {...register("bio")} className={`w-full border rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-sky-500/20 ${errors.bio ? 'border-orange-500' : 'border-slate-200'}`} placeholder="Tell travelers about your experience, your connection to Kashmir, and what makes your tours special..." />
+                  <textarea disabled={isProfileLocked} rows={5} {...register("bio")} className={`w-full border rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-sky-500/20 ${errors.bio ? 'border-orange-500' : 'border-slate-200'} ${isProfileLocked ? 'bg-slate-50 text-slate-500 cursor-not-allowed' : ''}`} placeholder="Tell travelers about your experience, your connection to Kashmir, and what makes your tours special..." />
                   {errors.bio && <p className="text-orange-500 text-xs mt-1 font-medium">{errors.bio.message}</p>}
                 </div>
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
                     <label className="block text-sm font-medium text-slate-700 mb-2">Profile Picture (Avatar) <span className="text-red-500">*</span></label>
-                    <div className="bg-slate-50 border border-slate-200 rounded-xl p-4">
+                    <div className={`bg-slate-50 border border-slate-200 rounded-xl p-4 ${isProfileLocked ? 'pointer-events-none opacity-70' : ''}`}>
                       <ImageUpload 
                         uploadedPhotos={avatar} 
                         setUploadedPhotos={setAvatar} 
@@ -684,7 +697,7 @@ export default function GuideDashboard({ bookings = [], vendorProfileId, initial
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-slate-700 mb-2">Cover Photo <span className="text-red-500">*</span></label>
-                    <div className="bg-slate-50 border border-slate-200 rounded-xl p-4">
+                    <div className={`bg-slate-50 border border-slate-200 rounded-xl p-4 ${isProfileLocked ? 'pointer-events-none opacity-70' : ''}`}>
                       <ImageUpload 
                         uploadedPhotos={coverPhoto} 
                         setUploadedPhotos={setCoverPhoto} 
@@ -700,13 +713,13 @@ export default function GuideDashboard({ bookings = [], vendorProfileId, initial
                     <label className="block text-sm font-medium text-slate-700 mb-2">Location / Base City</label>
                     <div className="relative">
                       <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-                      <input type="text" {...register("location")} className={`w-full border rounded-lg pl-10 pr-4 py-3 focus:outline-none focus:ring-2 focus:ring-sky-500/20 ${errors.location ? 'border-orange-500' : 'border-slate-200'}`} placeholder="e.g. Srinagar, Gulmarg" />
+                      <input disabled={isProfileLocked} type="text" {...register("location")} className={`w-full border rounded-lg pl-10 pr-4 py-3 focus:outline-none focus:ring-2 focus:ring-sky-500/20 ${errors.location ? 'border-orange-500' : 'border-slate-200'} ${isProfileLocked ? 'bg-slate-50 text-slate-500 cursor-not-allowed' : ''}`} placeholder="e.g. Srinagar, Gulmarg" />
                     </div>
                     {errors.location && <p className="text-orange-500 text-xs mt-1 font-medium">{errors.location.message}</p>}
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-slate-700 mb-2 flex items-center gap-1"><Languages className="w-4 h-4" /> Languages Spoken</label>
-                    <input type="text" {...register("languages")} className={`w-full border rounded-lg px-4 py-2.5 ${errors.languages ? 'border-orange-500' : 'border-slate-200'}`} placeholder="e.g. English, Hindi, Kashmiri" />
+                    <input disabled={isProfileLocked} type="text" {...register("languages")} className={`w-full border rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-sky-500/20 ${errors.languages ? 'border-orange-500' : 'border-slate-200'} ${isProfileLocked ? 'bg-slate-50 text-slate-500 cursor-not-allowed' : ''}`} placeholder="e.g. English, Hindi, Kashmiri" />
                     {errors.languages && <p className="text-orange-500 text-xs mt-1 font-medium">{errors.languages.message}</p>}
                   </div>
                 </div>
@@ -714,14 +727,14 @@ export default function GuideDashboard({ bookings = [], vendorProfileId, initial
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
                     <label className="block text-sm font-medium text-slate-700 mb-2">Years of Experience</label>
-                    <input type="number" {...register("experienceYears", { valueAsNumber: true })} className={`w-full border rounded-lg px-4 py-2.5 ${errors.experienceYears ? 'border-orange-500' : 'border-slate-200'}`} placeholder="5" />
+                    <input disabled={isProfileLocked} type="number" {...register("experienceYears", { valueAsNumber: true })} className={`w-full border rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-sky-500/20 ${errors.experienceYears ? 'border-orange-500' : 'border-slate-200'} ${isProfileLocked ? 'bg-slate-50 text-slate-500 cursor-not-allowed' : ''}`} placeholder="5" />
                     {errors.experienceYears && <p className="text-orange-500 text-xs mt-1 font-medium">{errors.experienceYears.message}</p>}
                   </div>
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-2">Specializations</label>
-                  <input type="text" {...register("specializations")} className={`w-full border rounded-lg px-4 py-2.5 ${errors.specializations ? 'border-orange-500' : 'border-slate-200'}`} placeholder="e.g. History Walks, Trekking, Photography" />
+                  <input disabled={isProfileLocked} type="text" {...register("specializations")} className={`w-full border rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-sky-500/20 ${errors.specializations ? 'border-orange-500' : 'border-slate-200'} ${isProfileLocked ? 'bg-slate-50 text-slate-500 cursor-not-allowed' : ''}`} placeholder="e.g. History Walks, Trekking, Photography" />
                   {errors.specializations && <p className="text-orange-500 text-xs mt-1 font-medium">{errors.specializations.message}</p>}
                 </div>
                 
@@ -734,7 +747,7 @@ export default function GuideDashboard({ bookings = [], vendorProfileId, initial
                       <label className="block text-sm font-medium text-slate-700 mb-2">Daily Rate (What the customer pays)</label>
                       <div className="relative">
                         <IndianRupee className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                        <input type="number" {...register("dailyRate", { valueAsNumber: true })} className={`w-full border rounded-lg pl-10 pr-4 py-2.5 bg-white ${errors.dailyRate ? 'border-orange-500' : 'border-slate-200'}`} placeholder="1500" />
+                        <input disabled={isProfileLocked} type="number" {...register("dailyRate", { valueAsNumber: true })} className={`w-full border rounded-lg pl-10 pr-4 py-3 bg-white focus:outline-none focus:ring-2 focus:ring-sky-500/20 ${errors.dailyRate ? 'border-orange-500' : 'border-slate-200'} ${isProfileLocked ? 'bg-slate-50 text-slate-500 cursor-not-allowed' : ''}`} placeholder="1500" />
                       </div>
                       {errors.dailyRate && <p className="text-orange-500 text-xs mt-1 font-medium">{errors.dailyRate.message}</p>}
                     </div>
@@ -768,7 +781,7 @@ export default function GuideDashboard({ bookings = [], vendorProfileId, initial
                         <input 
                           type="checkbox" 
                           {...register("instantBooking")}
-                          disabled={!hasInstantBooking}
+                          disabled={!hasInstantBooking || isProfileLocked}
                           className="w-5 h-5 rounded text-sky-500 focus:ring-sky-500 disabled:opacity-50" 
                         />
                         <span className={`font-medium ${hasInstantBooking ? 'text-slate-900' : 'text-slate-400'}`}>
@@ -780,8 +793,8 @@ export default function GuideDashboard({ bookings = [], vendorProfileId, initial
                 </div>
 
                 <div className="pt-6 flex justify-end gap-3">
-                  <button type="submit" disabled={isSaving} className={`flex items-center gap-2 px-8 py-3 rounded-lg font-bold shadow-sm transition-transform ${!isSaving ? 'bg-slate-900 text-white hover:bg-slate-800 hover:-translate-y-0.5' : 'bg-slate-200 text-slate-400 cursor-not-allowed'}`}>
-                    <Save className="w-4 h-4" /> {isSaving ? "Saving..." : "Save Profile"}
+                  <button type="submit" disabled={isSaving || isProfileLocked} className={`flex items-center gap-2 px-8 py-3 rounded-lg font-bold shadow-sm transition-transform ${!isSaving && !isProfileLocked ? 'bg-slate-900 text-white hover:bg-slate-800 hover:-translate-y-0.5' : 'bg-slate-200 text-slate-400 cursor-not-allowed'}`}>
+                    <Save className="w-4 h-4" /> {isSaving ? "Saving..." : isProfileLocked ? "Profile Locked" : "Save Profile"}
                   </button>
                 </div>
               </form>
