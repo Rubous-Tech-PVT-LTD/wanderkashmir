@@ -417,12 +417,22 @@ export default function TourDetailClient({ initialTour }: { initialTour: any }) 
                     </div>
                   </div>
 
-                  <button className="w-full btn-primary justify-center text-base py-3.5 rounded-xl mb-3">
+                  <a 
+                    href={`https://wa.me/916005888754?text=${encodeURIComponent(`Hello WanderKashmir, I want to book the tour: *${tour.title}* for ${persons} person(s)${travelDate ? ` on ${travelDate.toDateString()}` : ''}.`)}`} 
+                    target="_blank" 
+                    rel="noopener noreferrer" 
+                    className="w-full btn-primary justify-center text-base py-3.5 rounded-xl mb-3 flex items-center"
+                  >
                     Book This Tour
-                  </button>
-                  <button className="w-full btn-secondary py-3 rounded-xl text-sm justify-center">
+                  </a>
+                  <a 
+                    href={`https://wa.me/916005888754?text=${encodeURIComponent(`Hello WanderKashmir, I would like to request a custom quote for the tour: *${tour.title}*.`)}`} 
+                    target="_blank" 
+                    rel="noopener noreferrer" 
+                    className="w-full btn-secondary py-3 rounded-xl text-sm justify-center flex items-center"
+                  >
                     Request Custom Quote
-                  </button>
+                  </a>
 
                   <p className="text-xs text-slate-400 text-center mt-3 flex items-center justify-center gap-1">
                     <Shield className="w-3.5 h-3.5 text-sky-500" />
@@ -438,16 +448,21 @@ export default function TourDetailClient({ initialTour }: { initialTour: any }) 
                   </p>
                   <div className="space-y-2">
                     <a
-                      href="tel:+919400000000"
+                      href="tel:+916005888754"
                       className="flex items-center gap-2.5 px-4 py-2.5 border border-slate-200 rounded-xl text-sm text-slate-700 hover:border-orange-300 hover:text-orange-600 transition-colors"
                     >
                       <Phone className="w-4 h-4 text-orange-500" />
-                      +91 94000 XXXXX
+                      +91 60058 88754
                     </a>
-                    <button className="w-full flex items-center gap-2.5 px-4 py-2.5 bg-sky-50 border border-sky-200 rounded-xl text-sm text-sky-700 hover:bg-sky-100 transition-colors">
+                    <a 
+                      href={`https://wa.me/916005888754?text=${encodeURIComponent(`Hello WanderKashmir, I need help planning my trip for ${tour.title}.`)}`} 
+                      target="_blank" 
+                      rel="noopener noreferrer" 
+                      className="w-full flex items-center gap-2.5 px-4 py-2.5 bg-sky-50 border border-sky-200 rounded-xl text-sm text-sky-700 hover:bg-sky-100 transition-colors"
+                    >
                       <MessageCircle className="w-4 h-4 text-sky-500" />
                       Chat on WhatsApp
-                    </button>
+                    </a>
                   </div>
                 </div>
 
