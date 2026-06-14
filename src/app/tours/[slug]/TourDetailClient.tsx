@@ -512,9 +512,9 @@ export default function TourDetailClient({ initialTour }: { initialTour: any }) 
       {/* Booking Modal */}
       {showBookingFlow && (
         <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-200">
-          <div className="bg-white rounded-3xl w-full max-w-lg shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
+          <div className="bg-white rounded-3xl w-full max-w-lg max-h-[90vh] flex flex-col shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
             {/* Modal Header */}
-            <div className="bg-slate-50 px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+            <div className="bg-slate-50 px-6 py-4 border-b border-slate-100 flex items-center justify-between flex-shrink-0">
               <div>
                 <h3 className="font-bold text-lg text-slate-900">Complete Your Booking</h3>
                 <p className="text-sm text-slate-500">
@@ -530,7 +530,7 @@ export default function TourDetailClient({ initialTour }: { initialTour: any }) 
             </div>
 
             {/* Progress Bar */}
-            <div className="w-full h-1.5 bg-slate-100">
+            <div className="w-full h-1.5 bg-slate-100 flex-shrink-0">
               <div 
                 className="h-full bg-orange-500 transition-all duration-300" 
                 style={{ width: bookingStep === 1 ? '50%' : '100%' }}
@@ -538,7 +538,7 @@ export default function TourDetailClient({ initialTour }: { initialTour: any }) 
             </div>
 
             {/* Modal Body */}
-            <div className="p-6">
+            <div className="p-6 overflow-y-auto flex-1">
               {bookingStep === 1 && (
                 <div className="space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
