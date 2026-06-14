@@ -47,6 +47,7 @@ export async function POST(request: Request) {
       inclusions,
       exclusions,
       originalPrice,
+      isLive,
     } = body;
 
     const tour = await prisma.tour.create({

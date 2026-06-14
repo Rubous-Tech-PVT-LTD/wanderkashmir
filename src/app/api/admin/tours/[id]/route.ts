@@ -32,6 +32,7 @@ export async function PUT(
         inclusions: Array.isArray(data.inclusions) ? data.inclusions : [],
         exclusions: Array.isArray(data.exclusions) ? data.exclusions : [],
         itinerary: data.itinerary ? data.itinerary : null,
+        isLive: typeof data.isLive === 'boolean' ? data.isLive : true,
       }
     });
 

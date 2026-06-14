@@ -358,6 +358,7 @@ model Tour {
   highlights      String[] @default([])
   itinerary       Json?
   exclusions      String[] @default([])
+  isLive          Boolean  @default(true)
   
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt

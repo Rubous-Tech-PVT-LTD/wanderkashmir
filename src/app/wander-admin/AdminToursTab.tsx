@@ -35,6 +35,7 @@ export default function AdminToursTab({ initialTours }: { initialTours: any[] })
     inclusions: "",
     exclusions: "",
     itinerary: [] as { day: number, title: string, description: string }[],
+    isLive: true,
   });
 
   const handleEdit = (tour: any) => {
@@ -54,6 +55,7 @@ export default function AdminToursTab({ initialTours }: { initialTours: any[] })
       inclusions: tour.inclusions?.join(", ") || "",
       exclusions: tour.exclusions?.join(", ") || "",
       itinerary: tour.itinerary && Array.isArray(tour.itinerary) ? tour.itinerary : [],
+      isLive: tour.isLive ?? true,
     });
     setIsAdding(true);
   };
@@ -75,6 +77,7 @@ export default function AdminToursTab({ initialTours }: { initialTours: any[] })
       inclusions: "",
       exclusions: "",
       itinerary: [],
+      isLive: true,
     });
     setIsAdding(true);
   };
@@ -107,6 +110,7 @@ export default function AdminToursTab({ initialTours }: { initialTours: any[] })
         inclusions: formData.inclusions.split(",").map(s => s.trim()).filter(Boolean),
         exclusions: formData.exclusions.split(",").map(s => s.trim()).filter(Boolean),
         itinerary: formData.itinerary,
+        isLive: formData.isLive,
       };
 
       let res;
@@ -183,6 +187,13 @@ export default function AdminToursTab({ initialTours }: { initialTours: any[] })
           <div>
             <label className="block text-sm font-semibold mb-1">Slug (URL friendly)</label>
             <input required type="text" className="w-full border rounded-lg p-2" value={formData.slug} onChange={e => setFormData({ ...formData, slug: e.target.value })} />
+          </div>
+          <div>
+            <label className="block text-sm font-semibold mb-1">Tour Status</label>
+            <div className="flex items-center gap-2 mt-2">
+              <input type="checkbox" id="isLive" className="w-5 h-5 accent-sky-600 rounded border-slate-300" checked={formData.isLive} onChange={e => setFormData({ ...formData, isLive: e.target.checked })} />
+              <label htmlFor="isLive" className="font-medium text-slate-700 cursor-pointer">{formData.isLive ? "Live (Visible)" : "Coming Soon"}</label>
+            </div>
           </div>
           <div>
             <label className="block text-sm font-semibold mb-1">Duration</label>
@@ -414,7 +425,12 @@ export default function AdminToursTab({ initialTours }: { initialTours: any[] })
                   <div className="flex items-center gap-3">
                     <img src={tour.images[0] || "https://placehold.co/100x100"} alt="tour" className="w-12 h-12 rounded-lg object-cover" />
                     <div>
-                      <p className="font-bold text-slate-900">{tour.title}</p>
+                      <div className="flex items-center gap-2">
+                        <p className="font-bold text-slate-900">{tour.title}</p>
+                        <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${tour.isLive ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}`}>
+                          {tour.isLive ? "LIVE" : "COMING SOON"}
+                        </span>
+                      </div>
                       <p className="text-xs text-slate-500">{tour.destinations.join(", ")}</p>
                     </div>
                   </div>

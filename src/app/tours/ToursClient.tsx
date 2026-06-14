@@ -113,9 +113,14 @@ export default function ToursClient({ initialTours }: { initialTours: any[] }) {
           {/* Tour cards */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {paginatedTours.map((tour) => (
-              <Link key={tour.id} href={`/tours/${tour.slug}`}>
-                <div className="bg-white rounded-2xl overflow-hidden shadow-md card-hover border border-slate-100 h-full flex flex-col">
-                  {/* Image */}
+              <Link
+                key={tour.id}
+                href={tour.isLive ? `/tours/${tour.slug}` : `https://wa.me/919999999999?text=I'm%20interested%20in%20the%20${encodeURIComponent(tour.title)}`}
+                target={tour.isLive ? undefined : "_blank"}
+                className="group block"
+              >
+                <div className="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 border border-slate-100 flex flex-col h-full transform hover:-translate-y-1">
+                  {/* Image Container */}
                   <div className="relative h-52 overflow-hidden flex-shrink-0">
                     <Image 
                       src={tour.images[0] || "https://i.ibb.co/DfbJP98Q/OIP.webp"} 
@@ -220,9 +225,20 @@ export default function ToursClient({ initialTours }: { initialTours: any[] }) {
                           <span className="text-xs font-normal text-slate-400">/person</span>
                         </p>
                       </div>
-                      <span className="text-xs font-semibold px-3 py-1.5 rounded-lg text-white bg-gradient-to-r from-sky-500 to-sky-600 shadow-sm">
-                        View Details
-                      </span>
+                      {tour.isLive ? (
+                        <span className="text-xs font-semibold px-3 py-1.5 rounded-lg text-white bg-gradient-to-r from-sky-500 to-sky-600 shadow-sm">
+                          View Details
+                        </span>
+                      ) : (
+                        <div className="flex flex-col items-end gap-1.5">
+                          <span className="text-[10px] font-bold px-2 py-0.5 rounded text-amber-700 bg-amber-100 uppercase tracking-wider">
+                            Coming Soon
+                          </span>
+                          <span className="text-xs font-semibold px-3 py-1.5 rounded-lg text-emerald-700 bg-emerald-100 shadow-sm flex items-center gap-1 hover:bg-emerald-200 transition-colors">
+                            WhatsApp Now
+                          </span>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
