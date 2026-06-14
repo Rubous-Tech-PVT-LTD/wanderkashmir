@@ -13,6 +13,8 @@ import { vehicleSchema, VehicleData } from "@/lib/validations";
 import { addVehicle, updateVehicle, deleteVehicle } from "@/actions/listings";
 import { calculateDashboardMetrics } from "@/lib/chartUtils";
 import { format } from "date-fns";
+import Script from "next/script";
+import { updateSubscriptionPlan } from "@/actions/vendor";
 import DriversTab from "@/components/vendor/TaxiStand/DriversTab";
 import RatesTab from "@/components/vendor/TaxiStand/RatesTab";
 import TripsTab from "@/components/vendor/TaxiStand/TripsTab";
@@ -78,19 +80,101 @@ export default function TaxiDashboard({
   ];
   const COLORS = ['#0ea5e9', '#6366f1', '#f59e0b', '#10b981'];
 
-  const handleSimulateUpgrade = async (planName: any, price: string) => {
+  const [isUpgrading, setIsUpgrading] = useState(false);
+
+  const handleSimulateUpgrade = async (planName: any, priceString: string) => {
     if (subscriptionPlan === planName) return;
     if (planName === "Enterprise") {
       toast.success("Our sales team will contact you shortly!", { icon: '📞' });
       return;
     }
-    const confirmed = window.confirm(`Simulated Payment Gateway:\n\nConfirm payment of ${price} to upgrade to ${planName}?`);
-    if (confirmed) {
-      toast.loading("Upgrading plan...", { id: 'upgrade' });
-      setTimeout(() => {
-        setSubscriptionPlan(planName);
-        toast.success(`Success! Upgraded to ${planName}.`, { id: 'upgrade' });
-      }, 1000);
+    
+    setIsUpgrading(true);
+    const toastId = toast.loading("Initializing payment...");
+    
+    try {
+      const numericPrice = parseInt(priceString.replace(/[^0-9]/g, ""));
+      if (isNaN(numericPrice) || numericPrice <= 0) {
+        toast.error("Invalid price", { id: toastId });
+        setIsUpgrading(false);
+        return;
+      }
+
+      const response = await fetch("/api/razorpay/subscription", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          planName: planName,
+          amount: numericPrice,
+        }),
+      });
+
+      const orderData = await response.json();
+
+      if (orderData.error) {
+        toast.error(orderData.error, { id: toastId });
+        setIsUpgrading(false);
+        return;
+      }
+
+      toast.dismiss(toastId);
+
+      const options = {
+        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
+        amount: orderData.amount,
+        currency: orderData.currency,
+        name: "WanderKashmir",
+        description: `${planName} Subscription`,
+        image: "/images/razorpay.svg",
+        order_id: orderData.id,
+        handler: async function (response: any) {
+          const verifyToast = toast.loading("Verifying payment...");
+          try {
+            const verifyRes = await fetch("/api/razorpay/verify", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                razorpay_order_id: response.razorpay_order_id,
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_signature: response.razorpay_signature,
+              }),
+            });
+            const verifyData = await verifyRes.json();
+            
+            if (verifyData.success) {
+              const updateRes = await updateSubscriptionPlan(planName);
+              if (updateRes.success) {
+                setSubscriptionPlan(planName);
+                toast.success(`Success! Upgraded to ${planName}.`, { id: verifyToast });
+              } else {
+                toast.error("Payment verified, but failed to update plan. Please contact support.", { id: verifyToast });
+              }
+            } else {
+              toast.error("Payment Verification Failed!", { id: verifyToast });
+            }
+          } catch (e) {
+            toast.error("Something went wrong during verification", { id: verifyToast });
+          } finally {
+            setIsUpgrading(false);
+          }
+        },
+        theme: {
+          color: "#ea580c",
+        },
+      };
+
+      // @ts-ignore
+      const razorpayInstance = new window.Razorpay(options);
+      razorpayInstance.on("payment.failed", function (response: any) {
+        toast.error(`Payment failed: ${response.error.description}`);
+        setIsUpgrading(false);
+      });
+      razorpayInstance.open();
+
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to initiate checkout", { id: toastId });
+      setIsUpgrading(false);
     }
   };
 
@@ -237,6 +321,8 @@ export default function TaxiDashboard({
   };
 
   return (
+    <>
+    <Script src="https://checkout.razorpay.com/v1/checkout.js" />
     <div className="max-w-5xl mx-auto">
       <div className="flex items-center justify-between mb-8">
         <div>
@@ -841,5 +927,6 @@ export default function TaxiDashboard({
         />
       )}
     </div>
+    </>
   );
 }
