@@ -139,10 +139,6 @@ export default function TourDetailClient({ initialTour }: { initialTour: any }) 
                     <Clock className="w-4 h-4 text-orange-500" />
                     {tour.duration}
                   </div>
-                  <div className="flex items-center gap-1">
-                    <Users className="w-4 h-4 text-orange-500" />
-                    Max {tour.maxPersons} persons
-                  </div>
                   <div className="flex flex-wrap gap-1.5">
                     {tour.destinations?.map((d: string) => (
                       <span key={d} className="flex items-center gap-1 badge badge-saffron">
@@ -381,15 +377,14 @@ export default function TourDetailClient({ initialTour }: { initialTour: any }) 
                     </label>
                     <div className="border-2 border-slate-200 rounded-xl px-3 py-3 focus-within:border-orange-400 transition-colors flex items-center gap-2">
                       <Users className="w-4 h-4 text-orange-500" />
-                      <select
+                      <input
+                        type="number"
+                        min="1"
+                        max="100"
                         value={persons}
-                        onChange={(e) => setPersons(Number(e.target.value))}
-                        className="flex-1 text-sm font-medium text-slate-800 focus:outline-none bg-transparent appearance-none"
-                      >
-                        {Array.from({ length: tour.maxPersons }, (_, i) => i + 1).map((n) => (
-                          <option key={n} value={n}>{n} person{n > 1 ? "s" : ""}</option>
-                        ))}
-                      </select>
+                        onChange={(e) => setPersons(Math.max(1, Number(e.target.value)))}
+                        className="flex-1 text-sm font-medium text-slate-800 focus:outline-none bg-transparent"
+                      />
                     </div>
                   </div>
 
@@ -409,113 +404,21 @@ export default function TourDetailClient({ initialTour }: { initialTour: any }) 
                     </div>
                   </div>
 
-                  {!showBookingFlow ? (
-                    <button 
-                      onClick={() => {
-                        if (!isSignedIn) {
-                          alert("Please sign in to book a tour.");
-                          // Note: In a real app we'd redirect to /sign-in, but alert works for now.
-                        }
+                  <button 
+                    onClick={() => {
+                      if (!isSignedIn) {
+                        alert("Please sign in to book a tour.");
+                      } else if (!travelDate) {
+                        alert("Please select a travel date first.");
+                      } else {
                         setShowBookingFlow(true);
-                      }}
-                      className="w-full btn-primary justify-center text-base py-3.5 rounded-xl mb-3 flex items-center"
-                    >
-                      Book This Tour
-                    </button>
-                  ) : (
-                    <div className="bg-white border-2 border-sky-100 p-4 rounded-2xl mb-4 space-y-4 shadow-sm relative overflow-hidden">
-                      <div className="absolute top-0 left-0 w-full h-1 bg-slate-100">
-                        <div className="h-full bg-sky-500 transition-all duration-300" style={{ width: bookingStep === 1 ? '50%' : '100%' }}></div>
-                      </div>
-                      
-                      <div className="flex items-center justify-between mb-2 mt-1">
-                        <h4 className="font-bold text-slate-800 flex items-center gap-1.5">
-                          {bookingStep === 1 ? <User className="w-4 h-4 text-sky-500" /> : <Shield className="w-4 h-4 text-emerald-500" />}
-                          {bookingStep === 1 ? "Traveller Details" : "Review & Pay"}
-                        </h4>
-                        <button onClick={() => setShowBookingFlow(false)} className="text-slate-400 hover:text-slate-600">
-                          <XCircle className="w-5 h-5" />
-                        </button>
-                      </div>
+                      }
+                    }}
+                    className="w-full btn-primary justify-center text-base py-3.5 rounded-xl mb-3 flex items-center"
+                  >
+                    Book This Tour
+                  </button>
 
-                      {bookingStep === 1 && (
-                        <div className="space-y-3 animate-in fade-in slide-in-from-right-4 duration-300">
-                          <div>
-                            <label className="block text-xs font-semibold text-slate-600 mb-1">Lead Guest Name *</label>
-                            <input type="text" value={guestName} onChange={e => setGuestName(e.target.value)} placeholder="John Doe" className="w-full border border-slate-200 rounded-lg p-2.5 text-sm outline-none focus:border-sky-500" />
-                          </div>
-                          <div>
-                            <label className="block text-xs font-semibold text-slate-600 mb-1">Phone Number *</label>
-                            <input type="tel" value={guestPhone} onChange={e => setGuestPhone(e.target.value)} placeholder="+91 9876543210" className="w-full border border-slate-200 rounded-lg p-2.5 text-sm outline-none focus:border-sky-500" />
-                          </div>
-                          <div>
-                            <label className="block text-xs font-semibold text-slate-600 mb-1">Special Requests</label>
-                            <textarea value={specialRequests} onChange={e => setSpecialRequests(e.target.value)} placeholder="e.g. Dietary requirements..." className="w-full border border-slate-200 rounded-lg p-2.5 text-sm outline-none focus:border-sky-500 h-16" />
-                          </div>
-                          <button 
-                            disabled={!guestName || !guestPhone || !travelDate}
-                            onClick={() => setBookingStep(2)}
-                            className="w-full bg-slate-900 text-white font-semibold py-3 rounded-xl hover:bg-slate-800 transition-colors disabled:opacity-50 mt-2"
-                          >
-                            Continue
-                          </button>
-                          {!travelDate && <p className="text-xs text-red-500 text-center mt-1">Please select a travel date above.</p>}
-                        </div>
-                      )}
-
-                      {bookingStep === 2 && (
-                        <div className="space-y-4 animate-in fade-in slide-in-from-right-4 duration-300">
-                          <div className="bg-slate-50 p-3 rounded-lg border border-slate-100 text-sm">
-                            <p className="flex justify-between mb-1"><span className="text-slate-500">Tour:</span> <span className="font-semibold text-slate-800 text-right">{tour.title}</span></p>
-                            <p className="flex justify-between mb-1"><span className="text-slate-500">Date:</span> <span className="font-semibold text-slate-800">{travelDate?.toDateString()}</span></p>
-                            <p className="flex justify-between"><span className="text-slate-500">Guest:</span> <span className="font-semibold text-slate-800">{guestName}</span></p>
-                          </div>
-
-                          <div className="flex items-start gap-2.5 bg-orange-50/50 p-3 rounded-lg border border-orange-100">
-                            <input 
-                              type="checkbox" 
-                              id="policy" 
-                              checked={agreedToPolicy} 
-                              onChange={(e) => setAgreedToPolicy(e.target.checked)}
-                              className="mt-1 flex-shrink-0 w-4 h-4 text-orange-600 rounded border-orange-300 focus:ring-orange-500" 
-                            />
-                            <label htmlFor="policy" className="text-xs text-slate-600 leading-relaxed cursor-pointer">
-                              I agree to the <span className="text-orange-600 font-medium">Cancellation & Date Change Policy</span>. 
-                              (Free cancellation up to 7 days before travel. Changes subject to availability.)
-                            </label>
-                          </div>
-
-                          <div className="flex gap-2 mt-4">
-                            <button onClick={() => setBookingStep(1)} className="px-4 py-3 rounded-xl border border-slate-200 font-medium text-slate-600 hover:bg-slate-50">
-                              Back
-                            </button>
-                            <div className="flex-1">
-                              {!agreedToPolicy ? (
-                                <button disabled className="w-full bg-slate-200 text-slate-400 font-bold py-3.5 rounded-xl">
-                                  Agree to continue
-                                </button>
-                              ) : (
-                                <CheckoutButton 
-                                  propertyId=""
-                                  tourId={tour.id}
-                                  pricePerNight={0}
-                                  isLoggedIn={isSignedIn || false}
-                                  checkIn={travelDate?.toISOString() || new Date().toISOString()}
-                                  checkOut={travelDate ? new Date(travelDate.getTime() + (parseInt(tour.duration.split(' ')[0]) || 1) * 86400000).toISOString() : new Date().toISOString()}
-                                  guests={persons}
-                                  nights={parseInt(tour.duration.split(' ')[0]) || 1}
-                                  guestName={guestName}
-                                  guestPhone={guestPhone}
-                                  specialRequests={specialRequests}
-                                  baseAmount={Math.round(totalPrice * 1.05)}
-                                />
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  )}
                   <a 
                     href={`https://wa.me/916005888754?text=${encodeURIComponent(`Hello WanderKashmir, I would like to request a custom quote for the tour: *${tour.title}*.`)}`} 
                     target="_blank" 
@@ -577,6 +480,156 @@ export default function TourDetailClient({ initialTour }: { initialTour: any }) 
           </div>
         </div>
       </div>
+      {/* Booking Modal */}
+      {showBookingFlow && (
+        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-200">
+          <div className="bg-white rounded-3xl w-full max-w-lg shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
+            {/* Modal Header */}
+            <div className="bg-slate-50 px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+              <div>
+                <h3 className="font-bold text-lg text-slate-900">Complete Your Booking</h3>
+                <p className="text-sm text-slate-500">
+                  {bookingStep === 1 ? "Step 1: Traveller Details" : "Step 2: Review & Pay"}
+                </p>
+              </div>
+              <button 
+                onClick={() => setShowBookingFlow(false)} 
+                className="p-2 bg-white rounded-full text-slate-400 hover:text-slate-700 hover:bg-slate-200 transition-colors"
+              >
+                <XCircle className="w-6 h-6" />
+              </button>
+            </div>
+
+            {/* Progress Bar */}
+            <div className="w-full h-1.5 bg-slate-100">
+              <div 
+                className="h-full bg-orange-500 transition-all duration-300" 
+                style={{ width: bookingStep === 1 ? '50%' : '100%' }}
+              ></div>
+            </div>
+
+            {/* Modal Body */}
+            <div className="p-6">
+              {bookingStep === 1 && (
+                <div className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="md:col-span-2">
+                      <label className="block text-sm font-semibold text-slate-700 mb-1">Lead Guest Name <span className="text-red-500">*</span></label>
+                      <input 
+                        type="text" 
+                        value={guestName} 
+                        onChange={e => setGuestName(e.target.value)} 
+                        placeholder="John Doe" 
+                        className="w-full border border-slate-200 rounded-xl p-3 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none transition-all" 
+                      />
+                    </div>
+                    <div className="md:col-span-2">
+                      <label className="block text-sm font-semibold text-slate-700 mb-1">Phone Number <span className="text-red-500">*</span></label>
+                      <input 
+                        type="tel" 
+                        value={guestPhone} 
+                        onChange={e => setGuestPhone(e.target.value)} 
+                        placeholder="+91 9876543210" 
+                        className="w-full border border-slate-200 rounded-xl p-3 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none transition-all" 
+                      />
+                    </div>
+                    <div className="md:col-span-2">
+                      <label className="block text-sm font-semibold text-slate-700 mb-1">Special Requests</label>
+                      <textarea 
+                        value={specialRequests} 
+                        onChange={e => setSpecialRequests(e.target.value)} 
+                        placeholder="e.g. Dietary requirements..." 
+                        className="w-full border border-slate-200 rounded-xl p-3 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none h-24 resize-none transition-all" 
+                      />
+                    </div>
+                  </div>
+                  
+                  <button 
+                    disabled={!guestName || !guestPhone}
+                    onClick={() => setBookingStep(2)}
+                    className="w-full bg-slate-900 text-white font-bold py-3.5 rounded-xl hover:bg-slate-800 transition-colors disabled:opacity-50 mt-4 text-lg"
+                  >
+                    Continue to Payment
+                  </button>
+                </div>
+              )}
+
+              {bookingStep === 2 && (
+                <div className="space-y-6">
+                  {/* Summary Card */}
+                  <div className="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                    <div className="flex gap-4">
+                      <img src={tour.images[0] || "https://placehold.co/100x100"} alt="tour" className="w-20 h-20 rounded-lg object-cover" />
+                      <div>
+                        <h4 className="font-bold text-slate-900 line-clamp-1">{tour.title}</h4>
+                        <div className="text-sm text-slate-500 mt-1 space-y-0.5">
+                          <p className="flex items-center gap-1.5"><Calendar className="w-3.5 h-3.5" /> {travelDate?.toDateString()}</p>
+                          <p className="flex items-center gap-1.5"><Users className="w-3.5 h-3.5" /> {persons} Person{persons > 1 ? 's' : ''}</p>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="border-t border-slate-200 mt-4 pt-4">
+                      <div className="flex justify-between items-center mb-1">
+                        <span className="text-slate-600">Total Price (incl. taxes)</span>
+                        <span className="font-black text-lg text-slate-900">₹{Math.round(totalPrice * 1.05).toLocaleString("en-IN")}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Policy */}
+                  <div className="flex items-start gap-3 bg-orange-50 p-4 rounded-xl border border-orange-100">
+                    <input 
+                      type="checkbox" 
+                      id="policy-modal" 
+                      checked={agreedToPolicy} 
+                      onChange={(e) => setAgreedToPolicy(e.target.checked)}
+                      className="mt-1 flex-shrink-0 w-4 h-4 text-orange-600 rounded border-orange-300 focus:ring-orange-500" 
+                    />
+                    <label htmlFor="policy-modal" className="text-sm text-slate-700 leading-relaxed cursor-pointer select-none">
+                      I agree to WanderKashmir's <span className="text-orange-600 font-semibold hover:underline">Cancellation & Date Change Policy</span>. 
+                      (Free cancellation up to 7 days before travel. Changes subject to availability.)
+                    </label>
+                  </div>
+
+                  {/* Actions */}
+                  <div className="flex gap-3 pt-2">
+                    <button 
+                      onClick={() => setBookingStep(1)} 
+                      className="px-6 py-3.5 rounded-xl border-2 border-slate-200 font-bold text-slate-600 hover:bg-slate-50 hover:border-slate-300 transition-all"
+                    >
+                      Back
+                    </button>
+                    <div className="flex-1">
+                      {!agreedToPolicy ? (
+                        <button disabled className="w-full bg-slate-200 text-slate-400 font-bold py-3.5 rounded-xl text-lg">
+                          Agree to continue
+                        </button>
+                      ) : (
+                        <CheckoutButton 
+                          propertyId=""
+                          tourId={tour.id}
+                          pricePerNight={0}
+                          isLoggedIn={isSignedIn || false}
+                          checkIn={travelDate?.toISOString() || new Date().toISOString()}
+                          checkOut={travelDate ? new Date(travelDate.getTime() + (parseInt(tour.duration.split(' ')[0]) || 1) * 86400000).toISOString() : new Date().toISOString()}
+                          guests={persons}
+                          nights={parseInt(tour.duration.split(' ')[0]) || 1}
+                          guestName={guestName}
+                          guestPhone={guestPhone}
+                          specialRequests={specialRequests}
+                          baseAmount={Math.round(totalPrice * 1.05)}
+                        />
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
       <Footer />
     </main>
   );
