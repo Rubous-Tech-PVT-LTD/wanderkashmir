@@ -196,8 +196,41 @@ export default function AdminToursTab({ initialTours }: { initialTours: any[] })
                         }
                         setFormData({ ...formData, category: newCats.join(', ') });
                       }}
-                    />
                     <span className="text-sm font-medium text-slate-700 select-none">{cat}</span>
+                    {!TOUR_CATEGORIES.includes(cat) && (
+                      <div className="flex items-center gap-1.5 ml-1" onClick={e => { e.preventDefault(); e.stopPropagation(); }}>
+                        <button 
+                          type="button"
+                          onClick={() => {
+                            const newName = prompt("Modify custom category name:", cat);
+                            if (newName && newName.trim() && newName.trim() !== cat) {
+                              const trimmed = newName.trim();
+                              setCustomCategories(prev => prev.map(c => c === cat ? trimmed : c));
+                              const currentCats = formData.category.split(',').map(c => c.trim()).filter(Boolean);
+                              setFormData({ ...formData, category: currentCats.map(c => c === cat ? trimmed : c).join(', ') });
+                            }
+                          }}
+                          className="text-slate-400 hover:text-sky-500"
+                          title="Edit Category"
+                        >
+                          <Edit2 className="w-3 h-3" />
+                        </button>
+                        <button 
+                          type="button"
+                          onClick={() => {
+                            if (confirm(`Delete custom category "${cat}"?`)) {
+                              setCustomCategories(prev => prev.filter(c => c !== cat));
+                              const currentCats = formData.category.split(',').map(c => c.trim()).filter(Boolean);
+                              setFormData({ ...formData, category: currentCats.filter(c => c !== cat).join(', ') });
+                            }
+                          }}
+                          className="text-slate-400 hover:text-red-500"
+                          title="Delete Category"
+                        >
+                          <Trash2 className="w-3 h-3" />
+                        </button>
+                      </div>
+                    )}
                   </label>
                 )
               })}
