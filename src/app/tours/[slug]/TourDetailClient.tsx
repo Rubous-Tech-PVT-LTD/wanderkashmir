@@ -498,6 +498,7 @@ export default function TourDetailClient({ initialTour }: { initialTour: any }) 
                                 <CheckoutButton 
                                   propertyId=""
                                   tourId={tour.id}
+                                  pricePerNight={0}
                                   isLoggedIn={isSignedIn || false}
                                   checkIn={travelDate?.toISOString() || new Date().toISOString()}
                                   checkOut={travelDate ? new Date(travelDate.getTime() + (parseInt(tour.duration.split(' ')[0]) || 1) * 86400000).toISOString() : new Date().toISOString()}
