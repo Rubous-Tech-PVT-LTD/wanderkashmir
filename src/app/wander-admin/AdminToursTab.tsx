@@ -21,6 +21,10 @@ export default function AdminToursTab({ initialTours }: { initialTours: any[] })
     maxPersons: "2",
     images: "",
     overview: "",
+    highlights: "",
+    inclusions: "",
+    exclusions: "",
+    itinerary: [] as { day: number, title: string, description: string }[],
   });
 
   const handleEdit = (tour: any) => {
@@ -36,6 +40,10 @@ export default function AdminToursTab({ initialTours }: { initialTours: any[] })
       maxPersons: String(tour.maxPersons),
       images: tour.images.join(", "),
       overview: tour.overview || "",
+      highlights: tour.highlights?.join(", ") || "",
+      inclusions: tour.inclusions?.join(", ") || "",
+      exclusions: tour.exclusions?.join(", ") || "",
+      itinerary: tour.itinerary && Array.isArray(tour.itinerary) ? tour.itinerary : [],
     });
     setIsAdding(true);
   };
@@ -53,6 +61,10 @@ export default function AdminToursTab({ initialTours }: { initialTours: any[] })
       maxPersons: "2",
       images: "",
       overview: "",
+      highlights: "",
+      inclusions: "",
+      exclusions: "",
+      itinerary: [],
     });
     setIsAdding(true);
   };
@@ -79,8 +91,12 @@ export default function AdminToursTab({ initialTours }: { initialTours: any[] })
     try {
       const payload = {
         ...formData,
-        destinations: formData.destinations.split(",").map(s => s.trim()),
-        images: formData.images.split(",").map(s => s.trim()),
+        destinations: formData.destinations.split(",").map(s => s.trim()).filter(Boolean),
+        images: formData.images.split(",").map(s => s.trim()).filter(Boolean),
+        highlights: formData.highlights.split(",").map(s => s.trim()).filter(Boolean),
+        inclusions: formData.inclusions.split(",").map(s => s.trim()).filter(Boolean),
+        exclusions: formData.exclusions.split(",").map(s => s.trim()).filter(Boolean),
+        itinerary: formData.itinerary,
       };
 
       let res;
@@ -116,6 +132,24 @@ export default function AdminToursTab({ initialTours }: { initialTours: any[] })
     } finally {
       setLoading(false);
     }
+  };
+
+  const addItineraryDay = () => {
+    setFormData(prev => ({
+      ...prev,
+      itinerary: [...prev.itinerary, { day: prev.itinerary.length + 1, title: "", description: "" }]
+    }));
+  };
+
+  const updateItineraryDay = (index: number, field: string, value: string) => {
+    const newItin = [...formData.itinerary];
+    newItin[index] = { ...newItin[index], [field]: value };
+    setFormData({ ...formData, itinerary: newItin });
+  };
+
+  const removeItineraryDay = (index: number) => {
+    const newItin = formData.itinerary.filter((_, i) => i !== index).map((day, i) => ({ ...day, day: i + 1 }));
+    setFormData({ ...formData, itinerary: newItin });
   };
 
   if (isAdding) {
@@ -158,6 +192,65 @@ export default function AdminToursTab({ initialTours }: { initialTours: any[] })
           <div className="md:col-span-2">
             <label className="block text-sm font-semibold mb-1">Overview</label>
             <textarea className="w-full border rounded-lg p-2 h-32" value={formData.overview} onChange={e => setFormData({ ...formData, overview: e.target.value })} />
+          </div>
+
+          <div className="md:col-span-2">
+            <label className="block text-sm font-semibold mb-1">Tour Highlights (comma separated)</label>
+            <textarea className="w-full border rounded-lg p-2 h-20" placeholder="Shikara ride on Dal Lake, Gulmarg Gondola ride" value={formData.highlights} onChange={e => setFormData({ ...formData, highlights: e.target.value })} />
+          </div>
+
+          <div>
+            <label className="block text-sm font-semibold mb-1">What's Included (comma separated)</label>
+            <textarea className="w-full border rounded-lg p-2 h-24" placeholder="Breakfast, Hotel Stay, Airport Transfer" value={formData.inclusions} onChange={e => setFormData({ ...formData, inclusions: e.target.value })} />
+          </div>
+
+          <div>
+            <label className="block text-sm font-semibold mb-1">What's Excluded (comma separated)</label>
+            <textarea className="w-full border rounded-lg p-2 h-24" placeholder="Flight tickets, Lunch, Personal expenses" value={formData.exclusions} onChange={e => setFormData({ ...formData, exclusions: e.target.value })} />
+          </div>
+
+          {/* Dynamic Itinerary Section */}
+          <div className="md:col-span-2 border-t border-slate-200 pt-6 mt-4">
+            <div className="flex justify-between items-center mb-4">
+              <h4 className="text-lg font-bold text-slate-800">Day-by-Day Itinerary</h4>
+              <button type="button" onClick={addItineraryDay} className="flex items-center gap-1 bg-sky-100 text-sky-700 px-3 py-1.5 rounded-lg text-sm font-semibold hover:bg-sky-200 transition-colors">
+                <Plus className="w-4 h-4" /> Add Day
+              </button>
+            </div>
+            
+            {formData.itinerary.length === 0 && (
+              <div className="text-center p-6 bg-slate-50 border border-dashed border-slate-300 rounded-xl text-slate-500 text-sm">
+                No itinerary days added yet. Click "Add Day" to start building your tour schedule.
+              </div>
+            )}
+
+            <div className="space-y-4">
+              {formData.itinerary.map((day, index) => (
+                <div key={index} className="bg-slate-50 p-4 rounded-xl border border-slate-200 relative">
+                  <div className="flex justify-between items-center mb-3">
+                    <span className="font-bold text-slate-800 bg-white px-3 py-1 rounded-md shadow-sm text-sm border border-slate-100">Day {day.day}</span>
+                    <button type="button" onClick={() => removeItineraryDay(index)} className="text-red-500 hover:text-red-700 p-1 bg-red-50 rounded-md">
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                  <div className="grid grid-cols-1 gap-3">
+                    <input 
+                      type="text" 
+                      placeholder="Title (e.g., Arrival in Srinagar)" 
+                      className="w-full border rounded-lg p-2 text-sm font-semibold"
+                      value={day.title}
+                      onChange={(e) => updateItineraryDay(index, 'title', e.target.value)}
+                    />
+                    <textarea 
+                      placeholder="Description of activities for the day..." 
+                      className="w-full border rounded-lg p-2 text-sm h-20"
+                      value={day.description}
+                      onChange={(e) => updateItineraryDay(index, 'description', e.target.value)}
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
           
           <div className="md:col-span-2 flex justify-end gap-3 mt-4">

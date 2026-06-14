@@ -28,6 +28,10 @@ export async function PUT(
         maxPersons: parseInt(data.maxPersons) || 1,
         images: Array.isArray(data.images) ? data.images : [],
         overview: data.overview,
+        highlights: Array.isArray(data.highlights) ? data.highlights : [],
+        inclusions: Array.isArray(data.inclusions) ? data.inclusions : [],
+        exclusions: Array.isArray(data.exclusions) ? data.exclusions : [],
+        itinerary: data.itinerary ? data.itinerary : null,
       }
     });
 

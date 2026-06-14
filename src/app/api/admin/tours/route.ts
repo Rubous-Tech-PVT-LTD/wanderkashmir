@@ -42,6 +42,10 @@ export async function POST(request: Request) {
       maxPersons,
       images,
       overview,
+      highlights,
+      itinerary,
+      inclusions,
+      exclusions,
       originalPrice,
     } = body;
 
@@ -57,6 +61,10 @@ export async function POST(request: Request) {
         maxPersons: parseInt(maxPersons),
         images: Array.isArray(images) ? images : [],
         overview,
+        highlights: Array.isArray(highlights) ? highlights : [],
+        inclusions: Array.isArray(inclusions) ? inclusions : [],
+        exclusions: Array.isArray(exclusions) ? exclusions : [],
+        itinerary: itinerary ? itinerary : null,
       },
     });
 
