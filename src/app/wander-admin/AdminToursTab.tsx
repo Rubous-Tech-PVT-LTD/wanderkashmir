@@ -4,6 +4,11 @@ import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
 
 export default function AdminToursTab({ initialTours }: { initialTours: any[] }) {
+  const TOUR_CATEGORIES = [
+    "Honeymoon", "Family", "Adventure", "Pilgrimage", "Nature",
+    "Culture", "Skiing", "Trekking", "Wildlife", "Luxury", "Budget", "Group"
+  ];
+
   const [tours, setTours] = useState(initialTours);
   const [isEditing, setIsEditing] = useState<any>(null);
   const [isAdding, setIsAdding] = useState(false);
@@ -169,9 +174,33 @@ export default function AdminToursTab({ initialTours }: { initialTours: any[] })
             <label className="block text-sm font-semibold mb-1">Duration</label>
             <input required type="text" className="w-full border rounded-lg p-2" placeholder="e.g. 5 Days / 4 Nights" value={formData.duration} onChange={e => setFormData({ ...formData, duration: e.target.value })} />
           </div>
-          <div>
-            <label className="block text-sm font-semibold mb-1">Category (comma separated for multiple)</label>
-            <input required type="text" className="w-full border rounded-lg p-2" placeholder="e.g. Honeymoon, Adventure, Family" value={formData.category} onChange={e => setFormData({ ...formData, category: e.target.value })} />
+          <div className="md:col-span-2">
+            <label className="block text-sm font-semibold mb-2">Category (Select multiple)</label>
+            <div className="flex flex-wrap gap-3">
+              {TOUR_CATEGORIES.map(cat => {
+                const isSelected = formData.category.split(',').map(c => c.trim()).includes(cat);
+                return (
+                  <label key={cat} className="flex items-center gap-2 bg-slate-50 border border-slate-200 px-3 py-2 rounded-lg cursor-pointer hover:bg-slate-100 transition-colors">
+                    <input 
+                      type="checkbox" 
+                      className="rounded border-slate-300 text-sky-600 focus:ring-sky-500 w-4 h-4 cursor-pointer"
+                      checked={isSelected}
+                      onChange={(e) => {
+                        const currentCats = formData.category.split(',').map(c => c.trim()).filter(Boolean);
+                        let newCats;
+                        if (e.target.checked) {
+                          newCats = [...currentCats, cat];
+                        } else {
+                          newCats = currentCats.filter(c => c !== cat);
+                        }
+                        setFormData({ ...formData, category: newCats.join(', ') });
+                      }}
+                    />
+                    <span className="text-sm font-medium text-slate-700 select-none">{cat}</span>
+                  </label>
+                )
+              })}
+            </div>
           </div>
           <div>
             <label className="block text-sm font-semibold mb-1">Destinations (comma separated)</label>
