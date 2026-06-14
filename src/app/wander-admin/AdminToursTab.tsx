@@ -189,6 +189,10 @@ export default function AdminToursTab({ initialTours }: { initialTours: any[] })
             <label className="block text-sm font-semibold mb-1">Original Price (optional)</label>
             <input type="number" className="w-full border rounded-lg p-2" value={formData.originalPrice} onChange={e => setFormData({ ...formData, originalPrice: e.target.value })} />
           </div>
+          <div>
+            <label className="block text-sm font-semibold mb-1">Max Persons</label>
+            <input required type="number" min="1" className="w-full border rounded-lg p-2" placeholder="e.g. 10" value={formData.maxPersons} onChange={e => setFormData({ ...formData, maxPersons: e.target.value })} />
+          </div>
           <div className="md:col-span-2">
             <label className="block text-sm font-semibold mb-1">Overview</label>
             <textarea className="w-full border rounded-lg p-2 h-32" value={formData.overview} onChange={e => setFormData({ ...formData, overview: e.target.value })} />
