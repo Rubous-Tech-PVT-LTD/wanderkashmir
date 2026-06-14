@@ -93,7 +93,9 @@ export default function TourDetailClient({ initialTour }: { initialTour: any }) 
                   {/* Badges */}
                   <div className="absolute top-4 left-4 flex gap-2">
                     <span className="badge bg-orange-500 text-white">Best Seller</span>
-                    <span className="badge bg-sky-600 text-white">{tour.category}</span>
+                    {tour.category?.split(',').map((cat: string, idx: number) => (
+                      <span key={idx} className="badge bg-sky-600 text-white">{cat.trim()}</span>
+                    ))}
                   </div>
                   {/* Actions */}
                   <div className="absolute top-4 right-4 flex gap-2">

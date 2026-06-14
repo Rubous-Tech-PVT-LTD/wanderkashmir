@@ -19,7 +19,7 @@ export default function ToursClient({ initialTours }: { initialTours: any[] }) {
   const tours = initialTours;
 
   const filtered = tours.filter(
-    (t) => selectedCat === "All" || t.category === selectedCat
+    (t) => selectedCat === "All" || (t.category && t.category.toLowerCase().includes(selectedCat.toLowerCase()))
   );
 
   // Pagination logic
@@ -113,9 +113,11 @@ export default function ToursClient({ initialTours }: { initialTours: any[] }) {
                           {tour.badge}
                         </span>
                       )}
-                      <span className="badge bg-sky-600 text-white text-xs px-2 py-1 rounded-lg font-semibold">
-                        {tour.category}
-                      </span>
+                      {tour.category?.split(',').map((cat: string, idx: number) => (
+                        <span key={idx} className="badge bg-sky-600 text-white text-xs px-2 py-1 rounded-lg font-semibold">
+                          {cat.trim()}
+                        </span>
+                      ))}
                     </div>
                     <button className="absolute top-3 right-3 w-8 h-8 bg-white/90 rounded-full flex items-center justify-center shadow">
                       <Heart className="w-4 h-4 text-slate-400" />

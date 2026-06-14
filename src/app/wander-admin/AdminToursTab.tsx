@@ -170,8 +170,8 @@ export default function AdminToursTab({ initialTours }: { initialTours: any[] })
             <input required type="text" className="w-full border rounded-lg p-2" placeholder="e.g. 5 Days / 4 Nights" value={formData.duration} onChange={e => setFormData({ ...formData, duration: e.target.value })} />
           </div>
           <div>
-            <label className="block text-sm font-semibold mb-1">Category</label>
-            <input required type="text" className="w-full border rounded-lg p-2" placeholder="e.g. Family, Adventure" value={formData.category} onChange={e => setFormData({ ...formData, category: e.target.value })} />
+            <label className="block text-sm font-semibold mb-1">Category (comma separated for multiple)</label>
+            <input required type="text" className="w-full border rounded-lg p-2" placeholder="e.g. Honeymoon, Adventure, Family" value={formData.category} onChange={e => setFormData({ ...formData, category: e.target.value })} />
           </div>
           <div>
             <label className="block text-sm font-semibold mb-1">Destinations (comma separated)</label>
