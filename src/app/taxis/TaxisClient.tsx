@@ -70,7 +70,7 @@ export default function TaxisClient({ rateCards, imagesMap = {}, verifiedDrivers
         
         return {
           id: d.id,
-          name: d.name || "Wander Verified Driver",
+          name: d.businessName || "Wander Verified Driver",
           isOfficial: false,
           vehicleType: d.vehicleType || primaryVehicle?.model || selectedVehicle,
           vehicleRegistration: d.vehicleRegistration || primaryVehicle?.registrationNum,

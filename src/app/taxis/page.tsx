@@ -29,10 +29,11 @@ export default async function TaxisPage() {
     },
     select: {
       id: true,
+      businessName: true,
       vehicleType: true,
       vehicleRegistration: true,
       experienceYears: true,
-      kycDocuments: true, // to get a profile pic if any
+      kycDocuments: true,
       rateOverrides: true,
       vehicles: true
     }
