@@ -43,8 +43,14 @@ export default function TaxisClient({ rateCards, imagesMap = {}, verifiedDrivers
     trips?: number;
   };
 
-  // Combine providers and paginate
   const allProviders: ProviderType[] = [
+    {
+      id: "wanderkashmir_official",
+      name: "WanderKashmir",
+      isOfficial: true,
+      vehicleType: selectedVehicle,
+      description: "Official standard rates provided directly by WanderKashmir.",
+    },
     ...activeVerifiedDrivers
       .map((d, i) => {
         // Fallbacks if rating/trips are not yet in backend
@@ -393,7 +399,7 @@ export default function TaxisClient({ rateCards, imagesMap = {}, verifiedDrivers
                         <td className="px-6 py-4 text-right">
                           {price && price > 0 && (
                             <Link 
-                              href={`/checkout?type=taxi&vehicle=${selectedVehicle}&route=${encodeURIComponent(rate.place)}${selectedProvider !== "union_green_valley" ? `&driverId=${selectedProvider}` : ''}`} 
+                              href={`/checkout?type=taxi&vehicle=${selectedVehicle}&route=${encodeURIComponent(rate.place)}${selectedProvider !== "wanderkashmir_official" ? `&driverId=${selectedProvider}` : ''}`} 
                               className="inline-flex items-center gap-1 text-sm font-bold text-orange-600 opacity-0 group-hover:opacity-100 transition-opacity"
                             >
                               Book <ArrowRight className="w-4 h-4" />
