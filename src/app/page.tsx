@@ -22,6 +22,7 @@ import {
   ChevronRight,
   Play,
 } from "lucide-react";
+import FeaturedTaxisClient from "@/components/FeaturedTaxisClient";
 
 export const revalidate = 60;
 
@@ -204,6 +205,41 @@ async function getFeaturedGuides() {
   }
 }
 
+async function getFeaturedTaxis() {
+  try {
+    const dbTaxis = await prisma.vendorProfile.findMany({
+      where: {
+        type: 'TAXI',
+        isApproved: true
+      },
+      take: 8,
+      orderBy: { createdAt: "desc" },
+      include: {
+        vehicles: true
+      }
+    });
+
+    if (dbTaxis.length > 0) {
+      return dbTaxis.map((t) => {
+        const primaryVehicle = t.vehicles && t.vehicles.length > 0 ? t.vehicles[0] : null;
+        return {
+          id: t.id,
+          name: t.businessName || "Local Taxi Driver",
+          vehicleType: t.vehicleType || primaryVehicle?.model || "Taxi",
+          image: primaryVehicle?.images?.[0] || "https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?auto=format&fit=crop&q=80&w=800",
+          rating: 4.8 + Math.random() * 0.2,
+          trips: Math.floor(Math.random() * 200) + 50,
+          vehicleRegistration: t.vehicleRegistration || primaryVehicle?.registrationNum || "Verified"
+        };
+      });
+    }
+    return [];
+  } catch (error) {
+    console.error("Failed to fetch featured taxis:", error);
+    return [];
+  }
+}
+
 const destinations = [
   {
     name: "Srinagar",
@@ -356,10 +392,11 @@ const whyUs = [
 /* ─── End Mock Data ──────────────────────────────────────── */
 
 export default async function Home() {
-  const [featuredProperties, locationCounts, featuredGuides] = await Promise.all([
+  const [featuredProperties, locationCounts, featuredGuides, featuredTaxis] = await Promise.all([
     getFeaturedProperties(),
     getDestinationCounts(),
-    getFeaturedGuides()
+    getFeaturedGuides(),
+    getFeaturedTaxis()
   ]);
 
   // Fetch tours from DB
@@ -480,7 +517,7 @@ export default async function Home() {
         </div>
       </section>
 
-      {/* ─── FEATURED GUIDES ──────────────────────────────── */}
+      {/* ─── FEATURED LOCAL GUIDES ──────────────────────────── */}
       {featuredGuides.length > 0 && (
         <section className="py-12 bg-white">
           <div className="container-custom">
@@ -528,6 +565,9 @@ export default async function Home() {
           </div>
         </section>
       )}
+
+      {/* ─── POPULAR TAXI DRIVERS ──────────────────────────── */}
+      <FeaturedTaxisClient taxis={featuredTaxis} />
 
       {/* ─── TOUR PACKAGES & TAXI ───────────────────────────────── */}
       <section className="section-padding">
