@@ -11,21 +11,22 @@ export const dynamic = "force-dynamic";
 export default async function CheckoutPage({
   searchParams,
 }: {
-  searchParams: { [key: string]: string | string[] | undefined };
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
+  const params = await searchParams;
   const { userId } = await auth();
   if (!userId) {
-    redirect("/sign-in?redirect_url=/checkout?" + new URLSearchParams(searchParams as any).toString());
+    redirect("/sign-in?redirect_url=/checkout?" + new URLSearchParams(params as any).toString());
   }
 
-  const type = typeof searchParams.type === "string" ? searchParams.type : null;
+  const type = typeof params.type === "string" ? params.type : null;
   
   let checkoutData = null;
 
   if (type === "taxi") {
-    const vehicleType = typeof searchParams.vehicle === "string" ? searchParams.vehicle : null;
-    const route = typeof searchParams.route === "string" ? searchParams.route : null;
-    const driverId = typeof searchParams.driverId === "string" ? searchParams.driverId : null;
+    const vehicleType = typeof params.vehicle === "string" ? params.vehicle : null;
+    const route = typeof params.route === "string" ? params.route : null;
+    const driverId = typeof params.driverId === "string" ? params.driverId : null;
     
     // Calculate price logic (similar to TaxisClient)
     let price = 0;
@@ -60,7 +61,7 @@ export default async function CheckoutPage({
       price
     };
   } else if (type === "guide") {
-    const guideId = typeof searchParams.guideId === "string" ? searchParams.guideId : null;
+    const guideId = typeof params.guideId === "string" ? params.guideId : null;
     let guide = null;
     if (guideId) {
       guide = await prisma.guideProfile.findUnique({
