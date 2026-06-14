@@ -245,6 +245,38 @@ export default function GuideDashboard({ bookings = [], vendorProfileId, initial
             </div>
           </div>
           
+          {/* Guide Profile Status Box */}
+          {initialGuideProfile ? (
+            <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden mt-8">
+              <div className="p-6 border-b border-slate-100 bg-slate-50 flex justify-between items-center">
+                <h2 className="text-lg font-bold text-slate-900">Your Guide Profile</h2>
+                <span className="inline-block bg-emerald-100 text-emerald-700 text-xs font-bold px-3 py-1 rounded-full">Live</span>
+              </div>
+              <div className="p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                   <h3 className="font-bold text-slate-900 text-lg mb-1">Public Listing is Active</h3>
+                   <p className="text-slate-500 text-sm">Tourists can find and book your services directly from the public listing.</p>
+                   <div className="flex gap-4 mt-3">
+                     <p className="font-semibold text-slate-900 text-sm">Rate: <span className="font-normal text-slate-600">₹{initialGuideProfile.pricePerDay}/day</span></p>
+                     <p className="font-semibold text-slate-900 text-sm">Exp: <span className="font-normal text-slate-600">{initialGuideProfile.experienceYears} Years</span></p>
+                   </div>
+                </div>
+                <button onClick={() => setActiveTab("profile")} className="btn-secondary whitespace-nowrap text-sm px-6 py-2.5">
+                   Edit Profile
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="bg-orange-50 border border-orange-200 rounded-2xl p-6 mt-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div>
+                <h2 className="text-lg font-bold text-orange-900">Complete Your Profile</h2>
+                <p className="text-orange-800 text-sm mt-1">Your guide profile is empty. You must complete your profile to be listed on WanderKashmir and receive bookings.</p>
+              </div>
+              <button onClick={() => setActiveTab("profile")} className="bg-orange-500 hover:bg-orange-600 text-white px-5 py-2.5 rounded-xl font-bold transition-colors whitespace-nowrap">
+                Complete Profile
+              </button>
+            </div>
+          )}
 
 
           {/* ADVANCED ANALYTICS (FEATURE GATED) */}
