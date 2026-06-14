@@ -11,6 +11,8 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { calculateDashboardMetrics } from "@/lib/chartUtils";
 import { format } from "date-fns";
+import { saveGuideProfile } from "@/actions/guide";
+import { useRouter } from "next/navigation";
 
 // --- ZOD SCHEMA FOR GUIDE PROFILE ---
 const guideProfileSchema = z.object({
@@ -24,7 +26,7 @@ const guideProfileSchema = z.object({
 
 type GuideProfileFormValues = z.infer<typeof guideProfileSchema>;
 
-export default function GuideDashboard({ bookings = [] }: { bookings?: any[] }) {
+export default function GuideDashboard({ bookings = [], vendorProfileId, initialGuideProfile }: { bookings?: any[], vendorProfileId?: string, initialGuideProfile?: any }) {
   const { isApproved, subscriptionPlan, setSubscriptionPlan } = useVendor();
   const [activeTab, setActiveTab] = useState("overview");
 
@@ -75,8 +77,11 @@ export default function GuideDashboard({ bookings = [] }: { bookings?: any[] }) 
     resolver: zodResolver(guideProfileSchema),
     mode: "onChange",
     defaultValues: {
-      dailyRate: 1500,
-      experienceYears: 2,
+      bio: initialGuideProfile?.bio || "",
+      languages: initialGuideProfile?.languages?.join(", ") || "",
+      specializations: initialGuideProfile?.specialties?.join(", ") || "",
+      dailyRate: initialGuideProfile?.pricePerDay || 1500,
+      experienceYears: initialGuideProfile?.experienceYears || 2,
       instantBooking: false,
     }
   });
@@ -94,13 +99,27 @@ export default function GuideDashboard({ bookings = [] }: { bookings?: any[] }) 
   const platformFee = Math.round((watchDailyRate || 0) * commissionRate);
   const netEarnings = (watchDailyRate || 0) - platformFee;
 
-  const onSubmit = (data: GuideProfileFormValues) => {
+  const [isSaving, setIsSaving] = useState(false);
+  const router = useRouter();
+
+  const onSubmit = async (data: GuideProfileFormValues) => {
     if (!isApproved) {
       toast.error("Error: Your profile is pending Admin approval. You cannot publish your profile yet.");
       return;
     }
+    if (!vendorProfileId) return;
 
-    toast.success("Profile published successfully!");
+    setIsSaving(true);
+    toast.loading("Saving profile...", { id: "save-guide" });
+    const res = await saveGuideProfile(vendorProfileId, data);
+    setIsSaving(false);
+    
+    if (res.success) {
+      toast.success("Profile published successfully!", { id: "save-guide" });
+      router.refresh();
+    } else {
+      toast.error(res.error || "Failed to save profile", { id: "save-guide" });
+    }
   };
 
   return (
@@ -623,8 +642,8 @@ export default function GuideDashboard({ bookings = [] }: { bookings?: any[] }) 
                 </div>
 
                 <div className="pt-6 flex justify-end gap-3">
-                  <button type="submit" disabled={!isApproved} className={`flex items-center gap-2 px-8 py-3 rounded-lg font-bold shadow-sm transition-transform ${isApproved ? 'bg-slate-900 text-white hover:bg-slate-800 hover:-translate-y-0.5' : 'bg-slate-200 text-slate-400 cursor-not-allowed'}`}>
-                    <Save className="w-4 h-4" /> Save Profile
+                  <button type="submit" disabled={!isApproved || isSaving} className={`flex items-center gap-2 px-8 py-3 rounded-lg font-bold shadow-sm transition-transform ${isApproved && !isSaving ? 'bg-slate-900 text-white hover:bg-slate-800 hover:-translate-y-0.5' : 'bg-slate-200 text-slate-400 cursor-not-allowed'}`}>
+                    <Save className="w-4 h-4" /> {isSaving ? "Saving..." : "Save Profile"}
                   </button>
                 </div>
               </form>

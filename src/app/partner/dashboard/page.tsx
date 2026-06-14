@@ -181,7 +181,9 @@ export default async function DynamicVendorDashboard() {
         />
       );
     case "GUIDE":
-      return <GuideDashboard bookings={bookings} />;
+      const guideProfiles = await prisma.guideProfile.findMany({ where: { vendorProfileId: vendorProfile.id }});
+      const initialGuideProfile = guideProfiles.length > 0 ? guideProfiles[0] : null;
+      return <GuideDashboard bookings={bookings} vendorProfileId={vendorProfile.id} initialGuideProfile={initialGuideProfile} />;
     default:
       return (
         <div className="flex flex-col items-center justify-center min-h-[60vh] text-center">
