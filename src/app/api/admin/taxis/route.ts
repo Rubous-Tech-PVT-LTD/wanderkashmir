@@ -4,7 +4,7 @@ import prisma from "@/lib/prisma";
 export async function GET(request: Request) {
   try {
     const rateCards = await prisma.taxiRateCard.findMany({
-      orderBy: { place: 'asc' }
+      orderBy: { createdAt: 'asc' }
     });
     return NextResponse.json(rateCards);
   } catch (error) {

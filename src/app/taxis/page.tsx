@@ -14,7 +14,7 @@ export const revalidate = 60;
 export default async function TaxisPage() {
   // Fetch real rate cards
   const ratesData = await prisma.taxiRateCard.findMany({
-    orderBy: { place: 'asc' }
+    orderBy: { createdAt: 'asc' }
   });
 
   const imagesData = await prisma.taxiTypeImage.findMany();
