@@ -146,12 +146,18 @@ export default function ToursClient({ initialTours }: { initialTours: any[] }) {
                         <Clock className="w-3.5 h-3.5 text-white/70" />
                         <span className="text-xs text-white/80">{tour.duration}</span>
                       </div>
-                      <div className="flex gap-1 flex-wrap">
-                        {tour.destinations.map((d: string) => (
+                      <div className="flex gap-1 flex-wrap mt-1">
+                        {tour.destinations.slice(0, 3).map((d: string) => (
                           <span key={d} className="text-xs bg-white/20 backdrop-blur-sm px-2 py-0.5 rounded-full flex items-center gap-1">
-                            <MapPin className="w-2.5 h-2.5" /> {d}
+                            <MapPin className="w-2.5 h-2.5 flex-shrink-0" /> 
+                            <span className="truncate max-w-[120px]">{d}</span>
                           </span>
                         ))}
+                        {tour.destinations.length > 3 && (
+                          <span className="text-xs bg-white/20 backdrop-blur-sm px-2 py-0.5 rounded-full flex items-center" title={tour.destinations.slice(3).join(', ')}>
+                            +{tour.destinations.length - 3}
+                          </span>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -171,12 +177,20 @@ export default function ToursClient({ initialTours }: { initialTours: any[] }) {
 
                     {/* Inclusions */}
                     <div className="flex gap-1.5 flex-wrap mb-3">
-                      {tour.inclusions.map((inc: string) => (
+                      {tour.inclusions.slice(0, 4).map((inc: string) => (
                         <span key={inc} className="flex items-center gap-1 text-xs bg-slate-50 border border-slate-100 px-2 py-1 rounded-lg text-slate-600">
-                          <CheckCircle2 className="w-3 h-3 text-sky-500" />
-                          {inc}
+                          <CheckCircle2 className="w-3 h-3 text-sky-500 flex-shrink-0" />
+                          <span className="truncate max-w-[150px]">{inc}</span>
                         </span>
                       ))}
+                      {tour.inclusions.length > 4 && (
+                        <span 
+                          className="flex items-center gap-1 text-xs bg-slate-50 border border-slate-100 px-2 py-1 rounded-lg text-slate-500 cursor-help"
+                          title={tour.inclusions.slice(4).join(', ')}
+                        >
+                          +{tour.inclusions.length - 4} more
+                        </span>
+                      )}
                     </div>
 
                     {/* Price */}
