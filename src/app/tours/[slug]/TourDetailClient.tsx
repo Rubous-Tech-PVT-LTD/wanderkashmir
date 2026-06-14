@@ -84,7 +84,7 @@ export default function TourDetailClient({ initialTour }: { initialTour: any }) 
               <div className="bg-white rounded-2xl overflow-hidden shadow-sm">
                 <div className="relative h-80 md:h-[420px]">
                   <Image
-                    src={tour.images[activeImage] || "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=900&q=80"}
+                    src={tour.images?.[activeImage] || "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=900&q=80"}
                     alt={tour.title}
                     fill
                     className="object-cover transition-all duration-500"
@@ -205,17 +205,23 @@ export default function TourDetailClient({ initialTour }: { initialTour: any }) 
                           </div>
                           <div>
                             <p className="font-semibold text-slate-900 text-sm">{day.title}</p>
-                            <p className="text-xs text-slate-400 flex items-center gap-1 mt-0.5">
-                              <MapPin className="w-3 h-3" />
-                              {day.location}
-                              {day.meals && (
-                                <>
-                                  <span className="mx-1">·</span>
-                                  <Utensils className="w-3 h-3" />
-                                  {day.meals}
-                                </>
-                              )}
-                            </p>
+                            {(day.location || day.meals) && (
+                              <p className="text-xs text-slate-400 flex items-center gap-1 mt-0.5">
+                                {day.location && (
+                                  <>
+                                    <MapPin className="w-3 h-3" />
+                                    {day.location}
+                                  </>
+                                )}
+                                {day.meals && (
+                                  <>
+                                    {day.location && <span className="mx-1">·</span>}
+                                    <Utensils className="w-3 h-3" />
+                                    {day.meals}
+                                  </>
+                                )}
+                              </p>
+                            )}
                           </div>
                         </div>
                         {openDay === day.day ? (
@@ -227,12 +233,17 @@ export default function TourDetailClient({ initialTour }: { initialTour: any }) 
                       {openDay === day.day && (
                         <div className="border-t border-slate-100 px-4 pb-4 pt-3 bg-slate-50">
                           <ul className="space-y-2">
-                            {day.activities.map((a: string, i: number) => (
+                            {day.activities ? day.activities.map((a: string, i: number) => (
                               <li key={i} className="flex items-start gap-2.5 text-sm text-slate-700">
                                 <div className="w-1.5 h-1.5 rounded-full bg-orange-400 mt-1.5 flex-shrink-0" />
                                 {a}
                               </li>
-                            ))}
+                            )) : day.description ? (
+                              <li className="flex items-start gap-2.5 text-sm text-slate-700">
+                                <div className="w-1.5 h-1.5 rounded-full bg-orange-400 mt-1.5 flex-shrink-0" />
+                                {day.description}
+                              </li>
+                            ) : null}
                           </ul>
                           {day.overnight && (
                             <p className="text-xs text-slate-500 mt-3 flex items-center gap-1">
