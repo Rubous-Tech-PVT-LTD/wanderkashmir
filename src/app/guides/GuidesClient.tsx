@@ -241,11 +241,11 @@ export default function GuidesClient({ initialGuides }: { initialGuides: any[] }
                   >
                     <div className="flex flex-col md:flex-row">
                       {/* Side Image */}
-                      <div className="md:w-56 h-56 md:h-auto relative flex-shrink-0">
+                      <div className="md:w-56 h-56 md:h-auto relative flex-shrink-0 overflow-hidden">
                         <img
                           src={guide.image}
                           alt={guide.name}
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                          className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                         />
                         {guide.featured && (
                           <div className="absolute top-3 left-3">
