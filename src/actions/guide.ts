@@ -38,6 +38,7 @@ export async function saveGuideProfile(vendorProfileId: string, data: any) {
           specialties: specialtiesArray,
           pricePerDay: data.dailyRate,
           experienceYears: data.experienceYears,
+          images: data.images || [],
           // instantBooking: data.instantBooking
         }
       });
@@ -45,13 +46,14 @@ export async function saveGuideProfile(vendorProfileId: string, data: any) {
       guideProfile = await prisma.guideProfile.create({
         data: {
           vendorProfileId: vendor.id,
-          isApproved: true, 
-          status: "APPROVED",
+          isApproved: vendor.isApproved, 
+          status: vendor.status,
           bio: data.bio,
           languages: languagesArray,
           specialties: specialtiesArray,
           pricePerDay: data.dailyRate,
           experienceYears: data.experienceYears,
+          images: data.images || [],
         }
       });
     }

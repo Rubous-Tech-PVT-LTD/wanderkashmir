@@ -11,6 +11,8 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { calculateDashboardMetrics } from "@/lib/chartUtils";
 import { format } from "date-fns";
+import dynamic from "next/dynamic";
+const ImageUpload = dynamic(() => import("@/components/ImageUpload"), { ssr: false });
 import { saveGuideProfile } from "@/actions/guide";
 import { useRouter } from "next/navigation";
 
@@ -102,16 +104,21 @@ export default function GuideDashboard({ bookings = [], vendorProfileId, initial
   const [isSaving, setIsSaving] = useState(false);
   const router = useRouter();
 
+  const [avatar, setAvatar] = useState<string[]>(initialGuideProfile?.images?.[1] ? [initialGuideProfile.images[1]] : []);
+  const [coverPhoto, setCoverPhoto] = useState<string[]>(initialGuideProfile?.images?.[0] ? [initialGuideProfile.images[0]] : []);
+
   const onSubmit = async (data: GuideProfileFormValues) => {
-    if (!isApproved) {
-      toast.error("Error: Your profile is pending Admin approval. You cannot publish your profile yet.");
-      return;
-    }
     if (!vendorProfileId) return;
 
     setIsSaving(true);
     toast.loading("Saving profile...", { id: "save-guide" });
-    const res = await saveGuideProfile(vendorProfileId, data);
+    
+    const submitData = {
+      ...data,
+      images: [coverPhoto[0] || "", avatar[0] || ""]
+    };
+    
+    const res = await saveGuideProfile(vendorProfileId, submitData);
     setIsSaving(false);
     
     if (res.success) {
@@ -599,6 +606,31 @@ export default function GuideDashboard({ bookings = [], vendorProfileId, initial
                   <textarea rows={5} {...register("bio")} className={`w-full border rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-sky-500/20 ${errors.bio ? 'border-orange-500' : 'border-slate-200'}`} placeholder="Tell travelers about your experience, your connection to Kashmir, and what makes your tours special..." />
                   {errors.bio && <p className="text-orange-500 text-xs mt-1 font-medium">{errors.bio.message}</p>}
                 </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-2">Profile Picture (Avatar)</label>
+                    <div className="bg-slate-50 border border-slate-200 rounded-xl p-4">
+                      <ImageUpload 
+                        uploadedPhotos={avatar} 
+                        setUploadedPhotos={setAvatar} 
+                        photoLimit={1}
+                      />
+                      <p className="text-xs text-slate-500 mt-2">A clear, friendly photo of your face builds trust.</p>
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-2">Cover Photo</label>
+                    <div className="bg-slate-50 border border-slate-200 rounded-xl p-4">
+                      <ImageUpload 
+                        uploadedPhotos={coverPhoto} 
+                        setUploadedPhotos={setCoverPhoto} 
+                        photoLimit={1}
+                      />
+                      <p className="text-xs text-slate-500 mt-2">A landscape photo of you in action or a beautiful location.</p>
+                    </div>
+                  </div>
+                </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
@@ -674,7 +706,7 @@ export default function GuideDashboard({ bookings = [], vendorProfileId, initial
                 </div>
 
                 <div className="pt-6 flex justify-end gap-3">
-                  <button type="submit" disabled={!isApproved || isSaving} className={`flex items-center gap-2 px-8 py-3 rounded-lg font-bold shadow-sm transition-transform ${isApproved && !isSaving ? 'bg-slate-900 text-white hover:bg-slate-800 hover:-translate-y-0.5' : 'bg-slate-200 text-slate-400 cursor-not-allowed'}`}>
+                  <button type="submit" disabled={isSaving} className={`flex items-center gap-2 px-8 py-3 rounded-lg font-bold shadow-sm transition-transform ${!isSaving ? 'bg-slate-900 text-white hover:bg-slate-800 hover:-translate-y-0.5' : 'bg-slate-200 text-slate-400 cursor-not-allowed'}`}>
                     <Save className="w-4 h-4" /> {isSaving ? "Saving..." : "Save Profile"}
                   </button>
                 </div>
