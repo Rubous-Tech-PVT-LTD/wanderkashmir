@@ -5,6 +5,7 @@ import { Home, Save, Plus, MapPin, IndianRupee, CheckCircle2, AlertTriangle, Loc
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, LineChart, Line, AreaChart, Area, PieChart, Pie, Cell } from 'recharts';
 import { Download } from "lucide-react";
 import { useVendor } from "@/context/VendorContext";
+import Script from "next/script";
 import dynamic from "next/dynamic";
 const ImageUpload = dynamic(() => import("@/components/ImageUpload"), { ssr: false });
 
