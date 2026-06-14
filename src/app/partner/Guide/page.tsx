@@ -44,6 +44,16 @@ export default function GuideDashboard({ bookings = [], vendorProfileId, initial
   
   const totalViews = initialGuideProfile?.profileViews || 0;
 
+  const missingFields: string[] = [];
+  if (initialGuideProfile) {
+    if (!initialGuideProfile.bio) missingFields.push("Bio");
+    if (!initialGuideProfile.images?.[1]) missingFields.push("Profile Picture");
+    if (!initialGuideProfile.images?.[0]) missingFields.push("Cover Photo");
+    if (!initialGuideProfile.languages || initialGuideProfile.languages.length === 0) missingFields.push("Languages");
+    if (!initialGuideProfile.specialties || initialGuideProfile.specialties.length === 0) missingFields.push("Specialties");
+    if (!initialGuideProfile.location) missingFields.push("Location");
+  }
+
   const getChartData = () => {
     return chartData.map(d => ({ ...d, tours: d.bookings })); // Rename bookings to tours for chart tooltips
   };
@@ -272,12 +282,28 @@ export default function GuideDashboard({ bookings = [], vendorProfileId, initial
             <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden mt-8">
               <div className="p-6 border-b border-slate-100 bg-slate-50 flex justify-between items-center">
                 <h2 className="text-lg font-bold text-slate-900">Your Guide Profile</h2>
-                <span className="inline-block bg-emerald-100 text-emerald-700 text-xs font-bold px-3 py-1 rounded-full">Live</span>
+                <span className={`inline-block text-xs font-bold px-3 py-1 rounded-full ${isApproved ? 'bg-emerald-100 text-emerald-700' : 'bg-orange-100 text-orange-700'}`}>
+                  {isApproved ? 'Live' : 'Pending Approval'}
+                </span>
               </div>
               <div className="p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
-                   <h3 className="font-bold text-slate-900 text-lg mb-1">Public Listing is Active</h3>
-                   <p className="text-slate-500 text-sm">Tourists can find and book your services directly from the public listing.</p>
+                   <h3 className="font-bold text-slate-900 text-lg mb-1">{isApproved ? 'Public Listing is Active' : 'Profile is Pending Approval'}</h3>
+                   <p className="text-slate-500 text-sm">
+                     {isApproved 
+                       ? "Tourists can find and book your services directly from the public listing."
+                       : "You have saved your profile, but it won't be visible to tourists until Admin approves it."}
+                   </p>
+                   
+                   {missingFields.length > 0 && (
+                     <div className="mt-3 bg-amber-50 border border-amber-200 rounded-lg p-3 flex items-start gap-3 max-w-lg">
+                       <AlertTriangle className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
+                       <div>
+                         <p className="text-sm text-amber-900 font-semibold">Incomplete Profile Fields</p>
+                         <p className="text-xs text-amber-700 mt-0.5">Please complete the following missing fields to get the best out of your profile: <strong className="font-semibold">{missingFields.join(", ")}</strong></p>
+                       </div>
+                     </div>
+                   )}
                    
                    {subscriptionPlan === "Free" && (
                      <div className="mt-3 bg-sky-50 border border-sky-100 rounded-lg p-3 flex items-start gap-3 max-w-lg">
