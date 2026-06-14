@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import Link from "next/link";
@@ -37,6 +37,23 @@ export default function TourDetailClient({ initialTour }: { initialTour: any }) 
   const [guestPhone, setGuestPhone] = useState("");
   const [specialRequests, setSpecialRequests] = useState("");
   const [agreedToPolicy, setAgreedToPolicy] = useState(false);
+  const [otherGuests, setOtherGuests] = useState<{name: string, age: string}[]>([]);
+
+  // Keep otherGuests array in sync with persons - 1
+  useEffect(() => {
+    const requiredLength = Math.max(0, persons - 1);
+    if (otherGuests.length !== requiredLength) {
+      const newGuests = [...otherGuests];
+      if (newGuests.length < requiredLength) {
+        while (newGuests.length < requiredLength) {
+          newGuests.push({ name: "", age: "" });
+        }
+      } else {
+        newGuests.length = requiredLength;
+      }
+      setOtherGuests(newGuests);
+    }
+  }, [persons, otherGuests]);
 
   const tour = initialTour;
 
@@ -533,6 +550,48 @@ export default function TourDetailClient({ initialTour }: { initialTour: any }) 
                         className="w-full border border-slate-200 rounded-xl p-3 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none transition-all" 
                       />
                     </div>
+                    
+                    {/* Other Guests */}
+                    {otherGuests.length > 0 && (
+                      <div className="md:col-span-2 mt-2 space-y-3">
+                        <div className="flex items-center gap-2 mb-2">
+                          <div className="h-px bg-slate-200 flex-1"></div>
+                          <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Other Travellers</span>
+                          <div className="h-px bg-slate-200 flex-1"></div>
+                        </div>
+                        {otherGuests.map((guest, index) => (
+                          <div key={index} className="flex gap-3">
+                            <div className="flex-1">
+                              <input 
+                                type="text" 
+                                value={guest.name} 
+                                onChange={(e) => {
+                                  const newArr = [...otherGuests];
+                                  newArr[index].name = e.target.value;
+                                  setOtherGuests(newArr);
+                                }}
+                                placeholder={`Traveller ${index + 2} Name`}
+                                className="w-full border border-slate-200 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none transition-all"
+                              />
+                            </div>
+                            <div className="w-24">
+                              <input 
+                                type="number" 
+                                value={guest.age} 
+                                onChange={(e) => {
+                                  const newArr = [...otherGuests];
+                                  newArr[index].age = e.target.value;
+                                  setOtherGuests(newArr);
+                                }}
+                                placeholder="Age"
+                                className="w-full border border-slate-200 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none transition-all"
+                              />
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
                     <div className="md:col-span-2">
                       <label className="block text-sm font-semibold text-slate-700 mb-1">Special Requests</label>
                       <textarea 
@@ -618,6 +677,7 @@ export default function TourDetailClient({ initialTour }: { initialTour: any }) 
                           guestName={guestName}
                           guestPhone={guestPhone}
                           specialRequests={specialRequests}
+                          otherGuests={otherGuests.filter(g => g.name)}
                           baseAmount={Math.round(totalPrice * 1.05)}
                         />
                       )}
