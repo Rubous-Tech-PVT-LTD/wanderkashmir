@@ -17,7 +17,7 @@ export const vendorRegistrationSchema = z.object({
   accountHolderName: z.string().min(3, "Account holder name is required"),
   bankName: z.string().min(3, "Bank name is required"),
   accountNumber: z.string().min(9, "Account number must be at least 9 characters"),
-  ifscCode: z.string().regex(/^[A-Z]{4}0[A-Z0-9]{6}$/, "Invalid IFSC Code format"),
+  ifscCode: z.string().trim().toUpperCase().regex(/^[A-Z]{4}0[A-Z0-9]{6}$/, "Invalid IFSC Code format"),
   kycDocuments: z.array(z.string()).optional(),
   agreeToTerms: z.literal(true, {
     error: "You must agree to the terms of service"
