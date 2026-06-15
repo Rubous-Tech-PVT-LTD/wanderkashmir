@@ -48,6 +48,7 @@ model User {
 
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
+  @@index([role])
 }
 
 model Account {
@@ -135,6 +136,9 @@ model VendorProfile {
 
   @@index([userId])
   @@index([type, status])
+  @@index([type])
+  @@index([status])
+  @@index([isApproved])
 }
 
 model Property {
@@ -168,6 +172,8 @@ model Property {
   @@index([status, isApproved])
   @@index([location])
   @@index([vendorProfileId])
+  @@index([isApproved])
+  @@index([status])
 }
 
 model Vehicle {
@@ -231,6 +237,7 @@ model TaxiRateCard {
   
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  @@index([place])
 }
 
 model TaxiTypeImage {
@@ -318,6 +325,7 @@ model Booking {
 
   @@index([propertyId, status])
   @@index([userId])
+  @@index([status])
 }
 
 model Review {
