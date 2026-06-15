@@ -14,7 +14,8 @@ const DEFAULT_IMAGES: Record<string, string> = {
   "SWIFT DZIRE": "https://imgd.aeplcdn.com/664x374/n/cw/ec/170173/swift-exterior-right-front-three-quarter-2.jpeg?isig=0&q=80",
   "ECCO": "https://imgd.aeplcdn.com/664x374/n/cw/ec/131151/eeco-exterior-right-front-three-quarter-2.jpeg?isig=0&q=80",
   "ALTO K10": "https://imgd.aeplcdn.com/664x374/n/cw/ec/127563/alto-k10-exterior-right-front-three-quarter-2.jpeg?isig=0&q=80",
-  "SUMO": "https://imgd.aeplcdn.com/664x374/ec/14/C8/10410/img/m/Tata-Sumo-Gold-Right-Front-Three-Quarter-51206_ol.jpg?v=201711021421&q=80"
+  "SUMO": "https://imgd.aeplcdn.com/664x374/ec/14/C8/10410/img/m/Tata-Sumo-Gold-Right-Front-Three-Quarter-51206_ol.jpg?v=201711021421&q=80",
+  "BOLERO": "https://imgd.aeplcdn.com/664x374/n/cw/ec/131131/bolero-exterior-right-front-three-quarter-2.jpeg?isig=0&q=80"
 };
 
 const VEHICLE_TYPES = Object.keys(DEFAULT_IMAGES);

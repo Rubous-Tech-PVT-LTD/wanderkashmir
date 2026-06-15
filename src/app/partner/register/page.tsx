@@ -313,6 +313,7 @@ export default function VendorEntryPage() {
                           <option value="ECCO">Maruti Eeco</option>
                           <option value="ALTO">Alto K10</option>
                           <option value="SUMO">Tata Sumo</option>
+                          <option value="BOLERO">Mahindra Bolero Top Model</option>
                         </select>
                         {errors.vehicleType && <span className="text-orange-500 text-xs font-medium mt-1">{errors.vehicleType.message}</span>}
                       </div>
