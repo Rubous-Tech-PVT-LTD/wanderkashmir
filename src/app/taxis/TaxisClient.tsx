@@ -29,6 +29,8 @@ export default function TaxisClient({ rateCards, imagesMap = {}, verifiedDrivers
   
   // Filter verified drivers for the selected vehicle type
   const activeVerifiedDrivers = verifiedDrivers.filter(driver => {
+    if (!driver.vehicles || driver.vehicles.length === 0) return false;
+
     const matchVehicle = selectedVehicle.toUpperCase();
     const dType = driver.vehicleType?.toUpperCase() || "";
     

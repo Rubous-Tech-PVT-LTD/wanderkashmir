@@ -8,6 +8,7 @@ import ToasterProvider from "@/components/ToasterProvider";
 import { getVendorSession } from "@/lib/auth";
 
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://www.wanderkashmir.com"),
   title: "WanderKashmir – Hotels, Homestays, Taxis & Tours in Kashmir",
   description:
     "Book verified hotels, homestays, houseboats, taxi services and tour packages across Jammu & Kashmir. Your all-in-one Kashmir travel platform.",
@@ -19,6 +20,9 @@ export const metadata: Metadata = {
       "Book verified stays, taxis & tour packages across Jammu & Kashmir",
     type: "website",
     locale: "en_IN",
+  },
+  alternates: {
+    canonical: "/",
   },
 };
 

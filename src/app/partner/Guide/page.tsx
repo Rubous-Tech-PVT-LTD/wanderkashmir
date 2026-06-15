@@ -36,6 +36,7 @@ type GuideProfileFormValues = z.infer<typeof guideProfileSchema>;
 export default function GuideDashboard({ bookings = [], vendorProfileId, initialGuideProfile }: { bookings?: any[], vendorProfileId?: string, initialGuideProfile?: any }) {
   const { isApproved, subscriptionPlan, setSubscriptionPlan } = useVendor();
   const [activeTab, setActiveTab] = useState("overview");
+  const [isEditMode, setIsEditMode] = useState(false);
 
   // Feature Gating Logic
   const hasInstantBooking = subscriptionPlan === "Growth Pro" || subscriptionPlan === "Pro" || subscriptionPlan === "Enterprise";
@@ -58,7 +59,7 @@ export default function GuideDashboard({ bookings = [], vendorProfileId, initial
     if (!initialGuideProfile.location) missingFields.push("Location");
   }
 
-  const isProfileLocked = subscriptionPlan === "Free" && initialGuideProfile !== null && missingFields.length === 0;
+  const isProfileLocked = subscriptionPlan === "Free" && initialGuideProfile !== null && missingFields.length === 0 && !isEditMode;
 
   const getChartData = () => {
     return chartData.map(d => ({ ...d, tours: d.bookings })); // Rename bookings to tours for chart tooltips
@@ -269,7 +270,7 @@ export default function GuideDashboard({ bookings = [], vendorProfileId, initial
         {["overview", "profile", "bookings", "financials"].map((tab) => (
           <button
             key={tab}
-            onClick={() => setActiveTab(tab)}
+            onClick={() => { setActiveTab(tab); setIsEditMode(false); }}
             className={`pb-4 text-sm font-semibold capitalize transition-colors relative ${activeTab === tab ? "text-sky-600" : "text-slate-500 hover:text-slate-800"}`}
           >
             {tab === "financials" ? "Financials & Subscription" : tab}
@@ -409,7 +410,7 @@ export default function GuideDashboard({ bookings = [], vendorProfileId, initial
                      <p className="font-semibold text-slate-900 text-sm">Exp: <span className="font-normal text-slate-600">{initialGuideProfile.experienceYears} Years</span></p>
                    </div>
                 </div>
-                <button onClick={() => setActiveTab("profile")} className="btn-secondary whitespace-nowrap text-sm px-6 py-2.5">
+                <button onClick={() => { setActiveTab("profile"); setIsEditMode(true); }} className="btn-secondary whitespace-nowrap text-sm px-6 py-2.5">
                    Edit Profile
                 </button>
               </div>
@@ -755,9 +756,9 @@ export default function GuideDashboard({ bookings = [], vendorProfileId, initial
                 <div className="bg-sky-50 border border-sky-200 rounded-xl p-5 mb-8 flex items-start gap-3">
                   <Lock className="w-5 h-5 text-sky-600 mt-0.5 shrink-0" />
                   <div>
-                    <h3 className="font-bold text-sky-900 text-sm">Profile Locked (Free Plan)</h3>
-                    <p className="text-sm text-sky-800 mt-1">Your profile is complete and has been saved! On the Free plan, profiles cannot be edited after completion. Please upgrade to Growth Pro to unlock unlimited profile edits and priority ranking.</p>
-                    <button type="button" onClick={() => setActiveTab("financials")} className="mt-3 text-xs font-bold text-white bg-sky-600 px-4 py-2 rounded-lg hover:bg-sky-700 transition-colors">View Upgrade Plans</button>
+                    <h3 className="font-bold text-sky-900 text-sm">Your limit reached</h3>
+                    <p className="text-sm text-sky-800 mt-1">Your profile is complete and has been saved! On the Free plan, profiles cannot be edited after completion from this tab. Please upgrade to Growth Pro to unlock unlimited profile edits and priority ranking.</p>
+                    <button type="button" onClick={() => { setActiveTab("financials"); setIsEditMode(false); }} className="mt-3 text-xs font-bold text-white bg-sky-600 px-4 py-2 rounded-lg hover:bg-sky-700 transition-colors">View Upgrade Plans</button>
                   </div>
                 </div>
               )}
