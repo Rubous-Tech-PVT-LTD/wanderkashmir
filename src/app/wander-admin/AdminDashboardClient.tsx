@@ -17,7 +17,10 @@ import toast from "react-hot-toast";
 import { LogOut } from "lucide-react";
 import AdminToursTab from "./AdminToursTab";
 import AdminTaxisTab from "./AdminTaxisTab";
+import { useEffect, useCallback } from "react";
 import dynamic from "next/dynamic";
+import Pagination from "@/components/Pagination";
+import { getPaginatedVendors, getPaginatedProperties, getPaginatedUsers, getPaginatedBookings } from "@/actions/admin-data";
 const AdminMapView = dynamic(() => import("./AdminMapView"), { ssr: false });
 
 // Define the type based on the props passed from Server
@@ -95,8 +98,23 @@ const downloadCSV = (data: any[], filename: string) => {
   document.body.removeChild(link);
 };
 
-export default function AdminDashboardClient({ tours = [], vendors, properties = [], totalUsers, totalRevenue, payouts = [], users = [], bookings = [] }: { tours?: any[], vendors: VendorProfile[], properties?: PropertyProfile[], totalUsers: number, totalRevenue: number, payouts?: any[], users?: any[], bookings?: any[] }) {
+export default function AdminDashboardClient({ 
+  totalUsers, totalRevenue, totalLiveVendors, pendingVendors, rejectedVendors, payouts = [] 
+}: { 
+  totalUsers: number, totalRevenue: number, totalLiveVendors: number, pendingVendors: number, rejectedVendors: number, payouts?: any[] 
+}) {
   const [activeTab, setActiveTab] = useState("dashboard");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
+  const [isLoading, setIsLoading] = useState(false);
+  const ITEMS_PER_PAGE = 20;
+
+  // Data States
+  const [vendorsData, setVendorsData] = useState<VendorProfile[]>([]);
+  const [propertiesData, setPropertiesData] = useState<PropertyProfile[]>([]);
+  const [usersData, setUsersData] = useState<any[]>([]);
+  const [bookingsData, setBookingsData] = useState<any[]>([]);
   const [isProcessing, setIsProcessing] = useState<string | null>(null);
   const [selectedVendorDetails, setSelectedVendorDetails] = useState<VendorProfile | null>(null);
   const [rejectingVendor, setRejectingVendor] = useState<VendorProfile | null>(null);
@@ -121,45 +139,54 @@ export default function AdminDashboardClient({ tours = [], vendors, properties =
   const [filterType, setFilterType] = useState("ALL");
   const [filterDate, setFilterDate] = useState("ALL"); // For daily manifest
 
-  // --- DERIVED FILTERED ARRAYS ---
-  const filteredVendors = vendors.filter(v => {
-    const matchesSearch = v.businessName.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                          (v.user?.name || "").toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesType = filterType === "ALL" || v.type === filterType;
-    let matchesStatus = true;
-    if (filterStatus === "PENDING") matchesStatus = !v.isApproved && v.status !== "REJECTED";
-    if (filterStatus === "APPROVED") matchesStatus = v.isApproved;
-    if (filterStatus === "SUSPENDED") matchesStatus = v.status === "SUSPENDED";
-    return matchesSearch && matchesType && matchesStatus;
-  });
+  // --- DATA FETCHING (SERVER ACTIONS) ---
+  const fetchData = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      if (activeTab === "approvals" || activeTab === "live_vendors" || activeTab === "rejected") {
+        let status = "ALL";
+        if (activeTab === "approvals") status = "PENDING";
+        else if (activeTab === "live_vendors") status = "APPROVED";
+        else if (activeTab === "rejected") status = "REJECTED";
+        
+        const res = await getPaginatedVendors({ page: currentPage, limit: ITEMS_PER_PAGE, search: searchQuery, status, type: filterType });
+        setVendorsData(res.data);
+        setTotalPages(res.totalPages);
+        setTotalItems(res.totalCount);
+      } 
+      else if (activeTab === "listings" || activeTab === "live_listings") {
+        let status = activeTab === "listings" ? "PENDING" : "APPROVED";
+        const res = await getPaginatedProperties({ page: currentPage, limit: ITEMS_PER_PAGE, search: searchQuery, status });
+        setPropertiesData(res.data);
+        setTotalPages(res.totalPages);
+        setTotalItems(res.totalCount);
+      }
+      else if (activeTab === "users") {
+        const res = await getPaginatedUsers({ page: currentPage, limit: ITEMS_PER_PAGE, search: searchQuery, status: filterStatus });
+        setUsersData(res.data);
+        setTotalPages(res.totalPages);
+        setTotalItems(res.totalCount);
+      }
+      else if (activeTab === "manifest") {
+        const res = await getPaginatedBookings({ page: currentPage, limit: ITEMS_PER_PAGE, search: searchQuery, status: "CONFIRMED", type: filterType, dateFilter: filterDate });
+        setBookingsData(res.data);
+        setTotalPages(res.totalPages);
+        setTotalItems(res.totalCount);
+      }
+    } catch (e) {
+      console.error(e);
+      toast.error("Failed to load data");
+    } finally {
+      setIsLoading(false);
+    }
+  }, [activeTab, currentPage, searchQuery, filterStatus, filterType, filterDate]);
 
-  const filteredProperties = properties.filter(p => {
-    const matchesSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                          p.vendorProfile.businessName.toLowerCase().includes(searchQuery.toLowerCase());
-    let matchesStatus = true;
-    if (filterStatus === "PENDING") matchesStatus = !p.isApproved && p.status !== "REJECTED";
-    if (filterStatus === "APPROVED") matchesStatus = p.isApproved;
-    if (filterStatus === "SUSPENDED") matchesStatus = p.status === "SUSPENDED";
-    return matchesSearch && matchesStatus;
-  });
-
-  const filteredUsers = users.filter(u => {
-    const matchesSearch = (u.name || "").toLowerCase().includes(searchQuery.toLowerCase()) || 
-                          u.email.toLowerCase().includes(searchQuery.toLowerCase());
-    let matchesStatus = true;
-    if (filterStatus === "ACTIVE") matchesStatus = !u.isBanned;
-    if (filterStatus === "BANNED") matchesStatus = u.isBanned;
-    return matchesSearch && matchesStatus;
-  });
-
-  const filteredBookings = bookings.filter(b => {
-    const matchesSearch = b.id.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                          (b.user?.name || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
-                          (b.user?.email || "").toLowerCase().includes(searchQuery.toLowerCase());
-    let matchesStatus = true;
-    if (filterStatus !== "ALL") matchesStatus = b.status === filterStatus;
-    return matchesSearch && matchesStatus;
-  });
+  useEffect(() => {
+    // Only fetch for tabs that use the main generic fetching pattern
+    if (["approvals", "live_vendors", "rejected", "listings", "live_listings", "users", "manifest"].includes(activeTab)) {
+      fetchData();
+    }
+  }, [fetchData, activeTab]);
 
   const filteredPayouts = payouts.filter(p => {
     const matchesSearch = p.businessName.toLowerCase().includes(searchQuery.toLowerCase());
@@ -169,33 +196,9 @@ export default function AdminDashboardClient({ tours = [], vendors, properties =
     return matchesSearch && matchesStatus;
   });
 
-  const filteredManifest = bookings.filter(b => {
-    // Only show confirmed bookings in manifest
-    if (b.status !== "CONFIRMED") return false;
-
-    const matchesSearch = b.id.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                          (b.user?.name || "").toLowerCase().includes(searchQuery.toLowerCase());
-    
-    // Service Type Filter
-    const vendorType = b.property?.vendorProfile?.type || b.vehicle?.vendorProfile?.type || "UNKNOWN";
-    const matchesType = filterType === "ALL" || vendorType === filterType;
-
-    // Date Filter (Check-in Date)
-    let matchesDate = true;
-    const today = new Date();
-    const tomorrow = addDays(today, 1);
-    
-    if (filterDate === "TODAY" && b.checkIn) {
-      matchesDate = isSameDay(new Date(b.checkIn), today);
-    } else if (filterDate === "TOMORROW" && b.checkIn) {
-      matchesDate = isSameDay(new Date(b.checkIn), tomorrow);
-    }
-
-    return matchesSearch && matchesType && matchesDate;
-  });
-
   const handleTabChange = (tab: string) => {
     setActiveTab(tab);
+    setCurrentPage(1);
     setSearchQuery("");
     setFilterStatus("ALL");
     setFilterType("ALL");
@@ -242,7 +245,7 @@ export default function AdminDashboardClient({ tours = [], vendors, properties =
     let totalVendorCut = 0;
     let totalCommission = 0;
 
-    const data = filteredBookings.map((b: any) => {
+    const data = bookingsData.map((b: any) => {
       const amount = b.amount || 0;
       const vendorCut = amount * 0.85;
       const commission = amount * 0.15;
@@ -280,7 +283,7 @@ export default function AdminDashboardClient({ tours = [], vendors, properties =
   };
 
   const exportDailyManifest = () => {
-    const data = filteredManifest.map((b: any) => ({
+    const data = bookingsData.map((b: any) => ({
       "Booking ID": b.id,
       "Customer Name": b.user?.name || "N/A",
       "Customer Email": b.user?.email || "N/A",
@@ -295,7 +298,7 @@ export default function AdminDashboardClient({ tours = [], vendors, properties =
 
     data.push({
       "Booking ID": "TOTAL BOOKINGS:",
-      "Customer Name": String(filteredManifest.length),
+      "Customer Name": String(bookingsData.length),
       "Customer Email": "",
       "Customer Phone": "",
       "Service Booked": "",
@@ -310,14 +313,10 @@ export default function AdminDashboardClient({ tours = [], vendors, properties =
   };
 
   // Stats calculation
-  // Stats calculation
-  const totalLiveVendors = vendors.filter(v => v.isApproved && v.status !== "SUSPENDED").length;
-  const pendingVendors = vendors.filter(v => !v.isApproved && v.status !== "REJECTED" && v.status !== "SUSPENDED").length;
-  const rejectedVendors = vendors.filter(v => v.status === "REJECTED").length;
-
+  // (using props now)
   const stats = [
     { label: "Total Platform Revenue", value: `₹${totalRevenue.toLocaleString('en-IN')}`, icon: IndianRupee, color: "text-emerald-500", bg: "bg-emerald-50", tab: "payouts" },
-    { label: "Total Registered Users", value: users.length.toString(), icon: Users, color: "text-sky-500", bg: "bg-sky-50", tab: "users" },
+    { label: "Total Registered Users", value: totalUsers.toString(), icon: Users, color: "text-sky-500", bg: "bg-sky-50", tab: "users" },
     { label: "Total Live Vendors", value: totalLiveVendors.toString(), icon: Building2, color: "text-indigo-500", bg: "bg-indigo-50", tab: "live_vendors" },
     { label: "Total Rejected", value: rejectedVendors.toString(), icon: XCircle, color: "text-red-500", bg: "bg-red-50", tab: "rejected" },
     { label: "Pending Vendor Approvals", value: pendingVendors.toString(), icon: Clock, color: "text-orange-500", bg: "bg-orange-50", tab: "approvals" },
@@ -518,7 +517,7 @@ export default function AdminDashboardClient({ tours = [], vendors, properties =
   };
 
   const exportUsers = () => {
-    const data = filteredUsers.map(u => ({
+    const data = usersData.map(u => ({
       "Name": u.name || "N/A",
       "Email": u.email,
       "Phone": u.phone || "N/A",
@@ -529,7 +528,7 @@ export default function AdminDashboardClient({ tours = [], vendors, properties =
   };
 
   const exportLiveVendors = () => {
-    const data = filteredVendors.filter(v => v.isApproved || v.status === "SUSPENDED").map(v => ({
+    const data = vendorsData.filter(v => v.isApproved || v.status === "SUSPENDED").map(v => ({
       "Business Name": v.businessName,
       "Owner Name": v.user?.name || "N/A",
       "Email": v.email || "N/A",
@@ -542,7 +541,7 @@ export default function AdminDashboardClient({ tours = [], vendors, properties =
   };
 
   const exportApprovals = () => {
-    const data = filteredVendors.filter(v => !v.isApproved && v.status !== "REJECTED" && v.status !== "SUSPENDED").map(v => ({
+    const data = vendorsData.filter(v => !v.isApproved && v.status !== "REJECTED" && v.status !== "SUSPENDED").map(v => ({
       "Business Name": v.businessName,
       "Owner Name": v.user?.name || "N/A",
       "Email": v.email || "N/A",
@@ -555,7 +554,7 @@ export default function AdminDashboardClient({ tours = [], vendors, properties =
   };
 
   const exportRejectedVendors = () => {
-    const data = filteredVendors.filter(v => v.status === "REJECTED").map(v => ({
+    const data = vendorsData.filter(v => v.status === "REJECTED").map(v => ({
       "Business Name": v.businessName,
       "Owner Name": v.user?.name || "N/A",
       "Email": v.email || "N/A",
@@ -571,7 +570,7 @@ export default function AdminDashboardClient({ tours = [], vendors, properties =
   if (activeTab === "map_view") {
     return (
       <div className="w-full h-screen overflow-hidden">
-        <AdminMapView vendors={vendors} onExit={() => handleTabChange("dashboard")} />
+        <AdminMapView vendors={vendorsData} onExit={() => handleTabChange("dashboard")} />
       </div>
     );
   }
@@ -675,7 +674,7 @@ export default function AdminDashboardClient({ tours = [], vendors, properties =
         )}
 
         {/* Dynamic Content Area */}
-        {activeTab === "tours" && <AdminToursTab initialTours={tours} />}
+        {activeTab === "tours" && <AdminToursTab />}
         {activeTab === "taxis" && <AdminTaxisTab />}
 
         {activeTab === "approvals" && (
@@ -729,7 +728,7 @@ export default function AdminDashboardClient({ tours = [], vendors, properties =
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
-                  {filteredVendors.filter(v => !v.isApproved && v.status !== "REJECTED").map((vendor) => (
+                  {vendorsData.filter(v => !v.isApproved && v.status !== "REJECTED").map((vendor) => (
                     <tr key={vendor.id} className="hover:bg-slate-50 transition-colors">
                       <td className="px-6 py-4">
                         <div className="font-bold text-slate-900">{vendor.businessName}</div>
@@ -801,16 +800,15 @@ export default function AdminDashboardClient({ tours = [], vendors, properties =
                       </td>
                     </tr>
                   ))}
-                  {vendors.filter(v => !v.isApproved && v.status !== "SUSPENDED").length === 0 && (
+                  {vendorsData.filter(v => !v.isApproved && v.status !== "SUSPENDED").length === 0 && (
                     <tr>
                       <td colSpan={6} className="px-6 py-8 text-center text-slate-500">
                         No pending vendor approvals.
                       </td>
                     </tr>
                   )}
-                </tbody>
-              </table>
-            </div>
+                </tbody></table></div>
+<Pagination currentPage={currentPage} totalPages={totalPages} totalItems={totalItems} itemsPerPage={ITEMS_PER_PAGE} onPageChange={setCurrentPage} />
           </div>
         )}
 
@@ -865,7 +863,7 @@ export default function AdminDashboardClient({ tours = [], vendors, properties =
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
-                  {filteredVendors.filter(v => v.isApproved && v.status !== "SUSPENDED").map((vendor) => (
+                  {vendorsData.filter(v => v.isApproved && v.status !== "SUSPENDED").map((vendor) => (
                     <tr key={vendor.id} className="hover:bg-slate-50 transition-colors">
                       <td className="px-6 py-4">
                         <div className="font-bold text-slate-900">{vendor.businessName}</div>
@@ -912,16 +910,15 @@ export default function AdminDashboardClient({ tours = [], vendors, properties =
                       </td>
                     </tr>
                   ))}
-                  {vendors.filter(v => v.isApproved || v.status === "SUSPENDED").length === 0 && (
+                  {vendorsData.filter(v => v.isApproved || v.status === "SUSPENDED").length === 0 && (
                     <tr>
                       <td colSpan={6} className="px-6 py-8 text-center text-slate-500">
                         No live vendors found.
                       </td>
                     </tr>
                   )}
-                </tbody>
-              </table>
-            </div>
+                </tbody></table></div>
+<Pagination currentPage={currentPage} totalPages={totalPages} totalItems={totalItems} itemsPerPage={ITEMS_PER_PAGE} onPageChange={setCurrentPage} />
           </div>
         )}
 
@@ -976,7 +973,7 @@ export default function AdminDashboardClient({ tours = [], vendors, properties =
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
-                  {filteredVendors.filter(v => v.status === "REJECTED").map((vendor) => (
+                  {vendorsData.filter(v => v.status === "REJECTED").map((vendor) => (
                     <tr key={vendor.id} className="hover:bg-slate-50 transition-colors">
                       <td className="px-6 py-4">
                         <div className="font-bold text-slate-900">{vendor.businessName}</div>
@@ -1009,16 +1006,15 @@ export default function AdminDashboardClient({ tours = [], vendors, properties =
                       </td>
                     </tr>
                   ))}
-                  {filteredVendors.filter(v => v.status === "REJECTED").length === 0 && (
+                  {vendorsData.filter(v => v.status === "REJECTED").length === 0 && (
                     <tr>
                       <td colSpan={6} className="px-6 py-8 text-center text-slate-500">
                         No rejected vendors found.
                       </td>
                     </tr>
                   )}
-                </tbody>
-              </table>
-            </div>
+                </tbody></table></div>
+<Pagination currentPage={currentPage} totalPages={totalPages} totalItems={totalItems} itemsPerPage={ITEMS_PER_PAGE} onPageChange={setCurrentPage} />
           </div>
         )}
 
@@ -1053,7 +1049,7 @@ export default function AdminDashboardClient({ tours = [], vendors, properties =
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
-                  {filteredProperties.filter(p => !p.isApproved && p.status !== "REJECTED").map((property) => (
+                  {propertiesData.filter(p => !p.isApproved && p.status !== "REJECTED").map((property) => (
                     <tr key={property.id} className="hover:bg-slate-50 transition-colors">
                       <td className="px-6 py-4">
                         <div className="font-bold text-slate-900">{property.name}</div>
@@ -1117,16 +1113,15 @@ export default function AdminDashboardClient({ tours = [], vendors, properties =
                       </td>
                     </tr>
                   ))}
-                  {properties.filter(p => !p.isApproved && p.status !== "SUSPENDED").length === 0 && (
+                  {propertiesData.filter(p => !p.isApproved && p.status !== "SUSPENDED").length === 0 && (
                     <tr>
                       <td colSpan={6} className="px-6 py-8 text-center text-slate-500">
                         No pending properties.
                       </td>
                     </tr>
                   )}
-                </tbody>
-              </table>
-            </div>
+                </tbody></table></div>
+<Pagination currentPage={currentPage} totalPages={totalPages} totalItems={totalItems} itemsPerPage={ITEMS_PER_PAGE} onPageChange={setCurrentPage} />
           </div>
         )}
 
@@ -1161,7 +1156,7 @@ export default function AdminDashboardClient({ tours = [], vendors, properties =
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
-                  {filteredProperties.filter(p => p.isApproved || p.status === "SUSPENDED").map((property) => (
+                  {propertiesData.filter(p => p.isApproved || p.status === "SUSPENDED").map((property) => (
                     <tr key={property.id} className="hover:bg-slate-50 transition-colors">
                       <td className="px-6 py-4">
                         <div className="font-bold text-slate-900">{property.name}</div>
@@ -1209,16 +1204,15 @@ export default function AdminDashboardClient({ tours = [], vendors, properties =
                       </td>
                     </tr>
                   ))}
-                  {properties.filter(p => p.isApproved || p.status === "SUSPENDED").length === 0 && (
+                  {propertiesData.filter(p => p.isApproved || p.status === "SUSPENDED").length === 0 && (
                     <tr>
                       <td colSpan={6} className="px-6 py-8 text-center text-slate-500">
                         No live properties.
                       </td>
                     </tr>
                   )}
-                </tbody>
-              </table>
-            </div>
+                </tbody></table></div>
+<Pagination currentPage={currentPage} totalPages={totalPages} totalItems={totalItems} itemsPerPage={ITEMS_PER_PAGE} onPageChange={setCurrentPage} />
           </div>
         )}
 
@@ -1270,7 +1264,7 @@ export default function AdminDashboardClient({ tours = [], vendors, properties =
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
-                  {filteredUsers.map((user) => (
+                  {usersData.map((user) => (
                     <tr key={user.id} className="hover:bg-slate-50 transition-colors">
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
@@ -1325,16 +1319,15 @@ export default function AdminDashboardClient({ tours = [], vendors, properties =
                       </td>
                     </tr>
                   ))}
-                                  {(!users || users.length === 0) && (
+                                  {(!usersData || usersData.length === 0) && (
                     <tr>
                       <td colSpan={5} className="px-6 py-8 text-center text-slate-500">
                         No registered tourists found.
                       </td>
                     </tr>
                   )}
-                </tbody>
-              </table>
-            </div>
+                </tbody></table></div>
+<Pagination currentPage={currentPage} totalPages={totalPages} totalItems={totalItems} itemsPerPage={ITEMS_PER_PAGE} onPageChange={setCurrentPage} />
           </div>
         )}
 
@@ -1388,7 +1381,7 @@ export default function AdminDashboardClient({ tours = [], vendors, properties =
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
-                    {filteredBookings && filteredBookings.map((booking: any) => (
+                    {bookingsData && bookingsData.map((booking: any) => (
                       <tr key={booking.id} className="hover:bg-slate-50 transition-colors">
                         <td className="px-6 py-4 font-mono text-xs text-slate-500">
                           {booking.id.slice(-8).toUpperCase()}
@@ -1428,16 +1421,15 @@ export default function AdminDashboardClient({ tours = [], vendors, properties =
                         </td>
                       </tr>
                     ))}
-                    {(!bookings || bookings.length === 0) && (
+                    {(!bookingsData || bookingsData.length === 0) && (
                       <tr>
                         <td colSpan={6} className="px-6 py-8 text-center text-slate-500">
                           No bookings have been made on the platform yet.
                         </td>
                       </tr>
                     )}
-                  </tbody>
-                </table>
-              </div>
+                  </tbody></table></div>
+<Pagination currentPage={currentPage} totalPages={totalPages} totalItems={totalItems} itemsPerPage={ITEMS_PER_PAGE} onPageChange={setCurrentPage} />
             </div>
           </div>
         )}
@@ -1540,9 +1532,8 @@ export default function AdminDashboardClient({ tours = [], vendors, properties =
                       </td>
                     </tr>
                   )}
-                </tbody>
-              </table>
-            </div>
+                </tbody></table></div>
+<Pagination currentPage={currentPage} totalPages={totalPages} totalItems={totalItems} itemsPerPage={ITEMS_PER_PAGE} onPageChange={setCurrentPage} />
           </div>
         )}
 
@@ -1605,7 +1596,7 @@ export default function AdminDashboardClient({ tours = [], vendors, properties =
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
-                    {filteredManifest && filteredManifest.map((booking: any) => (
+                    {bookingsData && bookingsData.map((booking: any) => (
                       <tr key={`manifest-${booking.id}`} className="hover:bg-slate-50 transition-colors">
                         <td className="px-6 py-4 font-mono text-xs text-slate-500 font-bold">
                           {booking.id.slice(-8).toUpperCase()}
@@ -1630,7 +1621,7 @@ export default function AdminDashboardClient({ tours = [], vendors, properties =
                         </td>
                       </tr>
                     ))}
-                    {(!filteredManifest || filteredManifest.length === 0) && (
+                    {(!bookingsData || bookingsData.length === 0) && (
                       <tr>
                         <td colSpan={5} className="px-6 py-12 text-center">
                           <div className="flex flex-col items-center justify-center text-slate-400">
@@ -1640,9 +1631,8 @@ export default function AdminDashboardClient({ tours = [], vendors, properties =
                         </td>
                       </tr>
                     )}
-                  </tbody>
-                </table>
-              </div>
+                  </tbody></table></div>
+<Pagination currentPage={currentPage} totalPages={totalPages} totalItems={totalItems} itemsPerPage={ITEMS_PER_PAGE} onPageChange={setCurrentPage} />
             </div>
           </div>
         )}

@@ -1,20 +1,39 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Edit2, Trash2, Plus } from "lucide-react";
 import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
+import { getPaginatedTours } from "@/actions/admin-data";
+import Pagination from "@/components/Pagination";
 
-export default function AdminToursTab({ initialTours }: { initialTours: any[] }) {
+export default function AdminToursTab() {
   const TOUR_CATEGORIES = [
     "Honeymoon", "Family", "Adventure", "Pilgrimage", "Nature",
     "Culture", "Skiing", "Trekking", "Wildlife", "Luxury", "Budget", "Group"
   ];
 
-  const [tours, setTours] = useState(initialTours);
+  const [tours, setTours] = useState<any[]>([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
   const [isEditing, setIsEditing] = useState<any>(null);
   const [isAdding, setIsAdding] = useState(false);
   const [loading, setLoading] = useState(false);
   const [customCategories, setCustomCategories] = useState<string[]>([]);
   const router = useRouter();
+
+  useEffect(() => {
+    const fetchTours = async () => {
+      try {
+        const res = await getPaginatedTours({ page: currentPage, limit: 20 });
+        setTours(res.data);
+        setTotalPages(res.totalPages);
+        setTotalItems(res.totalCount);
+      } catch (err) {
+        toast.error("Failed to load tours");
+      }
+    };
+    fetchTours();
+  }, [currentPage]);
 
   const generateSlug = (text: string) => {
     return text.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
@@ -477,6 +496,7 @@ export default function AdminToursTab({ initialTours }: { initialTours: any[] })
           </tbody>
         </table>
       </div>
+      <Pagination currentPage={currentPage} totalPages={totalPages} totalItems={totalItems} itemsPerPage={20} onPageChange={setCurrentPage} />
     </div>
   );
 }
