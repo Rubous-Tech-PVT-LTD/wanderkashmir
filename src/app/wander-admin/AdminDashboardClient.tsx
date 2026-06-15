@@ -612,12 +612,6 @@ export default function AdminDashboardClient({
               {item.label}
             </button>
           ))}
-          <button 
-            onClick={() => handleTabChange("users")}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold transition-all ${activeTab === 'users' ? 'bg-sky-500 text-white shadow-md shadow-sky-500/20' : 'text-slate-400 hover:bg-slate-800'}`}
-          >
-            <Users className="w-5 h-5" /> Tourists
-          </button>
         </nav>
       </div>
 
