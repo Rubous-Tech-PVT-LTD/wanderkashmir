@@ -82,6 +82,10 @@ export default function HotelDashboard({ properties = [], bookings = [] }: { pro
       pricePerNight: 4500,
       totalRooms: 15,
       instantBooking: false,
+      bedrooms: 1,
+      beds: 1,
+      guests: 2,
+      bedDetails: "",
     }
   });
 
@@ -229,6 +233,10 @@ export default function HotelDashboard({ properties = [], bookings = [] }: { pro
           images: allImages,
           amenities: selectedAmenities,
           totalRooms: data.totalRooms,
+          bedrooms: data.bedrooms,
+          beds: data.beds,
+          guests: data.guests,
+          bedDetails: data.bedDetails,
         });
       } else {
         if (hasReachedLimit) {
@@ -245,6 +253,10 @@ export default function HotelDashboard({ properties = [], bookings = [] }: { pro
           images: allImages,
           amenities: selectedAmenities,
           totalRooms: data.totalRooms,
+          bedrooms: data.bedrooms,
+          beds: data.beds,
+          guests: data.guests,
+          bedDetails: data.bedDetails,
         });
       }
 
@@ -273,7 +285,11 @@ export default function HotelDashboard({ properties = [], bookings = [] }: { pro
       location: property.location,
       pricePerNight: property.pricePerNight,
       totalRooms: property.totalRooms || 15,
-      instantBooking: false
+      instantBooking: false,
+      bedrooms: property.bedrooms || 1,
+      beds: property.beds || 1,
+      guests: property.guests || 2,
+      bedDetails: property.bedDetails || "",
     });
     setCoverPhoto(property.images?.[0] || "");
     setUploadedPhotos(property.images?.slice(1) || []);
@@ -308,7 +324,11 @@ export default function HotelDashboard({ properties = [], bookings = [] }: { pro
       location: "",
       pricePerNight: 4500,
       totalRooms: 15,
-      instantBooking: false
+      instantBooking: false,
+      bedrooms: 1,
+      beds: 1,
+      guests: 2,
+      bedDetails: "",
     });
     setCoverPhoto("");
     setUploadedPhotos([]);
@@ -1036,6 +1056,45 @@ export default function HotelDashboard({ properties = [], bookings = [] }: { pro
                     placeholder="15" 
                   />
                   {errors.totalRooms && <p className="text-orange-500 text-xs mt-1 font-medium">{errors.totalRooms.message}</p>}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">Bedrooms</label>
+                  <input 
+                    type="number" 
+                    {...register("bedrooms", { valueAsNumber: true })}
+                    className={`w-full border rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-sky-500/20 ${errors.bedrooms ? 'border-orange-500 focus:border-orange-500' : 'border-slate-200 focus:border-sky-500'}`} 
+                    placeholder="1" 
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">Beds</label>
+                  <input 
+                    type="number" 
+                    {...register("beds", { valueAsNumber: true })}
+                    className={`w-full border rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-sky-500/20 ${errors.beds ? 'border-orange-500 focus:border-orange-500' : 'border-slate-200 focus:border-sky-500'}`} 
+                    placeholder="1" 
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">Guests</label>
+                  <input 
+                    type="number" 
+                    {...register("guests", { valueAsNumber: true })}
+                    className={`w-full border rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-sky-500/20 ${errors.guests ? 'border-orange-500 focus:border-orange-500' : 'border-slate-200 focus:border-sky-500'}`} 
+                    placeholder="2" 
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">Bed Details</label>
+                  <input 
+                    type="text" 
+                    {...register("bedDetails")}
+                    className={`w-full border rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-sky-500/20 ${errors.bedDetails ? 'border-orange-500 focus:border-orange-500' : 'border-slate-200 focus:border-sky-500'}`} 
+                    placeholder="e.g. 1 Single, 1 Double" 
+                  />
                 </div>
               </div>
 

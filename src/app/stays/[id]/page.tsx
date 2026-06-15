@@ -15,6 +15,7 @@ const BookingSidebar = dynamic(() => import("@/components/BookingSidebar"));
 const AddonsSelectorClient = dynamic(() => import("@/components/AddonsSelectorClient"));
 const ReviewList = dynamic(() => import("@/components/ReviewList"));
 const ReviewForm = dynamic(() => import("@/components/ReviewForm"));
+import PropertyDescription from "@/components/PropertyDescription";
 import { getReviews, getReviewStats } from "@/actions/reviews";
 import { Metadata } from "next";
 
@@ -193,9 +194,12 @@ export default async function PropertyDetailPage({
                 <h2 className="text-xl font-bold text-slate-900 mb-1">
                   Entire {property.vendorProfile.type.toLowerCase()} hosted by {property.vendorProfile.businessName}
                 </h2>
-                <p className="text-slate-500 flex items-center gap-4 text-sm">
-                  <span className="flex items-center gap-1"><Users className="w-4 h-4" /> 4 guests</span>
-                  <span className="flex items-center gap-1"><Home className="w-4 h-4" /> 2 bedrooms</span>
+                <p className="text-slate-500 flex flex-wrap items-center gap-4 text-sm mt-2">
+                  <span className="flex items-center gap-1"><Users className="w-4 h-4" /> {property.guests || 2} guests</span>
+                  <span className="flex items-center gap-1"><Home className="w-4 h-4" /> {property.bedrooms || 1} bedrooms</span>
+                  {property.bedDetails && (
+                    <span className="flex items-center gap-1 text-slate-400 border-l border-slate-200 pl-4">{property.bedDetails}</span>
+                  )}
                 </p>
               </div>
               <div className="w-14 h-14 bg-sky-100 rounded-full flex items-center justify-center border-2 border-white shadow-sm overflow-hidden">
@@ -204,12 +208,9 @@ export default async function PropertyDetailPage({
             </div>
 
             {/* Description */}
-            <div>
-              <h3 className="text-xl font-bold text-slate-900 mb-4">About this space</h3>
-              <p className="text-slate-600 leading-relaxed whitespace-pre-wrap">
-                {property.description || "Experience the unparalleled beauty of Kashmir in this cozy property. Perfectly situated to give you the best views and comfort."}
-              </p>
-            </div>
+            <PropertyDescription 
+              description={property.description || "Experience the unparalleled beauty of Kashmir in this cozy property. Perfectly situated to give you the best views and comfort."} 
+            />
 
             {/* Amenities */}
             <div>

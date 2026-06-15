@@ -44,6 +44,10 @@ export async function addProperty(data: PropertyData) {
         amenities: parsedData.data.amenities || [],
         totalRooms: parsedData.data.totalRooms ?? 1,
         availableRooms: parsedData.data.totalRooms ?? 1, // Set initially to totalRooms
+        bedrooms: parsedData.data.bedrooms ?? 1,
+        beds: parsedData.data.beds ?? 1,
+        guests: parsedData.data.guests ?? 2,
+        bedDetails: parsedData.data.bedDetails,
       }
     });
 
@@ -92,6 +96,10 @@ export async function updateProperty(propertyId: string, data: PropertyData) {
         images: parsedData.data.images || [],
         amenities: parsedData.data.amenities || [],
         totalRooms: parsedData.data.totalRooms ?? 1,
+        bedrooms: parsedData.data.bedrooms ?? 1,
+        beds: parsedData.data.beds ?? 1,
+        guests: parsedData.data.guests ?? 2,
+        bedDetails: parsedData.data.bedDetails,
       }
     });
 

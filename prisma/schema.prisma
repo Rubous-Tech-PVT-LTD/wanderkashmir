@@ -152,6 +152,10 @@ model Property {
   pricePerNight   Float
   availableRooms  Int           @default(1)
   totalRooms      Int           @default(1)
+  bedrooms        Int           @default(1)
+  beds            Int           @default(1)
+  guests          Int           @default(2)
+  bedDetails      String?       // "6 Queen Beds, 3 Double Beds"
   images          String[]      @default([])
   amenities       String[]      @default([])
   

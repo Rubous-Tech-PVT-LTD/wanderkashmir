@@ -83,6 +83,10 @@ export const propertySchema = z.object({
   images: z.array(z.string()).optional(),
   amenities: z.array(z.string()).optional(),
   totalRooms: z.number().min(1, "Must have at least 1 room").optional(),
+  bedrooms: z.number().min(1).optional(),
+  beds: z.number().min(1).optional(),
+  guests: z.number().min(1).optional(),
+  bedDetails: z.string().optional(),
 });
 
 export type PropertyData = z.infer<typeof propertySchema>;
