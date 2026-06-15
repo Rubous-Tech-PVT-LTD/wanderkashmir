@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import Navbar from "@/components/Navbar";
 import dynamic from "next/dynamic";
-import { MapPin, Star, Users, Home, ShieldCheck, CheckCircle2 } from "lucide-react";
+import { MapPin, Star, Users, Home, ShieldCheck, CheckCircle2, AlertCircle } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { auth } from "@clerk/nextjs/server";
@@ -225,6 +225,38 @@ export default async function PropertyDetailPage({
               </div>
             </div>
 
+            {/* Property Rules (J&K Govt) */}
+            <div className="pt-10 border-t border-slate-100 mt-10">
+              <h3 className="text-xl font-bold text-slate-900 mb-4 flex items-center gap-2">
+                <AlertCircle className="w-5 h-5 text-orange-500" />
+                Property Rules & Guidelines
+              </h3>
+              <p className="text-sm text-slate-500 mb-6">As per the regulations of the Government of Jammu & Kashmir Tourism Department, the following rules apply to all guests:</p>
+              
+              <div className="bg-slate-50 border border-slate-200 rounded-xl p-6 space-y-5">
+                <div className="flex gap-4">
+                  <div className="w-2 h-2 rounded-full bg-slate-400 mt-2 shrink-0"></div>
+                  <div>
+                    <span className="font-bold text-slate-900 block">Valid ID Proof Mandatory</span>
+                    <span className="text-sm text-slate-600 mt-1 block leading-relaxed">A valid, government-issued photo ID (Aadhar, Voter ID, Driving License, or Passport) is mandatory for all guests at the time of check-in. PAN Cards are not accepted as valid address proof.</span>
+                  </div>
+                </div>
+                <div className="flex gap-4">
+                  <div className="w-2 h-2 rounded-full bg-slate-400 mt-2 shrink-0"></div>
+                  <div>
+                    <span className="font-bold text-slate-900 block">Foreign Nationals</span>
+                    <span className="text-sm text-slate-600 mt-1 block leading-relaxed">All foreign guests must present their original Passport and a valid Indian Visa upon arrival. Submission of Form C to the local authorities by the property is mandatory.</span>
+                  </div>
+                </div>
+                <div className="flex gap-4">
+                  <div className="w-2 h-2 rounded-full bg-slate-400 mt-2 shrink-0"></div>
+                  <div>
+                    <span className="font-bold text-slate-900 block">Right to Admission</span>
+                    <span className="text-sm text-slate-600 mt-1 block leading-relaxed">The property reserves the right of admission. Accommodation can be denied to guests posing as a couple if suitable proof of identification is not presented at check-in.</span>
+                  </div>
+                </div>
+              </div>
+            </div>
             {/* Optional Trip Add-ons Selection */}
             {addonsRes.success && (
               <AddonsSelectorClient taxis={addonsRes.taxis || []} guides={addonsRes.guides || []} />
