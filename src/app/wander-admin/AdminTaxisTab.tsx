@@ -1,12 +1,20 @@
 import { useState, useEffect } from "react";
 import { Edit2, Trash2, Plus, Percent, Car, CheckCircle2, XCircle, AlertCircle } from "lucide-react";
 import toast from "react-hot-toast";
+import { getPaginatedTaxiRates } from "@/actions/admin-data";
+import Pagination from "@/components/Pagination";
+import { Search } from "lucide-react";
 
 const VEHICLE_TYPES = ["CRYSTA", "INNOVA", "ERTIGA", "TAVEERA", "ETIOS GLANZA", "SWIFT DZIRE", "ECCO", "ALTO K10", "SUMO", "BOLERO"];
 
 export default function AdminTaxisTab() {
   const [activeSubTab, setActiveSubTab] = useState("rates");
   const [rates, setRates] = useState<any[]>([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchInput, setSearchInput] = useState("");
   const [taxiImages, setTaxiImages] = useState<Record<string, string>>({});
   const [vehicles, setVehicles] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -18,10 +26,13 @@ export default function AdminTaxisTab() {
   const [rateForm, setRateForm] = useState<any>({ place: "", rates: {} });
 
   useEffect(() => {
-    fetchRates();
     fetchImages();
     fetchVehicles();
   }, []);
+
+  useEffect(() => {
+    fetchRates();
+  }, [currentPage, searchQuery]);
 
   const fetchVehicles = async () => {
     try {
@@ -69,10 +80,14 @@ export default function AdminTaxisTab() {
   };
 
   const fetchRates = async () => {
+    setLoading(true);
     try {
-      const res = await fetch("/api/admin/taxis");
-      const data = await res.json();
-      setRates(data);
+      const res = await getPaginatedTaxiRates({ page: currentPage, limit: 20, search: searchQuery });
+      if (res.success) {
+        setRates(res.data);
+        setTotalPages(res.totalPages);
+        setTotalItems(res.totalCount);
+      }
     } catch (e) {
       toast.error("Failed to load rates");
     } finally {
@@ -197,16 +212,42 @@ export default function AdminTaxisTab() {
 
       {activeSubTab === "rates" && (
         <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
-          <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+          <div className="p-6 border-b border-slate-100 flex flex-wrap gap-4 justify-between items-center bg-slate-50">
             <div>
               <h3 className="text-xl font-bold text-slate-900">Standard Taxi Rate Card</h3>
               <p className="text-sm text-slate-500">Manage drop/tour prices for different vehicle types.</p>
             </div>
-            {!isAddingRate && (
-              <button onClick={() => { setIsAddingRate(true); setEditingRateId(null); setRateForm({ place: "", rates: {} }) }} className="bg-slate-900 text-white px-4 py-2 rounded-lg font-semibold flex items-center gap-2 hover:bg-slate-800">
-                <Plus className="w-4 h-4" /> Add Route Price
-              </button>
-            )}
+            
+            <div className="flex gap-4 w-full md:w-auto">
+              {!isAddingRate && (
+                <div className="relative flex-1 md:w-64">
+                  <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                  <input
+                    type="text"
+                    placeholder="Search routes..."
+                    value={searchInput}
+                    onChange={(e) => setSearchInput(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        setSearchQuery(searchInput);
+                        setCurrentPage(1);
+                      }
+                    }}
+                    onBlur={() => {
+                      setSearchQuery(searchInput);
+                      setCurrentPage(1);
+                    }}
+                    className="w-full pl-9 pr-4 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-sky-500"
+                  />
+                </div>
+              )}
+
+              {!isAddingRate && (
+                <button onClick={() => { setIsAddingRate(true); setEditingRateId(null); setRateForm({ place: "", rates: {} }) }} className="bg-slate-900 text-white px-4 py-2 rounded-xl font-semibold flex items-center gap-2 hover:bg-slate-800 flex-shrink-0">
+                  <Plus className="w-4 h-4" /> Add Route
+                </button>
+              )}
+            </div>
           </div>
 
           {isAddingRate ? (
@@ -278,6 +319,9 @@ export default function AdminTaxisTab() {
                 </tbody>
               </table>
             </div>
+          )}
+          {!isAddingRate && (
+            <Pagination currentPage={currentPage} totalPages={totalPages} totalItems={totalItems} itemsPerPage={20} onPageChange={setCurrentPage} />
           )}
         </div>
       )}

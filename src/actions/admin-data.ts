@@ -1,6 +1,7 @@
 "use server";
 
 import prisma from "@/lib/prisma";
+import { Prisma } from "@prisma/client";
 import { getAdminSession } from "@/lib/auth";
 
 const checkAdmin = async () => {
@@ -319,4 +320,38 @@ export async function getPaginatedTaxis(params: {
     totalCount,
     totalPages: Math.ceil(totalCount / limit),
   };
+}
+
+export async function getPaginatedTaxiRates({ page = 1, limit = 10, search = '' }: { page?: number, limit?: number, search?: string }) {
+  try {
+    const session = await getAdminSession();
+    if (!session || session.role !== 'ADMIN') throw new Error('Unauthorized');
+
+    const skip = (page - 1) * limit;
+    
+    const whereClause: Prisma.TaxiRateCardWhereInput = search
+      ? { place: { contains: search, mode: 'insensitive' } }
+      : {};
+
+    const [data, totalCount] = await Promise.all([
+      prisma.taxiRateCard.findMany({
+        where: whereClause,
+        orderBy: { place: 'asc' },
+        skip,
+        take: limit,
+      }),
+      prisma.taxiRateCard.count({ where: whereClause })
+    ]);
+
+    return {
+      success: true,
+      data,
+      totalCount,
+      totalPages: Math.ceil(totalCount / limit),
+      currentPage: page
+    };
+  } catch (error) {
+    console.error('Failed to fetch paginated taxi rates', error);
+    throw new Error('Failed to fetch paginated taxi rates');
+  }
 }
