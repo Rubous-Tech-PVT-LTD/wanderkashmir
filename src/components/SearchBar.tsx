@@ -3,7 +3,12 @@
 import { useState } from "react";
 import { Search, MapPin } from "lucide-react";
 import { useRouter } from "next/navigation";
-import CustomDatePicker from "./CustomDatePicker";
+import dynamic from "next/dynamic";
+
+const CustomDatePicker = dynamic(() => import("./CustomDatePicker"), {
+  ssr: false,
+  loading: () => <div className="animate-pulse h-6 w-32 bg-slate-100 rounded"></div>,
+});
 
 export default function SearchBar() {
   const router = useRouter();
