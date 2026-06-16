@@ -31,14 +31,25 @@ export async function GET(request: Request) {
     });
     const existingSlugs = existingPages.map(p => p.slug);
 
+    const kashmirLocations = [
+      "Srinagar", "Gulmarg", "Pahalgam", "Sonamarg", "Doodhpathri", 
+      "Yusmarg", "Aru Valley", "Betaab Valley", "Gurez Valley", 
+      "Anantnag", "Kupwara", "Shopian", "Bandipora", "Pulwama", "Sopore",
+      "Srinagar Airport", "Jammu", "Katra", "Patnitop", "Sanasar",
+      "Bhaderwah", "Kishtwar", "Dal Lake", "Nigeen Lake"
+    ];
+    // Randomly pick a few locations to inspire the AI
+    const shuffled = kashmirLocations.sort(() => 0.5 - Math.random());
+    const randomLocations = shuffled.slice(0, 3).join(", ");
+
     // 4. Construct the Prompt for Gemini
-    const prompt = `
+    const prompt = \`
     You are an expert SEO copywriter for "WanderKashmir", a premium travel platform in Kashmir.
     Your task is to generate exactly 1 unique, highly-searched SEO landing page for a Kashmir tourist route or homestay location.
     
     IMPORTANT RULES:
-    1. Do NOT use any of these existing routes: ${existingSlugs.join(", ")}
-    2. Pick a very popular, high-traffic route (e.g., "pahalgam-to-betaab-valley-taxi", "homestays-in-doodhpathri", "srinagar-airport-to-sonamarg-cab").
+    1. Do NOT use any of these existing routes: \${existingSlugs.join(", ")}
+    2. BE CREATIVE. You must invent a completely NEW route or homestay location. For example, consider routes or homestays involving these random locations: \${randomLocations}. Do not just copy these, use them as inspiration for new combinations.
     3. The response MUST be a valid JSON object without any markdown wrapping.
     
     JSON STRUCTURE:
