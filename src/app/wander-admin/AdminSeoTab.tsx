@@ -1,13 +1,15 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Plus, Edit2, Trash2, Globe, Search, Link as LinkIcon } from "lucide-react";
+import { Plus, Edit2, Trash2, Globe, Search, Link as LinkIcon, Wand2, RefreshCw } from "lucide-react";
 import Link from "next/link";
 
 export default function AdminSeoTab() {
   const [pages, setPages] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [isGenerating, setIsGenerating] = useState(false);
   const [formData, setFormData] = useState({
     id: "",
     slug: "",
@@ -107,21 +109,54 @@ export default function AdminSeoTab() {
     }
   };
 
+  const handleGenerateAutomation = async () => {
+    if (!confirm("This will trigger the AI to generate a new random SEO page right now. Proceed?")) return;
+    setIsGenerating(true);
+    try {
+      const res = await fetch("/api/cron/generate-seo"); // assuming no auth required in dev or handled by cron
+      if (res.ok) {
+        alert("Magic AI Generation successful! A new page has been created.");
+        fetchPages();
+      } else {
+        alert("Failed to run generation.");
+      }
+    } catch (error) {
+      alert("An error occurred while generating.");
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  const filteredPages = pages.filter(p => 
+    p.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
+    p.slug.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
         <div>
           <h2 className="text-xl font-bold text-slate-800">SEO Landing Pages</h2>
-          <p className="text-sm text-slate-500">Create dynamic SEO routes for Taxis, Homestays, and Tours.</p>
+          <p className="text-sm text-slate-500">Manage dynamic SEO routes. Pages load instantly with Next.js ISR.</p>
         </div>
         {!isEditing && (
-          <button
-            onClick={() => setIsEditing(true)}
-            className="px-4 py-2 bg-[#0284c7] text-white rounded-lg flex items-center gap-2 hover:bg-[#0369a1] transition-colors"
-          >
-            <Plus className="w-4 h-4" />
-            Create New Page
-          </button>
+          <div className="flex gap-3">
+            <button
+              onClick={handleGenerateAutomation}
+              disabled={isGenerating}
+              className="px-4 py-2 bg-purple-600 text-white rounded-lg flex items-center gap-2 hover:bg-purple-700 transition-colors disabled:opacity-50"
+            >
+              {isGenerating ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Wand2 className="w-4 h-4" />}
+              {isGenerating ? "Generating..." : "Run Automation"}
+            </button>
+            <button
+              onClick={() => setIsEditing(true)}
+              className="px-4 py-2 bg-[#0284c7] text-white rounded-lg flex items-center gap-2 hover:bg-[#0369a1] transition-colors"
+            >
+              <Plus className="w-4 h-4" />
+              Create New Page
+            </button>
+          </div>
         )}
       </div>
 
@@ -286,8 +321,21 @@ export default function AdminSeoTab() {
               <p className="text-slate-500 mt-1">Create your first dynamic landing page to start ranking on Google.</p>
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse">
+            <>
+              <div className="p-4 border-b border-slate-100 bg-slate-50/50">
+                <div className="relative max-w-md">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                  <input
+                    type="text"
+                    placeholder="Search by title or slug..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full pl-9 pr-4 py-2 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#0284c7]"
+                  />
+                </div>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse">
                 <thead>
                   <tr className="bg-slate-50 border-b border-slate-100 text-sm font-semibold text-slate-600">
                     <th className="p-4">Type</th>
@@ -298,7 +346,7 @@ export default function AdminSeoTab() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 text-sm">
-                  {pages.map((page) => (
+                  {filteredPages.map((page) => (
                     <tr key={page.id} className="hover:bg-slate-50/50 transition-colors">
                       <td className="p-4">
                         <span className={`px-2 py-1 text-xs font-semibold rounded-full ${
@@ -348,6 +396,7 @@ export default function AdminSeoTab() {
                 </tbody>
               </table>
             </div>
+          </>
           )}
         </div>
       )}
