@@ -115,7 +115,7 @@ export default function AdminSeoTab() {
     setIsGenerating(true);
     try {
       const res = await triggerSeoGeneration();
-      if (res.ok || res.success) {
+      if (res.success) {
         alert("Magic AI Generation successful! A new page has been created.");
         fetchPages();
       } else {
