@@ -321,7 +321,7 @@ export default function AdminSeoTab() {
                       </td>
                       <td className="p-4 text-right space-x-2">
                         <Link 
-                          href={`/${page.type.toLowerCase() === "taxi" ? "taxis" : page.type.toLowerCase() === "homestay" ? "homestays" : "tours"}/${page.slug}`}
+                          href={`https://wanderkashmir.com/${page.type.toLowerCase() === "taxi" ? "taxis" : page.type.toLowerCase() === "homestay" ? "homestays" : "tours"}/${page.slug}`}
                           target="_blank"
                           className="inline-flex p-2 text-slate-400 hover:text-[#0284c7] hover:bg-[#0284c7]/10 rounded-lg transition-colors"
                           title="View Live Page"
