@@ -6,6 +6,7 @@ import Link from "next/link";
 import { ChevronRight, Calendar, User, ArrowLeft } from "lucide-react";
 import Footer from "@/components/Footer";
 import Navbar from "@/components/Navbar";
+import { marked } from "marked";
 
 export const revalidate = 3600; // ISR
 
@@ -53,7 +54,8 @@ export default async function BlogArticlePage({ params }: { params: Promise<{ sl
       year: "numeric" 
     });
 
-    const safeContent = page.content ? String(page.content).replace(/\n/g, '<br/>') : "";
+    const parsedContent = page.content ? await marked.parse(page.content) : "";
+    const safeContent = parsedContent;
 
   return (
     <main className="min-h-screen bg-slate-50 flex flex-col">

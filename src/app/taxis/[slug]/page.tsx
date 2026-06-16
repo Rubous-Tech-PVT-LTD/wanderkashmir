@@ -6,6 +6,7 @@ import Link from "next/link";
 import { ChevronRight, MapPin, CheckCircle, Car, ChevronDown } from "lucide-react";
 import Footer from "@/components/Footer";
 import Navbar from "@/components/Navbar";
+import { marked } from "marked";
 
 export const revalidate = 3600; // ISR: Revalidate every hour for instant load times
 
@@ -158,8 +159,8 @@ export default async function TaxiSeoPage({ params }: { params: Promise<{ slug: 
         {page.content && (
           <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-8 md:p-12 mb-16">
             <div 
-              className="prose prose-slate prose-lg md:prose-xl max-w-none prose-headings:text-[#0284c7] prose-a:text-[#0284c7] prose-img:rounded-2xl"
-              dangerouslySetInnerHTML={{ __html: page.content.replace(/\n/g, '<br/>') }} 
+              className="prose prose-slate prose-lg max-w-none prose-headings:text-[#0284c7] prose-a:text-[#0284c7]"
+              dangerouslySetInnerHTML={{ __html: await marked.parse(page.content) }} 
             />
           </div>
         )}
