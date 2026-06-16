@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { Plus, Edit2, Trash2, Globe, Search, Link as LinkIcon, Wand2, RefreshCw } from "lucide-react";
 import Link from "next/link";
+import { triggerSeoGeneration } from "@/actions/admin-seo";
 
 export default function AdminSeoTab() {
   const [pages, setPages] = useState<any[]>([]);
@@ -113,15 +114,15 @@ export default function AdminSeoTab() {
     if (!confirm("This will trigger the AI to generate a new random SEO page right now. Proceed?")) return;
     setIsGenerating(true);
     try {
-      const res = await fetch("/api/cron/generate-seo"); // assuming no auth required in dev or handled by cron
-      if (res.ok) {
+      const res = await triggerSeoGeneration();
+      if (res.ok || res.success) {
         alert("Magic AI Generation successful! A new page has been created.");
         fetchPages();
       } else {
-        alert("Failed to run generation.");
+        alert("Failed to run generation: " + (res.error || "Unknown error"));
       }
-    } catch (error) {
-      alert("An error occurred while generating.");
+    } catch (error: any) {
+      alert("An error occurred while generating: " + error.message);
     } finally {
       setIsGenerating(false);
     }
