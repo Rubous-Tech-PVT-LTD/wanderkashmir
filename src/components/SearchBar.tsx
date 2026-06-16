@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Search, MapPin, Calendar, Users } from "lucide-react";
+import { Search, MapPin } from "lucide-react";
 import { useRouter } from "next/navigation";
 import CustomDatePicker from "./CustomDatePicker";
 
@@ -16,7 +16,6 @@ export default function SearchBar() {
   const [guests, setGuests] = useState("2 Guests, 1 Room");
 
   const handleSearch = () => {
-    // Implement GTM-style search routing logic
     const queryParams = new URLSearchParams();
     if (destination) queryParams.append("q", destination);
     if (checkIn) queryParams.append("checkIn", checkIn.toISOString().split("T")[0]);
@@ -26,7 +25,7 @@ export default function SearchBar() {
     let route = "/stays";
     if (activeTab === "Taxis") route = "/taxis";
     if (activeTab === "Tour Packages") route = "/tours";
-    
+
     const queryString = queryParams.toString();
     router.push(`${route}${queryString ? `?${queryString}` : ""}`);
   };
@@ -34,14 +33,16 @@ export default function SearchBar() {
   return (
     <div className="w-full bg-white rounded-2xl shadow-2xl overflow-hidden border border-slate-100">
       {/* Tabs */}
-      <div className="flex items-center gap-2 bg-[#f8f9fa] px-4 pt-3 border-b border-slate-100 overflow-x-auto no-scrollbar">
+      <div className="flex items-center gap-2 bg-[#f8f9fa] px-4 pt-3 border-b border-slate-100 overflow-x-auto no-scrollbar" role="tablist" aria-label="Search categories">
         {tabs.map((tab) => (
           <button
             key={tab}
+            role="tab"
+            aria-selected={activeTab === tab}
             onClick={() => setActiveTab(tab)}
             className={`whitespace-nowrap px-8 py-3.5 text-sm font-bold rounded-t-xl transition-colors relative ${
-              activeTab === tab 
-                ? "bg-white text-[#0284c7] shadow-sm" 
+              activeTab === tab
+                ? "bg-white text-[#0284c7] shadow-sm"
                 : "text-slate-600 hover:text-slate-900 hover:bg-slate-100/50"
             }`}
           >
@@ -55,20 +56,22 @@ export default function SearchBar() {
 
       {/* Input Fields */}
       <div className="flex flex-col md:flex-row items-center divide-y md:divide-y-0 md:divide-x divide-slate-100 bg-white p-2">
-        
+
         {/* STAYS & HOMESTAYS */}
         {(activeTab === "Stays" || activeTab === "Homestays") && (
           <>
             <div className="flex-[1.5] w-full p-2 hover:bg-slate-50 rounded-xl transition-colors cursor-text group">
-              <label className="block text-[11px] font-bold text-slate-800 ml-8 mb-1">Where are you going?</label>
+              <label htmlFor="destination-input" className="block text-[11px] font-bold text-slate-800 ml-8 mb-1">Where are you going?</label>
               <div className="flex items-center gap-3 px-2">
-                <Search className="w-4 h-4 text-slate-500 group-focus-within:text-[#0284c7] flex-shrink-0" />
+                {/* Icon is decorative — screen readers read the label instead */}
+                <Search className="w-4 h-4 text-slate-500 group-focus-within:text-[#0284c7] flex-shrink-0" aria-hidden="true" />
                 <input
+                  id="destination-input"
                   type="text"
                   value={destination}
                   onChange={(e) => setDestination(e.target.value)}
                   placeholder="Search destinations or properties"
-                  className="w-full text-sm font-medium text-slate-500 bg-transparent focus:outline-none placeholder-slate-400"
+                  className="w-full text-sm font-medium text-slate-700 bg-transparent focus:outline-none placeholder:text-slate-500"
                 />
               </div>
             </div>
@@ -82,7 +85,7 @@ export default function SearchBar() {
                 }}
                 minDate={new Date()}
                 placeholderText="Add date"
-                className="w-full text-sm font-medium text-slate-500 bg-transparent focus:outline-none cursor-pointer placeholder-slate-400"
+                className="w-full text-sm font-medium text-slate-700 bg-transparent focus:outline-none cursor-pointer placeholder:text-slate-500"
               />
             </div>
             <div className="flex-1 w-full p-2 hover:bg-slate-50 rounded-xl transition-colors cursor-pointer px-4">
@@ -92,18 +95,19 @@ export default function SearchBar() {
                 onChange={(date) => setCheckOut(date)}
                 minDate={checkIn || new Date()}
                 placeholderText="Add date"
-                className="w-full text-sm font-medium text-slate-500 bg-transparent focus:outline-none cursor-pointer placeholder-slate-400"
+                className="w-full text-sm font-medium text-slate-700 bg-transparent focus:outline-none cursor-pointer placeholder:text-slate-500"
               />
             </div>
             <div className="flex-[1.6] w-full p-2 flex items-center justify-between hover:bg-slate-50 rounded-xl transition-colors px-4">
               <div className="flex-1 cursor-pointer min-w-[120px]">
-                <label className="block text-[11px] font-bold text-slate-800 mb-1">Guests</label>
+                <label htmlFor="guests-input" className="block text-[11px] font-bold text-slate-800 mb-1">Guests</label>
                 <input
+                  id="guests-input"
                   type="text"
                   value={guests}
                   onChange={(e) => setGuests(e.target.value)}
                   placeholder="2 Guests, 1 Room"
-                  className="w-full text-sm font-medium text-slate-500 bg-transparent focus:outline-none cursor-pointer placeholder-slate-400"
+                  className="w-full text-sm font-medium text-slate-700 bg-transparent focus:outline-none cursor-pointer placeholder:text-slate-500"
                 />
               </div>
               <button
@@ -122,26 +126,28 @@ export default function SearchBar() {
         {activeTab === "Taxis" && (
           <>
             <div className="flex-[1.5] w-full p-2 hover:bg-slate-50 rounded-xl transition-colors cursor-text group">
-              <label className="block text-[11px] font-bold text-slate-800 ml-8 mb-1">Pick-up Location</label>
+              <label htmlFor="pickup-input" className="block text-[11px] font-bold text-slate-800 ml-8 mb-1">Pick-up Location</label>
               <div className="flex items-center gap-3 px-2">
-                <MapPin className="w-4 h-4 text-slate-500 group-focus-within:text-[#0284c7] flex-shrink-0" />
+                <MapPin className="w-4 h-4 text-slate-500 group-focus-within:text-[#0284c7] flex-shrink-0" aria-hidden="true" />
                 <input
+                  id="pickup-input"
                   type="text"
                   value={destination}
                   onChange={(e) => setDestination(e.target.value)}
                   placeholder="E.g. Srinagar Airport"
-                  className="w-full text-sm font-medium text-slate-500 bg-transparent focus:outline-none placeholder-slate-400"
+                  className="w-full text-sm font-medium text-slate-700 bg-transparent focus:outline-none placeholder:text-slate-500"
                 />
               </div>
             </div>
             <div className="flex-[1.5] w-full p-2 hover:bg-slate-50 rounded-xl transition-colors cursor-text group">
-              <label className="block text-[11px] font-bold text-slate-800 ml-8 mb-1">Drop-off Location</label>
+              <label htmlFor="dropoff-input" className="block text-[11px] font-bold text-slate-800 ml-8 mb-1">Drop-off Location</label>
               <div className="flex items-center gap-3 px-2">
-                <MapPin className="w-4 h-4 text-slate-500 group-focus-within:text-[#0284c7] flex-shrink-0" />
+                <MapPin className="w-4 h-4 text-slate-500 group-focus-within:text-[#0284c7] flex-shrink-0" aria-hidden="true" />
                 <input
+                  id="dropoff-input"
                   type="text"
                   placeholder="E.g. Gulmarg"
-                  className="w-full text-sm font-medium text-slate-500 bg-transparent focus:outline-none placeholder-slate-400"
+                  className="w-full text-sm font-medium text-slate-700 bg-transparent focus:outline-none placeholder:text-slate-500"
                 />
               </div>
             </div>
@@ -152,7 +158,7 @@ export default function SearchBar() {
                 onChange={(date) => setCheckIn(date)}
                 minDate={new Date()}
                 placeholderText="Add date"
-                className="w-full text-sm font-medium text-slate-500 bg-transparent focus:outline-none cursor-pointer placeholder-slate-400"
+                className="w-full text-sm font-medium text-slate-700 bg-transparent focus:outline-none cursor-pointer placeholder:text-slate-500"
               />
             </div>
             <div className="flex-[1] w-full p-2 flex items-center justify-between hover:bg-slate-50 rounded-xl transition-colors px-4">
@@ -172,21 +178,22 @@ export default function SearchBar() {
         {activeTab === "Tour Packages" && (
           <>
             <div className="flex-[1.5] w-full p-2 hover:bg-slate-50 rounded-xl transition-colors cursor-text group">
-              <label className="block text-[11px] font-bold text-slate-800 ml-8 mb-1">Where to?</label>
+              <label htmlFor="tour-dest-input" className="block text-[11px] font-bold text-slate-800 ml-8 mb-1">Where to?</label>
               <div className="flex items-center gap-3 px-2">
-                <Search className="w-4 h-4 text-slate-500 group-focus-within:text-[#0284c7] flex-shrink-0" />
+                <Search className="w-4 h-4 text-slate-500 group-focus-within:text-[#0284c7] flex-shrink-0" aria-hidden="true" />
                 <input
+                  id="tour-dest-input"
                   type="text"
                   value={destination}
                   onChange={(e) => setDestination(e.target.value)}
                   placeholder="Srinagar, Pahalgam..."
-                  className="w-full text-sm font-medium text-slate-500 bg-transparent focus:outline-none placeholder-slate-400"
+                  className="w-full text-sm font-medium text-slate-700 bg-transparent focus:outline-none placeholder:text-slate-500"
                 />
               </div>
             </div>
             <div className="flex-1 w-full p-2 hover:bg-slate-50 rounded-xl transition-colors cursor-pointer px-4">
-              <label className="block text-[11px] font-bold text-slate-800 mb-1">Travel Month</label>
-              <select className="w-full text-sm font-medium text-slate-500 bg-transparent focus:outline-none cursor-pointer">
+              <label htmlFor="travel-month" className="block text-[11px] font-bold text-slate-800 mb-1">Travel Month</label>
+              <select id="travel-month" className="w-full text-sm font-medium text-slate-700 bg-transparent focus:outline-none cursor-pointer">
                 <option>Any Month</option>
                 <option>January</option>
                 <option>February</option>
@@ -198,8 +205,8 @@ export default function SearchBar() {
               </select>
             </div>
             <div className="flex-1 w-full p-2 hover:bg-slate-50 rounded-xl transition-colors cursor-pointer px-4">
-              <label className="block text-[11px] font-bold text-slate-800 mb-1">Duration</label>
-              <select className="w-full text-sm font-medium text-slate-500 bg-transparent focus:outline-none cursor-pointer">
+              <label htmlFor="tour-duration" className="block text-[11px] font-bold text-slate-800 mb-1">Duration</label>
+              <select id="tour-duration" className="w-full text-sm font-medium text-slate-700 bg-transparent focus:outline-none cursor-pointer">
                 <option>Any Duration</option>
                 <option>3-5 Days</option>
                 <option>6-8 Days</option>
@@ -208,13 +215,14 @@ export default function SearchBar() {
             </div>
             <div className="flex-[1.6] w-full p-2 flex items-center justify-between hover:bg-slate-50 rounded-xl transition-colors px-4">
               <div className="flex-1 cursor-pointer min-w-[120px]">
-                <label className="block text-[11px] font-bold text-slate-800 mb-1">Travelers</label>
+                <label htmlFor="tour-travelers" className="block text-[11px] font-bold text-slate-800 mb-1">Travelers</label>
                 <input
+                  id="tour-travelers"
                   type="text"
                   value={guests}
                   onChange={(e) => setGuests(e.target.value)}
                   placeholder="2 Adults"
-                  className="w-full text-sm font-medium text-slate-500 bg-transparent focus:outline-none cursor-pointer placeholder-slate-400"
+                  className="w-full text-sm font-medium text-slate-700 bg-transparent focus:outline-none cursor-pointer placeholder:text-slate-500"
                 />
               </div>
               <button

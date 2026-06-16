@@ -6,6 +6,10 @@ const nextConfig: NextConfig = {
     // images that Cloudinary has already optimized with q_auto,f_auto
     loader: "custom",
     loaderFile: "./src/lib/cloudinaryLoader.ts",
+    // Mobile-optimized breakpoints — matches real device widths (×2 DPR)
+    // so the srcset has entries at 640w (iPhone SE), 750w (iPhone 14),
+    // 828w (iPhone 14 Pro Max), then tablet/desktop sizes.
+    deviceSizes: [320, 375, 390, 414, 640, 750, 828, 1080, 1200, 1920],
     remotePatterns: [
       {
         protocol: "https",

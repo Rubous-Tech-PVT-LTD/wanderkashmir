@@ -122,6 +122,24 @@ export default async function RootLayout({
 
   return (
     <html lang="en" className={fontClasses}>
+      <head>
+        {/* Preconnect to Cloudinary CDN — opens TCP+TLS handshake early */}
+        <link rel="preconnect" href="https://res.cloudinary.com" />
+        {/* 
+          LCP preload: tell the browser to start fetching the first hero image
+          immediately, before it discovers the <Image> tag in the HTML.
+          Uses the exact Cloudinary URL that our loader generates for w=750
+          (= 375px viewport at 2× DPR, which is what PageSpeed Insights simulates).
+        */}
+        <link
+          rel="preload"
+          as="image"
+          href="https://res.cloudinary.com/dcmoseix9/image/upload/w_750,q_auto,f_auto/v1781182033/ChatGPT_Image_Jun_11_2026_06_15_47_PM_npe0t1.png"
+          imageSrcSet="https://res.cloudinary.com/dcmoseix9/image/upload/w_375,q_auto,f_auto/v1781182033/ChatGPT_Image_Jun_11_2026_06_15_47_PM_npe0t1.png 375w, https://res.cloudinary.com/dcmoseix9/image/upload/w_750,q_auto,f_auto/v1781182033/ChatGPT_Image_Jun_11_2026_06_15_47_PM_npe0t1.png 750w, https://res.cloudinary.com/dcmoseix9/image/upload/w_1080,q_auto,f_auto/v1781182033/ChatGPT_Image_Jun_11_2026_06_15_47_PM_npe0t1.png 1080w, https://res.cloudinary.com/dcmoseix9/image/upload/w_1920,q_auto,f_auto/v1781182033/ChatGPT_Image_Jun_11_2026_06_15_47_PM_npe0t1.png 1920w"
+          imageSizes="100vw"
+          fetchPriority="high"
+        />
+      </head>
       <body className="antialiased" suppressHydrationWarning>
         <ClerkProvider
           localization={{
