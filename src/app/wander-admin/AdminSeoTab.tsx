@@ -1,9 +1,9 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Plus, Edit2, Trash2, Globe, Search, Link as LinkIcon, Wand2, RefreshCw } from "lucide-react";
+import { Plus, Edit2, Trash2, Globe, Search, Link as LinkIcon, Wand2, RefreshCw, PenTool } from "lucide-react";
 import Link from "next/link";
-import { triggerSeoGeneration } from "@/actions/admin-seo";
+import { triggerSeoGeneration, triggerBlogGeneration } from "@/actions/admin-seo";
 
 export default function AdminSeoTab() {
   const [pages, setPages] = useState<any[]>([]);
@@ -111,18 +111,36 @@ export default function AdminSeoTab() {
   };
 
   const handleGenerateAutomation = async () => {
-    if (!confirm("This will trigger the AI to generate a new random SEO page right now. Proceed?")) return;
+    if (!confirm("This will trigger the AI to generate a new SEO Route page right now. Proceed?")) return;
     setIsGenerating(true);
     try {
       const res = await triggerSeoGeneration();
       if (res.success) {
-        alert("Magic AI Generation successful! A new page has been created.");
+        alert("Magic AI Generation successful! A new SEO Route page has been created.");
         fetchPages();
       } else {
         alert("Failed to run generation: " + (res.error || "Unknown error"));
       }
     } catch (error: any) {
       alert("An error occurred while generating: " + error.message);
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  const handleGenerateBlog = async () => {
+    if (!confirm("This will trigger the AI to write a new Travel Blog Article right now. Proceed?")) return;
+    setIsGenerating(true);
+    try {
+      const res = await triggerBlogGeneration();
+      if (res.success) {
+        alert("Magic AI Blog Generation successful! A new Blog has been published.");
+        fetchPages();
+      } else {
+        alert("Failed to run blog generation: " + (res.error || "Unknown error"));
+      }
+    } catch (error: any) {
+      alert("An error occurred while generating blog: " + error.message);
     } finally {
       setIsGenerating(false);
     }
@@ -145,10 +163,18 @@ export default function AdminSeoTab() {
             <button
               onClick={handleGenerateAutomation}
               disabled={isGenerating}
-              className="px-4 py-2 bg-purple-600 text-white rounded-lg flex items-center gap-2 hover:bg-purple-700 transition-colors disabled:opacity-50"
+              className="flex items-center gap-2 bg-[#0284c7] text-white px-4 py-2.5 rounded-xl hover:bg-[#0369a1] transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-sm font-medium"
             >
-              {isGenerating ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Wand2 className="w-4 h-4" />}
-              {isGenerating ? "Generating..." : "Run Automation"}
+              <Wand2 className={`w-4 h-4 ${isGenerating ? 'animate-spin' : ''}`} />
+              {isGenerating ? "Generating..." : "Generate SEO Page"}
+            </button>
+            <button
+              onClick={handleGenerateBlog}
+              disabled={isGenerating}
+              className="flex items-center gap-2 bg-purple-600 text-white px-4 py-2.5 rounded-xl hover:bg-purple-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-sm font-medium"
+            >
+              <PenTool className={`w-4 h-4 ${isGenerating ? 'animate-bounce' : ''}`} />
+              {isGenerating ? "Writing..." : "Generate Blog Article"}
             </button>
             <button
               onClick={() => setIsEditing(true)}
@@ -372,7 +398,7 @@ export default function AdminSeoTab() {
                       </td>
                       <td className="p-4 text-right space-x-2">
                         <Link 
-                          href={`https://wanderkashmir.com/${page.type.toLowerCase() === "taxi" ? "taxis" : page.type.toLowerCase() === "homestay" ? "homestays" : page.type.toLowerCase() === "blog" ? "blog" : "tours"}/${page.slug}`}
+                          href={`/${page.type.toLowerCase() === "taxi" ? "taxis" : page.type.toLowerCase() === "homestay" ? "homestays" : page.type.toLowerCase() === "blog" ? "blog" : "tours"}/${page.slug}`}
                           target="_blank"
                           className="inline-flex p-2 text-slate-400 hover:text-[#0284c7] hover:bg-[#0284c7]/10 rounded-lg transition-colors"
                           title="View Live Page"
