@@ -5,6 +5,8 @@ import SearchBar from "@/components/SearchBar";
 import PropertyCard from "@/components/PropertyCard";
 import HeroCarousel from "@/components/HeroCarousel";
 import ComingSoonButton from "@/components/ComingSoonButton";
+import SearchSection from "./SearchSection";
+import PopularSeoRoutes from "@/components/PopularSeoRoutes";
 import Link from "next/link";
 import Image from "next/image";
 import {
@@ -648,6 +650,8 @@ export default async function Home() {
           </div>
         </div>
       </section>
+
+      <PopularSeoRoutes />
 
       <Footer />
     </main>

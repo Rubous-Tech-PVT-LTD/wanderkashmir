@@ -1,5 +1,6 @@
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import PopularSeoRoutes from "@/components/PopularSeoRoutes";
 import TaxisClient from "@/app/taxis/TaxisClient";
 import prisma from "@/lib/prisma";
 import { Metadata } from "next";
@@ -43,6 +44,7 @@ export default async function TaxisPage() {
     <main className="min-h-screen bg-slate-50">
       <Navbar />
       <TaxisClient rateCards={ratesData} imagesMap={imagesMap} verifiedDrivers={verifiedDrivers} />
+      <PopularSeoRoutes />
       <Footer />
     </main>
   );
