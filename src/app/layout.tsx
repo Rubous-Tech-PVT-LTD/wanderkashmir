@@ -126,15 +126,7 @@ export default async function RootLayout({
         {/* Preconnect to Cloudinary CDN — opens TCP+TLS handshake early */}
         <link rel="preconnect" href="https://res.cloudinary.com" />
         
-        {/* Exact manual preload matching Next.js deviceSizes array to prevent LCP delay without double-download */}
-        <link
-          rel="preload"
-          as="image"
-          href="https://res.cloudinary.com/dcmoseix9/image/upload/w_1080,q_auto:eco,f_auto/v1781182033/ChatGPT_Image_Jun_11_2026_06_15_47_PM_npe0t1.png"
-          imageSrcSet="https://res.cloudinary.com/dcmoseix9/image/upload/w_320,q_auto:eco,f_auto/v1781182033/ChatGPT_Image_Jun_11_2026_06_15_47_PM_npe0t1.png 320w, https://res.cloudinary.com/dcmoseix9/image/upload/w_375,q_auto:eco,f_auto/v1781182033/ChatGPT_Image_Jun_11_2026_06_15_47_PM_npe0t1.png 375w, https://res.cloudinary.com/dcmoseix9/image/upload/w_390,q_auto:eco,f_auto/v1781182033/ChatGPT_Image_Jun_11_2026_06_15_47_PM_npe0t1.png 390w, https://res.cloudinary.com/dcmoseix9/image/upload/w_414,q_auto:eco,f_auto/v1781182033/ChatGPT_Image_Jun_11_2026_06_15_47_PM_npe0t1.png 414w, https://res.cloudinary.com/dcmoseix9/image/upload/w_640,q_auto:eco,f_auto/v1781182033/ChatGPT_Image_Jun_11_2026_06_15_47_PM_npe0t1.png 640w, https://res.cloudinary.com/dcmoseix9/image/upload/w_750,q_auto:eco,f_auto/v1781182033/ChatGPT_Image_Jun_11_2026_06_15_47_PM_npe0t1.png 750w, https://res.cloudinary.com/dcmoseix9/image/upload/w_828,q_auto:eco,f_auto/v1781182033/ChatGPT_Image_Jun_11_2026_06_15_47_PM_npe0t1.png 828w, https://res.cloudinary.com/dcmoseix9/image/upload/w_1080,q_auto:eco,f_auto/v1781182033/ChatGPT_Image_Jun_11_2026_06_15_47_PM_npe0t1.png 1080w, https://res.cloudinary.com/dcmoseix9/image/upload/w_1200,q_auto:eco,f_auto/v1781182033/ChatGPT_Image_Jun_11_2026_06_15_47_PM_npe0t1.png 1200w, https://res.cloudinary.com/dcmoseix9/image/upload/w_1920,q_auto:eco,f_auto/v1781182033/ChatGPT_Image_Jun_11_2026_06_15_47_PM_npe0t1.png 1920w"
-          imageSizes="100vw"
-          fetchPriority="high"
-        />
+
       </head>
       <body className="antialiased" suppressHydrationWarning>
         <ClerkProvider
