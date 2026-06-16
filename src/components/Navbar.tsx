@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Menu, X, ChevronDown } from "lucide-react";
+import Image from "next/image";
 import dynamic from "next/dynamic";
 
 // ── Lazy-load ALL Clerk auth UI ───────────────────────────────────────────────
@@ -84,10 +85,13 @@ export default function Navbar() {
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2 group">
             <div className="flex items-center justify-center transition-transform group-hover:-rotate-12">
-              <img
+              <Image
                 src="/icon.png"
                 alt="WanderKashmir logo"
-                className="w-9 h-9 rounded-md object-cover shadow-sm"
+                width={36}
+                height={36}
+                className="rounded-md object-cover shadow-sm"
+                priority
               />
             </div>
             <div className="flex flex-col">
@@ -157,10 +161,12 @@ export default function Navbar() {
           <div className="flex items-center justify-between p-5 border-b border-slate-100">
             <Link href="/" className="flex items-center gap-2.5" onClick={() => setMobileOpen(false)}>
               <div className="flex items-center justify-center">
-                <img
+                <Image
                   src="/icon.png"
                   alt="WanderKashmir logo"
-                  className="w-9 h-9 rounded-md object-cover shadow-sm"
+                  width={36}
+                  height={36}
+                  className="rounded-md object-cover shadow-sm"
                 />
               </div>
               <div className="flex flex-col">
