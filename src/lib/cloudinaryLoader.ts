@@ -53,8 +53,7 @@ export default function cloudinaryLoader({
     }
 
     const contentPath = segments.slice(contentStart).join("/");
-    const q = quality ?? "auto";
-    const transforms = `w_${width},q_${q},f_auto`;
+    const transforms = `w_${width},q_auto:eco,f_auto`;
 
     // contentPath already includes the version segment (e.g. v1781182033/filename.png)
     return `${base}/upload/${transforms}/${contentPath}`;
