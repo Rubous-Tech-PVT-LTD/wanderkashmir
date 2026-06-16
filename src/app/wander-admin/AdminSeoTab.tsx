@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Plus, Edit2, Trash2, Globe, Search, Link as LinkIcon, Wand2 } from "lucide-react";
+import { Plus, Edit2, Trash2, Globe, Search, Link as LinkIcon } from "lucide-react";
 import Link from "next/link";
 
 export default function AdminSeoTab() {
@@ -37,54 +37,6 @@ export default function AdminSeoTab() {
     fetchPages();
   }, []);
 
-  const handleAutoFill = () => {
-    if (!formData.slug) {
-      alert("Please enter a Route Slug first (e.g., srinagar-to-gulmarg)");
-      return;
-    }
-
-    // Convert slug "srinagar-to-gulmarg-taxi" into "Srinagar To Gulmarg Taxi"
-    const readableName = formData.slug
-      .split("-")
-      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-      .join(" ");
-
-    let title = "";
-    let description = "";
-    let h1Heading = "";
-    let content = "";
-    let faqs: { question: string; answer: string }[] = [];
-
-    if (formData.type === "TAXI") {
-      title = `Book ${readableName} | Best Cabs & Fares in Kashmir`;
-      description = `Looking for a reliable ${readableName}? Book sedans and SUVs at the best price with WanderKashmir. Local expert drivers and transparent pricing.`;
-      h1Heading = `${readableName} Service`;
-      content = `Book your **${readableName}** with WanderKashmir for a safe, comfortable, and scenic journey. We offer well-maintained cabs including Innova, Etios, and Swift Dzire with experienced local drivers who know the best routes.\n\nEnjoy transparent pricing with zero hidden charges. Whether you need a one-way drop or a round trip, our ${readableName.toLowerCase()} service is designed to make your Kashmir trip memorable.`;
-      faqs = [
-        { question: `What is the fare for a ${readableName.toLowerCase()}?`, answer: `The fare depends on the type of vehicle you choose (Sedan vs SUV). Please check our rate card below for exact pricing.` },
-        { question: `How long does the journey take?`, answer: `Journey times vary based on traffic and weather conditions, but our drivers always take the safest and most efficient routes.` },
-        { question: `Can I book a round trip?`, answer: `Yes, you can easily book both one-way drops and round trips through our platform.` }
-      ];
-    } else if (formData.type === "HOMESTAY") {
-      title = `Best Homestays in ${readableName} | Authentic Kashmiri Experience`;
-      description = `Stay in the best homestays in ${readableName}. Experience authentic Kashmiri hospitality, home-cooked Wazwan, and peaceful surroundings.`;
-      h1Heading = `Authentic Homestays in ${readableName}`;
-      content = `Experience the true essence of Kashmir by staying at our handpicked homestays in **${readableName}**. Wake up to breathtaking views and enjoy traditional Kashmiri hospitality away from the crowded tourist hotels.\n\nOur hosts provide comfortable rooms, modern amenities, and delicious home-cooked meals including traditional Kashmiri Wazwan.`;
-      faqs = [
-        { question: `Do homestays in ${readableName} provide food?`, answer: `Yes, most of our hosts provide delicious home-cooked breakfast and dinner. You can also request traditional Kashmiri Wazwan.` },
-        { question: `Is it safe to stay in a homestay?`, answer: `Absolutely. All our homestays and hosts are strictly verified by the WanderKashmir team to ensure your safety and comfort.` }
-      ];
-    }
-
-    setFormData((prev) => ({
-      ...prev,
-      title,
-      description,
-      h1Heading,
-      content,
-      faqs,
-    }));
-  };
 
   const handleAddFaq = () => {
     setFormData({ ...formData, faqs: [...formData.faqs, { question: "", answer: "" }] });
@@ -191,25 +143,14 @@ export default function AdminSeoTab() {
             </div>
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">URL Slug</label>
-              <div className="flex gap-2">
-                <input
-                  required
-                  type="text"
-                  placeholder="e.g. srinagar-to-gulmarg"
-                  value={formData.slug}
-                  onChange={(e) => setFormData({ ...formData, slug: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '-') })}
-                  className="flex-1 p-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0284c7]"
-                />
-                <button
-                  type="button"
-                  onClick={handleAutoFill}
-                  className="px-3 py-2 bg-indigo-50 text-indigo-600 rounded-lg hover:bg-indigo-100 transition-colors flex items-center gap-1 font-medium text-sm border border-indigo-100 whitespace-nowrap"
-                  title="Auto-fill SEO fields based on Slug"
-                >
-                  <Wand2 className="w-4 h-4" />
-                  Auto-Fill
-                </button>
-              </div>
+              <input
+                required
+                type="text"
+                placeholder="e.g. srinagar-to-gulmarg"
+                value={formData.slug}
+                onChange={(e) => setFormData({ ...formData, slug: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '-') })}
+                className="w-full p-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0284c7]"
+              />
             </div>
           </div>
 

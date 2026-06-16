@@ -4,12 +4,11 @@ import Link from "next/link";
 import { Building2, Home, Car, UserCircle2, LayoutDashboard, LogOut, Settings, Award } from "lucide-react";
 import { useVendor } from "@/context/VendorContext";
 import { useClerk } from "@clerk/nextjs";
-import { useRouter, usePathname } from "next/navigation";
+import { usePathname } from "next/navigation";
 
 export default function VendorSidebar() {
   const { vendorType, isRegistered, setIsRegistered, setVendorType, vendorName, vendorEmail } = useVendor();
-  const { signOut, openUserProfile } = useClerk();
-  const router = useRouter();
+  const { openUserProfile } = useClerk();
   const pathname = usePathname();
 
   // Hide sidebar completely on the onboarding entry page
