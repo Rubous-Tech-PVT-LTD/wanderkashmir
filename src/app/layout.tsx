@@ -124,9 +124,7 @@ export default async function RootLayout({
     <html lang="en" className={fontClasses}>
       <head>
         {/* Preconnect to Cloudinary CDN — opens TCP+TLS handshake early */}
-        <link rel="preconnect" href="https://res.cloudinary.com" />
-        
-
+        <link rel="preconnect" href="https://res.cloudinary.com" crossOrigin="anonymous" />
       </head>
       <body className="antialiased" suppressHydrationWarning>
         <ClerkProvider
