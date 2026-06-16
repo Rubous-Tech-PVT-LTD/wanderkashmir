@@ -11,21 +11,21 @@ import { Plus_Jakarta_Sans, Inter, Dancing_Script } from "next/font/google";
 const plusJakartaSans = Plus_Jakarta_Sans({
   subsets: ["latin"],
   variable: "--font-plus-jakarta",
-  display: "swap",
+  display: "optional",
   weight: ["300", "400", "500", "600", "700", "800"],
 });
 
 const inter = Inter({
   subsets: ["latin"],
   variable: "--font-inter",
-  display: "swap",
+  display: "optional",
   weight: ["300", "400", "500", "600", "700"],
 });
 
 const dancingScript = Dancing_Script({
   subsets: ["latin"],
   variable: "--font-dancing-script",
-  display: "swap",
+  display: "optional",
   weight: ["600"],
 });
 
