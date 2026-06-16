@@ -7,9 +7,10 @@ import { ChevronRight, MapPin, CheckCircle, Car } from "lucide-react";
 import Footer from "@/components/Footer";
 import Navbar from "@/components/Navbar";
 
-export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const resolvedParams = await params;
   const page = await prisma.seoLandingPage.findUnique({
-    where: { slug: params.slug },
+    where: { slug: resolvedParams.slug },
   });
 
   if (!page || page.type !== "TAXI") {
@@ -22,9 +23,10 @@ export async function generateMetadata({ params }: { params: { slug: string } })
   };
 }
 
-export default async function TaxiSeoPage({ params }: { params: { slug: string } }) {
+export default async function TaxiSeoPage({ params }: { params: Promise<{ slug: string }> }) {
+  const resolvedParams = await params;
   const page = await prisma.seoLandingPage.findUnique({
-    where: { slug: params.slug },
+    where: { slug: resolvedParams.slug },
   });
 
   if (!page || page.type !== "TAXI") {
@@ -38,7 +40,7 @@ export default async function TaxiSeoPage({ params }: { params: { slug: string }
   const allRateCards = await prisma.taxiRateCard.findMany();
   
   // Create an array of searchable words from slug (e.g. "srinagar-to-gulmarg-taxi" -> ["srinagar", "gulmarg"])
-  const slugWords = params.slug.toLowerCase().split('-').filter(w => w !== 'to' && w !== 'taxi' && w !== 'cab' && w !== 'service' && w.length > 2);
+  const slugWords = resolvedParams.slug.toLowerCase().split('-').filter(w => w !== 'to' && w !== 'taxi' && w !== 'cab' && w !== 'service' && w.length > 2);
   
   // Find the rate card that matches the most words
   let matchedRateCard = null;

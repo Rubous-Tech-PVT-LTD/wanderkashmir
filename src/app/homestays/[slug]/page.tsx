@@ -7,9 +7,10 @@ import { ChevronRight, Home, Heart, Coffee, MapPin, Star } from "lucide-react";
 import Footer from "@/components/Footer";
 import Navbar from "@/components/Navbar";
 
-export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const resolvedParams = await params;
   const page = await prisma.seoLandingPage.findUnique({
-    where: { slug: params.slug },
+    where: { slug: resolvedParams.slug },
   });
 
   if (!page || page.type !== "HOMESTAY") {
@@ -22,9 +23,10 @@ export async function generateMetadata({ params }: { params: { slug: string } })
   };
 }
 
-export default async function HomestaySeoPage({ params }: { params: { slug: string } }) {
+export default async function HomestaySeoPage({ params }: { params: Promise<{ slug: string }> }) {
+  const resolvedParams = await params;
   const page = await prisma.seoLandingPage.findUnique({
-    where: { slug: params.slug },
+    where: { slug: resolvedParams.slug },
   });
 
   if (!page || page.type !== "HOMESTAY") {
@@ -34,7 +36,7 @@ export default async function HomestaySeoPage({ params }: { params: { slug: stri
   const faqs = (page.faqs as { question: string; answer: string }[]) || [];
 
   // Try to find matching homestays
-  const slugWords = params.slug.toLowerCase().split('-').filter(w => w !== 'in' && w !== 'homestays' && w !== 'homestay' && w !== 'stay' && w.length > 2);
+  const slugWords = resolvedParams.slug.toLowerCase().split('-').filter(w => w !== 'in' && w !== 'homestays' && w !== 'homestay' && w !== 'stay' && w.length > 2);
   
   const allProperties = await prisma.property.findMany({
     where: {
