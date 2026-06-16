@@ -179,3 +179,33 @@
 .animate-shake {
   animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both;
 }
+
+/* Hero Carousel Animations */
+@keyframes heroFadeFirst {
+  0%   { opacity: 1; }
+  30%  { opacity: 1; }
+  33%  { opacity: 0; }
+  100% { opacity: 0; }
+}
+
+@keyframes heroFadeSecond {
+  0%   { opacity: 0; }
+  33%  { opacity: 0; }
+  38%  { opacity: 1; }
+  63%  { opacity: 1; }
+  66%  { opacity: 0; }
+  100% { opacity: 0; }
+}
+
+@keyframes heroFadeThird {
+  0%   { opacity: 0; }
+  66%  { opacity: 0; }
+  71%  { opacity: 1; }
+  96%  { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-slide { animation: none !important; opacity: 0 !important; }
+  .hero-slide:first-child { opacity: 1 !important; }
+}

@@ -46,47 +46,16 @@ const images = [
  * immediately on page load → browser selects it as the LCP element → no
  * font-loading bottleneck.
  */
-const KEYFRAMES = `
-@keyframes heroFadeFirst {
-  0%   { opacity: 1; }
-  30%  { opacity: 1; }
-  33%  { opacity: 0; }
-  100% { opacity: 0; }
-}
-
-@keyframes heroFadeSecond {
-  0%   { opacity: 0; }
-  33%  { opacity: 0; }
-  38%  { opacity: 1; }
-  63%  { opacity: 1; }
-  66%  { opacity: 0; }
-  100% { opacity: 0; }
-}
-
-@keyframes heroFadeThird {
-  0%   { opacity: 0; }
-  66%  { opacity: 0; }
-  71%  { opacity: 1; }
-  96%  { opacity: 1; }
-  100% { opacity: 0; }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .hero-slide { animation: none !important; opacity: 0 !important; }
-  .hero-slide:first-child { opacity: 1 !important; }
-}
-`;
 
 export default function HeroCarousel() {
   return (
     <div className="absolute inset-0 z-0 bg-black" aria-hidden="true">
-      <style dangerouslySetInnerHTML={{ __html: KEYFRAMES }} />
-
       {images.map((img, index) => (
         <div
           key={img.src}
           className="hero-slide absolute inset-0"
           style={{
+            opacity: index === 0 ? 1 : 0,
             animation: `${img.keyframe} 15s ease-in-out infinite`,
           }}
         >
