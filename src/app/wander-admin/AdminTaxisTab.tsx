@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Edit2, Trash2, Plus, Percent, Car, CheckCircle2, XCircle, AlertCircle } from "lucide-react";
 import toast from "react-hot-toast";
-import { getPaginatedTaxiRates } from "@/actions/admin-data";
+import { getPaginatedTaxiRates, getPaginatedTaxis } from "@/actions/admin-data";
 import Pagination from "@/components/Pagination";
 import { Search } from "lucide-react";
 
@@ -19,6 +19,12 @@ export default function AdminTaxisTab() {
   const [vehicles, setVehicles] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [isProcessing, setIsProcessing] = useState<string | null>(null);
+  const [currentVehiclePage, setCurrentVehiclePage] = useState(1);
+  const [totalVehiclePages, setTotalVehiclePages] = useState(1);
+  const [totalVehicleItems, setTotalVehicleItems] = useState(0);
+  const [vehicleSearchQuery, setVehicleSearchQuery] = useState("");
+  const [vehicleSearchInput, setVehicleSearchInput] = useState("");
+  const [loadingVehicles, setLoadingVehicles] = useState(false);
 
   // Form State for Rate Card
   const [isAddingRate, setIsAddingRate] = useState(false);
@@ -27,22 +33,29 @@ export default function AdminTaxisTab() {
 
   useEffect(() => {
     fetchImages();
-    fetchVehicles();
   }, []);
+
+  useEffect(() => {
+    fetchVehicles();
+  }, [currentVehiclePage, vehicleSearchQuery]);
 
   useEffect(() => {
     fetchRates();
   }, [currentPage, searchQuery]);
 
   const fetchVehicles = async () => {
+    setLoadingVehicles(true);
     try {
-      const res = await fetch("/api/admin/taxis/vehicles");
-      if (res.ok) {
-        const data = await res.json();
-        setVehicles(data);
+      const res = await getPaginatedTaxis({ page: currentVehiclePage, limit: 10, search: vehicleSearchQuery });
+      if (res.data) {
+        setVehicles(res.data);
+        setTotalVehiclePages(res.totalPages);
+        setTotalVehicleItems(res.totalCount);
       }
     } catch (e) {
-      console.error("Failed to fetch vehicles", e);
+      toast.error("Failed to fetch vehicles");
+    } finally {
+      setLoadingVehicles(false);
     }
   };
 
@@ -378,6 +391,25 @@ export default function AdminTaxisTab() {
           <div className="p-6 border-b border-slate-100 bg-slate-50">
             <h3 className="text-xl font-bold text-slate-900">Vehicle Approvals</h3>
             <p className="text-sm text-slate-500">Approve or reject vehicles added by Taxi Vendors.</p>
+            <div className="flex gap-2 w-full max-w-md mt-4">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                <input
+                  type="text"
+                  placeholder="Search vehicles..."
+                  value={vehicleSearchInput}
+                  onChange={(e) => setVehicleSearchInput(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && setVehicleSearchQuery(vehicleSearchInput)}
+                  className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500"
+                />
+              </div>
+              <button
+                onClick={() => setVehicleSearchQuery(vehicleSearchInput)}
+                className="px-4 py-2 bg-slate-900 text-white rounded-lg hover:bg-slate-800 transition-colors"
+              >
+                Search
+              </button>
+            </div>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
@@ -391,7 +423,9 @@ export default function AdminTaxisTab() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
-                {vehicles.map((vehicle) => (
+                {loadingVehicles ? (
+                  <tr><td colSpan={5} className="text-center py-8 text-slate-500">Loading vehicles...</td></tr>
+                ) : vehicles.map((vehicle) => (
                   <tr key={vehicle.id} className="hover:bg-slate-50 transition-colors">
                     <td className="px-6 py-4">
                       <div className="font-bold text-slate-900">{vehicle.make} {vehicle.model}</div>
