@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import prisma from "@/lib/prisma";
 import Image from "next/image";
 import Link from "next/link";
-import { ChevronRight, Home, Heart, Coffee, MapPin } from "lucide-react";
+import { ChevronRight, Home, Heart, Coffee, MapPin, Star } from "lucide-react";
 import Footer from "@/components/Footer";
 import Navbar from "@/components/Navbar";
 
@@ -32,6 +32,33 @@ export default async function HomestaySeoPage({ params }: { params: { slug: stri
   }
 
   const faqs = (page.faqs as { question: string; answer: string }[]) || [];
+
+  // Try to find matching homestays
+  const slugWords = params.slug.toLowerCase().split('-').filter(w => w !== 'in' && w !== 'homestays' && w !== 'homestay' && w !== 'stay' && w.length > 2);
+  
+  const allProperties = await prisma.property.findMany({
+    where: {
+      isApproved: true,
+      status: "APPROVED",
+      vendorProfile: {
+        type: "HOMESTAY"
+      }
+    },
+    include: {
+      vendorProfile: true
+    }
+  });
+
+  const matchedHomestays = allProperties.filter(prop => {
+    const locWords = prop.location.toLowerCase().split(' ');
+    let matches = 0;
+    for (const sw of slugWords) {
+      if (locWords.some(lw => lw.includes(sw) || sw.includes(lw))) {
+        matches++;
+      }
+    }
+    return matches > 0;
+  });
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col">
@@ -120,6 +147,75 @@ export default async function HomestaySeoPage({ params }: { params: { slug: stri
         {page.content && (
           <div className="prose prose-slate prose-lg max-w-none mb-16 bg-white p-8 md:p-12 rounded-3xl shadow-sm border border-slate-100">
             <div dangerouslySetInnerHTML={{ __html: page.content.replace(/\n/g, '<br/>') }} />
+          </div>
+        )}
+
+        {/* Dynamic Homestays Grid */}
+        {matchedHomestays.length > 0 && (
+          <div className="mb-16">
+            <h2 className="text-3xl font-bold text-slate-900 mb-8 text-center">Available Homestays in this area</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {matchedHomestays.map((property: any) => {
+                const imageUrl = property.images && property.images.length > 0 
+                  ? property.images[0] 
+                  : "https://images.unsplash.com/photo-1542718610-a1d656d1884c?auto=format&fit=crop&q=80&w=800";
+                  
+                return (
+                  <Link href={`/property/${property.id}`} key={property.id} className="group flex flex-col bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-all border border-slate-100">
+                    <div className="relative aspect-[4/3] w-full overflow-hidden">
+                      <Image
+                        src={imageUrl}
+                        alt={property.name}
+                        fill
+                        className="object-cover transition-transform duration-700 group-hover:scale-105"
+                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                      />
+                      <div className="absolute top-4 left-4 bg-white/90 backdrop-blur-sm px-3 py-1 rounded-full text-xs font-semibold text-slate-700 flex items-center gap-1">
+                        <Home className="w-3 h-3 text-[#0284c7]" />
+                        Homestay
+                      </div>
+                    </div>
+                    <div className="p-5 flex-1 flex flex-col">
+                      <div className="flex justify-between items-start mb-2">
+                        <h3 className="font-bold text-lg text-slate-900 group-hover:text-[#0284c7] transition-colors line-clamp-1">
+                          {property.name}
+                        </h3>
+                        <div className="flex items-center gap-1 bg-amber-50 px-2 py-0.5 rounded text-sm font-semibold text-amber-700">
+                          <Star className="w-3.5 h-3.5 fill-current" />
+                          <span>4.5</span>
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-center text-slate-500 text-sm mb-4">
+                        <MapPin className="w-4 h-4 mr-1 shrink-0" />
+                        <span className="truncate">{property.location}</span>
+                      </div>
+                      
+                      <div className="mt-auto pt-4 border-t border-slate-100 flex items-end justify-between">
+                        <div>
+                          <p className="text-xs text-slate-500 mb-0.5">Starting from</p>
+                          <div className="flex items-baseline gap-1">
+                            <span className="text-xl font-bold text-slate-900">₹{property.pricePerNight.toLocaleString('en-IN')}</span>
+                            <span className="text-slate-500 text-sm">/night</span>
+                          </div>
+                        </div>
+                        <button className="px-4 py-2 bg-slate-900 text-white rounded-lg text-sm font-medium hover:bg-slate-800 transition-colors">
+                          View details
+                        </button>
+                      </div>
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
+            <div className="mt-10 text-center">
+               <Link 
+                href={`/stays?q=${slugWords.join(' ')}`} 
+                className="px-8 py-3 bg-[#0284c7] text-white rounded-full font-medium hover:bg-[#0369a1] transition-colors shadow-sm inline-block"
+              >
+                View All {slugWords.length > 0 ? slugWords.map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ') : ''} Stays
+              </Link>
+            </div>
           </div>
         )}
 

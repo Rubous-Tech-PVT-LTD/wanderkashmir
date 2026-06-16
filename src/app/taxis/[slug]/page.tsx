@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import prisma from "@/lib/prisma";
 import Image from "next/image";
 import Link from "next/link";
-import { ChevronRight, MapPin, CheckCircle } from "lucide-react";
+import { ChevronRight, MapPin, CheckCircle, Car } from "lucide-react";
 import Footer from "@/components/Footer";
 import Navbar from "@/components/Navbar";
 
@@ -33,6 +33,32 @@ export default async function TaxiSeoPage({ params }: { params: { slug: string }
 
   // Define faqs type
   const faqs = (page.faqs as { question: string; answer: string }[]) || [];
+
+  // Try to find matching taxi rate card
+  const allRateCards = await prisma.taxiRateCard.findMany();
+  
+  // Create an array of searchable words from slug (e.g. "srinagar-to-gulmarg-taxi" -> ["srinagar", "gulmarg"])
+  const slugWords = params.slug.toLowerCase().split('-').filter(w => w !== 'to' && w !== 'taxi' && w !== 'cab' && w !== 'service' && w.length > 2);
+  
+  // Find the rate card that matches the most words
+  let matchedRateCard = null;
+  let maxMatches = 0;
+
+  for (const card of allRateCards) {
+    const placeWords = card.place.toLowerCase().split(' ');
+    let matches = 0;
+    for (const sw of slugWords) {
+      if (placeWords.some(pw => pw.includes(sw) || sw.includes(pw))) {
+        matches++;
+      }
+    }
+    if (matches > maxMatches && matches >= 1) { // Require at least 1 significant word match (like "gulmarg")
+      maxMatches = matches;
+      matchedRateCard = card;
+    }
+  }
+
+  const rates = matchedRateCard ? (matchedRateCard.rates as Record<string, number>) : null;
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col">
@@ -125,6 +151,50 @@ export default async function TaxiSeoPage({ params }: { params: { slug: string }
         {page.content && (
           <div className="prose prose-slate prose-lg max-w-none mb-16 bg-white p-8 md:p-12 rounded-3xl shadow-sm border border-slate-100">
             <div dangerouslySetInnerHTML={{ __html: page.content.replace(/\n/g, '<br/>') }} />
+          </div>
+        )}
+
+        {/* Dynamic Taxi Rates Table */}
+        {matchedRateCard && rates && Object.keys(rates).length > 0 && (
+          <div className="mb-16">
+            <h2 className="text-3xl font-bold text-slate-900 mb-6 text-center">
+              Taxi Fares: {matchedRateCard.place}
+            </h2>
+            <div className="bg-white rounded-3xl p-6 md:p-8 shadow-sm border border-slate-100 overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr className="bg-slate-50 border-b border-slate-200 text-sm uppercase tracking-wider font-bold text-slate-600">
+                      <th className="p-4 rounded-tl-xl">Vehicle Type</th>
+                      <th className="p-4 text-right rounded-tr-xl">Price (₹)</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {Object.entries(rates).map(([vehicle, price]) => (
+                      <tr key={vehicle} className="hover:bg-slate-50/50 transition-colors">
+                        <td className="p-4 flex items-center gap-3">
+                          <div className="p-2 bg-sky-50 text-[#0284c7] rounded-lg">
+                            <Car className="w-5 h-5" />
+                          </div>
+                          <span className="font-semibold text-slate-800">{vehicle}</span>
+                        </td>
+                        <td className="p-4 text-right font-bold text-lg text-emerald-600">
+                          ₹{price.toLocaleString('en-IN')}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              <div className="mt-6 flex justify-center">
+                 <Link 
+                  href="/taxis" 
+                  className="px-8 py-3 bg-[#0284c7] text-white rounded-full font-medium hover:bg-[#0369a1] transition-colors shadow-sm inline-block"
+                >
+                  Proceed to Booking
+                </Link>
+              </div>
+            </div>
           </div>
         )}
 
