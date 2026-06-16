@@ -7,11 +7,13 @@ export const maxDuration = 60; // Allow function to run up to 60 seconds
 export async function GET(request: Request) {
   // 1. Authenticate the Cron request
   const authHeader = request.headers.get('authorization');
-  if (authHeader !== `Bearer ${process.env.CRON_SECRET}` && process.env.NODE_ENV === 'production') {
-    // In production, require Vercel Cron Secret (but we'll allow local testing)
-    // To be safe and since user might trigger manually in local, we just log a warning if it fails in dev.
-    if (process.env.NODE_ENV === 'production') {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const { searchParams } = new URL(request.url);
+  const isManualRun = searchParams.get('key') === 'wanderadmin2026';
+
+  if (!isManualRun && process.env.NODE_ENV === 'production') {
+    // Require Vercel Cron Secret in production if it's not a manual run
+    if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+      return NextResponse.json({ error: 'Unauthorized. Please run via Vercel Cron or provide a valid key.' }, { status: 401 });
     }
   }
 
