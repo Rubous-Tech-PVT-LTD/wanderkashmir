@@ -56,7 +56,8 @@ export default function HeroCarousel() {
           className="hero-slide absolute inset-0"
           style={{
             opacity: index === 0 ? 1 : 0,
-            animation: `${img.keyframe} 15s ease-in-out infinite`,
+            animation: index === 0 ? "none" : `${img.keyframe} 15s ease-in-out infinite`,
+            zIndex: index === 0 ? 0 : 1,
           }}
         >
           <Image

@@ -181,12 +181,7 @@
 }
 
 /* Hero Carousel Animations */
-@keyframes heroFadeFirst {
-  0%   { opacity: 1; }
-  30%  { opacity: 1; }
-  33%  { opacity: 0; }
-  100% { opacity: 0; }
-}
+
 
 @keyframes heroFadeSecond {
   0%   { opacity: 0; }
