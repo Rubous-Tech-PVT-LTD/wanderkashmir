@@ -7,15 +7,12 @@ export const maxDuration = 60; // Allow function to run up to 60 seconds
 export async function GET(request: Request) {
   // 1. Authenticate the Cron request
   const authHeader = request.headers.get('authorization');
-  const { searchParams } = new URL(request.url);
-  const customKey = searchParams.get('key');
-
-  // Allow either Vercel's native CRON_SECRET OR our custom secret key
-  const isVercelCron = authHeader === `Bearer ${process.env.CRON_SECRET}`;
-  const isCustomKey = customKey === 'wander_magic_key_2026';
-
-  if (!isVercelCron && !isCustomKey && process.env.NODE_ENV === 'production') {
-    return NextResponse.json({ error: 'Unauthorized. Invalid Key.' }, { status: 401 });
+  if (authHeader !== `Bearer ${process.env.CRON_SECRET}` && process.env.NODE_ENV === 'production') {
+    // In production, require Vercel Cron Secret (but we'll allow local testing)
+    // To be safe and since user might trigger manually in local, we just log a warning if it fails in dev.
+    if (process.env.NODE_ENV === 'production') {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
   }
 
   // 2. Setup Gemini

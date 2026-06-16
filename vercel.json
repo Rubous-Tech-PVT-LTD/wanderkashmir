@@ -1,7 +1,7 @@
 {
   "crons": [
     {
-      "path": "/api/cron/generate-seo?key=wander_magic_key_2026",
+      "path": "/api/cron/generate-seo",
       "schedule": "0 2 * * *"
     }
   ]
