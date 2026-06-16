@@ -174,6 +174,7 @@ export default function AdminSeoTab() {
                 <option value="TAXI">Taxi Route</option>
                 <option value="HOMESTAY">Homestay Location</option>
                 <option value="TOUR">Tour Package</option>
+                <option value="BLOG">Travel Blog Article</option>
               </select>
             </div>
             <div>
@@ -352,6 +353,7 @@ export default function AdminSeoTab() {
                         <span className={`px-2 py-1 text-xs font-semibold rounded-full ${
                           page.type === "TAXI" ? "bg-yellow-100 text-yellow-800" :
                           page.type === "HOMESTAY" ? "bg-green-100 text-green-800" :
+                          page.type === "BLOG" ? "bg-purple-100 text-purple-800" :
                           "bg-blue-100 text-blue-800"
                         }`}>
                           {page.type}
@@ -361,7 +363,7 @@ export default function AdminSeoTab() {
                       <td className="p-4">
                         <div className="flex items-center gap-1.5 text-slate-500">
                           <LinkIcon className="w-3.5 h-3.5" />
-                          <span>/{page.type.toLowerCase() === "taxi" ? "taxis" : page.type.toLowerCase() === "homestay" ? "homestays" : "tours"}/{page.slug}</span>
+                          <span>/{page.type.toLowerCase() === "taxi" ? "taxis" : page.type.toLowerCase() === "homestay" ? "homestays" : page.type.toLowerCase() === "blog" ? "blog" : "tours"}/{page.slug}</span>
                         </div>
                       </td>
                       <td className="p-4 text-slate-500">
@@ -369,7 +371,7 @@ export default function AdminSeoTab() {
                       </td>
                       <td className="p-4 text-right space-x-2">
                         <Link 
-                          href={`https://wanderkashmir.com/${page.type.toLowerCase() === "taxi" ? "taxis" : page.type.toLowerCase() === "homestay" ? "homestays" : "tours"}/${page.slug}`}
+                          href={`https://wanderkashmir.com/${page.type.toLowerCase() === "taxi" ? "taxis" : page.type.toLowerCase() === "homestay" ? "homestays" : page.type.toLowerCase() === "blog" ? "blog" : "tours"}/${page.slug}`}
                           target="_blank"
                           className="inline-flex p-2 text-slate-400 hover:text-[#0284c7] hover:bg-[#0284c7]/10 rounded-lg transition-colors"
                           title="View Live Page"

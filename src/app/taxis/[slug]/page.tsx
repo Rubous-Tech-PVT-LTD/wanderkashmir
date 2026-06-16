@@ -3,9 +3,11 @@ import { notFound } from "next/navigation";
 import prisma from "@/lib/prisma";
 import Image from "next/image";
 import Link from "next/link";
-import { ChevronRight, MapPin, CheckCircle, Car } from "lucide-react";
+import { ChevronRight, MapPin, CheckCircle, Car, ChevronDown } from "lucide-react";
 import Footer from "@/components/Footer";
 import Navbar from "@/components/Navbar";
+
+export const revalidate = 3600; // ISR: Revalidate every hour for instant load times
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const resolvedParams = await params;
@@ -107,22 +109,22 @@ export default async function TaxiSeoPage({ params }: { params: Promise<{ slug: 
         </nav>
 
         {/* Hero Section */}
-        <div className="bg-white rounded-3xl p-8 md:p-12 shadow-sm border border-slate-100 mb-12 flex flex-col md:flex-row gap-8 items-center">
-          <div className="flex-1 space-y-6">
-            <div className="inline-flex items-center gap-2 px-3 py-1 bg-sky-100 text-[#0284c7] rounded-full text-sm font-semibold">
+        <div className="relative rounded-3xl overflow-hidden shadow-2xl mb-12 flex flex-col md:flex-row bg-[#0284c7]/5">
+          <div className="flex-1 space-y-6 p-8 md:p-12 z-10 relative">
+            <div className="inline-flex items-center gap-2 px-3 py-1 bg-white/80 backdrop-blur-sm text-[#0284c7] rounded-full text-sm font-semibold shadow-sm border border-sky-100">
               <MapPin className="w-4 h-4" />
               Verified Taxi Service
             </div>
-            <h1 className="text-4xl md:text-5xl font-bold text-slate-900 leading-tight">
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-slate-900 leading-tight">
               {page.h1Heading}
             </h1>
-            <p className="text-lg text-slate-600 leading-relaxed">
+            <p className="text-lg text-slate-700 leading-relaxed max-w-2xl">
               {page.description}
             </p>
-            <div className="flex gap-4 pt-4">
+            <div className="flex flex-wrap gap-4 pt-4">
               <Link 
                 href="/taxis" 
-                className="px-8 py-3 bg-[#0284c7] text-white rounded-full font-medium hover:bg-[#0369a1] transition-colors shadow-sm"
+                className="px-8 py-3.5 bg-[#0284c7] text-white rounded-full font-medium hover:bg-[#0369a1] transition-all transform hover:-translate-y-0.5 shadow-lg shadow-[#0284c7]/30"
               >
                 View Cabs & Prices
               </Link>
@@ -130,20 +132,23 @@ export default async function TaxiSeoPage({ params }: { params: Promise<{ slug: 
                 href="https://wa.me/917006871321" 
                 target="_blank" 
                 rel="noreferrer"
-                className="px-8 py-3 bg-green-50 text-green-700 rounded-full font-medium hover:bg-green-100 transition-colors"
+                className="px-8 py-3.5 bg-green-500 text-white rounded-full font-medium hover:bg-green-600 transition-all transform hover:-translate-y-0.5 shadow-lg shadow-green-500/30"
               >
                 WhatsApp Us
               </a>
             </div>
           </div>
           {page.imageUrl && (
-            <div className="w-full md:w-1/3 aspect-square relative rounded-2xl overflow-hidden shadow-lg">
+            <div className="w-full md:w-5/12 min-h-[300px] md:min-h-full relative">
+              <div className="absolute inset-0 bg-gradient-to-r from-[#0284c7]/5 to-transparent z-10 md:hidden" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent z-10 md:hidden" />
               <Image 
                 src={page.imageUrl} 
                 alt={page.h1Heading} 
                 fill 
                 className="object-cover"
-                sizes="(max-width: 768px) 100vw, 33vw"
+                sizes="(max-width: 768px) 100vw, 40vw"
+                priority
               />
             </div>
           )}
@@ -151,8 +156,11 @@ export default async function TaxiSeoPage({ params }: { params: Promise<{ slug: 
 
         {/* Dynamic Content */}
         {page.content && (
-          <div className="prose prose-slate prose-lg max-w-none mb-16 bg-white p-8 md:p-12 rounded-3xl shadow-sm border border-slate-100">
-            <div dangerouslySetInnerHTML={{ __html: page.content.replace(/\n/g, '<br/>') }} />
+          <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-8 md:p-12 mb-16">
+            <div 
+              className="prose prose-slate prose-lg md:prose-xl max-w-none prose-headings:text-[#0284c7] prose-a:text-[#0284c7] prose-img:rounded-2xl"
+              dangerouslySetInnerHTML={{ __html: page.content.replace(/\n/g, '<br/>') }} 
+            />
           </div>
         )}
 
@@ -222,13 +230,22 @@ export default async function TaxiSeoPage({ params }: { params: Promise<{ slug: 
         {/* FAQs */}
         {faqs.length > 0 && (
           <div className="mb-16">
-            <h2 className="text-3xl font-bold text-slate-900 mb-8 text-center">Frequently Asked Questions</h2>
-            <div className="space-y-4 max-w-3xl mx-auto">
-              {faqs.map((faq, index) => (
-                <div key={index} className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
-                  <h3 className="text-lg font-bold text-slate-800 mb-2">{faq.question}</h3>
-                  <p className="text-slate-600">{faq.answer}</p>
-                </div>
+            <h2 className="text-3xl font-bold text-slate-900 mb-8 text-center">
+              Frequently Asked Questions
+            </h2>
+            <div className="max-w-3xl mx-auto space-y-4">
+              {faqs.map((faq, idx) => (
+                <details key={idx} className="group bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden [&_summary::-webkit-details-marker]:hidden">
+                  <summary className="flex cursor-pointer items-center justify-between gap-1.5 p-6 text-slate-900 font-semibold hover:bg-slate-50 transition-colors">
+                    <span className="text-lg pr-4">{faq.question}</span>
+                    <span className="shrink-0 bg-slate-100 p-1.5 rounded-full text-slate-500 group-open:-rotate-180 transition-transform duration-300">
+                      <ChevronDown className="w-5 h-5" />
+                    </span>
+                  </summary>
+                  <div className="p-6 pt-0 text-slate-600 leading-relaxed border-t border-slate-50 mt-2 bg-slate-50/50">
+                    {faq.answer}
+                  </div>
+                </details>
               ))}
             </div>
           </div>

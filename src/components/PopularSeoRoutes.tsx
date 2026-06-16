@@ -20,7 +20,7 @@ export default async function PopularSeoRoutes() {
         
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
           {routes.map((route) => {
-            const basePath = route.type === "TAXI" ? "taxis" : route.type === "HOMESTAY" ? "homestays" : "tours";
+            const basePath = route.type === "TAXI" ? "taxis" : route.type === "HOMESTAY" ? "homestays" : route.type === "BLOG" ? "blog" : "tours";
             return (
               <Link
                 key={route.id}
