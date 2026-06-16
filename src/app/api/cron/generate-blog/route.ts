@@ -30,12 +30,12 @@ export async function GET(request: Request) {
     const existingSlugs = existingPages.map(p => p.slug);
 
     // 4. Construct Prompt
-    const prompt = \`
+    const prompt = `
     You are an expert Travel Blogger for "WanderKashmir", a premium travel platform in Kashmir.
     Your task is to generate exactly 1 unique, highly-searched Travel Blog article for Kashmir tourism.
     
     IMPORTANT RULES:
-    1. Do NOT use any of these existing topics/slugs: \${existingSlugs.join(", ")}
+    1. Do NOT use any of these existing topics/slugs: ${existingSlugs.join(", ")}
     2. BE CREATIVE. Use your deep knowledge of Kashmir travel trends to invent a completely new, engaging blog topic (e.g., hidden gems, itineraries, food guides, packing tips). DO NOT repeat standard examples.
     3. The response MUST be a valid JSON object without any markdown wrapping.
     

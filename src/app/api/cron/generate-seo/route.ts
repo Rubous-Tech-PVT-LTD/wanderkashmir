@@ -31,13 +31,12 @@ export async function GET(request: Request) {
     });
     const existingSlugs = existingPages.map(p => p.slug);
 
-    // 4. Construct the Prompt for Gemini
-    const prompt = \`
+    const prompt = `
     You are an expert SEO copywriter for "WanderKashmir", a premium travel platform in Kashmir.
     Your task is to generate exactly 1 unique, highly-searched SEO landing page for a Kashmir tourist route or homestay location.
     
     IMPORTANT RULES:
-    1. Do NOT use any of these existing routes: \${existingSlugs.join(", ")}
+    1. Do NOT use any of these existing routes: ${existingSlugs.join(", ")}
     2. BE CREATIVE. You must invent a completely NEW route or homestay location in Kashmir. Use your deep knowledge of Jammu & Kashmir's geography (including offbeat and famous locations) to pick a unique topic. DO NOT repeat standard examples.
     3. The response MUST be a valid JSON object without any markdown wrapping.
     
