@@ -7,8 +7,39 @@ import dynamic from "next/dynamic";
 
 const CustomDatePicker = dynamic(() => import("./CustomDatePicker"), {
   ssr: false,
-  loading: () => <div className="animate-pulse h-6 w-32 bg-slate-100 rounded"></div>,
+  loading: () => <input type="text" readOnly placeholder="Loading..." className="w-full text-sm font-medium text-slate-700 bg-transparent focus:outline-none cursor-wait placeholder:text-slate-400" />,
 });
+
+function LazyDatePickerField({ label, selected, onChange, minDate, placeholderText }: any) {
+  const [isInteractive, setIsInteractive] = useState(false);
+
+  return (
+    <div 
+      className="flex-1 w-full p-2 hover:bg-slate-50 rounded-xl transition-colors cursor-pointer px-4"
+      onMouseEnter={() => setIsInteractive(true)}
+      onClick={() => setIsInteractive(true)}
+      onFocus={() => setIsInteractive(true)}
+    >
+      <label className="block text-[11px] font-bold text-slate-800 mb-1">{label}</label>
+      {!isInteractive && !selected ? (
+        <input 
+          type="text" 
+          readOnly 
+          placeholder={placeholderText} 
+          className="w-full text-sm font-medium text-slate-700 bg-transparent focus:outline-none cursor-pointer placeholder:text-slate-500" 
+        />
+      ) : (
+        <CustomDatePicker
+          selected={selected}
+          onChange={onChange}
+          minDate={minDate}
+          placeholderText={placeholderText}
+          className="w-full text-sm font-medium text-slate-700 bg-transparent focus:outline-none cursor-pointer placeholder:text-slate-500"
+        />
+      )}
+    </div>
+  );
+}
 
 export default function SearchBar() {
   const router = useRouter();
@@ -80,29 +111,23 @@ export default function SearchBar() {
                 />
               </div>
             </div>
-            <div className="flex-1 w-full p-2 hover:bg-slate-50 rounded-xl transition-colors cursor-pointer px-4">
-              <label className="block text-[11px] font-bold text-slate-800 mb-1">Check-in</label>
-              <CustomDatePicker
-                selected={checkIn}
-                onChange={(date) => {
-                  setCheckIn(date);
-                  if (date && checkOut && date > checkOut) setCheckOut(null);
-                }}
-                minDate={new Date()}
-                placeholderText="Add date"
-                className="w-full text-sm font-medium text-slate-700 bg-transparent focus:outline-none cursor-pointer placeholder:text-slate-500"
-              />
-            </div>
-            <div className="flex-1 w-full p-2 hover:bg-slate-50 rounded-xl transition-colors cursor-pointer px-4">
-              <label className="block text-[11px] font-bold text-slate-800 mb-1">Check-out</label>
-              <CustomDatePicker
-                selected={checkOut}
-                onChange={(date) => setCheckOut(date)}
-                minDate={checkIn || new Date()}
-                placeholderText="Add date"
-                className="w-full text-sm font-medium text-slate-700 bg-transparent focus:outline-none cursor-pointer placeholder:text-slate-500"
-              />
-            </div>
+            <LazyDatePickerField
+              label="Check-in"
+              selected={checkIn}
+              onChange={(date: Date) => {
+                setCheckIn(date);
+                if (date && checkOut && date > checkOut) setCheckOut(null);
+              }}
+              minDate={new Date()}
+              placeholderText="Add date"
+            />
+            <LazyDatePickerField
+              label="Check-out"
+              selected={checkOut}
+              onChange={(date: Date) => setCheckOut(date)}
+              minDate={checkIn || new Date()}
+              placeholderText="Add date"
+            />
             <div className="flex-[1.6] w-full p-2 flex items-center justify-between hover:bg-slate-50 rounded-xl transition-colors px-4">
               <div className="flex-1 cursor-pointer min-w-[120px]">
                 <label htmlFor="guests-input" className="block text-[11px] font-bold text-slate-800 mb-1">Guests</label>
@@ -156,16 +181,13 @@ export default function SearchBar() {
                 />
               </div>
             </div>
-            <div className="flex-1 w-full p-2 hover:bg-slate-50 rounded-xl transition-colors cursor-pointer px-4">
-              <label className="block text-[11px] font-bold text-slate-800 mb-1">Pick-up Date</label>
-              <CustomDatePicker
-                selected={checkIn}
-                onChange={(date) => setCheckIn(date)}
-                minDate={new Date()}
-                placeholderText="Add date"
-                className="w-full text-sm font-medium text-slate-700 bg-transparent focus:outline-none cursor-pointer placeholder:text-slate-500"
-              />
-            </div>
+            <LazyDatePickerField
+              label="Pick-up Date"
+              selected={checkIn}
+              onChange={(date: Date) => setCheckIn(date)}
+              minDate={new Date()}
+              placeholderText="Add date"
+            />
             <div className="flex-[1] w-full p-2 flex items-center justify-between hover:bg-slate-50 rounded-xl transition-colors px-4">
               <button
                 onClick={handleSearch}
