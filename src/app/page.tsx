@@ -425,7 +425,7 @@ export default async function Home() {
       <Navbar />
 
       {/* ─── HERO ─────────────────────────────────────────── */}
-      <section className="relative h-[100vh] md:h-[95vh] flex flex-col justify-center overflow-visible">
+      <section className="relative h-[99vh] md:h-[95vh] flex flex-col justify-center overflow-visible">
         {/* Background Image Carousel */}
         <HeroCarousel />
 
