@@ -4,7 +4,7 @@ import { useState } from "react";
 import { 
   Users, Building2, Car, Map, LayoutDashboard, 
   CheckCircle2, Clock, IndianRupee, FileText, Eye, EyeOff, ShieldCheck,
-  AlertCircle, MapPin, X, XCircle
+  AlertCircle, MapPin, X, XCircle, Globe
 } from "lucide-react";
 import { approveVendor, rejectVendor } from "@/actions/vendor";
 import { approveListing, rejectListing } from "@/actions/listings";
@@ -17,6 +17,7 @@ import toast from "react-hot-toast";
 import { LogOut } from "lucide-react";
 import AdminToursTab from "./AdminToursTab";
 import AdminTaxisTab from "./AdminTaxisTab";
+import AdminSeoTab from "./AdminSeoTab";
 import { useEffect, useCallback } from "react";
 import dynamic from "next/dynamic";
 import Pagination from "@/components/Pagination";
@@ -600,6 +601,7 @@ export default function AdminDashboardClient({
             { id: "payouts", label: "Payouts", icon: IndianRupee },
             { id: "rejected", label: "Rejected Vendors", icon: XCircle },
             { id: "users", label: "Tourists", icon: Users },
+            { id: "seo_pages", label: "SEO Pages", icon: Globe },
           ].map((item) => (
             <button
               key={item.id}
@@ -670,6 +672,7 @@ export default function AdminDashboardClient({
         {/* Dynamic Content Area */}
         {activeTab === "tours" && <AdminToursTab />}
         {activeTab === "taxis" && <AdminTaxisTab />}
+        {activeTab === "seo_pages" && <AdminSeoTab />}
 
         {activeTab === "approvals" && (
           <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">

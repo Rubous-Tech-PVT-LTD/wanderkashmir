@@ -380,3 +380,20 @@ model Tour {
   bookings        Booking[]
   reviews         Review[]
 }
+
+model SeoLandingPage {
+  id          String   @id @default(cuid())
+  slug        String   @unique
+  type        String   // e.g., "TAXI", "HOMESTAY", "TOUR"
+  title       String
+  description String?  @db.Text
+  h1Heading   String
+  content     String?  @db.Text
+  faqs        Json?    // Stores array of { question, answer }
+  imageUrl    String?  // Optional Hero image for the landing page
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@index([type])
+}
