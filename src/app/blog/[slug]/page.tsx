@@ -37,20 +37,23 @@ export async function generateStaticParams() {
 }
 
 export default async function BlogArticlePage({ params }: { params: Promise<{ slug: string }> }) {
-  const resolvedParams = await params;
-  const page = await prisma.seoLandingPage.findUnique({
-    where: { slug: resolvedParams.slug }
-  });
+  try {
+    const resolvedParams = await params;
+    const page = await prisma.seoLandingPage.findUnique({
+      where: { slug: resolvedParams.slug }
+    });
 
-  if (!page || page.type !== "BLOG") {
-    notFound();
-  }
+    if (!page || page.type !== "BLOG") {
+      notFound();
+    }
 
-  const publishDate = new Date(page.createdAt).toLocaleDateString("en-US", { 
-    month: "long", 
-    day: "numeric", 
-    year: "numeric" 
-  });
+    const publishDate = new Date(page.createdAt).toLocaleDateString("en-US", { 
+      month: "long", 
+      day: "numeric", 
+      year: "numeric" 
+    });
+
+    const safeContent = page.content ? String(page.content).replace(/\n/g, '<br/>') : "";
 
   return (
     <main className="min-h-screen bg-slate-50 flex flex-col">
@@ -116,7 +119,7 @@ export default async function BlogArticlePage({ params }: { params: Promise<{ sl
                          prose-img:rounded-2xl prose-img:shadow-lg
                          prose-strong:text-slate-900 prose-strong:font-bold
                          prose-li:marker:text-indigo-600"
-              dangerouslySetInnerHTML={{ __html: page.content.replace(/\n/g, '<br/>') }} 
+              dangerouslySetInnerHTML={{ __html: safeContent }} 
             />
           </article>
         )}
@@ -138,4 +141,13 @@ export default async function BlogArticlePage({ params }: { params: Promise<{ sl
       <Footer />
     </main>
   );
+  } catch (error: any) {
+    return (
+      <main className="min-h-screen flex items-center justify-center p-8 text-center flex-col">
+        <h1 className="text-3xl text-red-600 font-bold mb-4">Error Loading Blog</h1>
+        <p className="text-slate-800 p-4 bg-slate-100 rounded-xl whitespace-pre-wrap font-mono text-sm max-w-2xl">{error.stack || error.message || "Unknown error"}</p>
+        <Link href="/blog" className="mt-8 text-indigo-600 underline">Go back to Blog</Link>
+      </main>
+    );
+  }
 }
