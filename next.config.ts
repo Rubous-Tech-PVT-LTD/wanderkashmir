@@ -2,6 +2,10 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   images: {
+    // Use a custom loader for Cloudinary so Next.js doesn't double-process
+    // images that Cloudinary has already optimized with q_auto,f_auto
+    loader: "custom",
+    loaderFile: "./src/lib/cloudinaryLoader.ts",
     remotePatterns: [
       {
         protocol: "https",
@@ -18,6 +22,10 @@ const nextConfig: NextConfig = {
       {
         protocol: "https",
         hostname: "imgd.aeplcdn.com",
+      },
+      {
+        protocol: "https",
+        hostname: "randomuser.me",
       },
     ],
   },

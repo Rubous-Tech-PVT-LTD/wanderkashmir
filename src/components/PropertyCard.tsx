@@ -30,8 +30,11 @@ export default function PropertyCard({
       <div className="card-white h-full flex flex-col relative">
         
         {/* Heart Icon Top Right */}
-        <button className="absolute top-3 right-3 z-10 w-8 h-8 rounded-full bg-black/20 backdrop-blur-sm flex items-center justify-center text-white hover:bg-white hover:text-orange-500 transition-colors shadow-sm">
-          <Heart className="w-4 h-4" />
+        <button
+          aria-label={`Save ${name} to favorites`}
+          className="absolute top-3 right-3 z-10 w-8 h-8 rounded-full bg-black/20 backdrop-blur-sm flex items-center justify-center text-white hover:bg-white hover:text-orange-500 transition-colors shadow-sm"
+        >
+          <Heart className="w-4 h-4" aria-hidden="true" />
         </button>
 
         {featured && (

@@ -80,8 +80,11 @@ export default function Navbar() {
             >
               Become a Partner
             </Link>
-            <button className="flex items-center gap-1.5 text-xs font-bold text-slate-700 hover:text-slate-900 bg-slate-50 border border-slate-100 px-3 py-2 rounded-lg transition-colors">
-              INR <ChevronDown className="w-3.5 h-3.5 text-slate-500" />
+            <button
+              aria-label="Select currency: INR Indian Rupee"
+              className="flex items-center gap-1.5 text-xs font-bold text-slate-700 hover:text-slate-900 bg-slate-50 border border-slate-100 px-3 py-2 rounded-lg transition-colors"
+            >
+              INR <ChevronDown className="w-3.5 h-3.5 text-slate-500" aria-hidden="true" />
             </button>
             {!isSignedIn ? (
               <SignInButton mode="modal">
@@ -102,16 +105,19 @@ export default function Navbar() {
           {/* Mobile Menu Button */}
           <button
             onClick={() => setMobileOpen(true)}
+            aria-label="Open navigation menu"
+            aria-expanded={mobileOpen}
+            aria-controls="mobile-menu"
             className="lg:hidden p-2 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
           >
-            <Menu className="w-6 h-6" />
+            <Menu className="w-6 h-6" aria-hidden="true" />
           </button>
         </div>
       </nav>
 
       {/* Mobile Menu */}
       {mobileOpen && (
-        <div className="fixed inset-0 z-[100] bg-white flex flex-col">
+        <div id="mobile-menu" className="fixed inset-0 z-[100] bg-white flex flex-col" role="dialog" aria-modal="true" aria-label="Navigation menu">
           <div className="flex items-center justify-between p-5 border-b border-slate-100">
             <Link href="/" className="flex items-center gap-2.5">
               <div className="flex items-center justify-center">
@@ -126,9 +132,10 @@ export default function Navbar() {
             </Link>
             <button
               onClick={() => setMobileOpen(false)}
+              aria-label="Close navigation menu"
               className="p-2 text-slate-500 hover:bg-slate-100 rounded-lg"
             >
-              <X className="w-6 h-6" />
+              <X className="w-6 h-6" aria-hidden="true" />
             </button>
           </div>
           

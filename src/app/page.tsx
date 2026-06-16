@@ -22,7 +22,13 @@ import {
   ChevronRight,
   Play,
 } from "lucide-react";
-import FeaturedTaxisClient from "@/components/FeaturedTaxisClient";
+import dynamic from "next/dynamic";
+
+const FeaturedTaxisClient = dynamic(
+  () => import("@/components/FeaturedTaxisClient"),
+  { ssr: true } // Keep SSR so content is in initial HTML for SEO
+);
+
 
 export const revalidate = 60;
 
@@ -427,7 +433,7 @@ export default async function Home() {
         <div className="relative z-10 container-custom mb-32 md:mb-0 pt-16 md:pt-0 md:mt-12 text-left">
           <h1 className="text-[3rem] md:text-[4.5rem] font-bold text-white leading-[1.1] drop-shadow-xl tracking-tight mb-2">
             Discover <span className="text-orange-500">Paradise</span> <br className="hidden md:block" />
-            <div className="font-['Dancing_Script'] text-[#38bdf8] font-normal drop-shadow-md mt-2 flex items-baseline justify-start gap-4">
+            <div className="text-[#38bdf8] font-normal drop-shadow-md mt-2 flex items-baseline justify-start gap-4" style={{ fontFamily: "var(--font-dancing-script), 'Dancing Script', cursive" }}>
               <span className="text-[2.5rem] md:text-[3.5rem]">in</span>
               <span className="text-[4.5rem] md:text-[6rem]">Kashmir</span>
             </div>

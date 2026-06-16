@@ -47,16 +47,18 @@ export default function FeaturedTaxisClient({ taxis }: { taxis: any[] }) {
               <button 
                 onClick={() => scroll("left")} 
                 disabled={!canScrollLeft}
+                aria-label="Scroll taxi list left"
                 className={`p-2 rounded-full border border-slate-200 transition-colors ${canScrollLeft ? 'bg-white text-slate-700 hover:bg-slate-100' : 'bg-slate-50 text-slate-300'}`}
               >
-                <ChevronLeft className="w-5 h-5" />
+                <ChevronLeft className="w-5 h-5" aria-hidden="true" />
               </button>
               <button 
                 onClick={() => scroll("right")} 
                 disabled={!canScrollRight}
+                aria-label="Scroll taxi list right"
                 className={`p-2 rounded-full border border-slate-200 transition-colors ${canScrollRight ? 'bg-white text-slate-700 hover:bg-slate-100' : 'bg-slate-50 text-slate-300'}`}
               >
-                <ChevronRight className="w-5 h-5" />
+                <ChevronRight className="w-5 h-5" aria-hidden="true" />
               </button>
             </div>
             <Link

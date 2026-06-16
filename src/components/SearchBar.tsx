@@ -106,8 +106,12 @@ export default function SearchBar() {
                   className="w-full text-sm font-medium text-slate-500 bg-transparent focus:outline-none cursor-pointer placeholder-slate-400"
                 />
               </div>
-              <button onClick={handleSearch} className="bg-[#0284c7] text-white p-3 md:px-6 md:py-3.5 rounded-xl hover:bg-[#0369a1] transition-all shadow-md flex items-center justify-center gap-2 flex-shrink-0 ml-2">
-                <Search className="w-[18px] h-[18px]" strokeWidth={2.5} />
+              <button
+                onClick={handleSearch}
+                aria-label="Search stays"
+                className="bg-[#0284c7] text-white p-3 md:px-6 md:py-3.5 rounded-xl hover:bg-[#0369a1] transition-all shadow-md flex items-center justify-center gap-2 flex-shrink-0 ml-2"
+              >
+                <Search className="w-[18px] h-[18px]" strokeWidth={2.5} aria-hidden="true" />
                 <span className="font-bold text-sm hidden lg:inline tracking-wide">Search</span>
               </button>
             </div>
@@ -152,8 +156,12 @@ export default function SearchBar() {
               />
             </div>
             <div className="flex-[1] w-full p-2 flex items-center justify-between hover:bg-slate-50 rounded-xl transition-colors px-4">
-              <button onClick={handleSearch} className="w-full bg-[#0284c7] text-white p-3 md:px-6 md:py-3.5 rounded-xl hover:bg-[#0369a1] transition-all shadow-md flex items-center justify-center gap-2 flex-shrink-0">
-                <Search className="w-[18px] h-[18px]" strokeWidth={2.5} />
+              <button
+                onClick={handleSearch}
+                aria-label="Search cabs"
+                className="w-full bg-[#0284c7] text-white p-3 md:px-6 md:py-3.5 rounded-xl hover:bg-[#0369a1] transition-all shadow-md flex items-center justify-center gap-2 flex-shrink-0"
+              >
+                <Search className="w-[18px] h-[18px]" strokeWidth={2.5} aria-hidden="true" />
                 <span className="font-bold text-sm hidden lg:inline tracking-wide">Search Cabs</span>
               </button>
             </div>
@@ -209,8 +217,12 @@ export default function SearchBar() {
                   className="w-full text-sm font-medium text-slate-500 bg-transparent focus:outline-none cursor-pointer placeholder-slate-400"
                 />
               </div>
-              <button onClick={handleSearch} className="bg-[#0284c7] text-white p-3 md:px-6 md:py-3.5 rounded-xl hover:bg-[#0369a1] transition-all shadow-md flex items-center justify-center gap-2 flex-shrink-0 ml-2">
-                <Search className="w-[18px] h-[18px]" strokeWidth={2.5} />
+              <button
+                onClick={handleSearch}
+                aria-label="Find tour packages"
+                className="bg-[#0284c7] text-white p-3 md:px-6 md:py-3.5 rounded-xl hover:bg-[#0369a1] transition-all shadow-md flex items-center justify-center gap-2 flex-shrink-0 ml-2"
+              >
+                <Search className="w-[18px] h-[18px]" strokeWidth={2.5} aria-hidden="true" />
                 <span className="font-bold text-sm hidden lg:inline tracking-wide">Find Tours</span>
               </button>
             </div>
