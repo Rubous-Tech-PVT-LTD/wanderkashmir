@@ -1,22 +1,5 @@
-/**
- * Custom Cloudinary Image Loader for Next.js
- *
- * CRITICAL BUG FIXED: The previous version used `dpr_auto` alongside `w_{width}`.
- * Next.js already accounts for device pixel ratio when calculating `width`
- * (e.g., it requests w=750 for a 375px viewport at 2× DPR). Adding `dpr_auto`
- * on top of that caused Cloudinary to multiply the image size a second time,
- * serving 1500–2250px images on mobile — a 3–4× payload penalty that was the
- * primary cause of LCP=4.1s on mobile.
- *
- * HOW THIS LOADER WORKS:
- * 1. For Cloudinary URLs: strips all existing transforms from the URL path,
- *    then injects `w_{width},q_auto,f_auto` to get correctly sized, auto-format
- *    images without double-processing by the Vercel edge.
- *
- * 2. For Unsplash URLs: appends `w` and `q` query params.
- *
- * 3. For all other sources: returns the URL unchanged.
- */
+
+
 export default function cloudinaryLoader({
   src,
   width,
