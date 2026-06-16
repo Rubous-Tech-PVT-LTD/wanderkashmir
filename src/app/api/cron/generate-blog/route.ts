@@ -29,21 +29,6 @@ export async function GET(request: Request) {
     });
     const existingSlugs = existingPages.map(p => p.slug);
 
-    const blogTopics = [
-      "Best time to visit", "Hidden gems in", "How to reach", 
-      "Top cafes in", "Winter packing list for", "Summer itinerary for",
-      "Adventure sports in", "Cultural guide to", "Budget travel in",
-      "Luxury staycation in", "Photography spots in", "Local food in"
-    ];
-    const kashmirLocations = [
-      "Srinagar", "Gulmarg", "Pahalgam", "Sonamarg", "Doodhpathri", "Gurez Valley"
-    ];
-    
-    // Randomly pick a topic and location to inspire the AI
-    const randomTopic = blogTopics[Math.floor(Math.random() * blogTopics.length)];
-    const randomLocation = kashmirLocations[Math.floor(Math.random() * kashmirLocations.length)];
-    const randomIdea = \`\${randomTopic} \${randomLocation}\`;
-
     // 4. Construct Prompt
     const prompt = \`
     You are an expert Travel Blogger for "WanderKashmir", a premium travel platform in Kashmir.
@@ -51,7 +36,7 @@ export async function GET(request: Request) {
     
     IMPORTANT RULES:
     1. Do NOT use any of these existing topics/slugs: \${existingSlugs.join(", ")}
-    2. BE CREATIVE. Invent a completely new, engaging blog topic. For example, you could write about: "\${randomIdea}". Do not just copy this exact idea, but use it as inspiration for a high-traffic travel article.
+    2. BE CREATIVE. Use your deep knowledge of Kashmir travel trends to invent a completely new, engaging blog topic (e.g., hidden gems, itineraries, food guides, packing tips). DO NOT repeat standard examples.
     3. The response MUST be a valid JSON object without any markdown wrapping.
     
     JSON STRUCTURE:

@@ -31,17 +31,6 @@ export async function GET(request: Request) {
     });
     const existingSlugs = existingPages.map(p => p.slug);
 
-    const kashmirLocations = [
-      "Srinagar", "Gulmarg", "Pahalgam", "Sonamarg", "Doodhpathri", 
-      "Yusmarg", "Aru Valley", "Betaab Valley", "Gurez Valley", 
-      "Anantnag", "Kupwara", "Shopian", "Bandipora", "Pulwama", "Sopore",
-      "Srinagar Airport", "Jammu", "Katra", "Patnitop", "Sanasar",
-      "Bhaderwah", "Kishtwar", "Dal Lake", "Nigeen Lake"
-    ];
-    // Randomly pick a few locations to inspire the AI
-    const shuffled = kashmirLocations.sort(() => 0.5 - Math.random());
-    const randomLocations = shuffled.slice(0, 3).join(", ");
-
     // 4. Construct the Prompt for Gemini
     const prompt = \`
     You are an expert SEO copywriter for "WanderKashmir", a premium travel platform in Kashmir.
@@ -49,7 +38,7 @@ export async function GET(request: Request) {
     
     IMPORTANT RULES:
     1. Do NOT use any of these existing routes: \${existingSlugs.join(", ")}
-    2. BE CREATIVE. You must invent a completely NEW route or homestay location. For example, consider routes or homestays involving these random locations: \${randomLocations}. Do not just copy these, use them as inspiration for new combinations.
+    2. BE CREATIVE. You must invent a completely NEW route or homestay location in Kashmir. Use your deep knowledge of Jammu & Kashmir's geography (including offbeat and famous locations) to pick a unique topic. DO NOT repeat standard examples.
     3. The response MUST be a valid JSON object without any markdown wrapping.
     
     JSON STRUCTURE:
