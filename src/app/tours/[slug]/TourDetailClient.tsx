@@ -474,14 +474,20 @@ export default function TourDetailClient({ initialTour }: { initialTour: any }) 
                     <p className="text-3xl font-bold text-slate-900">
                       ₹{tour.price.toLocaleString("en-IN")}
                     </p>
-                    <p className="text-slate-400 line-through text-sm">
-                      ₹{tour.originalPrice.toLocaleString("en-IN")}
-                    </p>
+                    {tour.originalPrice ? (
+                      <p className="text-slate-400 line-through text-sm">
+                        ₹{tour.originalPrice.toLocaleString("en-IN")}
+                      </p>
+                    ) : null}
                   </div>
                   <p className="text-xs text-slate-400 mb-1">per person</p>
-                  <p className="text-sm font-semibold text-sky-600 mb-4">
-                    💰 You save ₹{savings.toLocaleString("en-IN")} per person
-                  </p>
+                  {tour.originalPrice ? (
+                    <p className="text-sm font-semibold text-sky-600 mb-4">
+                      💰 You save ₹{savings.toLocaleString("en-IN")} per person
+                    </p>
+                  ) : (
+                    <div className="mb-4"></div>
+                  )}
 
                   {/* Date Picker */}
                   <div className="mb-3">
