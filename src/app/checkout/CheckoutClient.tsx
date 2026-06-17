@@ -100,8 +100,17 @@ export default function CheckoutClient({
   const isTaxi = type === "taxi";
   const isGuide = type === "guide";
   const isTour = type === "tour";
+  const addonGuide = searchParams.get("addonGuide") === "true";
 
   const [selectedGuideId, setSelectedGuideId] = useState<string>("");
+  
+  // Pre-select guide if addonGuide is true
+  useEffect(() => {
+    if (addonGuide && isTour && availableGuides && availableGuides.length > 0 && !selectedGuideId) {
+      setSelectedGuideId(availableGuides[0].id);
+    }
+  }, [addonGuide, isTour, availableGuides, selectedGuideId]);
+
   const selectedGuide = availableGuides?.find((g: any) => g.id === selectedGuideId);
   const guideRate = selectedGuide ? selectedGuide.pricePerDay : 0;
   

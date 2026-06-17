@@ -35,6 +35,7 @@ export default function TourDetailClient({ initialTour }: { initialTour: any }) 
   
   // Booking Flow State
   const [showBookingFlow, setShowBookingFlow] = useState(false);
+  const [showGuidePopup, setShowGuidePopup] = useState(false);
   const [bookingStep, setBookingStep] = useState(1);
   const [guestName, setGuestName] = useState("");
   const [guestPhone, setGuestPhone] = useState("");
@@ -554,8 +555,12 @@ export default function TourDetailClient({ initialTour }: { initialTour: any }) 
                     onClick={() => {
                       if (!isSignedIn) {
                         setBookingError("Please sign in to book a tour.");
+                      } else if (!travelDate) {
+                        setBookingError("Please select a travel date first.");
+                        setShakeDate(true);
+                        setTimeout(() => setShakeDate(false), 500);
                       } else {
-                        router.push(`/checkout?type=tour&tourId=${tour.id}`);
+                        setShowGuidePopup(true);
                       }
                     }}
                     className="w-full btn-primary justify-center text-base py-3.5 rounded-xl mb-3 flex items-center"
@@ -624,6 +629,59 @@ export default function TourDetailClient({ initialTour }: { initialTour: any }) 
           </div>
         </div>
       </div>
+      {/* Guide Add-on Popup */}
+      {showGuidePopup && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md z-[100] flex items-center justify-center p-4 animate-in fade-in duration-200">
+          <div className="bg-white rounded-3xl w-full max-w-md shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
+            <div className="bg-gradient-to-br from-sky-500 to-sky-700 p-6 text-center relative overflow-hidden">
+              <div className="absolute top-0 right-0 p-4 opacity-20">
+                <MapPin className="w-24 h-24 text-white" />
+              </div>
+              <div className="relative z-10">
+                <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
+                  <UserCircle2 className="w-8 h-8 text-sky-600" />
+                </div>
+                <h3 className="font-black text-2xl text-white mb-2">Wait! Enhance Your Trip</h3>
+                <p className="text-sky-100 text-sm font-medium">Add a local expert guide to make your Kashmir experience unforgettable.</p>
+              </div>
+            </div>
+            
+            <div className="p-6">
+              <div className="space-y-3 mb-8">
+                <div className="flex items-start gap-3">
+                  <CheckCircle2 className="w-5 h-5 text-emerald-500 flex-shrink-0 mt-0.5" />
+                  <p className="text-sm text-slate-600"><strong className="text-slate-900">Hidden Gems:</strong> See places tourists usually miss.</p>
+                </div>
+                <div className="flex items-start gap-3">
+                  <CheckCircle2 className="w-5 h-5 text-emerald-500 flex-shrink-0 mt-0.5" />
+                  <p className="text-sm text-slate-600"><strong className="text-slate-900">Local Culture:</strong> Learn authentic Kashmiri history and culture.</p>
+                </div>
+                <div className="flex items-start gap-3">
+                  <CheckCircle2 className="w-5 h-5 text-emerald-500 flex-shrink-0 mt-0.5" />
+                  <p className="text-sm text-slate-600"><strong className="text-slate-900">Hassle-free:</strong> Your guide handles navigation and local coordination.</p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <button 
+                  onClick={() => router.push(`/checkout?type=tour&tourId=\${tour.id}&addonGuide=true`)}
+                  className="bg-sky-600 text-white font-bold py-3.5 px-4 rounded-xl hover:bg-sky-700 transition-colors shadow-lg shadow-sky-600/30 text-sm flex items-center justify-center gap-2"
+                >
+                  Yes, Add Guide
+                </button>
+                <button 
+                  onClick={() => router.push(`/checkout?type=tour&tourId=\${tour.id}`)}
+                  className="bg-slate-100 text-slate-600 font-bold py-3.5 px-4 rounded-xl hover:bg-slate-200 transition-colors text-sm"
+                >
+                  Skip for now
+                </button>
+              </div>
+              <p className="text-center text-xs text-slate-400 mt-4 cursor-pointer hover:underline" onClick={() => setShowGuidePopup(false)}>Close</p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Booking Modal */}
       {showBookingFlow && (
         <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-200">
