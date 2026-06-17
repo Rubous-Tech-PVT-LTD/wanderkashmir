@@ -2000,7 +2000,7 @@ export default function AdminDashboardClient({
                                 <div class="section-title">Other Guests</div>
                                 <table>
                                   <tr><th>Name</th><th>Age</th></tr>
-                                  \${guests.map((g: any) => `<tr><td>\${g.name}</td><td>\${g.age}</td></tr>`).join('')}
+                                  ${guests.map((g: any) => `<tr><td>${g.name}</td><td>${g.age}</td></tr>`).join('')}
                                 </table>
                               </div>
                             `;
@@ -2014,12 +2014,12 @@ export default function AdminDashboardClient({
                         
                         let incHtml = '';
                         if (t.inclusions && Array.isArray(t.inclusions)) {
-                          incHtml = `<div><strong>Included:</strong><ul>\${t.inclusions.map((i:any) => `<li>\${i}</li>`).join('')}</ul></div>`;
+                          incHtml = `<div><strong>Included:</strong><ul>${t.inclusions.map((i:any) => `<li>${i}</li>`).join('')}</ul></div>`;
                         }
                         
                         let excHtml = '';
                         if (t.exclusions && Array.isArray(t.exclusions)) {
-                          excHtml = `<div><strong>Not Included:</strong><ul>\${t.exclusions.map((e:any) => `<li>\${e}</li>`).join('')}</ul></div>`;
+                          excHtml = `<div><strong>Not Included:</strong><ul>${t.exclusions.map((e:any) => `<li>${e}</li>`).join('')}</ul></div>`;
                         }
 
                         let itineraryHtml = '';
@@ -2027,10 +2027,10 @@ export default function AdminDashboardClient({
                           itineraryHtml = `
                             <div style="margin-top:20px;">
                               <strong>Itinerary:</strong>
-                              \${t.itinerary.map((day:any) => `
+                              ${t.itinerary.map((day:any) => `
                                 <div style="margin-bottom:10px; padding:10px; background:#f9f9f9; border-radius:5px;">
-                                  <div style="font-weight:bold;">Day \${day.day}: \${day.title}</div>
-                                  <div style="font-size:14px; margin-top:5px;">\${day.description}</div>
+                                  <div style="font-weight:bold;">Day ${day.day}: ${day.title}</div>
+                                  <div style="font-size:14px; margin-top:5px;">${day.description}</div>
                                 </div>
                               `).join('')}
                             </div>
@@ -2040,13 +2040,13 @@ export default function AdminDashboardClient({
                         tourHtml = `
                           <div class="section">
                             <div class="section-title">Tour Package Details</div>
-                            <div class="row"><span class="label">Tour Title</span> <span class="value">\${t.title}</span></div>
-                            <div class="row"><span class="label">Duration</span> <span class="value">\${t.duration || 'N/A'}</span></div>
+                            <div class="row"><span class="label">Tour Title</span> <span class="value">${t.title}</span></div>
+                            <div class="row"><span class="label">Duration</span> <span class="value">${t.duration || 'N/A'}</span></div>
                             <div style="display:flex; gap:20px; margin-top:15px;">
-                              <div style="flex:1;">\${incHtml}</div>
-                              <div style="flex:1;">\${excHtml}</div>
+                              <div style="flex:1;">${incHtml}</div>
+                              <div style="flex:1;">${excHtml}</div>
                             </div>
-                            \${itineraryHtml}
+                            ${itineraryHtml}
                           </div>
                         `;
                       }
@@ -2054,7 +2054,7 @@ export default function AdminDashboardClient({
                       const html = `
                         <html>
                           <head>
-                            <title>Booking Receipt - \${selectedBookingDetails.id}</title>
+                            <title>Booking Receipt - ${selectedBookingDetails.id}</title>
                             <style>
                               body { font-family: system-ui, -apple-system, sans-serif; padding: 40px; color: #333; line-height: 1.6; max-width: 800px; margin: 0 auto; }
                               .header { text-align: center; border-bottom: 2px solid #eee; padding-bottom: 20px; margin-bottom: 20px; }
@@ -2073,38 +2073,38 @@ export default function AdminDashboardClient({
                           <body>
                             <div class="header">
                               <div class="title">WanderKashmir Booking Receipt</div>
-                              <div class="subtitle">Booking ID: \${selectedBookingDetails.id.toUpperCase()} | Date: \${new Date(selectedBookingDetails.createdAt).toLocaleDateString()}</div>
-                              <div class="subtitle">Status: \${selectedBookingDetails.status}</div>
+                              <div class="subtitle">Booking ID: ${selectedBookingDetails.id.toUpperCase()} | Date: ${new Date(selectedBookingDetails.createdAt).toLocaleDateString()}</div>
+                              <div class="subtitle">Status: ${selectedBookingDetails.status}</div>
                             </div>
                             
                             <div class="section">
                               <div class="section-title">Customer Details</div>
-                              <div class="row"><span class="label">Lead Guest Name</span> <span class="value">\${selectedBookingDetails.guestName || selectedBookingDetails.user?.name || 'N/A'}</span></div>
-                              <div class="row"><span class="label">Email</span> <span class="value">\${selectedBookingDetails.user?.email || 'N/A'}</span></div>
-                              <div class="row"><span class="label">Phone</span> <span class="value">\${selectedBookingDetails.guestPhone || 'N/A'}</span></div>
-                              <div class="row"><span class="label">Total Guests</span> <span class="value">\${selectedBookingDetails.guests || 1}</span></div>
-                              \${selectedBookingDetails.specialRequests ? `<div style="margin-top:10px;"><strong>Special Requests:</strong> \${selectedBookingDetails.specialRequests}</div>` : ''}
+                              <div class="row"><span class="label">Lead Guest Name</span> <span class="value">${selectedBookingDetails.guestName || selectedBookingDetails.user?.name || 'N/A'}</span></div>
+                              <div class="row"><span class="label">Email</span> <span class="value">${selectedBookingDetails.user?.email || 'N/A'}</span></div>
+                              <div class="row"><span class="label">Phone</span> <span class="value">${selectedBookingDetails.guestPhone || 'N/A'}</span></div>
+                              <div class="row"><span class="label">Total Guests</span> <span class="value">${selectedBookingDetails.guests || 1}</span></div>
+                              ${selectedBookingDetails.specialRequests ? `<div style="margin-top:10px;"><strong>Special Requests:</strong> ${selectedBookingDetails.specialRequests}</div>` : ''}
                             </div>
 
-                            \${otherGuestsHtml}
+                            ${otherGuestsHtml}
 
                             <div class="section">
                               <div class="section-title">Booking Summary</div>
-                              <div class="row"><span class="label">Check-in</span> <span class="value">\${selectedBookingDetails.checkIn ? new Date(selectedBookingDetails.checkIn).toLocaleDateString() : 'N/A'}</span></div>
-                              <div class="row"><span class="label">Check-out</span> <span class="value">\${selectedBookingDetails.checkOut ? new Date(selectedBookingDetails.checkOut).toLocaleDateString() : 'N/A'}</span></div>
-                              \${selectedBookingDetails.property ? `<div class="row"><span class="label">Hotel/Property</span> <span class="value">\${selectedBookingDetails.property.name}</span></div>` : ''}
-                              \${selectedBookingDetails.vehicle ? `<div class="row"><span class="label">Vehicle</span> <span class="value">\${selectedBookingDetails.vehicle.make} \${selectedBookingDetails.vehicle.model}</span></div>` : ''}
-                              \${selectedBookingDetails.guideProfile ? `<div class="row"><span class="label">Guide Add-on</span> <span class="value">\${selectedBookingDetails.guideProfile.vendorProfile?.businessName || 'Yes'}</span></div>` : ''}
+                              <div class="row"><span class="label">Check-in</span> <span class="value">${selectedBookingDetails.checkIn ? new Date(selectedBookingDetails.checkIn).toLocaleDateString() : 'N/A'}</span></div>
+                              <div class="row"><span class="label">Check-out</span> <span class="value">${selectedBookingDetails.checkOut ? new Date(selectedBookingDetails.checkOut).toLocaleDateString() : 'N/A'}</span></div>
+                              ${selectedBookingDetails.property ? `<div class="row"><span class="label">Hotel/Property</span> <span class="value">${selectedBookingDetails.property.name}</span></div>` : ''}
+                              ${selectedBookingDetails.vehicle ? `<div class="row"><span class="label">Vehicle</span> <span class="value">${selectedBookingDetails.vehicle.make} ${selectedBookingDetails.vehicle.model}</span></div>` : ''}
+                              ${selectedBookingDetails.guideProfile ? `<div class="row"><span class="label">Guide Add-on</span> <span class="value">${selectedBookingDetails.guideProfile.vendorProfile?.businessName || 'Yes'}</span></div>` : ''}
                             </div>
 
-                            \${tourHtml}
+                            ${tourHtml}
 
                             <div class="section">
                               <div class="section-title">Payment Details</div>
-                              <div class="row"><span class="label">Base Amount</span> <span class="value">₹\${selectedBookingDetails.baseAmount || 0}</span></div>
-                              <div class="row"><span class="label">Taxi Add-on</span> <span class="value">₹\${selectedBookingDetails.taxiAmount || 0}</span></div>
-                              <div class="row"><span class="label">Guide Add-on</span> <span class="value">₹\${selectedBookingDetails.guideAmount || 0}</span></div>
-                              <div class="row" style="font-size:18px; border-top:2px solid #000; padding-top:10px;"><span class="label" style="color:#000;">Total Paid Amount</span> <span class="value" style="font-weight:bold;">₹\${selectedBookingDetails.amount}</span></div>
+                              <div class="row"><span class="label">Base Amount</span> <span class="value">₹${selectedBookingDetails.baseAmount || 0}</span></div>
+                              <div class="row"><span class="label">Taxi Add-on</span> <span class="value">₹${selectedBookingDetails.taxiAmount || 0}</span></div>
+                              <div class="row"><span class="label">Guide Add-on</span> <span class="value">₹${selectedBookingDetails.guideAmount || 0}</span></div>
+                              <div class="row" style="font-size:18px; border-top:2px solid #000; padding-top:10px;"><span class="label" style="color:#000;">Total Paid Amount</span> <span class="value" style="font-weight:bold;">₹${selectedBookingDetails.amount}</span></div>
                             </div>
                             
                             <div style="text-align:center; margin-top:50px; color:#888; font-size:12px;">
