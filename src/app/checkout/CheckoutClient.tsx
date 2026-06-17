@@ -25,7 +25,7 @@ export default function CheckoutClient({
   const [checkIn, setCheckIn] = useState<Date | null>(null);
   const [checkOut, setCheckOut] = useState<Date | null>(null);
   const [nights, setNights] = useState<number>(1);
-  const [guests, setGuests] = useState<number>(1);
+  const [guests, setGuests] = useState<number>(parseInt(searchParams.get("guests") || "1"));
 
   // Load from local storage
   useEffect(() => {

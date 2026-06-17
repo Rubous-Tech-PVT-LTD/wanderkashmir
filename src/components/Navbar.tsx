@@ -56,10 +56,10 @@ const NavbarAuthSectionMobile = dynamic(
 // ─────────────────────────────────────────────────────────────────────────────
 
 const navLinks = [
-  { label: "Stays", href: "/stays" },
-  { label: "Homestays", href: "/stays?type=Homestay" },
-  { label: "Taxis", href: "/taxis" },
   { label: "Tour Packages", href: "/tours" },
+  { label: "Homestays", href: "/stays?type=Homestay" },
+  { label: "Hotels", href: "/stays?type=Hotel" },
+  { label: "Taxis", href: "/taxis" },
   { label: "Travel Guide", href: "/guides" },
 ];
 

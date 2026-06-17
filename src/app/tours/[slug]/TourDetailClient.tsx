@@ -670,13 +670,13 @@ export default function TourDetailClient({ initialTour }: { initialTour: any }) 
 
               <div className="grid grid-cols-2 gap-3">
                 <button 
-                  onClick={() => router.push(`/checkout?type=tour&tourId=\${tour.id}&addonGuide=true`)}
+                  onClick={() => router.push(`/checkout?type=tour&tourId=${tour.id}&addonGuide=true&guests=${activePersons}`)}
                   className="bg-sky-600 text-white font-bold py-3.5 px-4 rounded-xl hover:bg-sky-700 transition-colors shadow-lg shadow-sky-600/30 text-sm flex items-center justify-center gap-2"
                 >
                   Yes, Add Guide
                 </button>
                 <button 
-                  onClick={() => router.push(`/checkout?type=tour&tourId=\${tour.id}`)}
+                  onClick={() => router.push(`/checkout?type=tour&tourId=${tour.id}&guests=${activePersons}`)}
                   className="bg-slate-100 text-slate-600 font-bold py-3.5 px-4 rounded-xl hover:bg-slate-200 transition-colors text-sm"
                 >
                   Skip for now

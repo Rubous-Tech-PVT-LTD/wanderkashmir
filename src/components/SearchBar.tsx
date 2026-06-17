@@ -43,8 +43,8 @@ function LazyDatePickerField({ label, selected, onChange, minDate, placeholderTe
 
 export default function SearchBar() {
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState("Stays");
-  const tabs = ["Stays", "Homestays", "Taxis", "Tour Packages"];
+  const [activeTab, setActiveTab] = useState("Tour Packages");
+  const tabs = ["Tour Packages", "Homestays", "Hotels", "Taxis", "Travel Guide"];
 
   const [destination, setDestination] = useState("");
   const [checkIn, setCheckIn] = useState<Date | null>(null);
@@ -59,8 +59,11 @@ export default function SearchBar() {
     if (guests) queryParams.append("guests", guests);
 
     let route = "/stays";
+    if (activeTab === "Hotels") route = "/stays?type=Hotel";
+    if (activeTab === "Homestays") route = "/stays?type=Homestay";
     if (activeTab === "Taxis") route = "/taxis";
     if (activeTab === "Tour Packages") route = "/tours";
+    if (activeTab === "Travel Guide") route = "/guides";
 
     const queryString = queryParams.toString();
     router.push(`${route}${queryString ? `?${queryString}` : ""}`);
@@ -93,8 +96,8 @@ export default function SearchBar() {
       {/* Input Fields */}
       <div className="flex flex-col md:flex-row items-center divide-y md:divide-y-0 md:divide-x divide-slate-100 bg-white p-2">
 
-        {/* STAYS & HOMESTAYS */}
-        {(activeTab === "Stays" || activeTab === "Homestays") && (
+        {/* HOMESTAYS & HOTELS */}
+        {(activeTab === "Homestays" || activeTab === "Hotels") && (
           <>
             <div className="flex-[1.5] w-full p-2 hover:bg-slate-50 rounded-xl transition-colors cursor-text group">
               <label htmlFor="destination-input" className="block text-[11px] font-bold text-slate-800 ml-8 mb-1">Where are you going?</label>
@@ -259,6 +262,43 @@ export default function SearchBar() {
               >
                 <Search className="w-[18px] h-[18px]" strokeWidth={2.5} aria-hidden="true" />
                 <span className="font-bold text-sm hidden lg:inline tracking-wide">Find Tours</span>
+              </button>
+            </div>
+          </>
+        )}
+
+        {/* TRAVEL GUIDE */}
+        {activeTab === "Travel Guide" && (
+          <>
+            <div className="flex-[1.5] w-full p-2 hover:bg-slate-50 rounded-xl transition-colors cursor-text group">
+              <label htmlFor="guide-dest-input" className="block text-[11px] font-bold text-slate-800 ml-8 mb-1">Where?</label>
+              <div className="flex items-center gap-3 px-2">
+                <MapPin className="w-4 h-4 text-slate-500 group-focus-within:text-[#0284c7] flex-shrink-0" aria-hidden="true" />
+                <input
+                  id="guide-dest-input"
+                  type="text"
+                  value={destination}
+                  onChange={(e) => setDestination(e.target.value)}
+                  placeholder="Srinagar, Gulmarg..."
+                  className="w-full text-sm font-medium text-slate-700 bg-transparent focus:outline-none placeholder:text-slate-500"
+                />
+              </div>
+            </div>
+            <LazyDatePickerField
+              label="Date"
+              selected={checkIn}
+              onChange={(date: Date) => setCheckIn(date)}
+              minDate={new Date()}
+              placeholderText="Select date"
+            />
+            <div className="flex-[1] w-full p-2 flex items-center justify-between hover:bg-slate-50 rounded-xl transition-colors px-4">
+              <button
+                onClick={handleSearch}
+                aria-label="Find local guides"
+                className="w-full bg-[#0284c7] text-white p-3 md:px-6 md:py-3.5 rounded-xl hover:bg-[#0369a1] transition-all shadow-md flex items-center justify-center gap-2 flex-shrink-0"
+              >
+                <Search className="w-[18px] h-[18px]" strokeWidth={2.5} aria-hidden="true" />
+                <span className="font-bold text-sm hidden lg:inline tracking-wide">Find Guides</span>
               </button>
             </div>
           </>

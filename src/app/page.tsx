@@ -5,7 +5,7 @@ import SearchBar from "@/components/SearchBar";
 import PropertyCard from "@/components/PropertyCard";
 import HeroCarousel from "@/components/HeroCarousel";
 import ComingSoonButton from "@/components/ComingSoonButton";
-import SearchSection from "./SearchSection";
+
 import PopularSeoRoutes from "@/components/PopularSeoRoutes";
 import Link from "next/link";
 import Image from "next/image";
@@ -559,12 +559,10 @@ export default async function Home() {
                         <span key={lang} className="text-[10px] uppercase font-bold tracking-wider bg-slate-100 text-slate-600 px-2 py-1 rounded-md">{lang}</span>
                       ))}
                     </div>
-                    <div className="pt-4 border-t border-slate-100 flex items-center justify-between">
-                      <div>
-                        <p className="text-xs text-slate-500">From</p>
-                        <p className="font-bold text-slate-900">₹{g.price.toLocaleString("en-IN")}</p>
-                      </div>
-                      <span className="bg-sky-50 text-sky-600 text-xs font-bold px-3 py-1.5 rounded-full">Book</span>
+                    <div className="pt-4 border-t border-slate-100 flex items-center justify-center">
+                      <span className="bg-slate-50 text-slate-700 text-sm font-bold px-4 py-2 rounded-full border border-slate-200 hover:bg-slate-100 hover:border-slate-300 transition-colors w-full text-center">
+                        View Details
+                      </span>
                     </div>
                   </div>
                 </Link>
