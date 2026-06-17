@@ -6,7 +6,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { 
   Star, Clock, Users, MapPin, CheckCircle2, 
-  Heart, Share2, ChevronRight, Calendar, Info, Shield, Phone, MessageCircle, Utensils, Hotel, ChevronDown, ChevronUp, XCircle, FileText, User, UserCheck, Car, Compass, Camera, AlertCircle
+  Heart, Share2, ChevronRight, Calendar, Info, Shield, Phone, MessageCircle, Utensils, Hotel, ChevronDown, ChevronUp, XCircle, FileText, User, UserCheck, Car, Compass, Camera, AlertCircle, UserCircle2
 } from "lucide-react";
 import CustomDatePicker from "@/components/CustomDatePicker";
 import { useRouter } from "next/navigation";
