@@ -81,12 +81,7 @@ export default function AdminMapView({ vendors, onExit }: { vendors: any[], onEx
         <div className="absolute top-0 left-0 w-full h-[2px] bg-emerald-500/50 shadow-[0_0_15px_rgba(16,185,129,1)] animate-[scan_3s_linear_infinite]"></div>
       </div>
 
-      <style dangerouslySetInnerHTML={{ __html: \`
-        @keyframes scan {
-          0% { transform: translateY(-100%); }
-          100% { transform: translateY(1000px); }
-        }
-      \`}} />
+
 
       <div className="w-full h-full relative z-0 bg-black">
         <MapContainer 

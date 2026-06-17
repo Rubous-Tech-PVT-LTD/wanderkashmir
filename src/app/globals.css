@@ -204,3 +204,8 @@
   .hero-slide { animation: none !important; opacity: 0 !important; }
   .hero-slide:first-child { opacity: 1 !important; }
 }
+
+@keyframes scan {
+  0% { transform: translateY(-100%); }
+  100% { transform: translateY(1000px); }
+}
