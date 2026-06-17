@@ -185,6 +185,8 @@ export default function TaxisClient() {
   const handlePickupChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value;
     setPickupText(val);
+    setPickupCoords(null);
+    setDistanceKm(0);
     if (pickupTimeoutRef.current) clearTimeout(pickupTimeoutRef.current);
     pickupTimeoutRef.current = setTimeout(() => searchLocationAutocomplete(val, true), 500);
   };
@@ -192,6 +194,8 @@ export default function TaxisClient() {
   const handleDropoffChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value;
     setDropoffText(val);
+    setDropoffCoords(null);
+    setDistanceKm(0);
     if (dropoffTimeoutRef.current) clearTimeout(dropoffTimeoutRef.current);
     dropoffTimeoutRef.current = setTimeout(() => searchLocationAutocomplete(val, false), 500);
   };
@@ -281,7 +285,10 @@ export default function TaxisClient() {
                           value={pickupText}
                           onChange={handlePickupChange}
                           onFocus={() => { if (pickupSuggestions.length > 0) setShowPickupDropdown(true); }}
-                          onBlur={() => setTimeout(() => setShowPickupDropdown(false), 200)}
+                          onBlur={() => setTimeout(() => {
+                            setShowPickupDropdown(false);
+                            if (pickupText && !pickupCoords) geocodeLocation(pickupText, true);
+                          }, 200)}
                           className="w-full font-medium text-slate-900 focus:outline-none"
                         />
                         <button onClick={() => handleGetCurrentLocation(true)} title="Use current location" className="p-2 bg-slate-100 rounded-lg text-slate-600 hover:bg-slate-200 flex-shrink-0">
@@ -317,7 +324,10 @@ export default function TaxisClient() {
                           value={dropoffText}
                           onChange={handleDropoffChange}
                           onFocus={() => { if (dropoffSuggestions.length > 0) setShowDropoffDropdown(true); }}
-                          onBlur={() => setTimeout(() => setShowDropoffDropdown(false), 200)}
+                          onBlur={() => setTimeout(() => {
+                            setShowDropoffDropdown(false);
+                            if (dropoffText && !dropoffCoords) geocodeLocation(dropoffText, false);
+                          }, 200)}
                           className="w-full font-medium text-slate-900 focus:outline-none"
                         />
                         <button onClick={() => handleGetCurrentLocation(false)} title="Use current location" className="p-2 bg-slate-100 rounded-lg text-slate-600 hover:bg-slate-200 flex-shrink-0">
