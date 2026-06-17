@@ -82,15 +82,29 @@ export default function TaxisClient() {
     }
   }, [rideType, distanceKm, vehicle, startDate, endDate]);
 
-  const handleGetCurrentLocation = () => {
+  const handleGetCurrentLocation = (isPickup: boolean = true) => {
     if ("geolocation" in navigator) {
       setIsLocating(true);
       navigator.geolocation.getCurrentPosition(
         async (position) => {
           const lat = position.coords.latitude;
           const lon = position.coords.longitude;
-          setPickupCoords([lat, lon]);
-          setPickupText("Current Location");
+          const coords: [number, number] = [lat, lon];
+          
+          if (isPickup) {
+            setPickupCoords(coords);
+            setPickupText("Current Location");
+          } else {
+            setDropoffCoords(coords);
+            setDropoffText("Current Location");
+          }
+
+          const pCoords = isPickup ? coords : pickupCoords;
+          const dCoords = !isPickup ? coords : dropoffCoords;
+          if (pCoords && dCoords) {
+            calculateDistance(pCoords, dCoords);
+          }
+
           setIsLocating(false);
           toast.success("Location found!", { id: "geo" });
         },
@@ -108,7 +122,13 @@ export default function TaxisClient() {
     if (!query) return;
     toast.loading(`Searching ${query}...`, { id: "search" });
     try {
-      const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&limit=1`);
+      // Improve accuracy by appending Kashmir if not present
+      let enhancedQuery = query;
+      if (!query.toLowerCase().includes("kashmir") && !query.toLowerCase().includes("srinagar") && !query.toLowerCase().includes("jammu")) {
+        enhancedQuery = `${query}, Kashmir, India`;
+      }
+
+      const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(enhancedQuery)}&format=json&limit=1&countrycodes=in`);
       const data = await res.json();
       if (data && data.length > 0) {
         const coords: [number, number] = [parseFloat(data[0].lat), parseFloat(data[0].lon)];
@@ -194,7 +214,7 @@ export default function TaxisClient() {
                           onBlur={() => geocodeLocation(pickupText, true)}
                           className="w-full font-medium text-slate-900 focus:outline-none"
                         />
-                        <button onClick={handleGetCurrentLocation} title="Use current location" className="p-2 bg-slate-100 rounded-lg text-slate-600 hover:bg-slate-200">
+                        <button onClick={() => handleGetCurrentLocation(true)} title="Use current location" className="p-2 bg-slate-100 rounded-lg text-slate-600 hover:bg-slate-200 flex-shrink-0">
                           <Navigation2 className="w-4 h-4" />
                         </button>
                       </div>
@@ -207,14 +227,19 @@ export default function TaxisClient() {
                     <div className="mt-1"><MapPin className="w-5 h-5 text-orange-500" /></div>
                     <div className="flex-1">
                       <label className="text-xs font-bold text-slate-500 uppercase">Drop-off Location</label>
-                      <input 
-                        type="text" 
-                        placeholder="Search drop-off destination..." 
-                        value={dropoffText}
-                        onChange={e => setDropoffText(e.target.value)}
-                        onBlur={() => geocodeLocation(dropoffText, false)}
-                        className="w-full font-medium text-slate-900 focus:outline-none mt-1"
-                      />
+                      <div className="flex items-center gap-2 mt-1">
+                        <input 
+                          type="text" 
+                          placeholder="Search drop-off destination..." 
+                          value={dropoffText}
+                          onChange={e => setDropoffText(e.target.value)}
+                          onBlur={() => geocodeLocation(dropoffText, false)}
+                          className="w-full font-medium text-slate-900 focus:outline-none"
+                        />
+                        <button onClick={() => handleGetCurrentLocation(false)} title="Use current location" className="p-2 bg-slate-100 rounded-lg text-slate-600 hover:bg-slate-200 flex-shrink-0">
+                          <Navigation2 className="w-4 h-4" />
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </div>
