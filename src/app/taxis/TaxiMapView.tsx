@@ -75,7 +75,7 @@ export default function TaxiMapView({
   if (dropoff) points.push(dropoff);
 
   return (
-    <div className="w-full h-[600px] rounded-2xl overflow-hidden relative">
+    <div className="w-full h-full min-h-[500px] rounded-2xl overflow-hidden relative z-0">
       <MapContainer 
         center={pickup || defaultCenter} 
         zoom={pickup ? 13 : 9} 

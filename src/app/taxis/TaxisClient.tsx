@@ -1,10 +1,12 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { Car, MapPin, Calendar, Clock, Navigation, CheckCircle2, Navigation2 } from "lucide-react";
+import { Car, MapPin, Calendar, Clock, Navigation, CheckCircle2, Navigation2, XCircle, Users, AlertCircle } from "lucide-react";
 import dynamic from "next/dynamic";
 import toast from "react-hot-toast";
 import CustomDatePicker from "@/components/CustomDatePicker";
+import { useUser } from "@clerk/nextjs";
+import CheckoutButton from "@/components/CheckoutButton";
 
 import type { ComponentType } from "react";
 
@@ -28,6 +30,14 @@ const SINGLEDAY_PRICES: Record<string, number> = {
 };
 
 export default function TaxisClient() {
+  const { isSignedIn } = useUser();
+  const [showBookingModal, setShowBookingModal] = useState(false);
+  const [bookingStep, setBookingStep] = useState(1);
+  const [guestName, setGuestName] = useState("");
+  const [guestPhone, setGuestPhone] = useState("");
+  const [specialRequests, setSpecialRequests] = useState("");
+  const [agreedToPolicy, setAgreedToPolicy] = useState(false);
+  const [otherGuests, setOtherGuests] = useState<{name: string, age: string}[]>([]);
   const [rideType, setRideType] = useState<"SINGLE" | "MULTI">("SINGLE");
   const [bookingFor, setBookingFor] = useState<"SELF" | "OTHER">("SELF");
   const [timing, setTiming] = useState<"INSTANT" | "SCHEDULED">("SCHEDULED");
@@ -40,6 +50,7 @@ export default function TaxisClient() {
   const [dropoffCoords, setDropoffCoords] = useState<[number, number] | null>(null);
   const [distanceKm, setDistanceKm] = useState<number>(0);
   const [isCalculating, setIsCalculating] = useState(false);
+  const [isLocating, setIsLocating] = useState(false);
 
   // Multi-day dates
   const [startDate, setStartDate] = useState<Date | null>(new Date());
@@ -73,16 +84,18 @@ export default function TaxisClient() {
 
   const handleGetCurrentLocation = () => {
     if ("geolocation" in navigator) {
-      toast.loading("Fetching location...", { id: "geo" });
+      setIsLocating(true);
       navigator.geolocation.getCurrentPosition(
         async (position) => {
           const lat = position.coords.latitude;
           const lon = position.coords.longitude;
           setPickupCoords([lat, lon]);
           setPickupText("Current Location");
+          setIsLocating(false);
           toast.success("Location found!", { id: "geo" });
         },
         (error) => {
+          setIsLocating(false);
           toast.error("Could not fetch location.", { id: "geo" });
         }
       );
@@ -301,7 +314,14 @@ export default function TaxisClient() {
                 )}
               </div>
               <button 
-                onClick={() => toast.success("Booking confirmed! Details sent to WhatsApp.")}
+                onClick={() => {
+                  if (!isSignedIn) {
+                    toast.error("Please sign in to book a ride.");
+                    return;
+                  }
+                  setShowBookingModal(true);
+                  setBookingStep(1);
+                }}
                 disabled={totalFare === 0}
                 className="w-full md:w-auto bg-white text-slate-900 px-8 py-3.5 rounded-xl font-bold hover:bg-slate-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
@@ -311,15 +331,242 @@ export default function TaxisClient() {
           </div>
 
           {/* Map View */}
-          <div className="flex-1 hidden lg:block bg-white p-2 rounded-3xl shadow-sm border border-slate-200">
-            <MapView 
-              pickup={pickupCoords} 
-              dropoff={dropoffCoords} 
-              routeDistance={distanceKm} 
-            />
+          <div className="flex-1 hidden lg:block relative z-0">
+            <div className="sticky top-28 bg-white p-2 rounded-3xl shadow-sm border border-slate-200 h-[calc(100vh-140px)] min-h-[500px]">
+              <MapView 
+                pickup={pickupCoords} 
+                dropoff={dropoffCoords} 
+                routeDistance={distanceKm} 
+              />
+            </div>
           </div>
         </div>
       </div>
+
+      {/* Booking Modal */}
+      {showBookingModal && (
+        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-200">
+          <div className="bg-white rounded-3xl w-full max-w-lg max-h-[90vh] flex flex-col shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 text-left">
+            {/* Modal Header */}
+            <div className="bg-slate-50 px-6 py-4 border-b border-slate-100 flex items-center justify-between flex-shrink-0">
+              <div>
+                <h3 className="font-bold text-lg text-slate-900">Complete Your Booking</h3>
+                <p className="text-sm text-slate-500">
+                  {bookingStep === 1 ? "Step 1: Traveller Details" : "Step 2: Review & Pay"}
+                </p>
+              </div>
+              <button 
+                onClick={() => setShowBookingModal(false)} 
+                className="p-2 bg-white rounded-full text-slate-400 hover:text-slate-700 hover:bg-slate-200 transition-colors"
+              >
+                <XCircle className="w-6 h-6" />
+              </button>
+            </div>
+
+            {/* Progress Bar */}
+            <div className="w-full h-1.5 bg-slate-100 flex-shrink-0">
+              <div 
+                className="h-full bg-sky-500 transition-all duration-300" 
+                style={{ width: bookingStep === 1 ? '50%' : '100%' }}
+              ></div>
+            </div>
+
+            {/* Modal Body */}
+            <div className="p-6 overflow-y-auto flex-1">
+              {bookingStep === 1 && (
+                <div className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="md:col-span-2">
+                      <label className="block text-sm font-semibold text-slate-700 mb-1">Lead Guest Name <span className="text-red-500">*</span></label>
+                      <input 
+                        type="text" 
+                        value={guestName} 
+                        onChange={e => setGuestName(e.target.value)} 
+                        placeholder="John Doe" 
+                        className="w-full border border-slate-200 rounded-xl p-3 focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-none transition-all text-slate-900" 
+                      />
+                    </div>
+                    <div className="md:col-span-2">
+                      <label className="block text-sm font-semibold text-slate-700 mb-1">Phone Number <span className="text-red-500">*</span></label>
+                      <input 
+                        type="tel" 
+                        value={guestPhone} 
+                        onChange={e => setGuestPhone(e.target.value)} 
+                        placeholder="+91 9876543210" 
+                        className="w-full border border-slate-200 rounded-xl p-3 focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-none transition-all text-slate-900" 
+                      />
+                    </div>
+                    
+                    {/* Other Guests */}
+                    {bookingFor === "OTHER" && (
+                      <div className="md:col-span-2 mt-2 space-y-3">
+                        <div className="flex items-center gap-2 mb-2">
+                          <div className="h-px bg-slate-200 flex-1"></div>
+                          <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Other Passengers</span>
+                          <div className="h-px bg-slate-200 flex-1"></div>
+                        </div>
+                        {otherGuests.length === 0 && (
+                          <button onClick={() => setOtherGuests([{name: "", age: ""}])} className="text-sm font-bold text-sky-600 hover:text-sky-700">
+                            + Add Passenger Details
+                          </button>
+                        )}
+                        {otherGuests.map((guest, index) => (
+                          <div key={index} className="flex gap-3">
+                            <div className="flex-1">
+                              <input 
+                                type="text" 
+                                value={guest.name} 
+                                onChange={(e) => {
+                                  const newArr = [...otherGuests];
+                                  newArr[index].name = e.target.value;
+                                  setOtherGuests(newArr);
+                                }}
+                                placeholder={`Passenger ${index + 1} Name`}
+                                className="w-full border border-slate-200 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-none transition-all text-slate-900"
+                              />
+                            </div>
+                            <div className="w-24">
+                              <input 
+                                type="number" 
+                                value={guest.age} 
+                                onChange={(e) => {
+                                  const newArr = [...otherGuests];
+                                  newArr[index].age = e.target.value;
+                                  setOtherGuests(newArr);
+                                }}
+                                placeholder="Age"
+                                className="w-full border border-slate-200 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-none transition-all text-slate-900"
+                              />
+                            </div>
+                            {index === otherGuests.length - 1 && (
+                              <button onClick={() => setOtherGuests([...otherGuests, {name: "", age: ""}])} className="text-sky-600 p-2 hover:bg-sky-50 rounded-lg">
+                                +
+                              </button>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    <div className="md:col-span-2">
+                      <label className="block text-sm font-semibold text-slate-700 mb-1">Special Requests</label>
+                      <textarea 
+                        value={specialRequests} 
+                        onChange={e => setSpecialRequests(e.target.value)} 
+                        placeholder="e.g. Extra luggage space needed..." 
+                        className="w-full border border-slate-200 rounded-xl p-3 focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-none h-24 resize-none transition-all text-slate-900" 
+                      />
+                    </div>
+                  </div>
+                  
+                  <button 
+                    disabled={!guestName || !guestPhone}
+                    onClick={() => setBookingStep(2)}
+                    className="w-full bg-slate-900 text-white font-bold py-3.5 rounded-xl hover:bg-slate-800 transition-colors disabled:opacity-50 mt-4 text-lg"
+                  >
+                    Continue to Payment
+                  </button>
+                </div>
+              )}
+
+              {bookingStep === 2 && (
+                <div className="space-y-6">
+                  {/* Summary Card */}
+                  <div className="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                    <div className="flex gap-4">
+                      <div className="w-16 h-16 bg-sky-100 rounded-lg flex items-center justify-center text-sky-600 flex-shrink-0">
+                        <Car className="w-8 h-8" />
+                      </div>
+                      <div>
+                        <h4 className="font-bold text-slate-900 line-clamp-1">{vehicle}</h4>
+                        <div className="text-sm text-slate-500 mt-1 space-y-0.5">
+                          <p className="flex items-center gap-1.5"><Calendar className="w-3.5 h-3.5" /> {(rideType === "SINGLE" ? pickupDate : startDate)?.toDateString()}</p>
+                          <p className="flex items-center gap-1.5">
+                            <Navigation className="w-3.5 h-3.5" /> 
+                            {rideType === "SINGLE" ? `${distanceKm.toFixed(1)} km Drop` : `${Math.max(1, Math.ceil(((endDate?.getTime() || 0) - (startDate?.getTime() || 0)) / (1000 * 60 * 60 * 24)))} Days Tour`}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="border-t border-slate-200 mt-4 pt-4">
+                      <div className="flex justify-between items-center mb-1">
+                        <span className="text-slate-600 font-medium">Estimated Fare</span>
+                        <span className="font-black text-lg text-slate-900">₹{totalFare.toLocaleString("en-IN")}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Policy */}
+                  <div className="flex items-start gap-3 bg-sky-50 p-4 rounded-xl border border-sky-100">
+                    <input 
+                      type="checkbox" 
+                      id="policy-modal-taxi" 
+                      checked={agreedToPolicy} 
+                      onChange={(e) => setAgreedToPolicy(e.target.checked)}
+                      className="mt-1 flex-shrink-0 w-4 h-4 text-sky-600 rounded border-sky-300 focus:ring-sky-500" 
+                    />
+                    <label htmlFor="policy-modal-taxi" className="text-sm text-slate-700 leading-relaxed cursor-pointer select-none">
+                      I agree to WanderKashmir's <span className="text-sky-600 font-semibold hover:underline">Taxi Booking Policy</span>. 
+                      (Free cancellation up to 24 hours before pickup time. Additional kms will be charged directly by the driver.)
+                    </label>
+                  </div>
+
+                  {/* Actions */}
+                  <div className="flex gap-3 pt-2">
+                    <button 
+                      onClick={() => setBookingStep(1)} 
+                      className="px-6 py-3.5 rounded-xl border-2 border-slate-200 font-bold text-slate-600 hover:bg-slate-50 hover:border-slate-300 transition-all"
+                    >
+                      Back
+                    </button>
+                    <div className="flex-1">
+                      {!agreedToPolicy ? (
+                        <button disabled className="w-full bg-slate-200 text-slate-400 font-bold py-3.5 rounded-xl text-lg transition-all">
+                          Agree to continue
+                        </button>
+                      ) : (
+                        <CheckoutButton 
+                          propertyId=""
+                          pricePerNight={0}
+                          isLoggedIn={isSignedIn || false}
+                          checkIn={(rideType === "SINGLE" ? pickupDate : startDate)?.toISOString() || new Date().toISOString()}
+                          checkOut={(rideType === "SINGLE" ? pickupDate : endDate)?.toISOString() || new Date().toISOString()}
+                          guests={bookingFor === "SELF" ? 1 : otherGuests.length + 1}
+                          nights={rideType === "SINGLE" ? 1 : Math.max(1, Math.ceil(((endDate?.getTime() || 0) - (startDate?.getTime() || 0)) / (1000 * 60 * 60 * 24)))}
+                          guestName={guestName}
+                          guestPhone={guestPhone}
+                          specialRequests={specialRequests}
+                          otherGuests={otherGuests.filter(g => g.name)}
+                          baseAmount={0}
+                          taxiAmount={totalFare}
+                        />
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Fetching Location Card */}
+      {isLocating && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4 animate-in fade-in duration-200">
+          <div className="bg-white rounded-3xl p-8 max-w-sm w-full shadow-2xl flex flex-col items-center text-center animate-in zoom-in-95 duration-200">
+            <div className="relative mb-6">
+              <div className="absolute inset-0 bg-sky-100 rounded-full animate-ping opacity-75"></div>
+              <div className="relative bg-sky-100 w-24 h-24 rounded-full flex items-center justify-center text-sky-600 shadow-inner">
+                <Navigation2 className="w-10 h-10 animate-bounce" />
+              </div>
+            </div>
+            <h3 className="text-xl font-bold text-slate-900 mb-2">Locating You</h3>
+            <p className="text-slate-500 text-sm">Please wait while we fetch your exact coordinates...</p>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }
