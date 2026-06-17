@@ -47,6 +47,7 @@ export async function GET(request: Request) {
       "description": "Meta description (150-160 chars, compelling for CTR)",
       "h1Heading": "The main H1 heading for the blog article",
       "content": "A detailed 4-5 paragraph SEO optimized content written in Markdown format. Make it an engaging article with headings. Mention WanderKashmir.",
+      "imagePrompt": "A highly descriptive 1-sentence prompt for an AI image generator to create a realistic photo for this blog. (e.g. 'A breathtaking view of snow-capped mountains in Gulmarg, Kashmir at sunrise, realistic photography, 8k resolution')",
       "faqs": [
         { "question": "Question 1", "answer": "Answer 1" },
         { "question": "Question 2", "answer": "Answer 2" }
@@ -70,7 +71,7 @@ export async function GET(request: Request) {
         h1Heading: parsedData.h1Heading,
         content: parsedData.content,
         faqs: parsedData.faqs,
-        imageUrl: "https://images.unsplash.com/photo-1595815771614-ade9d652a65d?auto=format&fit=crop&q=80&w=800"
+        imageUrl: `https://image.pollinations.ai/prompt/${encodeURIComponent(parsedData.imagePrompt || parsedData.title)}?width=800&height=400&nologo=true`
       }
     });
 

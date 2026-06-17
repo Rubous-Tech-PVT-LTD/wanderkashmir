@@ -37,6 +37,16 @@ export default async function PopularSeoRoutes() {
             );
           })}
         </div>
+        
+        <div className="mt-10 flex justify-center">
+          <Link
+            href="/destinations"
+            className="inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-full text-white bg-[#0284c7] hover:bg-[#0369a1] shadow-sm hover:shadow-md transition-all"
+          >
+            View All Destinations
+            <ArrowRight className="ml-2 -mr-1 w-5 h-5" aria-hidden="true" />
+          </Link>
+        </div>
       </div>
     </div>
   );

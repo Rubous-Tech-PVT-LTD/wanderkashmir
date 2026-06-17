@@ -48,6 +48,7 @@ export async function GET(request: Request) {
       "description": "Meta description (150-160 chars, compelling for CTR)",
       "h1Heading": "The main H1 heading for the page",
       "content": "A detailed 2-3 paragraph SEO optimized content written in Markdown format. Mention WanderKashmir, safety, pricing, and scenic views.",
+      "imagePrompt": "A highly descriptive 1-sentence prompt for an AI image generator to create a realistic photo for this page. Make it specific to the location/topic. (e.g. 'A beautiful local Kashmiri homestay in Pahalgam with wooden architecture surrounded by pine trees, realistic photography, 8k resolution')",
       "faqs": [
         { "question": "Question 1", "answer": "Answer 1" },
         { "question": "Question 2", "answer": "Answer 2" },
@@ -75,9 +76,7 @@ export async function GET(request: Request) {
         h1Heading: parsedData.h1Heading,
         content: parsedData.content,
         faqs: parsedData.faqs,
-        imageUrl: parsedData.type === "HOMESTAY" 
-          ? "https://images.unsplash.com/photo-1542718610-a1d656d1884c?auto=format&fit=crop&q=80&w=800" 
-          : "https://images.unsplash.com/photo-1513568853683-146d9a109a96?auto=format&fit=crop&q=80&w=800"
+        imageUrl: `https://image.pollinations.ai/prompt/${encodeURIComponent(parsedData.imagePrompt || parsedData.title)}?width=800&height=400&nologo=true`
       }
     });
 
