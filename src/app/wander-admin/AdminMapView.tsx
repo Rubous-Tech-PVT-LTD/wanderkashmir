@@ -12,8 +12,8 @@ const createCustomIcon = (color: string) => {
     className: "custom-leaflet-icon",
     html: `
       <div style="position: relative; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center;">
-        <div class="animate-ping" style="position: absolute; width: 100%; height: 100%; background-color: ${color}; border-radius: 50%; opacity: 0.9; animation-duration: 1.5s;"></div>
-        <div style="position: relative; width: 16px; height: 16px; background-color: ${color}; border-radius: 50%; border: 2px solid white; box-shadow: 0 0 15px ${color}, 0 0 30px ${color};"></div>
+        <div class="animate-ping" style="position: absolute; width: 100%; height: 100%; background-color: ${color}; border-radius: 50%; opacity: 0.9; animation-duration: 2s;"></div>
+        <div style="position: relative; width: 16px; height: 16px; background-color: ${color}; border-radius: 50%; border: 2px solid rgba(255,255,255,0.8); box-shadow: 0 0 20px ${color}, 0 0 40px ${color};"></div>
       </div>
     `,
     iconSize: [24, 24],
@@ -22,10 +22,10 @@ const createCustomIcon = (color: string) => {
   });
 };
 
-const hotelIcon = createCustomIcon("#3b82f6"); // blue-500
-const homestayIcon = createCustomIcon("#8b5cf6"); // violet-500
-const taxiIcon = createCustomIcon("#f59e0b"); // amber-500
-const guideIcon = createCustomIcon("#10b981"); // emerald-500
+const hotelIcon = createCustomIcon("#0ea5e9"); // Neon Blue
+const homestayIcon = createCustomIcon("#d946ef"); // Neon Fuchsia/Pink
+const taxiIcon = createCustomIcon("#eab308"); // Neon Yellow
+const guideIcon = createCustomIcon("#10b981"); // Neon Emerald
 
 export default function AdminMapView({ vendors, onExit }: { vendors: any[], onExit?: () => void }) {
   const [mounted, setMounted] = useState(false);
@@ -74,16 +74,11 @@ export default function AdminMapView({ vendors, onExit }: { vendors: any[], onEx
         )}
       </div>
 
-      {/* High-tech Radar Overlay for Video Recording */}
-      <div className="absolute inset-0 pointer-events-none z-[500] mix-blend-overlay opacity-30 bg-[radial-gradient(circle_at_center,transparent_0%,rgba(0,0,0,0.8)_100%)]"></div>
-      <div className="absolute inset-0 pointer-events-none z-[500] border-[1px] border-emerald-500/10 m-4 rounded-3xl overflow-hidden">
-        {/* Scanning line animation */}
-        <div className="absolute top-0 left-0 w-full h-[2px] bg-emerald-500/50 shadow-[0_0_15px_rgba(16,185,129,1)] animate-[scan_3s_linear_infinite]"></div>
-      </div>
+      {/* Cyberpunk Glow Overlay */}
+      <div className="absolute inset-0 pointer-events-none z-[400] bg-gradient-to-br from-indigo-900/30 via-purple-900/20 to-fuchsia-900/30 mix-blend-color"></div>
+      <div className="absolute inset-0 pointer-events-none z-[400] shadow-[inset_0_0_100px_rgba(76,29,149,0.5)]"></div>
 
-
-
-      <div className="w-full h-full relative z-0 bg-black">
+      <div className="w-full h-full relative z-0 bg-[#0a0a1a]">
         <MapContainer 
           center={defaultCenter} 
           zoom={8} 
@@ -91,10 +86,12 @@ export default function AdminMapView({ vendors, onExit }: { vendors: any[], onEx
           maxBounds={jkBounds}
           maxBoundsViscosity={1.0}
           style={{ height: "100%", width: "100%" }}
+          className="cyberpunk-map"
         >
           <TileLayer
-            attribution='Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
-            url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
+            attribution='&copy; <a href="https://carto.com/attributions">CARTO</a>'
+            url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+            className="filter sepia-[.3] hue-rotate-[240deg] saturate-[2] brightness-[0.8] contrast-[1.2]"
           />
 
           {vendors.filter(v => v.status !== "SUSPENDED").map((vendor) => {
