@@ -50,24 +50,24 @@ export default function AdminMapView({ vendors, onExit }: { vendors: any[], onEx
       
       {/* Overlay UI */}
       <div className="absolute top-6 left-6 right-6 z-[1000] flex flex-wrap items-start justify-between gap-4 pointer-events-none">
-        <div className="bg-white/95 backdrop-blur-sm p-4 rounded-2xl shadow-lg border border-slate-200 pointer-events-auto flex items-center gap-6">
+        <div className="bg-[#0f172a]/80 backdrop-blur-md p-4 rounded-2xl shadow-[0_0_20px_rgba(0,0,0,0.5)] border border-slate-700 pointer-events-auto flex items-center gap-6">
           <div>
-            <h2 className="text-xl font-black text-slate-900">Platform Map</h2>
-            <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mt-0.5">Live Vendor Tracking</p>
+            <h2 className="text-xl font-black text-white">Platform Map</h2>
+            <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mt-0.5">Live Vendor Tracking</p>
           </div>
-          <div className="h-8 w-px bg-slate-200 hidden sm:block"></div>
-          <div className="flex flex-wrap items-center gap-3 text-xs font-bold text-slate-700">
-            <div className="flex items-center gap-1.5"><div className="w-3 h-3 rounded-full bg-blue-500 shadow-sm shadow-blue-500/50"></div> Hotel</div>
-            <div className="flex items-center gap-1.5"><div className="w-3 h-3 rounded-full bg-violet-500 shadow-sm shadow-violet-500/50"></div> Homestay</div>
-            <div className="flex items-center gap-1.5"><div className="w-3 h-3 rounded-full bg-amber-500 shadow-sm shadow-amber-500/50"></div> Taxi</div>
-            <div className="flex items-center gap-1.5"><div className="w-3 h-3 rounded-full bg-emerald-500 shadow-sm shadow-emerald-500/50"></div> Guide</div>
+          <div className="h-8 w-px bg-slate-700 hidden sm:block"></div>
+          <div className="flex flex-wrap items-center gap-3 text-xs font-bold text-slate-200">
+            <div className="flex items-center gap-1.5"><div className="w-3 h-3 rounded-full bg-[#0ea5e9] shadow-[0_0_8px_#0ea5e9]"></div> Hotel</div>
+            <div className="flex items-center gap-1.5"><div className="w-3 h-3 rounded-full bg-[#d946ef] shadow-[0_0_8px_#d946ef]"></div> Homestay</div>
+            <div className="flex items-center gap-1.5"><div className="w-3 h-3 rounded-full bg-[#eab308] shadow-[0_0_8px_#eab308]"></div> Taxi</div>
+            <div className="flex items-center gap-1.5"><div className="w-3 h-3 rounded-full bg-[#10b981] shadow-[0_0_8px_#10b981]"></div> Guide</div>
           </div>
         </div>
 
         {onExit && (
           <button 
             onClick={onExit}
-            className="bg-slate-900 text-white px-5 py-3 rounded-xl font-bold shadow-lg shadow-slate-900/20 hover:bg-slate-800 transition-colors pointer-events-auto flex items-center gap-2"
+            className="bg-[#0f172a]/90 text-white border border-slate-700 px-5 py-3 rounded-xl font-bold shadow-[0_0_15px_rgba(0,0,0,0.5)] hover:bg-[#1e293b] hover:shadow-[0_0_20px_rgba(14,165,233,0.3)] transition-all pointer-events-auto flex items-center gap-2"
           >
             Exit Map View
           </button>
@@ -90,8 +90,8 @@ export default function AdminMapView({ vendors, onExit }: { vendors: any[], onEx
         >
           <TileLayer
             attribution='&copy; <a href="https://carto.com/attributions">CARTO</a>'
-            url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-            className="filter sepia-[.3] hue-rotate-[240deg] saturate-[2] brightness-[0.8] contrast-[1.2]"
+            url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
+            className="filter invert-[.95] hue-rotate-[200deg] saturate-[1.5] brightness-[0.9] contrast-[1.1]"
           />
 
           {vendors.filter(v => v.status !== "SUSPENDED").map((vendor) => {
@@ -140,18 +140,18 @@ export default function AdminMapView({ vendors, onExit }: { vendors: any[], onEx
             return (
               <Marker key={vendor.id} position={[lat, lng] as [number, number]} icon={icon}>
                 <Tooltip direction="top" offset={[0, -12]} opacity={1} className="custom-leaflet-tooltip !p-0 !border-none !bg-transparent !shadow-none">
-                  <div className="bg-white rounded-xl shadow-xl border border-slate-200 p-3 min-w-[180px] font-sans">
-                    <h3 className="font-bold text-slate-900 text-base leading-tight mb-1">{title}</h3>
-                    <p className="text-xs text-slate-500 uppercase tracking-wider font-bold mb-2">{typeLabel}</p>
+                  <div className="bg-[#0f172a]/90 backdrop-blur-md rounded-xl shadow-[0_0_25px_rgba(0,0,0,0.8)] border border-slate-700 p-3 min-w-[180px] font-sans">
+                    <h3 className="font-bold text-white text-base leading-tight mb-1">{title}</h3>
+                    <p className="text-xs text-slate-400 uppercase tracking-wider font-bold mb-2">{typeLabel}</p>
                     
-                    <div className="bg-slate-50 rounded p-2 text-sm border border-slate-100">
+                    <div className="bg-slate-900/50 rounded p-2 text-sm border border-slate-800/50">
                       <div className="flex justify-between items-center mb-1 gap-4">
-                        <span className="text-slate-500">Rate:</span>
-                        <span className="font-bold text-slate-900">{rate}</span>
+                        <span className="text-slate-400">Rate:</span>
+                        <span className="font-bold text-emerald-400">{rate}</span>
                       </div>
                       <div className="flex justify-between items-center gap-4">
-                        <span className="text-slate-500">Owner:</span>
-                        <span className="font-medium text-slate-700 truncate max-w-[100px]">{vendor.user?.name || "N/A"}</span>
+                        <span className="text-slate-400">Owner:</span>
+                        <span className="font-medium text-slate-300 truncate max-w-[100px]">{vendor.user?.name || "N/A"}</span>
                       </div>
                     </div>
                   </div>
