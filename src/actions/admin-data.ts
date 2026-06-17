@@ -217,7 +217,8 @@ export async function getPaginatedBookings(params: {
         user: { select: { name: true, email: true } },
         property: { select: { name: true, vendorProfile: { select: { businessName: true, type: true } } } },
         vehicle: { select: { make: true, model: true, vendorProfile: { select: { businessName: true, type: true } } } },
-        tour: { select: { title: true } }
+        tour: { select: { title: true, duration: true, itinerary: true, inclusions: true, exclusions: true } },
+        guideProfile: { select: { vendorProfile: { select: { businessName: true } } } }
       },
       orderBy: { createdAt: "desc" },
       skip: (page - 1) * limit,

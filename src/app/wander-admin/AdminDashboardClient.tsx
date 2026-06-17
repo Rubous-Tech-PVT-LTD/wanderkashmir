@@ -132,6 +132,7 @@ export default function AdminDashboardClient({
   const [selectedPropertyDetails, setSelectedPropertyDetails] = useState<PropertyProfile | null>(null);
   const [rejectingProperty, setRejectingProperty] = useState<PropertyProfile | null>(null);
   const [propertyRejectionRemarks, setPropertyRejectionRemarks] = useState("");
+  const [selectedBookingDetails, setSelectedBookingDetails] = useState<any | null>(null);
   const router = useRouter();
 
   // Filtering & Search States
@@ -169,8 +170,15 @@ export default function AdminDashboardClient({
         setTotalPages(res.totalPages);
         setTotalItems(res.totalCount);
       }
-      else if (activeTab === "manifest") {
-        const res = await getPaginatedBookings({ page: currentPage, limit: ITEMS_PER_PAGE, search: searchQuery, status: "CONFIRMED", type: filterType, dateFilter: filterDate });
+      else if (activeTab === "manifest" || activeTab === "dashboard") {
+        const res = await getPaginatedBookings({ 
+          page: currentPage, 
+          limit: ITEMS_PER_PAGE, 
+          search: searchQuery, 
+          status: activeTab === "dashboard" ? filterStatus : "CONFIRMED", 
+          type: filterType, 
+          dateFilter: filterDate 
+        });
         setBookingsData(res.data);
         setTotalPages(res.totalPages);
         setTotalItems(res.totalCount);
@@ -185,7 +193,7 @@ export default function AdminDashboardClient({
 
   useEffect(() => {
     // Only fetch for tabs that use the main generic fetching pattern
-    if (["approvals", "live_vendors", "rejected", "listings", "live_listings", "users", "manifest", "map_view"].includes(activeTab)) {
+    if (["dashboard", "approvals", "live_vendors", "rejected", "listings", "live_listings", "users", "manifest", "map_view"].includes(activeTab)) {
       fetchData();
     }
   }, [fetchData, activeTab]);
@@ -1376,6 +1384,7 @@ export default function AdminDashboardClient({
                       <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Dates</th>
                       <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Amount</th>
                       <th className="px-6 py-4 text-right text-xs font-bold text-slate-500 uppercase tracking-wider">Status</th>
+                      <th className="px-6 py-4 text-right text-xs font-bold text-slate-500 uppercase tracking-wider">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
@@ -1416,6 +1425,14 @@ export default function AdminDashboardClient({
                               PENDING
                             </span>
                           )}
+                        </td>
+                        <td className="px-6 py-4 text-right">
+                          <button 
+                            onClick={() => setSelectedBookingDetails(booking)}
+                            className="inline-flex items-center gap-1.5 text-sky-600 hover:text-sky-700 bg-sky-50 hover:bg-sky-100 px-3 py-1.5 rounded-lg text-sm font-bold transition-colors"
+                          >
+                            <Eye className="w-4 h-4" /> View
+                          </button>
                         </td>
                       </tr>
                     ))}
@@ -1956,6 +1973,351 @@ export default function AdminDashboardClient({
           </div>
         </div>
       )}
+      {/* BOOKING DETAILS MODAL */}
+        {selectedBookingDetails && (
+          <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <div className="bg-white rounded-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto shadow-2xl">
+              <div className="sticky top-0 bg-white border-b border-slate-100 p-6 flex items-center justify-between z-10 rounded-t-2xl">
+                <div>
+                  <h2 className="text-xl font-black text-slate-900 flex items-center gap-2">
+                    Booking Details 
+                    <span className="text-sm font-bold text-slate-500 bg-slate-100 px-2 py-1 rounded-md">#{selectedBookingDetails.id.slice(-8).toUpperCase()}</span>
+                  </h2>
+                  <p className="text-sm text-slate-500">Placed on {format(new Date(selectedBookingDetails.createdAt), "dd MMM yyyy, h:mm a")}</p>
+                </div>
+                <div className="flex items-center gap-3">
+                  <button 
+                    onClick={() => {
+                      const w = window.open('', '_blank');
+                      if (!w) return;
+                      let otherGuestsHtml = '';
+                      if (selectedBookingDetails.otherGuests) {
+                        try {
+                          const guests = typeof selectedBookingDetails.otherGuests === 'string' ? JSON.parse(selectedBookingDetails.otherGuests) : selectedBookingDetails.otherGuests;
+                          if (Array.isArray(guests) && guests.length > 0) {
+                            otherGuestsHtml = `
+                              <div class="section">
+                                <div class="section-title">Other Guests</div>
+                                <table>
+                                  <tr><th>Name</th><th>Age</th></tr>
+                                  \${guests.map((g: any) => `<tr><td>\${g.name}</td><td>\${g.age}</td></tr>`).join('')}
+                                </table>
+                              </div>
+                            `;
+                          }
+                        } catch(e) {}
+                      }
+
+                      let tourHtml = '';
+                      if (selectedBookingDetails.tour) {
+                        const t = selectedBookingDetails.tour;
+                        
+                        let incHtml = '';
+                        if (t.inclusions && Array.isArray(t.inclusions)) {
+                          incHtml = `<div><strong>Included:</strong><ul>\${t.inclusions.map((i:any) => `<li>\${i}</li>`).join('')}</ul></div>`;
+                        }
+                        
+                        let excHtml = '';
+                        if (t.exclusions && Array.isArray(t.exclusions)) {
+                          excHtml = `<div><strong>Not Included:</strong><ul>\${t.exclusions.map((e:any) => `<li>\${e}</li>`).join('')}</ul></div>`;
+                        }
+
+                        let itineraryHtml = '';
+                        if (t.itinerary && Array.isArray(t.itinerary)) {
+                          itineraryHtml = `
+                            <div style="margin-top:20px;">
+                              <strong>Itinerary:</strong>
+                              \${t.itinerary.map((day:any) => `
+                                <div style="margin-bottom:10px; padding:10px; background:#f9f9f9; border-radius:5px;">
+                                  <div style="font-weight:bold;">Day \${day.day}: \${day.title}</div>
+                                  <div style="font-size:14px; margin-top:5px;">\${day.description}</div>
+                                </div>
+                              `).join('')}
+                            </div>
+                          `;
+                        }
+
+                        tourHtml = `
+                          <div class="section">
+                            <div class="section-title">Tour Package Details</div>
+                            <div class="row"><span class="label">Tour Title</span> <span class="value">\${t.title}</span></div>
+                            <div class="row"><span class="label">Duration</span> <span class="value">\${t.duration || 'N/A'}</span></div>
+                            <div style="display:flex; gap:20px; margin-top:15px;">
+                              <div style="flex:1;">\${incHtml}</div>
+                              <div style="flex:1;">\${excHtml}</div>
+                            </div>
+                            \${itineraryHtml}
+                          </div>
+                        `;
+                      }
+
+                      const html = `
+                        <html>
+                          <head>
+                            <title>Booking Receipt - \${selectedBookingDetails.id}</title>
+                            <style>
+                              body { font-family: system-ui, -apple-system, sans-serif; padding: 40px; color: #333; line-height: 1.6; max-width: 800px; margin: 0 auto; }
+                              .header { text-align: center; border-bottom: 2px solid #eee; padding-bottom: 20px; margin-bottom: 20px; }
+                              .title { font-size: 24px; font-weight: bold; }
+                              .subtitle { color: #666; font-size: 14px; }
+                              .section { margin-bottom: 30px; }
+                              .section-title { font-size: 18px; font-weight: bold; border-bottom: 1px solid #eee; padding-bottom: 5px; margin-bottom: 15px; }
+                              .row { display: flex; justify-content: space-between; margin-bottom: 10px; border-bottom: 1px dashed #eee; padding-bottom: 5px; }
+                              .label { font-weight: bold; color: #555; }
+                              .value { color: #000; text-align:right; }
+                              table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+                              th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
+                              th { background-color: #f9f9f9; }
+                            </style>
+                          </head>
+                          <body>
+                            <div class="header">
+                              <div class="title">WanderKashmir Booking Receipt</div>
+                              <div class="subtitle">Booking ID: \${selectedBookingDetails.id.toUpperCase()} | Date: \${new Date(selectedBookingDetails.createdAt).toLocaleDateString()}</div>
+                              <div class="subtitle">Status: \${selectedBookingDetails.status}</div>
+                            </div>
+                            
+                            <div class="section">
+                              <div class="section-title">Customer Details</div>
+                              <div class="row"><span class="label">Lead Guest Name</span> <span class="value">\${selectedBookingDetails.guestName || selectedBookingDetails.user?.name || 'N/A'}</span></div>
+                              <div class="row"><span class="label">Email</span> <span class="value">\${selectedBookingDetails.user?.email || 'N/A'}</span></div>
+                              <div class="row"><span class="label">Phone</span> <span class="value">\${selectedBookingDetails.guestPhone || 'N/A'}</span></div>
+                              <div class="row"><span class="label">Total Guests</span> <span class="value">\${selectedBookingDetails.guests || 1}</span></div>
+                              \${selectedBookingDetails.specialRequests ? `<div style="margin-top:10px;"><strong>Special Requests:</strong> \${selectedBookingDetails.specialRequests}</div>` : ''}
+                            </div>
+
+                            \${otherGuestsHtml}
+
+                            <div class="section">
+                              <div class="section-title">Booking Summary</div>
+                              <div class="row"><span class="label">Check-in</span> <span class="value">\${selectedBookingDetails.checkIn ? new Date(selectedBookingDetails.checkIn).toLocaleDateString() : 'N/A'}</span></div>
+                              <div class="row"><span class="label">Check-out</span> <span class="value">\${selectedBookingDetails.checkOut ? new Date(selectedBookingDetails.checkOut).toLocaleDateString() : 'N/A'}</span></div>
+                              \${selectedBookingDetails.property ? `<div class="row"><span class="label">Hotel/Property</span> <span class="value">\${selectedBookingDetails.property.name}</span></div>` : ''}
+                              \${selectedBookingDetails.vehicle ? `<div class="row"><span class="label">Vehicle</span> <span class="value">\${selectedBookingDetails.vehicle.make} \${selectedBookingDetails.vehicle.model}</span></div>` : ''}
+                              \${selectedBookingDetails.guideProfile ? `<div class="row"><span class="label">Guide Add-on</span> <span class="value">\${selectedBookingDetails.guideProfile.vendorProfile?.businessName || 'Yes'}</span></div>` : ''}
+                            </div>
+
+                            \${tourHtml}
+
+                            <div class="section">
+                              <div class="section-title">Payment Details</div>
+                              <div class="row"><span class="label">Base Amount</span> <span class="value">₹\${selectedBookingDetails.baseAmount || 0}</span></div>
+                              <div class="row"><span class="label">Taxi Add-on</span> <span class="value">₹\${selectedBookingDetails.taxiAmount || 0}</span></div>
+                              <div class="row"><span class="label">Guide Add-on</span> <span class="value">₹\${selectedBookingDetails.guideAmount || 0}</span></div>
+                              <div class="row" style="font-size:18px; border-top:2px solid #000; padding-top:10px;"><span class="label" style="color:#000;">Total Paid Amount</span> <span class="value" style="font-weight:bold;">₹\${selectedBookingDetails.amount}</span></div>
+                            </div>
+                            
+                            <div style="text-align:center; margin-top:50px; color:#888; font-size:12px;">
+                              Thank you for choosing WanderKashmir. This is an automatically generated receipt.
+                            </div>
+                          </body>
+                        </html>
+                      `;
+                      w.document.write(html);
+                      w.document.close();
+                      setTimeout(() => w.print(), 500);
+                    }}
+                    className="flex items-center gap-2 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-lg text-sm transition-colors"
+                  >
+                    <FileText className="w-4 h-4" /> Print Booking
+                  </button>
+                  <button 
+                    onClick={() => setSelectedBookingDetails(null)}
+                    className="p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-600 rounded-full transition-colors"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+              </div>
+              
+              <div className="p-6 space-y-8">
+                {/* Status Bar */}
+                <div className="flex flex-wrap gap-4 items-center bg-slate-50 p-4 rounded-xl border border-slate-100">
+                  <div className="flex-1 min-w-[200px]">
+                    <span className="block text-xs font-bold text-slate-500 uppercase mb-1">Payment Status</span>
+                    {selectedBookingDetails.status === "CONFIRMED" ? (
+                      <span className="text-emerald-700 font-bold flex items-center gap-1"><CheckCircle2 className="w-4 h-4"/> CONFIRMED</span>
+                    ) : selectedBookingDetails.status === "CANCELLED" ? (
+                      <span className="text-red-700 font-bold flex items-center gap-1"><XCircle className="w-4 h-4"/> CANCELLED</span>
+                    ) : (
+                      <span className="text-amber-700 font-bold flex items-center gap-1"><AlertCircle className="w-4 h-4"/> PENDING</span>
+                    )}
+                  </div>
+                  <div className="flex-1 min-w-[200px]">
+                    <span className="block text-xs font-bold text-slate-500 uppercase mb-1">Total Amount Paid</span>
+                    <span className="text-2xl font-black text-slate-900">₹{selectedBookingDetails.amount?.toLocaleString('en-IN') || 0}</span>
+                  </div>
+                </div>
+
+                {/* Customer Details */}
+                <div>
+                  <h3 className="text-lg font-bold text-slate-900 mb-4 pb-2 border-b border-slate-100">Customer Details</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <div>
+                      <span className="block text-xs font-bold text-slate-500 uppercase mb-1">Lead Guest Name</span>
+                      <span className="font-medium text-slate-900">{selectedBookingDetails.guestName || selectedBookingDetails.user?.name || "Unknown"}</span>
+                    </div>
+                    <div>
+                      <span className="block text-xs font-bold text-slate-500 uppercase mb-1">Email</span>
+                      <span className="font-medium text-slate-900">{selectedBookingDetails.user?.email || "Unknown"}</span>
+                    </div>
+                    <div>
+                      <span className="block text-xs font-bold text-slate-500 uppercase mb-1">Phone Number</span>
+                      <span className="font-medium text-slate-900">{selectedBookingDetails.guestPhone || "Not Provided"}</span>
+                    </div>
+                    <div>
+                      <span className="block text-xs font-bold text-slate-500 uppercase mb-1">Total Guests</span>
+                      <span className="font-medium text-slate-900">{selectedBookingDetails.guests || 1} Person(s)</span>
+                    </div>
+                  </div>
+                  {selectedBookingDetails.specialRequests && (
+                    <div className="mt-4 p-4 bg-amber-50 text-amber-900 rounded-lg border border-amber-100 text-sm">
+                      <strong>Special Requests:</strong> {selectedBookingDetails.specialRequests}
+                    </div>
+                  )}
+
+                  {/* Other Guests */}
+                  {selectedBookingDetails.otherGuests && (
+                    <div className="mt-4">
+                      <span className="block text-xs font-bold text-slate-500 uppercase mb-2">Other Guests</span>
+                      <div className="bg-slate-50 rounded-xl p-4 border border-slate-100">
+                        {(() => {
+                          try {
+                            const guests = typeof selectedBookingDetails.otherGuests === 'string' 
+                              ? JSON.parse(selectedBookingDetails.otherGuests) 
+                              : selectedBookingDetails.otherGuests;
+                            
+                            if (Array.isArray(guests) && guests.length > 0) {
+                              return (
+                                <ul className="space-y-2">
+                                  {guests.map((g: any, i: number) => (
+                                    <li key={i} className="flex gap-4 text-sm">
+                                      <span className="font-medium text-slate-900">{g.name}</span>
+                                      <span className="text-slate-500">Age: {g.age}</span>
+                                    </li>
+                                  ))}
+                                </ul>
+                              );
+                            } else {
+                              return <span className="text-sm text-slate-500">No other guests specified.</span>;
+                            }
+                          } catch (e) {
+                            return <span className="text-sm text-slate-500">Could not parse guest data.</span>;
+                          }
+                        })()}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Tour Package Details */}
+                {selectedBookingDetails.tour && (
+                  <div>
+                    <h3 className="text-lg font-bold text-slate-900 mb-4 pb-2 border-b border-slate-100 flex items-center gap-2">
+                      <MapPin className="w-5 h-5 text-sky-500" /> Tour Package Details
+                    </h3>
+                    <div className="bg-sky-50 rounded-xl p-5 border border-sky-100 mb-6">
+                      <div className="font-black text-xl text-slate-900 mb-1">{selectedBookingDetails.tour.title}</div>
+                      <div className="text-sm text-sky-700 font-bold mb-4">{selectedBookingDetails.tour.duration || "N/A"}</div>
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        {/* Inclusions */}
+                        {selectedBookingDetails.tour.inclusions && Array.isArray(selectedBookingDetails.tour.inclusions) && selectedBookingDetails.tour.inclusions.length > 0 && (
+                          <div>
+                            <span className="block text-xs font-bold text-emerald-600 uppercase mb-2">Included</span>
+                            <ul className="space-y-1.5">
+                              {selectedBookingDetails.tour.inclusions.map((inc: string, i: number) => (
+                                <li key={i} className="flex items-start gap-2 text-sm text-slate-700">
+                                  <CheckCircle2 className="w-4 h-4 text-emerald-500 flex-shrink-0 mt-0.5" /> {inc}
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+                        
+                        {/* Exclusions */}
+                        {selectedBookingDetails.tour.exclusions && Array.isArray(selectedBookingDetails.tour.exclusions) && selectedBookingDetails.tour.exclusions.length > 0 && (
+                          <div>
+                            <span className="block text-xs font-bold text-red-600 uppercase mb-2">Not Included</span>
+                            <ul className="space-y-1.5">
+                              {selectedBookingDetails.tour.exclusions.map((exc: string, i: number) => (
+                                <li key={i} className="flex items-start gap-2 text-sm text-slate-700">
+                                  <XCircle className="w-4 h-4 text-red-400 flex-shrink-0 mt-0.5" /> {exc}
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Itinerary */}
+                    {selectedBookingDetails.tour.itinerary && Array.isArray(selectedBookingDetails.tour.itinerary) && selectedBookingDetails.tour.itinerary.length > 0 && (
+                      <div>
+                        <span className="block text-sm font-bold text-slate-900 mb-4">Full Itinerary</span>
+                        <div className="space-y-4">
+                          {selectedBookingDetails.tour.itinerary.map((day: any, i: number) => (
+                            <div key={i} className="flex gap-4">
+                              <div className="flex flex-col items-center">
+                                <div className="w-8 h-8 rounded-full bg-slate-900 text-white flex items-center justify-center font-bold text-sm flex-shrink-0">
+                                  {day.day}
+                                </div>
+                                {i !== selectedBookingDetails.tour.itinerary.length - 1 && (
+                                  <div className="w-0.5 h-full bg-slate-200 mt-2"></div>
+                                )}
+                              </div>
+                              <div className="pb-6">
+                                <h4 className="font-bold text-slate-900 text-lg">{day.title}</h4>
+                                <p className="text-slate-600 text-sm mt-1">{day.description}</p>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+                
+                {/* Hotel / Vehicle Details */}
+                {!selectedBookingDetails.tour && (
+                  <div>
+                    <h3 className="text-lg font-bold text-slate-900 mb-4 pb-2 border-b border-slate-100">Service Details</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-slate-50 rounded-xl p-5 border border-slate-100">
+                      {selectedBookingDetails.property && (
+                        <div>
+                          <span className="block text-xs font-bold text-slate-500 uppercase mb-1">Hotel / Property</span>
+                          <span className="font-medium text-slate-900 block text-lg">{selectedBookingDetails.property.name}</span>
+                          <span className="text-sm text-slate-500">by {selectedBookingDetails.property.vendorProfile?.businessName || "Unknown Vendor"}</span>
+                        </div>
+                      )}
+                      {selectedBookingDetails.vehicle && (
+                        <div>
+                          <span className="block text-xs font-bold text-slate-500 uppercase mb-1">Vehicle Details</span>
+                          <span className="font-medium text-slate-900 block text-lg">{selectedBookingDetails.vehicle.make} {selectedBookingDetails.vehicle.model}</span>
+                          <span className="text-sm text-slate-500">by {selectedBookingDetails.vehicle.vendorProfile?.businessName || "Unknown Vendor"}</span>
+                        </div>
+                      )}
+                      {selectedBookingDetails.guideProfile && (
+                        <div>
+                          <span className="block text-xs font-bold text-slate-500 uppercase mb-1">Guide Add-on</span>
+                          <span className="font-medium text-slate-900 block text-lg">Yes</span>
+                          <span className="text-sm text-slate-500">by {selectedBookingDetails.guideProfile.vendorProfile?.businessName || "Unknown Vendor"}</span>
+                        </div>
+                      )}
+                      <div>
+                        <span className="block text-xs font-bold text-slate-500 uppercase mb-1">Travel Dates</span>
+                        <span className="font-medium text-slate-900 block">
+                          {selectedBookingDetails.checkIn ? format(new Date(selectedBookingDetails.checkIn), "dd MMM yyyy") : "N/A"} - {selectedBookingDetails.checkOut ? format(new Date(selectedBookingDetails.checkOut), "dd MMM yyyy") : "N/A"}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+                
+              </div>
+            </div>
+          </div>
+        )}
       {/* Payout Confirmation Modal */}
       {payoutConfirmModal?.isOpen && (
         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
