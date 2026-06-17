@@ -12,8 +12,8 @@ const createCustomIcon = (color: string) => {
     className: "custom-leaflet-icon",
     html: `
       <div style="position: relative; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center;">
-        <div class="animate-ping" style="position: absolute; width: 100%; height: 100%; background-color: ${color}; border-radius: 50%; opacity: 0.8;"></div>
-        <div style="position: relative; width: 16px; height: 16px; background-color: ${color}; border-radius: 50%; border: 2px solid white; box-shadow: 0 0 10px ${color};"></div>
+        <div class="animate-ping" style="position: absolute; width: 100%; height: 100%; background-color: ${color}; border-radius: 50%; opacity: 0.9; animation-duration: 1.5s;"></div>
+        <div style="position: relative; width: 16px; height: 16px; background-color: ${color}; border-radius: 50%; border: 2px solid white; box-shadow: 0 0 15px ${color}, 0 0 30px ${color};"></div>
       </div>
     `,
     iconSize: [24, 24],
@@ -74,7 +74,21 @@ export default function AdminMapView({ vendors, onExit }: { vendors: any[], onEx
         )}
       </div>
 
-      <div className="w-full h-full relative z-0 bg-slate-100">
+      {/* High-tech Radar Overlay for Video Recording */}
+      <div className="absolute inset-0 pointer-events-none z-[500] mix-blend-overlay opacity-30 bg-[radial-gradient(circle_at_center,transparent_0%,rgba(0,0,0,0.8)_100%)]"></div>
+      <div className="absolute inset-0 pointer-events-none z-[500] border-[1px] border-emerald-500/10 m-4 rounded-3xl overflow-hidden">
+        {/* Scanning line animation */}
+        <div className="absolute top-0 left-0 w-full h-[2px] bg-emerald-500/50 shadow-[0_0_15px_rgba(16,185,129,1)] animate-[scan_3s_linear_infinite]"></div>
+      </div>
+
+      <style jsx global>{\`
+        @keyframes scan {
+          0% { transform: translateY(-100%); }
+          100% { transform: translateY(1000px); }
+        }
+      \`}</style>
+
+      <div className="w-full h-full relative z-0 bg-black">
         <MapContainer 
           center={defaultCenter} 
           zoom={8} 
@@ -84,8 +98,8 @@ export default function AdminMapView({ vendors, onExit }: { vendors: any[], onEx
           style={{ height: "100%", width: "100%" }}
         >
           <TileLayer
-            attribution='&copy; <a href="https://carto.com/attributions">CARTO</a>'
-            url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+            attribution='Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
+            url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
           />
 
           {vendors.filter(v => v.status !== "SUSPENDED").map((vendor) => {
