@@ -50,6 +50,8 @@ export async function getPaginatedVendors(params: {
       where,
       include: {
         user: { select: { name: true } },
+        properties: { select: { name: true, latitude: true, longitude: true, pricePerNight: true }, take: 1 },
+        guideProfiles: { select: { pricePerDay: true }, take: 1 }
       },
       orderBy: { createdAt: "desc" },
       skip: (page - 1) * limit,

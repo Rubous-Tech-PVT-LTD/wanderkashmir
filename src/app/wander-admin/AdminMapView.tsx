@@ -10,7 +10,12 @@ import { Building2, Car, Map as MapIcon, Info } from "lucide-react";
 const createCustomIcon = (color: string) => {
   return new L.DivIcon({
     className: "custom-leaflet-icon",
-    html: `<div style="background-color: ${color}; width: 24px; height: 24px; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.3);"></div>`,
+    html: `
+      <div style="position: relative; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center;">
+        <div class="animate-ping" style="position: absolute; width: 100%; height: 100%; background-color: ${color}; border-radius: 50%; opacity: 0.8;"></div>
+        <div style="position: relative; width: 16px; height: 16px; background-color: ${color}; border-radius: 50%; border: 2px solid white; box-shadow: 0 0 10px ${color};"></div>
+      </div>
+    `,
     iconSize: [24, 24],
     iconAnchor: [12, 12],
     popupAnchor: [0, -12],
@@ -80,10 +85,10 @@ export default function AdminMapView({ vendors, onExit }: { vendors: any[], onEx
         >
           <TileLayer
             attribution='&copy; <a href="https://carto.com/attributions">CARTO</a>'
-            url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
+            url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
           />
 
-          {vendors.filter(v => v.isApproved && v.status !== "SUSPENDED").map((vendor) => {
+          {vendors.filter(v => v.status !== "SUSPENDED").map((vendor) => {
             // Determine coordinate and icon
             let lat = vendor.latitude;
             let lng = vendor.longitude;

@@ -144,11 +144,12 @@ export default function AdminDashboardClient({
   const fetchData = useCallback(async () => {
     setIsLoading(true);
     try {
-      if (activeTab === "approvals" || activeTab === "live_vendors" || activeTab === "rejected") {
+      if (activeTab === "approvals" || activeTab === "live_vendors" || activeTab === "rejected" || activeTab === "map_view") {
         let status = "ALL";
         if (activeTab === "approvals") status = "PENDING";
         else if (activeTab === "live_vendors") status = "APPROVED";
         else if (activeTab === "rejected") status = "REJECTED";
+        // for map_view, keep status = "ALL" to see everyone on the map
         
         const res = await getPaginatedVendors({ page: currentPage, limit: ITEMS_PER_PAGE, search: searchQuery, status, type: filterType });
         setVendorsData(res.data);
@@ -184,7 +185,7 @@ export default function AdminDashboardClient({
 
   useEffect(() => {
     // Only fetch for tabs that use the main generic fetching pattern
-    if (["approvals", "live_vendors", "rejected", "listings", "live_listings", "users", "manifest"].includes(activeTab)) {
+    if (["approvals", "live_vendors", "rejected", "listings", "live_listings", "users", "manifest", "map_view"].includes(activeTab)) {
       fetchData();
     }
   }, [fetchData, activeTab]);
