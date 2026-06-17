@@ -52,6 +52,14 @@ export default function TaxisClient() {
   const [isCalculating, setIsCalculating] = useState(false);
   const [isLocating, setIsLocating] = useState(false);
 
+  // Autocomplete
+  const [pickupSuggestions, setPickupSuggestions] = useState<any[]>([]);
+  const [dropoffSuggestions, setDropoffSuggestions] = useState<any[]>([]);
+  const [showPickupDropdown, setShowPickupDropdown] = useState(false);
+  const [showDropoffDropdown, setShowDropoffDropdown] = useState(false);
+  const pickupTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const dropoffTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
   // Multi-day dates
   const [startDate, setStartDate] = useState<Date | null>(new Date());
   const [endDate, setEndDate] = useState<Date | null>(new Date(new Date().getTime() + 86400000));
@@ -122,7 +130,6 @@ export default function TaxisClient() {
     if (!query) return;
     toast.loading(`Searching ${query}...`, { id: "search" });
     try {
-      // Improve accuracy by appending Kashmir if not present
       let enhancedQuery = query;
       if (!query.toLowerCase().includes("kashmir") && !query.toLowerCase().includes("srinagar") && !query.toLowerCase().includes("jammu")) {
         enhancedQuery = `${query}, Kashmir, India`;
@@ -136,7 +143,6 @@ export default function TaxisClient() {
         else setDropoffCoords(coords);
         toast.success("Location found!", { id: "search" });
         
-        // If both coords exist, calculate distance
         const pCoords = isPickup ? coords : pickupCoords;
         const dCoords = !isPickup ? coords : dropoffCoords;
         
@@ -144,10 +150,73 @@ export default function TaxisClient() {
           calculateDistance(pCoords, dCoords);
         }
       } else {
-        toast.error("Location not found. Try adding 'Kashmir' or 'Srinagar'.", { id: "search" });
+        toast.error("Location not found", { id: "search" });
+      }
+    } catch (error) {
+      toast.error("Error searching location", { id: "search" });
+    }
+  };
+
+  const searchLocationAutocomplete = async (query: string, isPickup: boolean) => {
+    if (!query || query.length < 3) {
+      if (isPickup) setPickupSuggestions([]);
+      else setDropoffSuggestions([]);
+      return;
+    }
+    try {
+      let enhancedQuery = query;
+      if (!query.toLowerCase().includes("kashmir") && !query.toLowerCase().includes("srinagar") && !query.toLowerCase().includes("jammu")) {
+        enhancedQuery = `${query}, Kashmir, India`;
+      }
+      const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(enhancedQuery)}&format=json&limit=5&countrycodes=in`);
+      const data = await res.json();
+      if (isPickup) {
+        setPickupSuggestions(data);
+        setShowPickupDropdown(true);
+      } else {
+        setDropoffSuggestions(data);
+        setShowDropoffDropdown(true);
       }
     } catch (e) {
-      toast.error("Error searching location.", { id: "search" });
+      console.error(e);
+    }
+  };
+
+  const handlePickupChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value;
+    setPickupText(val);
+    if (pickupTimeoutRef.current) clearTimeout(pickupTimeoutRef.current);
+    pickupTimeoutRef.current = setTimeout(() => searchLocationAutocomplete(val, true), 500);
+  };
+
+  const handleDropoffChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value;
+    setDropoffText(val);
+    if (dropoffTimeoutRef.current) clearTimeout(dropoffTimeoutRef.current);
+    dropoffTimeoutRef.current = setTimeout(() => searchLocationAutocomplete(val, false), 500);
+  };
+
+  const selectSuggestion = (suggestion: any, isPickup: boolean) => {
+    const coords: [number, number] = [parseFloat(suggestion.lat), parseFloat(suggestion.lon)];
+    const nameParts = suggestion.display_name.split(',');
+    const shortName = nameParts[0].trim() + (nameParts[1] ? `, ${nameParts[1].trim()}` : '');
+    
+    if (isPickup) {
+      setPickupText(shortName);
+      setPickupCoords(coords);
+      setShowPickupDropdown(false);
+      setPickupSuggestions([]);
+    } else {
+      setDropoffText(shortName);
+      setDropoffCoords(coords);
+      setShowDropoffDropdown(false);
+      setDropoffSuggestions([]);
+    }
+    
+    const pCoords = isPickup ? coords : pickupCoords;
+    const dCoords = !isPickup ? coords : dropoffCoords;
+    if (pCoords && dCoords) {
+      calculateDistance(pCoords, dCoords);
     }
   };
 
@@ -203,21 +272,35 @@ export default function TaxisClient() {
                 <div className="relative border border-slate-200 rounded-2xl p-4 space-y-4">
                   <div className="flex items-start gap-3">
                     <div className="mt-1"><MapPin className="w-5 h-5 text-sky-500" /></div>
-                    <div className="flex-1">
+                    <div className="flex-1 relative">
                       <label className="text-xs font-bold text-slate-500 uppercase">Pick-up Location</label>
                       <div className="flex items-center gap-2 mt-1">
                         <input 
                           type="text" 
                           placeholder="Search pick-up location..." 
                           value={pickupText}
-                          onChange={e => setPickupText(e.target.value)}
-                          onBlur={() => geocodeLocation(pickupText, true)}
+                          onChange={handlePickupChange}
+                          onFocus={() => { if (pickupSuggestions.length > 0) setShowPickupDropdown(true); }}
+                          onBlur={() => setTimeout(() => setShowPickupDropdown(false), 200)}
                           className="w-full font-medium text-slate-900 focus:outline-none"
                         />
                         <button onClick={() => handleGetCurrentLocation(true)} title="Use current location" className="p-2 bg-slate-100 rounded-lg text-slate-600 hover:bg-slate-200 flex-shrink-0">
                           <Navigation2 className="w-4 h-4" />
                         </button>
                       </div>
+                      {showPickupDropdown && pickupSuggestions.length > 0 && (
+                        <div className="absolute top-full left-0 right-0 z-50 mt-1 bg-white border border-slate-200 rounded-xl shadow-lg max-h-60 overflow-y-auto">
+                          {pickupSuggestions.map((s, i) => (
+                            <div key={i} onClick={() => selectSuggestion(s, true)} className="p-3 hover:bg-slate-50 cursor-pointer border-b border-slate-100 last:border-0 flex items-start gap-2">
+                              <MapPin className="w-4 h-4 text-slate-400 mt-0.5 flex-shrink-0" />
+                              <div className="text-sm">
+                                <div className="font-semibold text-slate-800">{s.display_name.split(',')[0]}</div>
+                                <div className="text-xs text-slate-500 truncate">{s.display_name.split(',').slice(1).join(',')}</div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   </div>
                   
@@ -225,21 +308,35 @@ export default function TaxisClient() {
                   
                   <div className="flex items-start gap-3 pt-4 border-t border-slate-100">
                     <div className="mt-1"><MapPin className="w-5 h-5 text-orange-500" /></div>
-                    <div className="flex-1">
+                    <div className="flex-1 relative">
                       <label className="text-xs font-bold text-slate-500 uppercase">Drop-off Location</label>
                       <div className="flex items-center gap-2 mt-1">
                         <input 
                           type="text" 
                           placeholder="Search drop-off destination..." 
                           value={dropoffText}
-                          onChange={e => setDropoffText(e.target.value)}
-                          onBlur={() => geocodeLocation(dropoffText, false)}
+                          onChange={handleDropoffChange}
+                          onFocus={() => { if (dropoffSuggestions.length > 0) setShowDropoffDropdown(true); }}
+                          onBlur={() => setTimeout(() => setShowDropoffDropdown(false), 200)}
                           className="w-full font-medium text-slate-900 focus:outline-none"
                         />
                         <button onClick={() => handleGetCurrentLocation(false)} title="Use current location" className="p-2 bg-slate-100 rounded-lg text-slate-600 hover:bg-slate-200 flex-shrink-0">
                           <Navigation2 className="w-4 h-4" />
                         </button>
                       </div>
+                      {showDropoffDropdown && dropoffSuggestions.length > 0 && (
+                        <div className="absolute top-full left-0 right-0 z-50 mt-1 bg-white border border-slate-200 rounded-xl shadow-lg max-h-60 overflow-y-auto">
+                          {dropoffSuggestions.map((s, i) => (
+                            <div key={i} onClick={() => selectSuggestion(s, false)} className="p-3 hover:bg-slate-50 cursor-pointer border-b border-slate-100 last:border-0 flex items-start gap-2">
+                              <MapPin className="w-4 h-4 text-slate-400 mt-0.5 flex-shrink-0" />
+                              <div className="text-sm">
+                                <div className="font-semibold text-slate-800">{s.display_name.split(',')[0]}</div>
+                                <div className="text-xs text-slate-500 truncate">{s.display_name.split(',').slice(1).join(',')}</div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
