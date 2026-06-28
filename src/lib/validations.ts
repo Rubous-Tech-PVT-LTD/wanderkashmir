@@ -4,17 +4,29 @@ export const vendorRegistrationSchema = z.object({
   vendorType: z.enum(["hotel", "homestay", "taxi", "guide"], {
     message: "Please select a vendor type",
   }),
-  businessName: z.string().min(3, "Business Name must be at least 3 characters"),
-  gstNumber: z.string().optional(),
-  password: z.string().min(6, "Password must be at least 6 characters"),
+  businessName: z.string().min(3, "Business Name must be at least 3 characters").regex(/^[a-zA-Z0-9\s&'-]+$/, "Business Name contains invalid characters"),
+  gstNumber: z.string().regex(/^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/, "Invalid GST Number format").optional().or(z.literal("")),
+  password: z.string().min(8, "Password must be at least 8 characters").regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/, "Password must contain uppercase, lowercase, number, and special character"),
   address: z.string().min(10, "Please provide a complete address"),
   latitude: z.preprocess((val) => (val === "" || val === null || isNaN(Number(val)) ? undefined : Number(val)), z.number().optional()),
   longitude: z.preprocess((val) => (val === "" || val === null || isNaN(Number(val)) ? undefined : Number(val)), z.number().optional()),
-  email: z.string().email("Invalid email address"),
-  phone: z.string().regex(/^[0-9]{10}$/, "Phone number must be exactly 10 digits"),
+  email: z.string().email("Invalid email address").refine(
+    (val) => {
+      const lower = val.toLowerCase();
+      // Block common typos
+      if (lower.endsWith('.con')) return false;
+      if (lower.endsWith('.coom')) return false;
+      if (lower.endsWith('.comm')) return false;
+      if (lower.includes('@gmial.')) return false;
+      if (lower.includes('@gamil.')) return false;
+      return true;
+    },
+    { message: "Typo in email domain (e.g. .con instead of .com or gmial instead of gmail)" }
+  ),
+  phone: z.string().regex(/^[6-9]\d{9}$/, "Invalid Indian mobile number. Must start with 6-9 and have 10 digits"),
   altContactPerson: z.string().optional(),
-  altPhone: z.string().regex(/^[0-9]{10}$/, "Phone number must be exactly 10 digits").optional().or(z.literal("")),
-  accountHolderName: z.string().min(3, "Account holder name is required"),
+  altPhone: z.string().regex(/^[6-9]\d{9}$/, "Invalid Indian mobile number").optional().or(z.literal("")),
+  accountHolderName: z.string().min(3, "Account holder name is required").regex(/^[a-zA-Z\s'-]+$/, "Account holder name contains invalid characters"),
   bankName: z.string().min(3, "Bank name is required"),
   accountNumber: z.string().min(9, "Account number must be at least 9 characters"),
   ifscCode: z.string().trim().toUpperCase().regex(/^[A-Z]{4}0[A-Z0-9]{6}$/, "Invalid IFSC Code format"),
@@ -24,13 +36,13 @@ export const vendorRegistrationSchema = z.object({
   }),
   
   // Conditional Fields
-  panNumber: z.string().optional(),
+  panNumber: z.string().regex(/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/, "Invalid PAN format (e.g., ABCDE1234F)").optional().or(z.literal("")),
   tradeLicense: z.string().optional(),
   
   // Taxi specific
   taxiRole: z.string().optional(), // 'individual' or 'stand'
   vehicleType: z.string().optional(),
-  vehicleRegistration: z.string().optional(),
+  vehicleRegistration: z.string().regex(/^[A-Z]{2}[0-9]{1,2}[A-Z]{1,2}[0-9]{4}$/, "Invalid RC format (e.g., JK01AB1234)").optional().or(z.literal("")),
   drivingLicense: z.string().optional(),
   
   // Guide specific
@@ -74,7 +86,7 @@ export const vendorRegistrationSchema = z.object({
 export type VendorRegistrationData = z.infer<typeof vendorRegistrationSchema>;
 
 export const propertySchema = z.object({
-  name: z.string().min(3, "Property name must be at least 3 characters"),
+  name: z.string().min(3, "Property name must be at least 3 characters").regex(/^[a-zA-Z0-9\s&'-]+$/, "Property Name contains invalid characters"),
   location: z.string().min(5, "Please provide the full location"),
   latitude: z.number().optional(),
   longitude: z.number().optional(),
@@ -94,7 +106,7 @@ export type PropertyData = z.infer<typeof propertySchema>;
 export const vehicleSchema = z.object({
   make: z.string().min(2, "Make is required (e.g. Toyota)"),
   model: z.string().min(2, "Model is required (e.g. Innova)"),
-  registrationNum: z.string().min(4, "Registration number is required"),
+  registrationNum: z.string().min(4, "Registration number is required").regex(/^[A-Z]{2}[0-9]{1,2}[A-Z]{1,2}[0-9]{4}$/, "Invalid RC format (e.g., JK01AB1234)"),
   images: z.array(z.string()).optional(),
   type: z.enum(["Sedan", "SUV", "Hatchback", "Traveller"], {
     message: "Please select a vehicle type",
