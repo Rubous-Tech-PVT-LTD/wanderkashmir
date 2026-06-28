@@ -127,7 +127,8 @@ async function getDestinationCounts(): Promise<Record<string, number>> {
         where: {
           OR: [
             { location: { contains: 'srinagar', mode: 'insensitive' } },
-            { location: { contains: 'dal lake', mode: 'insensitive' } }
+            { location: { contains: 'dal lake', mode: 'insensitive' } },
+            { location: { contains: 'nigeen', mode: 'insensitive' } }
           ]
         }
       }),
