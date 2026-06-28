@@ -45,7 +45,22 @@ export default function StaysClient({ initialProperties, initialQuery = "" }: { 
 
   // Filter Logic
   let filtered = initialProperties.filter((p) => {
-    if (searchQuery && !p.name.toLowerCase().includes(searchQuery.toLowerCase())) return false;
+    if (searchQuery) {
+      const q = searchQuery.toLowerCase();
+      const matchName = p.name.toLowerCase().includes(q);
+      const loc = p.location.toLowerCase();
+      const matchLoc = loc.includes(q);
+      
+      const matchSrinagar = q === 'srinagar' && (loc.includes('dal lake') || loc.includes('nigeen'));
+      const matchGulmarg = q === 'gulmarg' && loc.includes('tangmarg');
+      const matchPahalgam = q === 'pahalgam' && (loc.includes('chandanwari') || loc.includes('aru'));
+      const matchSonamarg = q === 'sonamarg' && loc.includes('gagangeer');
+      const matchLadakh = q === 'ladakh' && loc.includes('leh');
+
+      if (!matchName && !matchLoc && !matchSrinagar && !matchGulmarg && !matchPahalgam && !matchSonamarg && !matchLadakh) {
+        return false;
+      }
+    }
     if (selectedType.length > 0 && !selectedType.includes(p.type)) return false;
     if (minRating && p.rating < minRating) return false;
     if (p.price > maxPrice) return false;
@@ -102,12 +117,12 @@ export default function StaysClient({ initialProperties, initialQuery = "" }: { 
 
               {/* Search */}
               <div className="mb-6">
-                <p className="text-sm font-semibold text-slate-900 mb-3">Search by name</p>
+                <p className="text-sm font-semibold text-slate-900 mb-3">Search by name or location</p>
                 <input
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search property name"
+                  placeholder="Search property name or location"
                   className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[var(--primary)]"
                 />
               </div>
