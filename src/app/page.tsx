@@ -256,7 +256,7 @@ const destinations = [
     count: "320+ stays",
     image:
       "https://res.cloudinary.com/dcmoseix9/image/upload/q_auto/f_auto/v1781184060/ChatGPT_Image_Jun_11_2026_06_50_39_PM_sagjr5.png",
-    href: "/stays/srinagar",
+    href: "/stays?q=srinagar",
   },
   {
     name: "Gulmarg",
@@ -264,7 +264,7 @@ const destinations = [
     count: "85+ stays",
     image:
       "https://res.cloudinary.com/dcmoseix9/image/upload/q_auto/f_auto/v1781184317/ChatGPT_Image_Jun_11_2026_06_54_50_PM_rot3s8.png",
-    href: "/stays/gulmarg",
+    href: "/stays?q=gulmarg",
   },
   {
     name: "Pahalgam",
@@ -272,7 +272,7 @@ const destinations = [
     count: "140+ stays",
     image:
       "https://res.cloudinary.com/dcmoseix9/image/upload/q_auto/f_auto/v1781184496/ChatGPT_Image_Jun_11_2026_06_57_52_PM_ohjz8z.png",
-    href: "/stays/pahalgam",
+    href: "/stays?q=pahalgam",
   },
   {
     name: "Sonamarg",
@@ -280,7 +280,7 @@ const destinations = [
     count: "60+ stays",
     image:
       "https://res.cloudinary.com/dcmoseix9/image/upload/q_auto/f_auto/v1781184714/ChatGPT_Image_Jun_11_2026_07_01_39_PM_lwcndk.png",
-    href: "/stays/sonamarg",
+    href: "/stays?q=sonamarg",
   },
   {
     name: "Dal Lake",
@@ -296,7 +296,7 @@ const destinations = [
     count: "110+ stays",
     image:
       "https://images.unsplash.com/photo-1592466932854-4cf8c0fa04ec?w=500&q=80",
-    href: "/stays/ladakh",
+    href: "/stays?q=ladakh",
   },
 ];
 
