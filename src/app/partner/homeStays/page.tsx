@@ -19,7 +19,7 @@ import toast from 'react-hot-toast';
 import { calculateDashboardMetrics } from "@/lib/chartUtils";
 
 // --- ZOD SCHEMA FOR HOMESTAY LISTING ---
-const homestayListingSchema = propertySchema.extend({
+const homestayListingSchema = propertySchema.omit({ pricePerNight: true }).extend({
   name: z.string().min(3, "Homestay name must be at least 3 characters").max(100),
   description: z.string().min(20, "Description must be at least 20 characters"),
   basePrice: z.number().min(300, "Base price must be at least ₹300").max(20000),
