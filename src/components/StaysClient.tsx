@@ -244,9 +244,11 @@ export default function StaysClient({ initialProperties, initialQuery = "" }: { 
                 <div className="flex-1 p-5 flex flex-col justify-between">
                   <div>
                     <div className="flex items-center gap-2 mb-1">
-                      <h3 className="text-xl font-bold text-slate-900 cursor-pointer hover:text-sky-600 transition-colors">
-                        {property.name}
-                      </h3>
+                      <Link href={`/stays/${property.id}`}>
+                        <h3 className="text-xl font-bold text-slate-900 cursor-pointer hover:text-sky-600 transition-colors">
+                          {property.name}
+                        </h3>
+                      </Link>
                       <div className="flex text-slate-400 text-xs">
                         {/* Fake Stars */}
                         <Star className="w-3.5 h-3.5 fill-slate-700 text-slate-700" />
@@ -258,7 +260,10 @@ export default function StaysClient({ initialProperties, initialQuery = "" }: { 
                     </div>
                     
                     <p className="text-sm text-slate-600 mb-3">
-                      <span className="text-sky-600 hover:underline cursor-pointer">{property.location}</span> <span className="text-slate-300 mx-1">|</span> 
+                      <Link href={`/stays/${property.id}`}>
+                        <span className="text-sky-600 hover:underline cursor-pointer">{property.location}</span>
+                      </Link> 
+                      <span className="text-slate-300 mx-1">|</span> 
                       {property.type === "Houseboat" ? "Scenic lake views" : "Prime location in the valley"}
                     </p>
 
