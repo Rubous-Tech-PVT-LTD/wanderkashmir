@@ -567,7 +567,7 @@ export default function HomestayDashboard({ bookings = [], properties = [] }: { 
           )}
 
           {/* ADVANCED ANALYTICS (FEATURE GATED) */}
-          <div className="relative bg-white rounded-2xl shadow-sm border border-slate-200 p-6 overflow-hidden mt-8">
+          <div className={`relative bg-white rounded-2xl shadow-sm border border-slate-200 p-6 overflow-hidden mt-8 ${!hasAnalytics ? 'min-h-[350px] bg-slate-50 flex flex-col' : ''}`}>
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
               <div className="flex items-center gap-2">
                 <LineChartIcon className="w-6 h-6 text-sky-500" />
@@ -588,37 +588,48 @@ export default function HomestayDashboard({ bookings = [], properties = [] }: { 
             </div>
             
             {!hasAnalytics && (
-              <div className="absolute inset-0 bg-white/60 backdrop-blur-sm z-10 flex flex-col items-center justify-center p-6 text-center">
-                <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center shadow-md mb-4">
-                  <Lock className="w-8 h-8 text-slate-400" />
+              <>
+                <div className="absolute inset-0 bg-slate-50/80 backdrop-blur-sm z-10 flex flex-col items-center justify-center p-6 text-center">
+                  <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center shadow-md mb-4 ring-4 ring-slate-100">
+                    <Lock className="w-8 h-8 text-slate-400" />
+                  </div>
+                  <h3 className="text-2xl font-bold text-slate-900 mb-2">Analytics Locked</h3>
+                  <p className="text-slate-600 max-w-md mb-6">Upgrade to the Growth Pro or Enterprise plan to view detailed conversion rates, customer demographics, and search appearances.</p>
+                  <button onClick={() => setActiveTab("financials")} className="bg-sky-500 text-white px-6 py-2.5 rounded-lg font-bold hover:bg-sky-600 transition-colors shadow-sm">
+                    View Upgrade Plans
+                  </button>
                 </div>
-                <h3 className="text-2xl font-bold text-slate-900 mb-2">Analytics Locked</h3>
-                <p className="text-slate-600 max-w-md mb-6">Upgrade to the Growth Pro or Enterprise plan to view detailed conversion rates, customer demographics, and search appearances.</p>
-                <button onClick={() => setActiveTab("financials")} className="bg-sky-500 text-white px-6 py-2.5 rounded-lg font-bold hover:bg-sky-600 transition-colors shadow-sm">
-                  View Upgrade Plans
-                </button>
-              </div>
+                {/* Fake blurred background to give it shape */}
+                <div className="flex-1 opacity-20 pointer-events-none mt-4 flex items-end gap-2 px-8">
+                  <div className="w-1/6 h-24 bg-sky-200 rounded-t-lg"></div>
+                  <div className="w-1/6 h-32 bg-sky-300 rounded-t-lg"></div>
+                  <div className="w-1/6 h-16 bg-sky-200 rounded-t-lg"></div>
+                  <div className="w-1/6 h-40 bg-sky-400 rounded-t-lg"></div>
+                  <div className="w-1/6 h-28 bg-sky-300 rounded-t-lg"></div>
+                  <div className="w-1/6 h-48 bg-sky-500 rounded-t-lg"></div>
+                </div>
+              </>
             )}
 
             {hasAnalytics && (() => {
               const { totalViews, totalBookings, totalRevenue, growthViews, growthBookings, growthRevenue } = calculateDashboardMetrics(bookings, "HOMESTAY", timeRange);
               return (
               <>
-                <div className="grid grid-cols-3 gap-4 mb-8 mt-4">
-                  <button onClick={() => setChartMetric("views")} className={`p-4 rounded-xl text-left border transition-all ${chartMetric === "views" ? 'border-sky-500 bg-sky-50 shadow-sm' : 'border-slate-100 bg-slate-50 hover:border-slate-200'}`}>
-                    <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Profile Views</p>
-                    <p className="text-2xl font-bold text-slate-900">{totalViews.toLocaleString()}</p>
-                    <p className="text-xs text-emerald-600 font-bold mt-1">+{growthViews}%</p>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8 mt-4">
+                  <button onClick={() => setChartMetric("views")} className={`p-4 rounded-xl border-2 transition-all text-left ${chartMetric === "views" ? 'border-sky-500 bg-sky-50' : 'border-slate-100 bg-white hover:border-slate-200'}`}>
+                    <div className="text-slate-500 text-sm font-medium mb-1">Profile Views</div>
+                    <div className="text-2xl font-black text-slate-900">{totalViews.toLocaleString()}</div>
+                    <div className="text-xs text-emerald-600 font-bold mt-2 flex items-center gap-1">+{growthViews}%</div>
                   </button>
-                  <button onClick={() => setChartMetric("bookings")} className={`p-4 rounded-xl text-left border transition-all ${chartMetric === "bookings" ? 'border-indigo-500 bg-indigo-50 shadow-sm' : 'border-slate-100 bg-slate-50 hover:border-slate-200'}`}>
-                    <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Bookings</p>
-                    <p className="text-2xl font-bold text-slate-900">{totalBookings}</p>
-                    <p className="text-xs text-emerald-600 font-bold mt-1">+{growthBookings}%</p>
+                  <button onClick={() => setChartMetric("bookings")} className={`p-4 rounded-xl border-2 transition-all text-left ${chartMetric === "bookings" ? 'border-indigo-500 bg-indigo-50' : 'border-slate-100 bg-white hover:border-slate-200'}`}>
+                    <div className="text-slate-500 text-sm font-medium mb-1">Confirmed Bookings</div>
+                    <div className="text-2xl font-black text-slate-900">{totalBookings}</div>
+                    <div className="text-xs text-emerald-600 font-bold mt-2 flex items-center gap-1">+{growthBookings}%</div>
                   </button>
-                  <button onClick={() => setChartMetric("revenue")} className={`p-4 rounded-xl text-left border transition-all ${chartMetric === "revenue" ? 'border-emerald-500 bg-emerald-50 shadow-sm' : 'border-slate-100 bg-slate-50 hover:border-slate-200'}`}>
-                    <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Revenue</p>
-                    <p className="text-2xl font-bold text-slate-900">₹{totalRevenue.toLocaleString()}</p>
-                    <p className="text-xs text-emerald-600 font-bold mt-1">+{growthRevenue}%</p>
+                  <button onClick={() => setChartMetric("revenue")} className={`p-4 rounded-xl border-2 transition-all text-left ${chartMetric === "revenue" ? 'border-emerald-500 bg-emerald-50' : 'border-slate-100 bg-white hover:border-slate-200'}`}>
+                    <div className="text-slate-500 text-sm font-medium mb-1">Net Earnings</div>
+                    <div className="text-2xl font-black text-slate-900">₹{totalRevenue.toLocaleString()}</div>
+                    <div className="text-xs text-emerald-600 font-bold mt-2 flex items-center gap-1">+{growthRevenue}%</div>
                   </button>
                 </div>
 
