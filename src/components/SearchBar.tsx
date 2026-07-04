@@ -81,14 +81,11 @@ export default function SearchBar() {
             onClick={() => setActiveTab(tab)}
             className={`whitespace-nowrap px-8 py-3.5 text-sm font-bold rounded-t-xl transition-colors relative ${
               activeTab === tab
-                ? "bg-white text-[#0284c7] shadow-sm"
+                ? "bg-orange-500 text-white shadow-sm"
                 : "text-slate-600 hover:text-slate-900 hover:bg-slate-100/50"
             }`}
           >
             {tab}
-            {activeTab === tab && (
-              <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[80%] h-[3px] bg-[#0284c7] rounded-t-md" />
-            )}
           </button>
         ))}
       </div>

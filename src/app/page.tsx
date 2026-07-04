@@ -122,7 +122,7 @@ async function getFeaturedProperties() {
 
 async function getDestinationCounts(): Promise<Record<string, number>> {
   try {
-    const [srinagar, gulmarg, pahalgam, sonamarg, ladakh] = await Promise.all([
+    const [srinagar, gulmarg, pahalgam, sonamarg, ladakh, dalLake] = await Promise.all([
       prisma.property.count({
         where: {
           OR: [
@@ -164,10 +164,15 @@ async function getDestinationCounts(): Promise<Record<string, number>> {
             { location: { contains: 'leh', mode: 'insensitive' } }
           ]
         }
+      }),
+      prisma.property.count({
+        where: {
+          location: { contains: 'dal lake', mode: 'insensitive' }
+        }
       })
     ]);
 
-    return { srinagar, gulmarg, pahalgam, sonamarg, ladakh };
+    return { srinagar, gulmarg, pahalgam, sonamarg, ladakh, 'dal lake': dalLake };
   } catch (error) {
     console.error("Failed to fetch location counts:", error);
     return {};
