@@ -29,8 +29,8 @@ export async function POST(req: Request) {
     }
 
     // Find the user by the identifier (email) in the token
-    const user = await prisma.user.findUnique({
-      where: { email: existingToken.identifier },
+    const user = await prisma.user.findFirst({
+      where: { email: { equals: existingToken.identifier, mode: 'insensitive' } },
     });
 
     if (!user) {

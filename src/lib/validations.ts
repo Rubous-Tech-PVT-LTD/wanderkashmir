@@ -10,7 +10,7 @@ export const vendorRegistrationSchema = z.object({
   address: z.string().min(10, "Please provide a complete address"),
   latitude: z.preprocess((val) => (val === "" || val === null || isNaN(Number(val)) ? undefined : Number(val)), z.number().optional()),
   longitude: z.preprocess((val) => (val === "" || val === null || isNaN(Number(val)) ? undefined : Number(val)), z.number().optional()),
-  email: z.string().email("Invalid email address").refine(
+  email: z.string().trim().toLowerCase().email("Invalid email address").refine(
     (val) => {
       const lower = val.toLowerCase();
       // Block common typos
