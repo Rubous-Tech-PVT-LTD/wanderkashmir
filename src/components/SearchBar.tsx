@@ -81,7 +81,7 @@ export default function SearchBar() {
             onClick={() => setActiveTab(tab)}
             className={`whitespace-nowrap px-8 py-3.5 text-sm font-bold rounded-t-xl transition-colors relative ${
               activeTab === tab
-                ? "bg-white text-orange-600 shadow-sm"
+                ? "bg-white text-slate-900 shadow-sm"
                 : "text-white/80 hover:text-white hover:bg-white/10"
             }`}
           >
