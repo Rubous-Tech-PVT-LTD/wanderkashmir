@@ -25,7 +25,7 @@ export async function POST(request: Request) {
       user = vendorProfile?.user ?? null;
       specificVendorProfileId = vendorProfile?.id ?? null;
     } else {
-      user = await prisma.user.findUnique({ where: { email: identifier } });
+      user = await prisma.user.findFirst({ where: { email: { equals: identifier, mode: 'insensitive' } } });
       if (user) {
         if (profileId) {
           specificVendorProfileId = profileId;
