@@ -72,7 +72,7 @@ export default function SearchBar() {
   return (
     <div className="w-full bg-white rounded-2xl shadow-2xl overflow-hidden border border-slate-100">
       {/* Tabs */}
-      <div className="flex items-center gap-2 bg-[#f8f9fa] px-4 pt-3 border-b border-slate-100 overflow-x-auto no-scrollbar" role="tablist" aria-label="Search categories">
+      <div className="flex items-center gap-2 bg-orange-500 px-4 pt-3 border-b border-orange-600 overflow-x-auto no-scrollbar" role="tablist" aria-label="Search categories">
         {tabs.map((tab) => (
           <button
             key={tab}
@@ -82,13 +82,10 @@ export default function SearchBar() {
             className={`whitespace-nowrap px-8 py-3.5 text-sm font-bold rounded-t-xl transition-colors relative ${
               activeTab === tab
                 ? "bg-white text-orange-600 shadow-sm"
-                : "text-slate-600 hover:text-slate-900 hover:bg-slate-100/50"
+                : "text-white/80 hover:text-white hover:bg-white/10"
             }`}
           >
             {tab}
-            {activeTab === tab && (
-              <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[80%] h-[3px] bg-orange-500 rounded-t-md" />
-            )}
           </button>
         ))}
       </div>
