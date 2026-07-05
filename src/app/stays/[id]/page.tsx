@@ -18,6 +18,7 @@ const ReviewForm = dynamic(() => import("@/components/ReviewForm"));
 import PropertyDescription from "@/components/PropertyDescription";
 import { getReviews, getReviewStats } from "@/actions/reviews";
 import { Metadata } from "next";
+import PhotoGalleryClient from "@/components/PhotoGalleryClient";
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
   const { id } = await params;
@@ -155,31 +156,7 @@ export default async function PropertyDetailPage({
 
       {/* ─── IMAGE GALLERY ─── */}
       <div className="container-custom mb-12">
-        <div className={`grid gap-4 ${images.length > 1 ? 'grid-cols-1 md:grid-cols-4 md:grid-rows-2 h-[50vh]' : 'h-[60vh]'}`}>
-          <div className={`relative rounded-l-2xl overflow-hidden group cursor-pointer ${images.length > 1 ? 'md:col-span-2 md:row-span-2' : 'w-full h-full rounded-r-2xl'}`}>
-            <Image src={mainImage} alt={property.name} fill className="object-cover transition-transform duration-700 group-hover:scale-105" />
-            <div className="absolute inset-0 bg-black/5 group-hover:bg-transparent transition-colors" />
-          </div>
-          
-          {images.slice(1, 5).map((img: string, idx: number) => (
-            <div key={idx} className={`relative overflow-hidden group cursor-pointer hidden md:block ${
-              idx === 1 && images.length === 3 ? 'md:row-span-2' : ''
-            } ${
-              idx === 1 && images.length === 5 ? 'rounded-tr-2xl' : ''
-            } ${
-              idx === 3 ? 'rounded-br-2xl' : ''
-            }`}>
-              <Image src={img} alt={`${property.name} - ${idx + 2}`} fill className="object-cover transition-transform duration-700 group-hover:scale-105" />
-              <div className="absolute inset-0 bg-black/5 group-hover:bg-transparent transition-colors" />
-            </div>
-          ))}
-          
-          {images.length > 1 && (
-            <button className="absolute bottom-6 right-6 bg-white/90 backdrop-blur-sm px-4 py-2 rounded-lg text-sm font-bold shadow-sm hover:bg-white transition-colors z-10">
-              View all photos
-            </button>
-          )}
-        </div>
+        <PhotoGalleryClient images={images} propertyName={property.name} />
       </div>
 
       {/* ─── CONTENT GRID ─── */}
