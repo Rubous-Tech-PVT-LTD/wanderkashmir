@@ -9,9 +9,10 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 interface SendBulkEmailInput {
   subject: string;
   bodyHtml: string;
-  vendorType: string; // "ALL", "HOTEL", "HOMESTAY", "TAXI", "GUIDE"
+  vendorType: string; // "ALL", "HOTEL", "HOMESTAY", "TAXI", "GUIDE", "CSV"
   subscriptionPlan: string; // "ALL", "FREE", "GROWTH", "PRO", "ENTERPRISE"
   testEmail?: string;
+  customRecipients?: { email: string; businessName: string }[];
 }
 
 export async function sendBulkEmailsAction(input: SendBulkEmailInput) {
@@ -30,7 +31,7 @@ export async function sendBulkEmailsAction(input: SendBulkEmailInput) {
       return { success: false, error: "Forbidden: Only admins can send bulk emails" };
     }
 
-    const { subject, bodyHtml, vendorType, subscriptionPlan, testEmail } = input;
+    const { subject, bodyHtml, vendorType, subscriptionPlan, testEmail, customRecipients } = input;
 
     if (!subject.trim()) {
       return { success: false, error: "Subject is required" };
@@ -52,35 +53,44 @@ export async function sendBulkEmailsAction(input: SendBulkEmailInput) {
       return { success: false, error: "Failed to send test email" };
     }
 
-    // 3. Prepare filters for DB Query
-    const whereClause: any = {
-      isApproved: true,
-      status: "APPROVED",
-      email: { not: null },
-    };
+    let validRecipients: { email: string; businessName: string }[] = [];
 
-    if (vendorType !== "ALL") {
-      whereClause.type = vendorType as VendorType;
+    if (vendorType === "CSV") {
+      if (!customRecipients || customRecipients.length === 0) {
+        return { success: false, error: "Custom CSV recipients list is empty." };
+      }
+      validRecipients = customRecipients;
+    } else {
+      // 3. Prepare filters for DB Query
+      const whereClause: any = {
+        isApproved: true,
+        status: "APPROVED",
+        email: { not: null },
+      };
+
+      if (vendorType !== "ALL") {
+        whereClause.type = vendorType as VendorType;
+      }
+
+      if (subscriptionPlan !== "ALL") {
+        whereClause.subscriptionPlan = subscriptionPlan as SubscriptionPlan;
+      }
+
+      // 4. Fetch Targeted Vendors
+      const vendors = await prisma.vendorProfile.findMany({
+        where: whereClause,
+        select: {
+          email: true,
+          businessName: true,
+        },
+      });
+
+      if (vendors.length === 0) {
+        return { success: false, error: "No matching vendors found with the selected filters." };
+      }
+
+      validRecipients = vendors.filter(v => v.email && v.email.includes("@")) as { email: string; businessName: string }[];
     }
-
-    if (subscriptionPlan !== "ALL") {
-      whereClause.subscriptionPlan = subscriptionPlan as SubscriptionPlan;
-    }
-
-    // 4. Fetch Targeted Vendors
-    const vendors = await prisma.vendorProfile.findMany({
-      where: whereClause,
-      select: {
-        email: true,
-        businessName: true,
-      },
-    });
-
-    if (vendors.length === 0) {
-      return { success: false, error: "No matching vendors found with the selected filters." };
-    }
-
-    const validRecipients = vendors.filter(v => v.email && v.email.includes("@")) as { email: string; businessName: string }[];
 
     if (validRecipients.length === 0) {
       return { success: false, error: "No valid email addresses found." };

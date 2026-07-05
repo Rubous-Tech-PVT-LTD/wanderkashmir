@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Mail, Send, CheckCircle2, AlertCircle, Eye, RefreshCw, Sparkles } from "lucide-react";
+import { Mail, Send, CheckCircle2, AlertCircle, Eye, RefreshCw, Sparkles, Upload } from "lucide-react";
 import { sendBulkEmailsAction, generateEmailWithAiAction } from "@/actions/emails";
 import toast from "react-hot-toast";
 
@@ -43,6 +43,78 @@ export default function AdminEmailsTab() {
   const [isTesting, setIsTesting] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [aiPrompt, setAiPrompt] = useState("");
+  
+  const [customRecipients, setCustomRecipients] = useState<{ email: string; businessName: string }[]>([]);
+  const [csvFileName, setCsvFileName] = useState("");
+
+  const handleCsvUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setCsvFileName(file.name);
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const text = event.target?.result as string;
+      if (!text) {
+        toast.error("Could not read file content.");
+        return;
+      }
+      
+      try {
+        const lines = text.split(/\r?\n/);
+        const parsedList: { email: string; businessName: string }[] = [];
+        
+        let emailIndex = -1;
+        let nameIndex = -1;
+        
+        if (lines.length > 0) {
+          const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
+          emailIndex = headers.findIndex(h => h.includes('email'));
+          nameIndex = headers.findIndex(h => h.includes('name') || h.includes('business') || h.includes('company') || h.includes('title'));
+        }
+        
+        for (let i = 1; i < lines.length; i++) {
+          const line = lines[i].trim();
+          if (!line) continue;
+          
+          const columns = line.split(',').map(c => c.replace(/^["']|["']$/g, '').trim());
+          let email = "";
+          let businessName = "";
+          
+          if (emailIndex !== -1 && columns[emailIndex]) {
+            email = columns[emailIndex];
+          } else {
+            const foundEmail = columns.find(c => c.includes('@'));
+            if (foundEmail) email = foundEmail;
+          }
+          
+          if (nameIndex !== -1 && columns[nameIndex]) {
+            businessName = columns[nameIndex];
+          } else {
+            const foundName = columns.find(c => !c.includes('@') && c.length > 1);
+            if (foundName) businessName = foundName;
+          }
+          
+          if (email && email.includes('@')) {
+            parsedList.push({
+              email,
+              businessName: businessName || "Partner",
+            });
+          }
+        }
+        
+        if (parsedList.length === 0) {
+          toast.error("No valid emails found in the CSV. Make sure you have an 'email' column.");
+        } else {
+          setCustomRecipients(parsedList);
+          toast.success(`Successfully loaded ${parsedList.length} recipients from CSV!`);
+        }
+      } catch (err) {
+        toast.error("Failed to parse CSV file. Ensure it is comma-separated.");
+      }
+    };
+    reader.readAsText(file);
+  };
 
   const handleGenerateWithAi = async () => {
     if (!aiPrompt.trim()) {
@@ -115,12 +187,19 @@ export default function AdminEmailsTab() {
       return;
     }
 
+    if (vendorType === "CSV" && customRecipients.length === 0) {
+      toast.error("Please upload a CSV file with valid emails first.");
+      return;
+    }
+
     const confirmSend = confirm(
-      `Are you sure you want to send this bulk email to all matching ${
-        vendorType === "ALL" ? "" : vendorType.toLowerCase()
-      } vendors on the ${
-        subscriptionPlan === "ALL" ? "any" : subscriptionPlan.toLowerCase()
-      } plan?`
+      vendorType === "CSV"
+        ? `Are you sure you want to send this bulk email to the ${customRecipients.length} uploaded CSV recipients?`
+        : `Are you sure you want to send this bulk email to all matching ${
+            vendorType === "ALL" ? "" : vendorType.toLowerCase()
+          } vendors on the ${
+            subscriptionPlan === "ALL" ? "any" : subscriptionPlan.toLowerCase()
+          } plan?`
     );
     if (!confirmSend) return;
 
@@ -132,10 +211,11 @@ export default function AdminEmailsTab() {
         bodyHtml,
         vendorType,
         subscriptionPlan,
+        customRecipients: vendorType === "CSV" ? customRecipients : undefined,
       });
 
       if (res.success) {
-        toast.success(`Success! Sent bulk emails to ${res.count} vendors.`, { id: toastId, duration: 5000 });
+        toast.success(`Success! Sent bulk emails to ${res.count} recipients.`, { id: toastId, duration: 5000 });
       } else {
         toast.error(res.error || "Failed to send bulk emails.", { id: toastId });
       }
@@ -210,6 +290,7 @@ export default function AdminEmailsTab() {
                   <option value="HOMESTAY">Homestays Only</option>
                   <option value="TAXI">Taxis Only</option>
                   <option value="GUIDE">Guides Only</option>
+                  <option value="CSV">Upload Custom List (CSV)</option>
                 </select>
               </div>
               <div>
@@ -217,7 +298,8 @@ export default function AdminEmailsTab() {
                 <select
                   value={subscriptionPlan}
                   onChange={(e) => setSubscriptionPlan(e.target.value)}
-                  className="w-full text-sm border border-slate-200 rounded-xl px-4 py-2.5 bg-white focus:outline-none focus:ring-2 focus:ring-orange-500/20"
+                  disabled={vendorType === "CSV"}
+                  className="w-full text-sm border border-slate-200 rounded-xl px-4 py-2.5 bg-white focus:outline-none focus:ring-2 focus:ring-orange-500/20 disabled:opacity-50 disabled:bg-slate-50"
                 >
                   <option value="ALL">All Plans</option>
                   <option value="FREE">Free Tier</option>
@@ -227,6 +309,36 @@ export default function AdminEmailsTab() {
                 </select>
               </div>
             </div>
+
+            {/* Custom CSV Upload block */}
+            {vendorType === "CSV" && (
+              <div className="bg-orange-50/20 border border-dashed border-orange-200 rounded-xl p-5 text-center transition-all">
+                <div className="w-8 h-8 rounded-lg bg-orange-100 text-orange-600 flex items-center justify-center mx-auto mb-2">
+                  <Upload className="w-4 h-4" />
+                </div>
+                <p className="text-xs font-bold text-slate-700 mb-0.5">Upload Custom Recipient List (.csv)</p>
+                <p className="text-[10px] text-slate-500 mb-3">CSV must contain columns named "email" and "name" or "businessName".</p>
+                <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+                  <input
+                    type="file"
+                    accept=".csv"
+                    onChange={handleCsvUpload}
+                    className="block w-full text-xs text-slate-500
+                      file:mr-4 file:py-1.5 file:px-3
+                      file:rounded-lg file:border-0
+                      file:text-xs file:font-semibold
+                      file:bg-orange-500 file:text-white
+                      hover:file:bg-orange-600 file:cursor-pointer"
+                  />
+                </div>
+                {customRecipients.length > 0 && (
+                  <div className="mt-3 flex items-center justify-center gap-1.5 text-xs text-green-600 font-semibold bg-green-50/50 py-1.5 px-3 rounded-lg border border-green-100">
+                    <CheckCircle2 className="w-4 h-4" />
+                    Successfully loaded {customRecipients.length} custom recipients from "{csvFileName}"
+                  </div>
+                )}
+              </div>
+            )}
 
             <div>
               <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Email Subject</label>
