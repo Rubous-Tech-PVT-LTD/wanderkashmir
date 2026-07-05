@@ -4,7 +4,7 @@ import { useState } from "react";
 import { 
   Users, Building2, Car, Map, LayoutDashboard, 
   CheckCircle2, Clock, IndianRupee, FileText, Eye, EyeOff, ShieldCheck,
-  AlertCircle, MapPin, X, XCircle, Globe
+  AlertCircle, MapPin, X, XCircle, Globe, Mail
 } from "lucide-react";
 import { approveVendor, rejectVendor } from "@/actions/vendor";
 import { approveListing, rejectListing } from "@/actions/listings";
@@ -23,6 +23,7 @@ import dynamic from "next/dynamic";
 import Pagination from "@/components/Pagination";
 import { getPaginatedVendors, getPaginatedProperties, getPaginatedUsers, getPaginatedBookings } from "@/actions/admin-data";
 const AdminMapView = dynamic(() => import("./AdminMapView"), { ssr: false });
+const AdminEmailsTab = dynamic(() => import("./AdminEmailsTab"), { ssr: false });
 
 // Define the type based on the props passed from Server
 type VendorProfile = {
@@ -611,6 +612,7 @@ export default function AdminDashboardClient({
             { id: "rejected", label: "Rejected Vendors", icon: XCircle },
             { id: "users", label: "Tourists", icon: Users },
             { id: "seo_pages", label: "SEO Pages", icon: Globe },
+            { id: "bulk_emails", label: "Bulk Emails", icon: Mail },
           ].map((item) => (
             <button
               key={item.id}
@@ -682,6 +684,7 @@ export default function AdminDashboardClient({
         {activeTab === "tours" && <AdminToursTab />}
         {activeTab === "taxis" && <AdminTaxisTab />}
         {activeTab === "seo_pages" && <AdminSeoTab />}
+        {activeTab === "bulk_emails" && <AdminEmailsTab />}
 
         {activeTab === "approvals" && (
           <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">

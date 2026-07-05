@@ -103,3 +103,47 @@ export async function sendPasswordResetEmail(email: string, resetToken: string) 
     return { success: false, error: err };
   }
 }
+
+export async function sendBulkEmailToVendors(
+  vendors: { email: string; businessName: string }[],
+  subject: string,
+  contentTemplate: string
+) {
+  if (!resend) {
+    console.log(`[MOCK EMAIL] Bulk Email Subject: "${subject}". Total recipients: ${vendors.length}`);
+    return { success: true, mocked: true };
+  }
+
+  try {
+    const emailBatch = vendors.map(vendor => {
+      // Replace [NAME] with the vendor's business name
+      const personalizedHtml = contentTemplate.replace(/\[NAME\]/g, vendor.businessName);
+
+      return {
+        from: 'WanderKashmir Updates <updates@wanderkashmir.com>',
+        to: vendor.email,
+        subject: subject,
+        html: personalizedHtml,
+      };
+    });
+
+    const chunkSize = 100;
+    const results = [];
+
+    for (let i = 0; i < emailBatch.length; i += chunkSize) {
+      const chunk = emailBatch.slice(i, i + chunkSize);
+      const { data, error } = await resend.batch.send(chunk);
+      
+      if (error) {
+        console.error(`Failed to send email batch starting at index ${i}:`, error);
+      } else {
+        results.push(data);
+      }
+    }
+
+    return { success: true, results };
+  } catch (err) {
+    console.error("Failed to send bulk emails:", err);
+    return { success: false, error: err };
+  }
+}
