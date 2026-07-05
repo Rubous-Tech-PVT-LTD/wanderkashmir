@@ -92,15 +92,23 @@ export async function sendBulkEmailsAction(input: SendBulkEmailInput) {
       validRecipients = vendors.filter(v => v.email && v.email.includes("@")) as { email: string; businessName: string }[];
     }
 
-    if (validRecipients.length === 0) {
+    // Clean all email addresses to prevent Resend validation errors (removing spaces, non-ASCII characters, quotes, etc.)
+    const cleanedRecipients = validRecipients
+      .map(r => ({
+        email: r.email.replace(/[^\x20-\x7E]/g, "").replace(/["'\s]/g, "").trim().toLowerCase(),
+        businessName: r.businessName.trim(),
+      }))
+      .filter(r => r.email.includes("@") && r.email.includes("."));
+
+    if (cleanedRecipients.length === 0) {
       return { success: false, error: "No valid email addresses found." };
     }
 
     // 5. Send Bulk Emails
-    const res = await sendBulkEmailToVendors(validRecipients, subject, bodyHtml);
+    const res = await sendBulkEmailToVendors(cleanedRecipients, subject, bodyHtml);
 
     if (res.success) {
-      return { success: true, count: validRecipients.length, test: false };
+      return { success: true, count: cleanedRecipients.length, test: false };
     }
 
     return { success: false, error: "Failed to send bulk emails." };

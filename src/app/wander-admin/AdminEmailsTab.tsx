@@ -61,23 +61,53 @@ export default function AdminEmailsTab() {
       }
       
       try {
-        const lines = text.split(/\r?\n/);
-        const parsedList: { email: string; businessName: string }[] = [];
+        // Remove BOM if present (e.g. \ufeff from Excel exports)
+        const cleanText = text.replace(/^\uFEFF/, "");
+        const lines = cleanText.split(/\r?\n/);
         
-        let emailIndex = -1;
-        let nameIndex = -1;
-        
-        if (lines.length > 0) {
-          const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
-          emailIndex = headers.findIndex(h => h.includes('email'));
-          nameIndex = headers.findIndex(h => h.includes('name') || h.includes('business') || h.includes('company') || h.includes('title'));
+        if (lines.length === 0) {
+          toast.error("CSV file is empty.");
+          return;
         }
+
+        // Helper to parse CSV line respecting quotes
+        const splitCsvLine = (line: string) => {
+          const result: string[] = [];
+          let current = "";
+          let inQuotes = false;
+          
+          for (let i = 0; i < line.length; i++) {
+            const char = line[i];
+            if (char === '"') {
+              inQuotes = !inQuotes;
+            } else if (char === ',' && !inQuotes) {
+              result.push(current.trim());
+              current = "";
+            } else {
+              current += char;
+            }
+          }
+          result.push(current.trim());
+          return result.map(c => c.replace(/^["']|["']$/g, '').trim());
+        };
+
+        // Parse headers to match index
+        const headers = splitCsvLine(lines[0]);
+        let emailIndex = headers.findIndex(h => h.toLowerCase().includes('email'));
+        let nameIndex = headers.findIndex(h => 
+          h.toLowerCase().includes('hotel') || 
+          h.toLowerCase().includes('name') || 
+          h.toLowerCase().includes('business') || 
+          h.toLowerCase().includes('company')
+        );
+
+        const parsedList: { email: string; businessName: string }[] = [];
         
         for (let i = 1; i < lines.length; i++) {
           const line = lines[i].trim();
           if (!line) continue;
           
-          const columns = line.split(',').map(c => c.replace(/^["']|["']$/g, '').trim());
+          const columns = splitCsvLine(line);
           let email = "";
           let businessName = "";
           
@@ -95,10 +125,16 @@ export default function AdminEmailsTab() {
             if (foundName) businessName = foundName;
           }
           
-          if (email && email.includes('@')) {
+          // Strictly clean email values from spaces, non-ASCII characters, and quotes
+          const cleanEmail = email
+            .replace(/[^\x20-\x7E]/g, "") // Keep only printable ASCII
+            .replace(/["'\s]/g, "")       // Remove quotes and whitespace
+            .trim();
+            
+          if (cleanEmail && cleanEmail.includes('@') && cleanEmail.includes('.')) {
             parsedList.push({
-              email,
-              businessName: businessName || "Partner",
+              email: cleanEmail.toLowerCase(),
+              businessName: businessName.trim() || "Partner",
             });
           }
         }
