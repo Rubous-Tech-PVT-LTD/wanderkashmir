@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useVendor } from "@/context/VendorContext";
 import { useRouter } from "next/navigation";
-import { CheckCircle2, Building2, Home, Car, UserCircle2, ArrowRight, UploadCloud, Info, Lock, Mail, AlertCircle } from "lucide-react";
+import { CheckCircle2, Building2, Home, Car, UserCircle2, ArrowRight, UploadCloud, Info, Lock, Mail, AlertCircle, Eye, EyeOff } from "lucide-react";
 import { registerVendor } from "@/actions/vendor";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -15,6 +15,7 @@ export default function VendorEntryPage() {
   const [step, setStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [kycPhotos, setKycPhotos] = useState<string[]>([]);
+  const [showPassword, setShowPassword] = useState(false);
   const { setVendorType, setVendorName, setIsRegistered, setIsApproved, isRegistered, status, rejectionReason } = useVendor();
   const router = useRouter();
 
@@ -381,7 +382,25 @@ export default function VendorEntryPage() {
 
                   <div className="col-span-2 md:col-span-1">
                     <label className="block text-sm font-medium text-slate-700 mb-1">Create Password *</label>
-                    <input {...register("password")} type="password" className={`w-full border rounded-lg px-4 py-2.5 outline-none ${errors.password ? "border-orange-500" : "border-slate-200 focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500"}`} placeholder="••••••••" />
+                    <div className="relative">
+                      <input 
+                        {...register("password")} 
+                        type={showPassword ? "text" : "password"} 
+                        className={`w-full border rounded-lg pl-4 pr-10 py-2.5 outline-none ${errors.password ? "border-orange-500" : "border-slate-200 focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500"}`} 
+                        placeholder="••••••••" 
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 focus:outline-none"
+                      >
+                        {showPassword ? (
+                          <EyeOff className="w-5 h-5" aria-hidden="true" />
+                        ) : (
+                          <Eye className="w-5 h-5" aria-hidden="true" />
+                        )}
+                      </button>
+                    </div>
                     {errors.password && <span className="text-orange-500 text-xs font-medium mt-1">{errors.password.message}</span>}
                   </div>
 
