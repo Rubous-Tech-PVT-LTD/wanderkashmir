@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { Mail, Send, CheckCircle2, AlertCircle, Eye, RefreshCw } from "lucide-react";
-import { sendBulkEmailsAction } from "@/actions/emails";
+import { Mail, Send, CheckCircle2, AlertCircle, Eye, RefreshCw, Sparkles } from "lucide-react";
+import { sendBulkEmailsAction, generateEmailWithAiAction } from "@/actions/emails";
 import toast from "react-hot-toast";
 
 export default function AdminEmailsTab() {
@@ -41,7 +41,32 @@ export default function AdminEmailsTab() {
   const [testEmail, setTestEmail] = useState("");
   const [isSending, setIsSending] = useState(false);
   const [isTesting, setIsTesting] = useState(false);
-  const [showPreview, setShowPreview] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [aiPrompt, setAiPrompt] = useState("");
+
+  const handleGenerateWithAi = async () => {
+    if (!aiPrompt.trim()) {
+      toast.error("Please enter a description for the email topic.");
+      return;
+    }
+
+    setIsGenerating(true);
+    const toastId = toast.loading("Generating email campaign using Gemini AI...");
+    try {
+      const res = await generateEmailWithAiAction(aiPrompt);
+      if (res.success && res.data) {
+        setSubject(res.data.subject || "");
+        setBodyHtml(res.data.bodyHtml || "");
+        toast.success("Email generated successfully!", { id: toastId });
+      } else {
+        toast.error(res.error || "Failed to generate email.", { id: toastId });
+      }
+    } catch (e) {
+      toast.error("An error occurred during AI generation.", { id: toastId });
+    } finally {
+      setIsGenerating(false);
+    }
+  };
 
   const handleSendTest = async () => {
     if (!testEmail.trim() || !testEmail.includes("@")) {
@@ -121,7 +146,6 @@ export default function AdminEmailsTab() {
     }
   };
 
-  // Simple preview placeholder replacement
   const getPreviewHtml = () => {
     return bodyHtml.replace(/\[NAME\]/g, "Sample Partner Co.");
   };
@@ -136,6 +160,37 @@ export default function AdminEmailsTab() {
           <div>
             <h3 className="text-lg font-bold text-slate-900 font-sans">Bulk Vendor Emails</h3>
             <p className="text-sm text-slate-500">Draft updates or marketing newsletters to select groups of partners.</p>
+          </div>
+        </div>
+
+        {/* AI GENERATOR CARD */}
+        <div className="bg-gradient-to-r from-orange-500/10 to-amber-500/10 border border-orange-200/50 rounded-2xl p-5 mb-8 flex flex-col md:flex-row items-center gap-4">
+          <div className="flex items-center gap-3 flex-1">
+            <div className="w-10 h-10 rounded-xl bg-orange-500 text-white flex items-center justify-center shrink-0 shadow-md">
+              <Sparkles className="w-5 h-5" />
+            </div>
+            <div>
+              <h4 className="font-bold text-slate-800 text-sm">AI Campaign Generator</h4>
+              <p className="text-xs text-slate-500">Enter a topic or context, and Gemini AI will write a beautiful HTML template and subject line.</p>
+            </div>
+          </div>
+          <div className="w-full md:w-auto flex flex-col sm:flex-row items-center gap-2 flex-1">
+            <input
+              type="text"
+              placeholder="e.g. Announce 50 photo limit for hotel vendors to update profiles"
+              value={aiPrompt}
+              onChange={(e) => setAiPrompt(e.target.value)}
+              className="w-full text-xs border border-orange-200 rounded-xl px-4 py-2.5 bg-white focus:outline-none focus:ring-2 focus:ring-orange-500/30 text-slate-700 placeholder:text-slate-400"
+            />
+            <button
+              type="button"
+              onClick={handleGenerateWithAi}
+              disabled={isGenerating || isSending}
+              className="w-full sm:w-auto bg-orange-500 hover:bg-orange-600 text-white font-bold px-5 py-2.5 rounded-xl text-xs transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-1.5 whitespace-nowrap disabled:opacity-50"
+            >
+              {isGenerating ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />}
+              Generate
+            </button>
           </div>
         </div>
 
@@ -209,7 +264,7 @@ export default function AdminEmailsTab() {
               <button
                 type="button"
                 onClick={handleSendTest}
-                disabled={isTesting || isSending}
+                disabled={isTesting || isSending || isGenerating}
                 className="w-full sm:w-auto bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold px-4 py-2 rounded-lg text-xs transition-colors flex items-center justify-center gap-1.5 whitespace-nowrap disabled:opacity-50"
               >
                 {isTesting ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
@@ -221,7 +276,7 @@ export default function AdminEmailsTab() {
             <button
               type="button"
               onClick={handleSendBulk}
-              disabled={isSending || isTesting}
+              disabled={isSending || isTesting || isGenerating}
               className="w-full bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 px-6 rounded-xl transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2 text-sm uppercase tracking-wider disabled:opacity-50"
             >
               {isSending ? <RefreshCw className="w-5 h-5 animate-spin" /> : <Send className="w-5 h-5" />}

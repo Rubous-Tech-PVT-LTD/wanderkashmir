@@ -4,6 +4,7 @@ import prisma from "@/lib/prisma";
 import { getCurrentUserId } from "@/lib/auth";
 import { sendBulkEmailToVendors } from "@/lib/email";
 import { VendorType, SubscriptionPlan } from "@prisma/client";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
 interface SendBulkEmailInput {
   subject: string;
@@ -97,5 +98,59 @@ export async function sendBulkEmailsAction(input: SendBulkEmailInput) {
   } catch (err: any) {
     console.error("sendBulkEmailsAction error:", err);
     return { success: false, error: err.message || "An unexpected error occurred." };
+  }
+}
+
+export async function generateEmailWithAiAction(prompt: string) {
+  try {
+    const userId = await getCurrentUserId();
+    if (!userId) {
+      return { success: false, error: "Unauthorized" };
+    }
+
+    const dbUser = await prisma.user.findUnique({
+      where: { id: userId },
+    });
+
+    if (!dbUser || dbUser.role !== "ADMIN") {
+      return { success: false, error: "Forbidden: Only admins can use AI tools" };
+    }
+
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey) {
+      return { success: false, error: "Gemini API Key is missing on the server. Please check the environmental configurations." };
+    }
+
+    const genAI = new GoogleGenerativeAI(apiKey);
+    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+
+    const systemPrompt = `
+    You are an expert copywriter for "WanderKashmir", a premium travel platform in Kashmir.
+    Your task is to write a highly professional, beautifully styled marketing or updates email broadcast to send to our vendors (hotels, homestays, taxi operators, or tour guides).
+    
+    The email must be visually outstanding and follow the platform's warm orange brand aesthetics.
+    Use inline styling for CSS.
+    You MUST include the placeholder [NAME] (with square brackets) wherever appropriate to represent the vendor's business name (e.g. "Hi [NAME]").
+    
+    The user wants an email about: "${prompt}"
+    
+    Return exactly a JSON object without markdown wrapping. Do NOT wrap the JSON in \`\`\`json ... \`\`\`.
+    
+    JSON STRUCTURE:
+    {
+      "subject": "Compelling subject line",
+      "bodyHtml": "A complete, responsive HTML layout starting with container div (no html/body root tags), featuring premium orange colors, clean fonts (Segoe UI/Arial), card layout, CTA buttons, variables, and footer"
+    }
+    `;
+
+    const result = await model.generateContent(systemPrompt);
+    const responseText = result.response.text();
+    const cleanedText = responseText.replace(/```json/gi, '').replace(/```/g, '').trim();
+    const parsedData = JSON.parse(cleanedText);
+
+    return { success: true, data: parsedData };
+  } catch (err: any) {
+    console.error("generateEmailWithAiAction error:", err);
+    return { success: false, error: err.message || "An unexpected error occurred during generation." };
   }
 }
