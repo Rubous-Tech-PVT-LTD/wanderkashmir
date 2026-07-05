@@ -777,9 +777,10 @@ export default function GuideDashboard({ bookings = [], vendorProfileId, initial
                       <ImageUpload 
                         uploadedPhotos={avatar} 
                         setUploadedPhotos={setAvatar} 
-                        photoLimit={1}
+                        photoLimit={50}
+                        videoLimit={10}
                       />
-                      <p className="text-xs text-slate-500 mt-2">A clear, friendly photo of your face builds trust.</p>
+                      <p className="text-xs text-slate-500 mt-2">A clear, friendly photo of your face builds trust. (Supports up to 50 photos / 10 videos)</p>
                     </div>
                   </div>
                   <div>
@@ -788,7 +789,8 @@ export default function GuideDashboard({ bookings = [], vendorProfileId, initial
                       <ImageUpload 
                         uploadedPhotos={coverPhoto} 
                         setUploadedPhotos={setCoverPhoto} 
-                        photoLimit={1}
+                        photoLimit={50}
+                        videoLimit={10}
                       />
                       <p className="text-xs text-slate-500 mt-2">A landscape photo of you in action or a beautiful location.</p>
                     </div>

@@ -63,7 +63,8 @@ export default function HotelDashboard({ properties = [], bookings = [] }: { pro
   ];
 
   // Feature Gating Logic
-  const photoLimit = subscriptionPlan === "Free" ? 3 : 20;
+  const photoLimit = subscriptionPlan === "Free" ? 50 : 100;
+  const videoLimit = subscriptionPlan === "Free" ? 10 : 20;
   const hasAnalytics = subscriptionPlan !== "Free";
   const hasInstantBooking = subscriptionPlan === "Growth Pro" || subscriptionPlan === "Pro" || subscriptionPlan === "Enterprise";
 
@@ -958,23 +959,26 @@ export default function HotelDashboard({ properties = [], bookings = [] }: { pro
                   />
                 </div>
 
-                <div className="flex items-center justify-between mb-4">
+                 <div className="flex items-center justify-between mb-4">
                   <div>
-                    <h3 className="font-bold text-slate-900">Gallery Photos (Optional)</h3>
-                    <p className="text-sm text-slate-500">Your {subscriptionPlan} plan allows up to <strong className="text-slate-900">{photoLimit}</strong> additional photos.</p>
+                    <h3 className="font-bold text-slate-900">Gallery Photos &amp; Videos (Optional)</h3>
+                    <p className="text-sm text-slate-500">Your {subscriptionPlan} plan allows up to <strong className="text-slate-900">{photoLimit}</strong> photos and <strong className="text-slate-900">{videoLimit}</strong> videos.</p>
                   </div>
-                  <span className="text-sm font-bold text-slate-400">{uploadedPhotos.length} / {photoLimit}</span>
+                  <span className="text-sm font-bold text-slate-400">
+                    {uploadedPhotos.filter(u => !u.includes("/video/upload/") && !/\.(mp4|webm|mov|ogg|avi|mkv)$/i.test(u)).length} / {photoLimit} Photos, {uploadedPhotos.filter(u => u.includes("/video/upload/") || /\.(mp4|webm|mov|ogg|avi|mkv)$/i.test(u)).length} / {videoLimit} Videos
+                  </span>
                 </div>
                 
                 <ImageUpload 
                   uploadedPhotos={uploadedPhotos} 
                   setUploadedPhotos={setUploadedPhotos} 
                   photoLimit={photoLimit} 
+                  videoLimit={videoLimit}
                 />
                 
-                {uploadedPhotos.length >= photoLimit && subscriptionPlan === "Free" && (
+                {uploadedPhotos.length >= (photoLimit + videoLimit) && subscriptionPlan === "Free" && (
                   <p className="text-orange-600 text-sm mt-4 font-medium flex items-center gap-1">
-                    <Lock className="w-4 h-4" /> You've reached the photo limit for the Free plan. <button type="button" onClick={() => setActiveTab("financials")} className="underline font-bold">Upgrade to add more.</button>
+                    <Lock className="w-4 h-4" /> You've reached the media limit for the Free plan. <button type="button" onClick={() => setActiveTab("financials")} className="underline font-bold">Upgrade to add more.</button>
                   </p>
                 )}
               </div>

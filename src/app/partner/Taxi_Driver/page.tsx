@@ -60,6 +60,8 @@ export default function TaxiDashboard({
   const isStand = taxiRole === "STAND";
   
   // Feature Gating Logic
+  const photoLimit = subscriptionPlan === "Free" ? 50 : 100;
+  const videoLimit = subscriptionPlan === "Free" ? 10 : 20;
   const hasInstantBooking = subscriptionPlan === "Growth Pro" || subscriptionPlan === "Pro" || subscriptionPlan === "Enterprise";
   const hasAnalytics = subscriptionPlan !== "Free";
 
@@ -737,14 +739,20 @@ export default function TaxiDashboard({
                 
                 {!isStand && (
                   <div className="bg-slate-50 p-6 rounded-xl border border-slate-200 mt-6">
-                    <div className="mb-4">
-                      <h3 className="font-bold text-slate-900 mb-1">Vehicle Photo (Optional)</h3>
-                      <p className="text-sm text-slate-500">Add a high-quality photo of your vehicle to attract more bookings.</p>
+                    <div className="flex items-center justify-between mb-4">
+                      <div>
+                        <h3 className="font-bold text-slate-900 mb-1">Vehicle Photos &amp; Videos (Optional)</h3>
+                        <p className="text-sm text-slate-500">Your {subscriptionPlan} plan allows up to <strong className="text-slate-900">{photoLimit}</strong> photos and <strong className="text-slate-900">{videoLimit}</strong> videos.</p>
+                      </div>
+                      <span className="text-sm font-bold text-slate-400">
+                        {uploadedPhotos.filter(u => !u.includes("/video/upload/") && !/\.(mp4|webm|mov|ogg|avi|mkv)$/i.test(u)).length} / {photoLimit} Photos, {uploadedPhotos.filter(u => u.includes("/video/upload/") || /\.(mp4|webm|mov|ogg|avi|mkv)$/i.test(u)).length} / {videoLimit} Videos
+                      </span>
                     </div>
                     <ImageUpload 
                       uploadedPhotos={uploadedPhotos} 
                       setUploadedPhotos={setUploadedPhotos} 
-                      photoLimit={1} 
+                      photoLimit={photoLimit} 
+                      videoLimit={videoLimit}
                     />
                   </div>
                 )}
