@@ -149,7 +149,14 @@ export default async function PropertyDetailPage({
           </div>
           <div className="flex items-center gap-1">
             <MapPin className="w-4 h-4 text-slate-400" />
-            <span className="underline decoration-slate-300 underline-offset-4">{property.location}</span>
+            <a 
+              href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(property.location)}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="underline decoration-slate-300 underline-offset-4 hover:text-sky-600 transition-colors"
+            >
+              {property.location}
+            </a>
           </div>
         </div>
       </div>
