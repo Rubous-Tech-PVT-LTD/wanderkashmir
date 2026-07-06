@@ -184,7 +184,26 @@ export default function TourDetailClient({ initialTour }: { initialTour: any }) 
                         className={`w-5 h-5 ${isWishlisted ? "fill-orange-500 text-orange-500" : "text-slate-400"}`}
                       />
                     </button>
-                    <button className="w-10 h-10 bg-white/90 rounded-full flex items-center justify-center shadow transition-transform hover:scale-110">
+                    <button 
+                      onClick={async () => {
+                        const shareData = {
+                          title: tour.title,
+                          text: `Check out this tour: ${tour.title}`,
+                          url: window.location.href,
+                        };
+                        if (navigator.share) {
+                          try {
+                            await navigator.share(shareData);
+                          } catch (err) {
+                            console.error('Error sharing:', err);
+                          }
+                        } else {
+                          navigator.clipboard.writeText(window.location.href);
+                          import("react-hot-toast").then(mod => mod.default.success("Link copied to clipboard!"));
+                        }
+                      }}
+                      className="w-10 h-10 bg-white/90 rounded-full flex items-center justify-center shadow transition-transform hover:scale-110"
+                    >
                       <Share2 className="w-5 h-5 text-slate-400" />
                     </button>
                   </div>
