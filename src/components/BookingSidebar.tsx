@@ -114,7 +114,7 @@ export default function BookingSidebar({ propertyId, pricePerNight, rating, isLo
     return () => clearTimeout(debounceTimer);
   }, [propertyId, checkIn, checkOut]);
 
-  const basePrice = pricePerNight * nights;
+  const basePrice = pricePerNight * nights * guests;
   const platformFee = Math.round(basePrice * 0.15); // 15% Convenience & Platform Fee
   const totalAmount = basePrice + platformFee + (taxiAmount * nights) + (guideAmount * nights);
 
@@ -123,7 +123,7 @@ export default function BookingSidebar({ propertyId, pricePerNight, rating, isLo
       <div className="flex items-end justify-between mb-6">
         <div>
           <span className="text-2xl font-black text-slate-900">₹{pricePerNight.toLocaleString('en-IN')}</span>
-          <span className="text-slate-500 text-sm ml-1">/ night</span>
+          <span className="text-slate-500 text-sm ml-1">/ night / guest</span>
         </div>
         <div className="flex items-center gap-1 text-sm font-medium">
           <Star className="w-4 h-4 fill-slate-900 text-slate-900" /> {rating}
@@ -167,10 +167,11 @@ export default function BookingSidebar({ propertyId, pricePerNight, rating, isLo
             onChange={(e) => setGuests(Number(e.target.value))}
             className="w-full text-sm outline-none bg-transparent text-slate-600"
           >
-            <option value={1}>1 guest</option>
-            <option value={2}>2 guests</option>
-            <option value={3}>3 guests</option>
-            <option value={4}>4 guests</option>
+            {[...Array(20)].map((_, i) => (
+              <option key={i + 1} value={i + 1}>
+                {i + 1} guest{i === 0 ? '' : 's'}
+              </option>
+            ))}
           </select>
         </div>
       </div>
@@ -198,7 +199,7 @@ export default function BookingSidebar({ propertyId, pricePerNight, rating, isLo
 
       <div className="mt-6 pt-6 border-t border-slate-100 space-y-3">
         <div className="flex justify-between text-slate-600 text-sm">
-          <span className="underline decoration-slate-300">₹{pricePerNight.toLocaleString('en-IN')} x {nights} nights</span>
+          <span className="underline decoration-slate-300">₹{pricePerNight.toLocaleString('en-IN')} x {nights} nights x {guests} guests</span>
           <span>₹{basePrice.toLocaleString('en-IN')}</span>
         </div>
         <div className="flex justify-between text-slate-600 text-sm">

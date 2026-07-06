@@ -225,9 +225,12 @@ export default function CheckoutClient({
                   onChange={(e) => setGuests(Number(e.target.value))}
                   className="w-full border border-slate-200 rounded-xl p-3 focus:ring-2 focus:ring-sky-500 outline-none text-slate-600 bg-white"
                 >
-                  {[1, 2, 3, 4, 5, 6, 7].map(num => (
-                    <option key={num} value={num}>{num} {num === 1 ? 'Person' : 'People'}</option>
-                  ))}
+                  {[...Array(20)].map((_, i) => {
+                    const num = i + 1;
+                    return (
+                      <option key={num} value={num}>{num} {num === 1 ? 'Person' : 'People'}</option>
+                    );
+                  })}
                 </select>
               </div>
             </div>
