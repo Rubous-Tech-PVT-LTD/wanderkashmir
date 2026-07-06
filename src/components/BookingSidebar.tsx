@@ -187,7 +187,7 @@ export default function BookingSidebar({ propertyId, pricePerNight, rating, isLo
           onClick={() => setShowModal(true)}
           className="w-full bg-sky-600 text-white font-bold py-3.5 rounded-xl hover:bg-sky-700 transition-colors shadow-md"
         >
-          Reserve
+          Continue
         </button>
       ) : (
         <button disabled className="w-full bg-slate-200 text-slate-400 font-bold py-3.5 rounded-xl transition-colors">
@@ -200,17 +200,8 @@ export default function BookingSidebar({ propertyId, pricePerNight, rating, isLo
       <div className="mt-6 pt-6 border-t border-slate-100 space-y-3">
         <div className="flex justify-between text-slate-600 text-sm">
           <span className="underline decoration-slate-300">₹{pricePerNight.toLocaleString('en-IN')} x {nights} nights x {guests} guests</span>
-          <span>₹{basePrice.toLocaleString('en-IN')}</span>
+          <span className="font-semibold text-slate-900">₹{basePrice.toLocaleString('en-IN')}</span>
         </div>
-        <div className="flex justify-between text-slate-600 text-sm">
-          <span className="underline decoration-slate-300">Convenience & Platform Fee</span>
-          <span>₹{platformFee.toLocaleString('en-IN')}</span>
-        </div>
-      </div>
-      
-      <div className="mt-4 pt-4 border-t border-slate-200 flex justify-between items-center font-bold text-slate-900 text-lg">
-        <span>Total Amount</span>
-        <span>₹{totalAmount.toLocaleString('en-IN')}</span>
       </div>
 
       {/* Multi-Step Checkout Modal */}
@@ -371,6 +362,18 @@ export default function BookingSidebar({ propertyId, pricePerNight, rating, isLo
                     <div className="flex justify-between items-center">
                       <span className="text-slate-600">Contact</span>
                       <span className="font-bold text-slate-900">{guestPhone}</span>
+                    </div>
+                  </div>
+
+                  <div className="bg-white p-4 rounded-xl border border-slate-200 space-y-3">
+                    <h3 className="text-sm font-bold text-slate-900 border-b border-slate-100 pb-2">Price Breakdown</h3>
+                    <div className="flex justify-between text-sm text-slate-600">
+                      <span>Base Price ({nights} nights x {guests} guests)</span>
+                      <span>₹{basePrice.toLocaleString('en-IN')}</span>
+                    </div>
+                    <div className="flex justify-between text-sm text-slate-600">
+                      <span>Convenience & Platform Fee</span>
+                      <span>₹{platformFee.toLocaleString('en-IN')}</span>
                     </div>
                   </div>
 
