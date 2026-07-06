@@ -115,7 +115,8 @@ export default function BookingSidebar({ propertyId, pricePerNight, rating, isLo
   }, [propertyId, checkIn, checkOut]);
 
   const basePrice = pricePerNight * nights;
-  const totalAmount = basePrice + (taxiAmount * nights) + (guideAmount * nights);
+  const platformFee = Math.round(basePrice * 0.15); // 15% Convenience & Platform Fee
+  const totalAmount = basePrice + platformFee + (taxiAmount * nights) + (guideAmount * nights);
 
   return (
     <div className="sticky top-28 bg-white rounded-2xl shadow-xl shadow-slate-200/50 border border-slate-200 p-6">
@@ -199,6 +200,10 @@ export default function BookingSidebar({ propertyId, pricePerNight, rating, isLo
         <div className="flex justify-between text-slate-600 text-sm">
           <span className="underline decoration-slate-300">₹{pricePerNight.toLocaleString('en-IN')} x {nights} nights</span>
           <span>₹{basePrice.toLocaleString('en-IN')}</span>
+        </div>
+        <div className="flex justify-between text-slate-600 text-sm">
+          <span className="underline decoration-slate-300">Convenience & Platform Fee</span>
+          <span>₹{platformFee.toLocaleString('en-IN')}</span>
         </div>
       </div>
       
@@ -386,7 +391,7 @@ export default function BookingSidebar({ propertyId, pricePerNight, rating, isLo
                       guestPhone={guestPhone}
                       specialRequests={specialRequests}
                       otherGuests={otherGuests}
-                      baseAmount={basePrice}
+                      baseAmount={basePrice + platformFee}
                       taxiAmount={taxiAmount * nights}
                       guideAmount={guideAmount * nights}
                       selectedTaxiId={selectedTaxiId}

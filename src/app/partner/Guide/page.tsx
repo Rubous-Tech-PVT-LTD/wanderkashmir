@@ -39,8 +39,8 @@ export default function GuideDashboard({ bookings = [], vendorProfileId, initial
   const [isEditMode, setIsEditMode] = useState(false);
 
   // Feature Gating Logic
-  const hasInstantBooking = subscriptionPlan === "Growth Pro" || subscriptionPlan === "Pro" || subscriptionPlan === "Enterprise";
-  const hasAnalytics = subscriptionPlan !== "Free";
+  const hasInstantBooking = true;
+  const hasAnalytics = true;
 
   const [timeRange, setTimeRange] = useState("7D");
   const [chartMetric, setChartMetric] = useState("views");
@@ -59,7 +59,7 @@ export default function GuideDashboard({ bookings = [], vendorProfileId, initial
     if (!initialGuideProfile.location) missingFields.push("Location");
   }
 
-  const isProfileLocked = subscriptionPlan === "Free" && initialGuideProfile !== null && missingFields.length === 0 && !isEditMode;
+  const isProfileLocked = false;
 
   const getChartData = () => {
     return chartData.map(d => ({ ...d, tours: d.bookings })); // Rename bookings to tours for chart tooltips
@@ -267,13 +267,13 @@ export default function GuideDashboard({ bookings = [], vendorProfileId, initial
       </div>
 
       <div className="flex gap-6 border-b border-slate-200 mb-8 overflow-x-auto whitespace-nowrap">
-        {["overview", "profile", "bookings", "financials"].map((tab) => (
+        {["overview", "profile", "bookings"].map((tab) => (
           <button
             key={tab}
             onClick={() => { setActiveTab(tab); setIsEditMode(false); }}
             className={`pb-4 text-sm font-semibold capitalize transition-colors relative ${activeTab === tab ? "text-sky-600" : "text-slate-500 hover:text-slate-800"}`}
           >
-            {tab === "financials" ? "Financials & Subscription" : tab}
+            {tab}
             {activeTab === tab && <span className="absolute bottom-0 left-0 w-full h-0.5 bg-sky-500 rounded-t-full" />}
           </button>
         ))}
@@ -394,16 +394,7 @@ export default function GuideDashboard({ bookings = [], vendorProfileId, initial
                      </div>
                    )}
                    
-                   {subscriptionPlan === "Free" && (
-                     <div className="mt-3 bg-sky-50 border border-sky-100 rounded-lg p-3 flex items-start gap-3 max-w-lg">
-                       <Award className="w-5 h-5 text-sky-500 shrink-0 mt-0.5" />
-                       <div>
-                         <p className="text-sm text-sky-900 font-semibold">Boost your visibility and get more bookings!</p>
-                         <p className="text-xs text-sky-700 mt-0.5">You are currently on the Free plan. Upgrade to Growth Pro to get priority ranking.</p>
-                         <button onClick={() => setActiveTab("financials")} className="text-xs font-bold text-sky-600 hover:text-sky-700 mt-2 underline">View Upgrade Plans</button>
-                       </div>
-                     </div>
-                   )}
+
 
                    <div className="flex gap-4 mt-4">
                      <p className="font-semibold text-slate-900 text-sm">Rate: <span className="font-normal text-slate-600">₹{initialGuideProfile.pricePerDay}/day</span></p>
@@ -739,16 +730,7 @@ export default function GuideDashboard({ bookings = [], vendorProfileId, initial
                   </div>
                 </div>
               )}
-              {isApproved && subscriptionPlan === "Free" && (
-                <div className="mt-4 bg-sky-50 border border-sky-100 rounded-xl p-4 flex items-start gap-3">
-                  <Award className="w-5 h-5 text-sky-500 shrink-0 mt-0.5" />
-                  <div>
-                    <h3 className="font-bold text-sky-900 text-sm">Boost your visibility and get more bookings!</h3>
-                    <p className="text-sm text-sky-700 mt-1">You are currently on the Free plan. Upgrade to Growth Pro to get <strong className="font-bold">priority ranking</strong> in search results.</p>
-                    <button type="button" onClick={() => setActiveTab("financials")} className="text-xs font-bold text-sky-600 hover:text-sky-700 mt-2 underline">View Upgrade Plans</button>
-                  </div>
-                </div>
-              )}
+
             </div>
             
             <div className="p-6">

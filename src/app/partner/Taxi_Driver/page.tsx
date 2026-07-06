@@ -60,10 +60,10 @@ export default function TaxiDashboard({
   const isStand = taxiRole === "STAND";
   
   // Feature Gating Logic
-  const photoLimit = subscriptionPlan === "Free" ? 50 : 100;
-  const videoLimit = subscriptionPlan === "Free" ? 10 : 20;
-  const hasInstantBooking = subscriptionPlan === "Growth Pro" || subscriptionPlan === "Pro" || subscriptionPlan === "Enterprise";
-  const hasAnalytics = subscriptionPlan !== "Free";
+  const photoLimit = 100;
+  const videoLimit = 20;
+  const hasInstantBooking = true;
+  const hasAnalytics = true;
 
   const [timeRange, setTimeRange] = useState("7D");
   const [chartMetric, setChartMetric] = useState("views");
@@ -208,7 +208,7 @@ export default function TaxiDashboard({
     }
   }, [hasInstantBooking, setValue, editingId]);
 
-  const hasReachedVehicleLimit = subscriptionPlan === "Free" && vehicles.length >= 1;
+  const hasReachedVehicleLimit = false;
 
   const handleAddNewClick = () => {
     if (hasReachedVehicleLimit) {
@@ -350,13 +350,13 @@ export default function TaxiDashboard({
       </div>
 
       <div className="flex gap-6 border-b border-slate-200 mb-8 overflow-x-auto whitespace-nowrap">
-        {["overview", "vehicles", isStand && "drivers", "rates", "trips", "financials"].filter(Boolean).map((tab) => (
+        {["overview", "vehicles", isStand && "drivers", "rates", "trips"].filter(Boolean).map((tab) => (
           <button
             key={tab as string}
             onClick={() => setActiveTab(tab as string)}
             className={`pb-4 text-sm font-semibold capitalize transition-colors relative ${activeTab === tab ? "text-sky-600" : "text-slate-500 hover:text-slate-800"}`}
           >
-            {tab === "financials" ? "Financials & Subscription" : tab as string}
+            {tab as string}
             {activeTab === tab && <span className="absolute bottom-0 left-0 w-full h-0.5 bg-sky-500 rounded-t-full" />}
           </button>
         ))}

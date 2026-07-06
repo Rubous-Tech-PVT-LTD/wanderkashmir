@@ -120,11 +120,12 @@ export default function CheckoutClient({
   
   // Price calculation
   const basePrice = (isGuide || isTour) ? price * (isTour ? guests : nights) : price; 
+  const addonAmount = (isTour && selectedGuide) ? (guideRate * tourDays) : 0;
   
-  let totalAmount = basePrice;
-  if (isTour && selectedGuide) {
-    totalAmount += (guideRate * tourDays);
-  }
+  const platformFeeRate = 0.10; // 10% for Taxi, Tour, Guide
+  const platformFee = Math.round((basePrice + addonAmount) * platformFeeRate);
+  
+  const totalAmount = basePrice + addonAmount + platformFee;
 
   let placeholderText = "e.g. Arriving late, ground floor room, etc.";
   if (isTaxi) {
@@ -337,11 +338,16 @@ export default function CheckoutClient({
               </div>
               
               {isTour && selectedGuide && (
-                <div className="flex justify-between text-slate-600 text-sm text-sky-700 font-medium">
+                <div className="flex justify-between text-slate-600 text-sm text-sky-700 font-medium mt-2">
                   <span>Guide Add-on ({tourDays} days)</span>
                   <span>+₹{(guideRate * tourDays).toLocaleString('en-IN')}</span>
                 </div>
               )}
+
+              <div className="flex justify-between text-slate-600 text-sm mt-2">
+                <span className="underline decoration-slate-300">Convenience & Platform Fee</span>
+                <span>₹{platformFee.toLocaleString('en-IN')}</span>
+              </div>
             </div>
 
             <div className="mt-4 pt-4 border-t border-slate-200 flex justify-between items-center font-bold text-slate-900 text-lg mb-6">
@@ -370,7 +376,7 @@ export default function CheckoutClient({
                 specialRequests={specialRequests}
                 otherGuests={[]}
                 tourId={tour?.id}
-                baseAmount={basePrice}
+                baseAmount={basePrice + platformFee}
                 taxiAmount={isTaxi ? basePrice : 0}
                 guideAmount={isGuide ? basePrice : (isTour && selectedGuide ? guideRate * tourDays : 0)}
                 selectedTaxiId={isTaxi ? driverId || "generic" : ""}

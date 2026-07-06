@@ -63,10 +63,10 @@ export default function HotelDashboard({ properties = [], bookings = [] }: { pro
   ];
 
   // Feature Gating Logic
-  const photoLimit = subscriptionPlan === "Free" ? 50 : 100;
-  const videoLimit = subscriptionPlan === "Free" ? 10 : 20;
-  const hasAnalytics = subscriptionPlan !== "Free";
-  const hasInstantBooking = subscriptionPlan === "Growth Pro" || subscriptionPlan === "Pro" || subscriptionPlan === "Enterprise";
+  const photoLimit = 100;
+  const videoLimit = 20;
+  const hasAnalytics = true;
+  const hasInstantBooking = true;
 
   // React Hook Form Integration
   const {
@@ -310,7 +310,7 @@ export default function HotelDashboard({ properties = [], bookings = [] }: { pro
     }
   };
 
-  const hasReachedLimit = subscriptionPlan === "Free" && properties.length >= 1;
+  const hasReachedLimit = false;
 
   const handleAddNewClick = () => {
     if (hasReachedLimit) {
@@ -409,7 +409,7 @@ export default function HotelDashboard({ properties = [], bookings = [] }: { pro
 
       {/* Tabs */}
       <div className="flex gap-6 border-b border-slate-200 mb-8 overflow-x-auto whitespace-nowrap">
-        {["overview", "listings", "bookings", "financials"].map((tab) => (
+        {["overview", "listings", "bookings"].map((tab) => (
           <button
             key={tab}
             onClick={() => {
@@ -428,7 +428,7 @@ export default function HotelDashboard({ properties = [], bookings = [] }: { pro
               activeTab === tab ? "text-sky-600" : "text-slate-500 hover:text-slate-800"
             }`}
           >
-            {tab === "financials" ? "Financials & Subscription" : tab}
+            {tab}
             {activeTab === tab && <span className="absolute bottom-0 left-0 w-full h-0.5 bg-sky-500 rounded-t-full" />}
           </button>
         ))}
