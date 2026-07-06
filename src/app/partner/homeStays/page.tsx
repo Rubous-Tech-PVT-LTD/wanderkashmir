@@ -415,10 +415,10 @@ export default function HomestayDashboard({ bookings = [], properties = [] }: { 
                 setActiveTab("financials");
               } else {
                 if (tab === "listings" && !editingId) {
-              if (tab === "listings" && !editingId) {
-                handleAddNewClick();
+                  handleAddNewClick();
+                }
+                setActiveTab(tab);
               }
-              setActiveTab(tab);
             }}
             className={`pb-4 text-sm font-semibold capitalize transition-colors relative ${
               activeTab === tab ? "text-sky-600" : "text-slate-500 hover:text-slate-800"
