@@ -24,6 +24,7 @@ import Pagination from "@/components/Pagination";
 import { getPaginatedVendors, getPaginatedProperties, getPaginatedUsers, getPaginatedBookings } from "@/actions/admin-data";
 const AdminMapView = dynamic(() => import("./AdminMapView"), { ssr: false });
 const AdminEmailsTab = dynamic(() => import("./AdminEmailsTab"), { ssr: false });
+const AdminPromoCodesTab = dynamic(() => import("./AdminPromoCodesTab"), { ssr: false });
 
 // Define the type based on the props passed from Server
 type VendorProfile = {
@@ -613,6 +614,7 @@ export default function AdminDashboardClient({
             { id: "users", label: "Tourists", icon: Users },
             { id: "seo_pages", label: "SEO Pages", icon: Globe },
             { id: "bulk_emails", label: "Bulk Emails", icon: Mail },
+            { id: "promo_codes", label: "Promo Codes", icon: CheckCircle2 },
           ].map((item) => (
             <button
               key={item.id}
@@ -685,6 +687,7 @@ export default function AdminDashboardClient({
         {activeTab === "taxis" && <AdminTaxisTab />}
         {activeTab === "seo_pages" && <AdminSeoTab />}
         {activeTab === "bulk_emails" && <AdminEmailsTab />}
+        {activeTab === "promo_codes" && <AdminPromoCodesTab />}
 
         {activeTab === "approvals" && (
           <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">

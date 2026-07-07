@@ -3,8 +3,9 @@
 import { useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import CheckoutButton from "@/components/CheckoutButton";
-import { CheckCircle2, ChevronRight, Car, UserCircle2, Info } from "lucide-react";
+import { CheckCircle2, ChevronRight, Car, UserCircle2, Info, Tag, X } from "lucide-react";
 import CustomDatePicker from "@/components/CustomDatePicker";
+import { validatePromoCode } from "@/actions/promo-codes";
 
 export default function CheckoutClient({ 
   isLoggedIn, 
@@ -26,6 +27,13 @@ export default function CheckoutClient({
   const [checkOut, setCheckOut] = useState<Date | null>(null);
   const [nights, setNights] = useState<number>(1);
   const [guests, setGuests] = useState<number>(parseInt(searchParams.get("guests") || "1"));
+
+  // Promo Code State
+  const [promoInput, setPromoInput] = useState("");
+  const [appliedPromo, setAppliedPromo] = useState<string | null>(null);
+  const [discountPercent, setDiscountPercent] = useState<number>(0);
+  const [isApplyingPromo, setIsApplyingPromo] = useState(false);
+  const [promoError, setPromoError] = useState("");
 
   // Load from local storage
   useEffect(() => {
@@ -122,10 +130,37 @@ export default function CheckoutClient({
   const basePrice = (isGuide || isTour) ? price * (isTour ? guests : nights) : price; 
   const addonAmount = (isTour && selectedGuide) ? (guideRate * tourDays) : 0;
   
+  const subtotal = basePrice + addonAmount;
+  const discountAmount = Math.round((subtotal * discountPercent) / 100);
+  const discountedSubtotal = subtotal - discountAmount;
+
   const platformFeeRate = 0.10; // 10% for Taxi, Tour, Guide
-  const platformFee = Math.round((basePrice + addonAmount) * platformFeeRate);
+  const platformFee = Math.round(discountedSubtotal * platformFeeRate);
   
-  const totalAmount = basePrice + addonAmount + platformFee;
+  const totalAmount = discountedSubtotal + platformFee;
+
+  const handleApplyPromo = async () => {
+    if (!promoInput.trim()) return;
+    setIsApplyingPromo(true);
+    setPromoError("");
+    
+    // Validate with server
+    const res = await validatePromoCode(promoInput.trim().toUpperCase(), tour?.id);
+    if (res.success && res.discountPercent) {
+      setAppliedPromo(promoInput.trim().toUpperCase());
+      setDiscountPercent(res.discountPercent);
+      setPromoInput("");
+    } else {
+      setPromoError(res.error || "Invalid promo code");
+    }
+    setIsApplyingPromo(false);
+  };
+
+  const removePromo = () => {
+    setAppliedPromo(null);
+    setDiscountPercent(0);
+    setPromoError("");
+  };
 
   let placeholderText = "e.g. Arriving late, ground floor room, etc.";
   if (isTaxi) {
@@ -347,10 +382,61 @@ export default function CheckoutClient({
                 </div>
               )}
 
-              <div className="flex justify-between text-slate-600 text-sm mt-2">
+              {appliedPromo && (
+                <div className="flex justify-between text-emerald-600 text-sm font-bold mt-2">
+                  <span className="flex items-center gap-1">
+                    <Tag className="w-4 h-4" /> 
+                    Discount ({discountPercent}%)
+                  </span>
+                  <span>-₹{discountAmount.toLocaleString('en-IN')}</span>
+                </div>
+              )}
+
+              <div className="flex justify-between text-slate-600 text-sm mt-2 pt-2 border-t border-slate-100">
                 <span className="underline decoration-slate-300">Convenience & Platform Fee</span>
                 <span>₹{platformFee.toLocaleString('en-IN')}</span>
               </div>
+            </div>
+
+            {/* Promo Code Section */}
+            <div className="mb-6 pt-4 border-t border-slate-200">
+              {appliedPromo ? (
+                <div className="bg-emerald-50 border border-emerald-100 p-3 rounded-xl flex items-center justify-between">
+                  <div className="flex items-center gap-2 text-emerald-700">
+                    <CheckCircle2 className="w-5 h-5" />
+                    <div>
+                      <p className="font-bold text-sm">'{appliedPromo}' Applied</p>
+                      <p className="text-xs">You saved ₹{discountAmount.toLocaleString('en-IN')}!</p>
+                    </div>
+                  </div>
+                  <button onClick={removePromo} className="text-emerald-700 hover:text-emerald-900 p-1">
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+              ) : (
+                <div>
+                  <label className="block text-sm font-bold text-slate-700 mb-2 flex items-center gap-1">
+                    <Tag className="w-4 h-4" /> Have a Promo Code?
+                  </label>
+                  <div className="flex gap-2">
+                    <input 
+                      type="text" 
+                      value={promoInput}
+                      onChange={(e) => setPromoInput(e.target.value)}
+                      placeholder="Enter code"
+                      className="flex-1 border border-slate-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-sky-500 outline-none uppercase"
+                    />
+                    <button 
+                      onClick={handleApplyPromo}
+                      disabled={isApplyingPromo || !promoInput.trim()}
+                      className="bg-slate-900 text-white font-bold px-4 py-2 rounded-lg text-sm disabled:opacity-50 hover:bg-slate-800 transition-colors"
+                    >
+                      {isApplyingPromo ? "..." : "Apply"}
+                    </button>
+                  </div>
+                  {promoError && <p className="text-red-500 text-xs mt-1 font-medium">{promoError}</p>}
+                </div>
+              )}
             </div>
 
             <div className="mt-4 pt-4 border-t border-slate-200 flex justify-between items-center font-bold text-slate-900 text-lg mb-6">
@@ -379,11 +465,13 @@ export default function CheckoutClient({
                 specialRequests={specialRequests}
                 otherGuests={[]}
                 tourId={tour?.id}
-                baseAmount={basePrice + platformFee}
+                baseAmount={discountedSubtotal + platformFee}
                 taxiAmount={isTaxi ? basePrice : 0}
                 guideAmount={isGuide ? basePrice : (isTour && selectedGuide ? guideRate * tourDays : 0)}
                 selectedTaxiId={isTaxi ? driverId || "generic" : ""}
                 selectedGuideId={isGuide ? checkoutData.guideId : (isTour && selectedGuide ? selectedGuide.id : "")}
+                promoCode={appliedPromo || undefined}
+                discountAmount={discountAmount}
               />
             )}
             

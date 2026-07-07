@@ -23,7 +23,8 @@ export async function POST(req: Request) {
     const { 
       propertyId, vehicleId, guideProfileId, tourId,
       checkIn, checkOut, guests, amount,
-      baseAmount, taxiAmount, guideAmount
+      baseAmount, taxiAmount, guideAmount,
+      promoCode, discountAmount
     } = body;
 
     if (!propertyId && !vehicleId && !guideProfileId && !tourId) {
@@ -109,6 +110,8 @@ export async function POST(req: Request) {
         guestPhone: body.guestPhone || null,
         specialRequests: body.specialRequests || null,
         otherGuests: body.otherGuests || null,
+        promoCode: promoCode || null,
+        discountAmount: discountAmount || 0,
       } as any,
     });
 
