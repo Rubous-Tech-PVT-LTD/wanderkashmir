@@ -7,6 +7,8 @@ import { useSearchParams } from "next/navigation";
 import CheckoutButton from "./CheckoutButton";
 import { useBookingStore } from "@/store/bookingStore";
 import CustomDatePicker from "./CustomDatePicker";
+import { validatePromoCode } from "@/actions/promo-codes";
+import { Tag } from "lucide-react";
 
 interface BookingSidebarProps {
   propertyId: string;
@@ -29,6 +31,13 @@ export default function BookingSidebar({ propertyId, pricePerNight, rating, isLo
   const [modalStep, setModalStep] = useState<number>(1); // 1: Details, 2: Summary
   const [guestName, setGuestName] = useState<string>("");
   const [guestPhone, setGuestPhone] = useState<string>("");
+
+  // Promo Code State
+  const [promoInput, setPromoInput] = useState("");
+  const [appliedPromo, setAppliedPromo] = useState<string | null>(null);
+  const [discountPercent, setDiscountPercent] = useState<number>(0);
+  const [isApplyingPromo, setIsApplyingPromo] = useState(false);
+  const [promoError, setPromoError] = useState("");
 
   // Load saved details from localStorage on mount
   useEffect(() => {
@@ -115,8 +124,37 @@ export default function BookingSidebar({ propertyId, pricePerNight, rating, isLo
   }, [propertyId, checkIn, checkOut]);
 
   const basePrice = pricePerNight * nights * guests;
-  const platformFee = Math.round(basePrice * 0.15); // 15% Convenience & Platform Fee
-  const totalAmount = basePrice + platformFee + (taxiAmount * nights) + (guideAmount * nights);
+  
+  const addonAmount = (taxiAmount * nights) + (guideAmount * nights);
+  const subtotal = basePrice + addonAmount;
+  const discountAmount = Math.round((subtotal * discountPercent) / 100);
+  const discountedSubtotal = subtotal - discountAmount;
+
+  const platformFee = Math.round(discountedSubtotal * 0.15); // 15% Convenience & Platform Fee
+  const totalAmount = discountedSubtotal + platformFee;
+
+  const handleApplyPromo = async () => {
+    if (!promoInput.trim()) return;
+    setIsApplyingPromo(true);
+    setPromoError("");
+    
+    // Validate with server
+    const res = await validatePromoCode(promoInput.trim().toUpperCase()); // No tourId passed for hotels
+    if (res.success && res.discountPercent) {
+      setAppliedPromo(promoInput.trim().toUpperCase());
+      setDiscountPercent(res.discountPercent);
+      setPromoInput("");
+    } else {
+      setPromoError(res.error || "Invalid promo code");
+    }
+    setIsApplyingPromo(false);
+  };
+
+  const removePromo = () => {
+    setAppliedPromo(null);
+    setDiscountPercent(0);
+    setPromoError("");
+  };
 
   return (
     <div className="sticky top-28 bg-white rounded-2xl shadow-xl shadow-slate-200/50 border border-slate-200 p-6">
@@ -375,6 +413,57 @@ export default function BookingSidebar({ propertyId, pricePerNight, rating, isLo
                       <span>Convenience & Platform Fee</span>
                       <span>₹{platformFee.toLocaleString('en-IN')}</span>
                     </div>
+
+                    {appliedPromo && (
+                      <div className="flex justify-between text-emerald-600 text-sm font-bold mt-2 pt-2 border-t border-slate-100">
+                        <span className="flex items-center gap-1">
+                          <Tag className="w-4 h-4" /> 
+                          Discount ({discountPercent}%)
+                        </span>
+                        <span>-₹{discountAmount.toLocaleString('en-IN')}</span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Promo Code Section */}
+                  <div className="pt-2">
+                    {appliedPromo ? (
+                      <div className="bg-emerald-50 border border-emerald-100 p-3 rounded-xl flex items-center justify-between">
+                        <div className="flex items-center gap-2 text-emerald-700">
+                          <CheckCircle2 className="w-5 h-5" />
+                          <div>
+                            <p className="font-bold text-sm">'{appliedPromo}' Applied</p>
+                            <p className="text-xs">You saved ₹{discountAmount.toLocaleString('en-IN')}!</p>
+                          </div>
+                        </div>
+                        <button onClick={removePromo} className="text-emerald-700 hover:text-emerald-900 p-1">
+                          <X className="w-5 h-5" />
+                        </button>
+                      </div>
+                    ) : (
+                      <div>
+                        <label className="block text-sm font-bold text-slate-700 mb-2 flex items-center gap-1">
+                          <Tag className="w-4 h-4" /> Have a Promo Code?
+                        </label>
+                        <div className="flex gap-2">
+                          <input 
+                            type="text" 
+                            value={promoInput}
+                            onChange={(e) => setPromoInput(e.target.value)}
+                            placeholder="Enter code"
+                            className="flex-1 border border-slate-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-sky-500 outline-none uppercase"
+                          />
+                          <button 
+                            onClick={handleApplyPromo}
+                            disabled={isApplyingPromo || !promoInput.trim()}
+                            className="bg-slate-900 text-white font-bold px-4 py-2 rounded-lg text-sm disabled:opacity-50 hover:bg-slate-800 transition-colors"
+                          >
+                            {isApplyingPromo ? "..." : "Apply"}
+                          </button>
+                        </div>
+                        {promoError && <p className="text-red-500 text-xs mt-1 font-medium">{promoError}</p>}
+                      </div>
+                    )}
                   </div>
 
                   <div className="flex justify-between items-center text-lg font-black text-slate-900 pt-2 border-t border-slate-200">
@@ -395,11 +484,13 @@ export default function BookingSidebar({ propertyId, pricePerNight, rating, isLo
                       guestPhone={guestPhone}
                       specialRequests={specialRequests}
                       otherGuests={otherGuests}
-                      baseAmount={basePrice + platformFee}
+                      baseAmount={discountedSubtotal + platformFee}
                       taxiAmount={taxiAmount * nights}
                       guideAmount={guideAmount * nights}
                       selectedTaxiId={selectedTaxiId}
                       selectedGuideId={selectedGuideId}
+                      promoCode={appliedPromo || undefined}
+                      discountAmount={discountAmount}
                     />
                     <button 
                       onClick={() => setModalStep(1)}
