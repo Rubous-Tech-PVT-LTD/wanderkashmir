@@ -22,7 +22,7 @@ export async function POST(req: Request) {
     const body = await req.json();
     const { 
       propertyId, vehicleId, guideProfileId, tourId,
-      checkIn, checkOut, guests, amount,
+      checkIn, checkOut, rooms, adults, childrenCount, amount,
       baseAmount, taxiAmount, guideAmount,
       promoCode, discountAmount, roomTypeId
     } = body;
@@ -116,7 +116,9 @@ export async function POST(req: Request) {
         userId: userId,
         checkIn: checkIn || "",
         checkOut: checkOut || "",
-        guests: guests ? guests.toString() : "0",
+        rooms: rooms ? rooms.toString() : "1",
+        adults: adults ? adults.toString() : "1",
+        childrenCount: childrenCount ? childrenCount.toString() : "0",
         addons: body.addons ? JSON.stringify(body.addons) : "",
       },
     });
@@ -138,7 +140,9 @@ export async function POST(req: Request) {
         razorpayOrderId: order.id,
         checkIn: checkIn ? new Date(checkIn) : null,
         checkOut: checkOut ? new Date(checkOut) : null,
-        guests: guests ? parseInt(guests.toString()) : null,
+        numberOfRooms: rooms ? parseInt(rooms.toString()) : 1,
+        adults: adults ? parseInt(adults.toString()) : 1,
+        childrenCount: childrenCount ? parseInt(childrenCount.toString()) : 0,
         guestName: body.guestName || null,
         guestPhone: body.guestPhone || null,
         specialRequests: body.specialRequests || null,

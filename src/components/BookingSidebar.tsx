@@ -20,7 +20,10 @@ interface BookingSidebarProps {
 export default function BookingSidebar({ propertyId, pricePerNight, rating, isLoggedIn }: BookingSidebarProps) {
   const [checkIn, setCheckIn] = useState<Date | null>(null);
   const [checkOut, setCheckOut] = useState<Date | null>(null);
-  const [guests, setGuests] = useState<number>(1);
+  const [rooms, setRooms] = useState<number>(1);
+  const [adults, setAdults] = useState<number>(2);
+  const [childrenCount, setChildrenCount] = useState<number>(0);
+  const [showGuestSelector, setShowGuestSelector] = useState<boolean>(false);
   const [nights, setNights] = useState<number>(1);
   const [isAvailable, setIsAvailable] = useState<boolean | null>(null);
   const [availableRoomTypes, setAvailableRoomTypes] = useState<any[]>([]);
@@ -57,15 +60,16 @@ export default function BookingSidebar({ propertyId, pricePerNight, rating, isLo
   // Add-ons State (from Zustand)
   const { selectedTaxiId, selectedGuideId, taxiAmount, guideAmount } = useBookingStore();
 
-  // Adjust otherGuests array when guests count changes
+  // Adjust otherGuests array when total guests count changes
   useEffect(() => {
-    const diff = (guests - 1) - otherGuests.length;
+    const totalGuests = adults + childrenCount;
+    const diff = (totalGuests - 1) - otherGuests.length;
     if (diff > 0) {
       setOtherGuests(prev => [...prev, ...Array(diff).fill({name: '', age: ''})]);
     } else if (diff < 0) {
-      setOtherGuests(prev => prev.slice(0, guests - 1));
+      setOtherGuests(prev => prev.slice(0, Math.max(0, totalGuests - 1)));
     }
-  }, [guests]);
+  }, [adults, childrenCount]);
 
   // Close modal on success
   useEffect(() => {
@@ -111,7 +115,7 @@ export default function BookingSidebar({ propertyId, pricePerNight, rating, isLo
       try {
         const inStr = checkIn.toISOString().split("T")[0];
         const outStr = checkOut.toISOString().split("T")[0];
-        const res = await fetch(`/api/stays/${propertyId}/check?in=${inStr}&out=${outStr}`);
+        const res = await fetch(`/api/stays/${propertyId}/check?in=${inStr}&out=${outStr}&rooms=${rooms}`);
         const data = await res.json();
         setIsAvailable(data.available);
         setAvailableRoomTypes(data.availableRoomTypes || []);
@@ -134,13 +138,13 @@ export default function BookingSidebar({ propertyId, pricePerNight, rating, isLo
 
     const debounceTimer = setTimeout(checkAvailability, 500);
     return () => clearTimeout(debounceTimer);
-  }, [propertyId, checkIn, checkOut]);
+  }, [propertyId, checkIn, checkOut, rooms]);
 
-  // If dynamicPrice exists (from RoomTypes), it represents the total for the selected room type for the entire stay.
-  // Otherwise fallback to legacy formula for non-migrated properties
+  // If dynamicPrice exists (from RoomTypes), it represents the total for 1 room for the entire stay.
+  // We multiply by number of rooms.
   const basePrice = dynamicPrice !== null 
-    ? dynamicPrice 
-    : pricePerNight * nights * guests;
+    ? dynamicPrice * rooms
+    : pricePerNight * nights * rooms;
   
   const displayPricePerNight = dynamicPrice !== null && nights > 0
     ? Math.round(dynamicPrice / nights)
@@ -219,19 +223,79 @@ export default function BookingSidebar({ propertyId, pricePerNight, rating, isLo
             />
           </div>
         </div>
-        <div className="p-3">
-          <label className="block text-[10px] font-bold uppercase text-slate-900 mb-1">Guests</label>
-          <select 
-            value={guests}
-            onChange={(e) => setGuests(Number(e.target.value))}
-            className="w-full text-sm outline-none bg-transparent text-slate-600"
+        <div className="p-3 relative">
+          <label className="block text-[10px] font-bold uppercase text-slate-900 mb-1">Guests & Rooms</label>
+          <button 
+            className="w-full text-left text-sm outline-none bg-transparent text-slate-900 font-semibold flex items-center justify-between"
+            onClick={() => setShowGuestSelector(!showGuestSelector)}
           >
-            {[...Array(20)].map((_, i) => (
-              <option key={i + 1} value={i + 1}>
-                {i + 1} guest{i === 0 ? '' : 's'}
-              </option>
-            ))}
-          </select>
+            <span>{rooms} Room{rooms > 1 ? 's' : ''}, {adults} Adult{adults > 1 ? 's' : ''}{childrenCount > 0 ? `, ${childrenCount} Child${childrenCount > 1 ? 'ren' : ''}` : ''}</span>
+          </button>
+          
+          {showGuestSelector && (
+            <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-xl shadow-xl border border-slate-200 p-4 z-50">
+              {/* Rooms */}
+              <div className="flex items-center justify-between mb-4">
+                <span className="text-sm font-bold text-slate-800">Rooms</span>
+                <div className="flex items-center gap-3">
+                  <button 
+                    onClick={() => setRooms(Math.max(1, rooms - 1))}
+                    className="w-8 h-8 rounded-full border border-slate-300 flex items-center justify-center text-slate-600 hover:bg-slate-50"
+                  >-</button>
+                  <span className="w-4 text-center font-bold text-sm">{rooms}</span>
+                  <button 
+                    onClick={() => setRooms(rooms + 1)}
+                    className="w-8 h-8 rounded-full border border-slate-300 flex items-center justify-center text-slate-600 hover:bg-slate-50"
+                  >+</button>
+                </div>
+              </div>
+              
+              {/* Adults */}
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <span className="block text-sm font-bold text-slate-800">Adults</span>
+                  <span className="block text-xs text-slate-500">12+ Years Old</span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <button 
+                    onClick={() => setAdults(Math.max(1, adults - 1))}
+                    className="w-8 h-8 rounded-full border border-slate-300 flex items-center justify-center text-slate-600 hover:bg-slate-50"
+                  >-</button>
+                  <span className="w-4 text-center font-bold text-sm">{adults}</span>
+                  <button 
+                    onClick={() => setAdults(adults + 1)}
+                    className="w-8 h-8 rounded-full border border-slate-300 flex items-center justify-center text-slate-600 hover:bg-slate-50"
+                  >+</button>
+                </div>
+              </div>
+              
+              {/* Children */}
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <span className="block text-sm font-bold text-slate-800">Children</span>
+                  <span className="block text-xs text-slate-500">0 - 11 Years Old</span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <button 
+                    onClick={() => setChildrenCount(Math.max(0, childrenCount - 1))}
+                    className="w-8 h-8 rounded-full border border-slate-300 flex items-center justify-center text-slate-600 hover:bg-slate-50"
+                  >-</button>
+                  <span className="w-4 text-center font-bold text-sm">{childrenCount}</span>
+                  <button 
+                    onClick={() => setChildrenCount(childrenCount + 1)}
+                    className="w-8 h-8 rounded-full border border-slate-300 flex items-center justify-center text-slate-600 hover:bg-slate-50"
+                  >+</button>
+                </div>
+              </div>
+              
+              <button 
+                onClick={() => setShowGuestSelector(false)}
+                className="w-full bg-sky-600 text-white font-bold py-2 rounded-lg mt-2 hover:bg-sky-700"
+              >
+                Apply
+              </button>
+            </div>
+          )}
         </div>
       </div>
 
@@ -245,37 +309,48 @@ export default function BookingSidebar({ propertyId, pricePerNight, rating, isLo
         <div className="mb-4">
           <label className="block text-[10px] font-bold uppercase text-slate-900 mb-2">Select Room Type</label>
           <div className="space-y-2">
-            {availableRoomTypes.map(rt => (
-              <label 
-                key={rt.id} 
-                className={`flex items-center justify-between p-3 border rounded-xl cursor-pointer transition-colors ${
-                  selectedRoomTypeId === rt.id 
-                    ? 'border-sky-500 bg-sky-50' 
-                    : 'border-slate-200 hover:border-slate-300'
-                }`}
-              >
-                <div className="flex items-center gap-2">
-                  <input 
-                    type="radio" 
-                    name="roomType"
-                    className="w-4 h-4 text-sky-600"
-                    checked={selectedRoomTypeId === rt.id} 
-                    onChange={() => {
-                      setSelectedRoomTypeId(rt.id);
-                      setDynamicPrice(rt.totalPrice);
-                    }} 
-                  />
-                  <div>
-                    <span className="block font-bold text-slate-900 text-sm">{rt.name}</span>
-                    <span className="block text-xs text-slate-500">Up to {rt.capacity} guests</span>
+            {availableRoomTypes.map(rt => {
+              const maxCapacity = rt.capacity * rooms;
+              const isCapacityValid = (adults + childrenCount) <= maxCapacity;
+              
+              return (
+                <label 
+                  key={rt.id} 
+                  className={`flex items-center justify-between p-3 border rounded-xl cursor-pointer transition-colors ${
+                    !isCapacityValid ? 'opacity-50 border-slate-100 bg-slate-50 cursor-not-allowed' :
+                    selectedRoomTypeId === rt.id 
+                      ? 'border-sky-500 bg-sky-50' 
+                      : 'border-slate-200 hover:border-slate-300'
+                  }`}
+                >
+                  <div className="flex items-center gap-2">
+                    <input 
+                      type="radio" 
+                      name="roomType"
+                      className="w-4 h-4 text-sky-600"
+                      disabled={!isCapacityValid}
+                      checked={selectedRoomTypeId === rt.id} 
+                      onChange={() => {
+                        if (isCapacityValid) {
+                          setSelectedRoomTypeId(rt.id);
+                          setDynamicPrice(rt.totalPrice);
+                        }
+                      }} 
+                    />
+                    <div>
+                      <span className="block font-bold text-slate-900 text-sm">{rt.name}</span>
+                      <span className={`block text-xs ${isCapacityValid ? 'text-slate-500' : 'text-red-500 font-semibold'}`}>
+                        {isCapacityValid ? `Up to ${rt.capacity} guests/room` : `Max ${maxCapacity} guests for ${rooms} rooms`}
+                      </span>
+                    </div>
                   </div>
-                </div>
-                <div className="text-right">
-                  <span className="block font-bold text-slate-900">₹{rt.pricePerNight.toLocaleString()} <span className="text-xs font-normal text-slate-500">avg/night</span></span>
-                  <span className="block text-xs font-semibold text-sky-600">Total: ₹{rt.totalPrice.toLocaleString()}</span>
-                </div>
-              </label>
-            ))}
+                  <div className="text-right">
+                    <span className="block font-bold text-slate-900">₹{rt.pricePerNight.toLocaleString()} <span className="text-xs font-normal text-slate-500">avg/night</span></span>
+                    <span className="block text-xs font-semibold text-sky-600">Total: ₹{(rt.totalPrice * rooms).toLocaleString()}</span>
+                  </div>
+                </label>
+              );
+            })}
           </div>
         </div>
       )}
@@ -299,8 +374,8 @@ export default function BookingSidebar({ propertyId, pricePerNight, rating, isLo
         <div className="flex justify-between text-slate-600 text-sm">
           <span className="underline decoration-slate-300">
             {dynamicPrice !== null 
-              ? `${nights} nights (Room rate)`
-              : `₹${pricePerNight.toLocaleString('en-IN')} x ${nights} nights x ${guests} guests`
+              ? `${nights} nights x ${rooms} room(s)`
+              : `₹${pricePerNight.toLocaleString('en-IN')} x ${nights} nights x ${rooms} room(s)`
             }
           </span>
           <span className="font-semibold text-slate-900">₹{basePrice.toLocaleString('en-IN')}</span>
@@ -451,8 +526,12 @@ export default function BookingSidebar({ propertyId, pricePerNight, rating, isLo
                         <span className="font-semibold text-slate-900">{nights} Nights</span>
                       </div>
                       <div>
+                        <span className="block text-slate-500 text-xs uppercase font-bold mb-1">Rooms</span>
+                        <span className="font-semibold text-slate-900">{rooms} Rooms</span>
+                      </div>
+                      <div>
                         <span className="block text-slate-500 text-xs uppercase font-bold mb-1">Guests</span>
-                        <span className="font-semibold text-slate-900">{guests} Guests</span>
+                        <span className="font-semibold text-slate-900">{adults + childrenCount} Guests</span>
                       </div>
                     </div>
                   </div>
@@ -543,7 +622,9 @@ export default function BookingSidebar({ propertyId, pricePerNight, rating, isLo
                       isLoggedIn={isLoggedIn} 
                       checkIn={checkIn?.toISOString().split("T")[0] || ""}
                       checkOut={checkOut?.toISOString().split("T")[0] || ""}
-                      guests={guests}
+                      rooms={rooms}
+                      adults={adults}
+                      childrenCount={childrenCount}
                       nights={nights}
                       guestName={guestName}
                       guestPhone={guestPhone}

@@ -11,7 +11,9 @@ interface CheckoutButtonProps {
   isLoggedIn?: boolean;
   checkIn: string;
   checkOut: string;
-  guests: number;
+  rooms: number;
+  adults: number;
+  childrenCount: number;
   nights: number;
   guestName?: string;
   guestPhone?: string;
@@ -29,7 +31,7 @@ interface CheckoutButtonProps {
 }
 
 export default function CheckoutButton({ 
-  propertyId, pricePerNight, isLoggedIn, checkIn, checkOut, guests, nights, 
+  propertyId, pricePerNight, isLoggedIn, checkIn, checkOut, rooms, adults, childrenCount, nights, 
   guestName, guestPhone, specialRequests, otherGuests,
   baseAmount, taxiAmount, guideAmount, selectedTaxiId, selectedGuideId, tourId,
   promoCode, discountAmount, roomTypeId
@@ -59,9 +61,11 @@ export default function CheckoutButton({
           tourId,
           checkIn,
           checkOut,
-          guests,
-          amount: (baseAmount || pricePerNight * nights) + (taxiAmount || 0) + (guideAmount || 0),
-          baseAmount: baseAmount || pricePerNight * nights,
+          rooms,
+          adults,
+          childrenCount,
+          amount: (baseAmount || pricePerNight * nights * rooms) + (taxiAmount || 0) + (guideAmount || 0),
+          baseAmount: baseAmount || pricePerNight * nights * rooms,
           taxiAmount,
           guideAmount,
           guestName,

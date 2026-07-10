@@ -10,6 +10,7 @@ export async function GET(
     const { searchParams } = new URL(request.url);
     const checkInStr = searchParams.get("in");
     const checkOutStr = searchParams.get("out");
+    const requestedRooms = parseInt(searchParams.get("rooms") || "1");
 
     if (!checkInStr || !checkOutStr) {
       return NextResponse.json({ error: "Missing dates" }, { status: 400 });
@@ -54,7 +55,7 @@ export async function GET(
           { checkOut: { gt: checkIn } }
         ]
       },
-      select: { roomTypeId: true, checkIn: true, checkOut: true }
+      select: { roomTypeId: true, checkIn: true, checkOut: true, numberOfRooms: true }
     });
 
     // 2. Get all custom inventory rules
@@ -81,16 +82,18 @@ export async function GET(
         // Base units available (either custom overridden limit or the total physical units)
         const baseUnits = override ? override.available : roomType.totalUnits;
         
-        // Count bookings that overlap with this specific date
-        const bookingsOnDate = overlappingBookings.filter(b => 
+        // Sum bookings that overlap with this specific date
+        const overlappingOnDate = overlappingBookings.filter(b => 
           b.roomTypeId === roomType.id &&
           b.checkIn && new Date(b.checkIn) <= d &&
           b.checkOut && new Date(b.checkOut) > d
-        ).length;
+        );
         
-        const unitsLeft = baseUnits - bookingsOnDate;
+        const bookingsCount = overlappingOnDate.reduce((sum, b) => sum + (b.numberOfRooms || 1), 0);
         
-        if (unitsLeft <= 0) {
+        const unitsLeft = baseUnits - bookingsCount;
+        
+        if (unitsLeft < requestedRooms) {
           isAvailableForFullStay = false;
           break; // Stop checking dates if it's unavailable on even one day
         }
@@ -104,17 +107,17 @@ export async function GET(
           id: roomType.id,
           name: roomType.name,
           capacity: roomType.capacity,
-          totalPrice,
-          pricePerNight: Math.round(totalPrice / dates.length)
+          totalPrice: totalPrice * requestedRooms,
+          pricePerNight: Math.round(totalPrice / dates.length) * requestedRooms
         });
       }
     }
 
     // Fallback: If no RoomTypes exist (legacy properties), fallback to property availability
     if (property.roomTypes.length === 0) {
-      const bookingsCount = overlappingBookings.length;
+      const bookingsCount = overlappingBookings.reduce((sum, b) => sum + (b.numberOfRooms || 1), 0);
       const roomsLeft = property.totalRooms - bookingsCount;
-      if (roomsLeft > 0) {
+      if (roomsLeft >= requestedRooms) {
         return NextResponse.json({
           available: true,
           roomsLeft: Math.max(0, roomsLeft),

@@ -330,6 +330,12 @@ model Booking {
   checkOut      DateTime?
   guests        Int?
   numberOfRooms Int       @default(1)
+  adults        Int       @default(1)
+  childrenCount Int       @default(0)
+  guestName     String?
+  guestPhone    String?
+  specialRequests String?
+  otherGuests     Json?
 
   vehicleId String?
   vehicle   Vehicle? @relation(fields: [vehicleId], references: [id], onDelete: SetNull)
@@ -346,11 +352,6 @@ model Booking {
 
   razorpayOrderId   String? @unique
   razorpayPaymentId String? @unique
-
-  guestName       String?
-  guestPhone      String?
-  specialRequests String?
-  otherGuests     Json?
 
   promoCode      String?
   discountAmount Float?  @default(0)
