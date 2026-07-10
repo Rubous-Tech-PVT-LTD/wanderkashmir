@@ -38,32 +38,33 @@ model User {
   role          Role      @default(CUSTOMER)
   isBanned      Boolean   @default(false)
   banReason     String?
-  
-  // Relations
-  accounts      Account[]
-  sessions      Session[]
-  vendorProfiles VendorProfile[]
-  bookings      Booking[]
-  reviews       Review[]
 
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  // Relations
+  accounts       Account[]
+  sessions       Session[]
+  vendorProfiles VendorProfile[]
+  bookings       Booking[]
+  reviews        Review[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
   @@index([role])
 }
 
 model Account {
-  id                 String  @id @default(cuid())
-  userId             String
-  type               String
-  provider           String
-  providerAccountId  String
-  refresh_token      String?  @db.Text
-  access_token       String?  @db.Text
-  expires_at         Int?
-  token_type         String?
-  scope              String?
-  id_token           String?  @db.Text
-  session_state      String?
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -87,12 +88,12 @@ model VerificationToken {
 }
 
 model VendorProfile {
-  id               String           @id @default(cuid())
-  userId           String
-  user             User             @relation(fields: [userId], references: [id], onDelete: Cascade)
-  vendorId         String?          @unique
-  type             VendorType
-  businessName     String
+  id                String           @id @default(cuid())
+  userId            String
+  user              User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  vendorId          String?          @unique
+  type              VendorType
+  businessName      String
   isApproved        Boolean          @default(false)
   status            String           @default("PENDING")
   rejectionReason   String?
@@ -109,30 +110,30 @@ model VendorProfile {
   bankName          String?
   accountNumber     String?
   ifscCode          String?
-  
+
   // Specific KYC Fields
-  gstNumber         String?
-  panNumber         String?
-  tradeLicense      String?
-  
+  gstNumber    String?
+  panNumber    String?
+  tradeLicense String?
+
   taxiRole            String? // "INDIVIDUAL" or "STAND"
   drivingLicense      String?
   vehicleRegistration String?
   vehicleType         String?
-  
-  guideLicense      String?
-  languages         String?
-  experienceYears   Int?
-  
+
+  guideLicense    String?
+  languages       String?
+  experienceYears Int?
+
   // Relations
-  properties       Property[]
-  vehicles         Vehicle[]
-  drivers          Driver[]
-  rateOverrides    TaxiStandRateOverride[]
-  guideProfiles    GuideProfile[]
-  
-  createdAt        DateTime         @default(now())
-  updatedAt        DateTime         @updatedAt
+  properties    Property[]
+  vehicles      Vehicle[]
+  drivers       Driver[]
+  rateOverrides TaxiStandRateOverride[]
+  guideProfiles GuideProfile[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([userId])
   @@index([type, status])
@@ -159,21 +160,49 @@ model Property {
   bedrooms        Int           @default(1)
   beds            Int           @default(1)
   guests          Int           @default(2)
-  bedDetails      String?       // "6 Queen Beds, 3 Double Beds"
+  bedDetails      String? // "6 Queen Beds, 3 Double Beds"
   images          String[]      @default([])
   amenities       String[]      @default([])
-  
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
 
-  bookings        Booking[]
-  reviews         Review[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  bookings  Booking[]
+  reviews   Review[]
+  roomTypes RoomType[]
 
   @@index([status, isApproved])
   @@index([location])
   @@index([vendorProfileId])
   @@index([isApproved])
   @@index([status])
+}
+
+model RoomType {
+  id         String   @id @default(cuid())
+  propertyId String
+  property   Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+
+  name        String // e.g., "Deluxe Room", "Standard Suite"
+  description String?
+  basePrice   Float // Default price per night
+  capacity    Int     @default(2) // Max guests
+  totalUnits  Int     @default(1) // Total physical rooms of this type
+
+  inventories RoomInventory[]
+  bookings    Booking[]
+}
+
+model RoomInventory {
+  id         String   @id @default(cuid())
+  roomTypeId String
+  roomType   RoomType @relation(fields: [roomTypeId], references: [id], onDelete: Cascade)
+
+  date          DateTime @db.Date
+  available     Int // How many are left on this specific date
+  priceOverride Float? // If the vendor wants to charge more/less on this date
+
+  @@unique([roomTypeId, date]) // Ensure only one record per room per date
 }
 
 model Vehicle {
@@ -186,65 +215,66 @@ model Vehicle {
   make            String
   model           String
   registrationNum String
-  type            String        // e.g., Sedan, SUV
-  
-  capacity               Int           @default(4)
-  images                 String[]      @default([])
-  platformCommissionRate Float         @default(10) 
-  isCommissionPercentage Boolean       @default(true)
-  
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
+  type            String // e.g., Sedan, SUV
 
-  bookings        Booking[]
-  reviews         Review[]
+  capacity               Int      @default(4)
+  images                 String[] @default([])
+  platformCommissionRate Float    @default(10)
+  isCommissionPercentage Boolean  @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  bookings Booking[]
+  reviews  Review[]
 }
 
 model Driver {
   id              String        @id @default(cuid())
   vendorProfileId String
   vendorProfile   VendorProfile @relation(fields: [vendorProfileId], references: [id], onDelete: Cascade)
-  
-  name            String
-  phone           String
-  drivingLicense  String
-  status          String        @default("ACTIVE") // ACTIVE, INACTIVE
-  
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
 
-  bookings        Booking[]
+  name           String
+  phone          String
+  drivingLicense String
+  status         String @default("ACTIVE") // ACTIVE, INACTIVE
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  bookings Booking[]
 }
 
 model TaxiStandRateOverride {
   id              String        @id @default(cuid())
   vendorProfileId String
   vendorProfile   VendorProfile @relation(fields: [vendorProfileId], references: [id], onDelete: Cascade)
-  
-  routePlace      String        // Matches TaxiRateCard.place
-  customPrice     Float
-  
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
-  
+
+  routePlace  String // Matches TaxiRateCard.place
+  customPrice Float
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
   @@unique([vendorProfileId, routePlace])
 }
 
 model TaxiRateCard {
-  id        String   @id @default(cuid())
-  place     String   // e.g., "LOCAL PAHALGAM FULL DAY", "SRINAGAR TRC DROP"
-  rates     Json     // Stores rates as JSON
-  
+  id    String @id @default(cuid())
+  place String // e.g., "LOCAL PAHALGAM FULL DAY", "SRINAGAR TRC DROP"
+  rates Json // Stores rates as JSON
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
   @@index([place])
 }
 
 model TaxiTypeImage {
-  id        String   @id @default(cuid())
-  type      String   @unique // e.g., "CRYSTA", "INNOVA"
-  imageUrl  String
-  
+  id       String @id @default(cuid())
+  type     String @unique // e.g., "CRYSTA", "INNOVA"
+  imageUrl String
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -256,75 +286,79 @@ model GuideProfile {
   isApproved      Boolean       @default(false)
   status          String        @default("PENDING")
   rejectionReason String?
-  
-  languages       String[]      @default([])
-  experienceYears Int           @default(0)
-  location        String        @default("Srinagar")
-  pricePerDay     Float         @default(0)
-  bio             String?       @db.Text
-  profileViews    Int           @default(0)
-  specialties     String[]      @default([])
-  images          String[]      @default([])
-  
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
 
-  bookings        Booking[]
-  reviews         Review[]
+  languages       String[] @default([])
+  experienceYears Int      @default(0)
+  location        String   @default("Srinagar")
+  pricePerDay     Float    @default(0)
+  bio             String?  @db.Text
+  profileViews    Int      @default(0)
+  specialties     String[] @default([])
+  images          String[] @default([])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  bookings Booking[]
+  reviews  Review[]
 }
 
 model Booking {
-  id        String   @id @default(cuid())
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  amount          Float
-  status          String    @default("PENDING") // PENDING, CONFIRMED, CANCELLED
-  
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  amount Float
+  status String @default("PENDING") // PENDING, CONFIRMED, CANCELLED
+
   // Payment Breakdown
-  baseAmount      Float     @default(0) // Hotel/Primary amount
-  taxiAmount      Float     @default(0) // Taxi add-on amount
-  guideAmount     Float     @default(0) // Guide add-on amount
-  
+  baseAmount  Float @default(0) // Hotel/Primary amount
+  taxiAmount  Float @default(0) // Taxi add-on amount
+  guideAmount Float @default(0) // Guide add-on amount
+
   // Payout Statuses
-  hotelPayoutStatus String  @default("PENDING") // PENDING, PAID
-  taxiPayoutStatus  String  @default("PENDING") // PENDING, PAID
-  guidePayoutStatus String  @default("PENDING") // PENDING, PAID
-  
-  propertyId      String?
-  property        Property? @relation(fields: [propertyId], references: [id], onDelete: SetNull)
-  
-  checkIn         DateTime?
-  checkOut        DateTime?
-  guests          Int?
+  hotelPayoutStatus String @default("PENDING") // PENDING, PAID
+  taxiPayoutStatus  String @default("PENDING") // PENDING, PAID
+  guidePayoutStatus String @default("PENDING") // PENDING, PAID
 
-  vehicleId       String?
-  vehicle         Vehicle?  @relation(fields: [vehicleId], references: [id], onDelete: SetNull)
+  propertyId String?
+  property   Property? @relation(fields: [propertyId], references: [id], onDelete: SetNull)
 
-  guideProfileId  String?
-  guideProfile    GuideProfile? @relation(fields: [guideProfileId], references: [id], onDelete: SetNull)
+  roomTypeId String?
+  roomType   RoomType? @relation(fields: [roomTypeId], references: [id], onDelete: SetNull)
 
-  driverId        String?
-  driver          Driver?       @relation(fields: [driverId], references: [id], onDelete: SetNull)
-  standApprovalStatus String    @default("PENDING") // PENDING, APPROVED, REJECTED
+  checkIn       DateTime?
+  checkOut      DateTime?
+  guests        Int?
+  numberOfRooms Int       @default(1)
 
-  tourId          String?
-  tour            Tour?     @relation(fields: [tourId], references: [id], onDelete: SetNull)
+  vehicleId String?
+  vehicle   Vehicle? @relation(fields: [vehicleId], references: [id], onDelete: SetNull)
 
-  razorpayOrderId String?   @unique
+  guideProfileId String?
+  guideProfile   GuideProfile? @relation(fields: [guideProfileId], references: [id], onDelete: SetNull)
+
+  driverId            String?
+  driver              Driver? @relation(fields: [driverId], references: [id], onDelete: SetNull)
+  standApprovalStatus String  @default("PENDING") // PENDING, APPROVED, REJECTED
+
+  tourId String?
+  tour   Tour?   @relation(fields: [tourId], references: [id], onDelete: SetNull)
+
+  razorpayOrderId   String? @unique
   razorpayPaymentId String? @unique
 
   guestName       String?
   guestPhone      String?
   specialRequests String?
   otherGuests     Json?
-  
-  promoCode       String?
-  discountAmount  Float?    @default(0)
-  
+
+  promoCode      String?
+  discountAmount Float?  @default(0)
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  
-  reviews   Review[]
+
+  reviews Review[]
 
   @@index([propertyId, status])
   @@index([userId])
@@ -332,86 +366,86 @@ model Booking {
 }
 
 model Review {
-  id              String   @id @default(cuid())
-  userId          String
-  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
-  rating          Int      // 1 to 5
-  comment         String?  @db.Text
-  
-  propertyId      String?
-  property        Property? @relation(fields: [propertyId], references: [id], onDelete: Cascade)
-  
-  vehicleId       String?
-  vehicle         Vehicle?  @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
-  
-  guideProfileId  String?
-  guideProfile    GuideProfile? @relation(fields: [guideProfileId], references: [id], onDelete: Cascade)
-  
-  tourId          String?
-  tour            Tour?     @relation(fields: [tourId], references: [id], onDelete: Cascade)
-  
-  bookingId       String?
-  booking         Booking? @relation(fields: [bookingId], references: [id], onDelete: SetNull)
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  rating  Int // 1 to 5
+  comment String? @db.Text
+
+  propertyId String?
+  property   Property? @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+
+  vehicleId String?
+  vehicle   Vehicle? @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+
+  guideProfileId String?
+  guideProfile   GuideProfile? @relation(fields: [guideProfileId], references: [id], onDelete: Cascade)
+
+  tourId String?
+  tour   Tour?   @relation(fields: [tourId], references: [id], onDelete: Cascade)
+
+  bookingId String?
+  booking   Booking? @relation(fields: [bookingId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Tour {
-  id              String   @id @default(cuid())
-  slug            String   @unique
-  title           String
-  duration        String
-  destinations    String[] @default([])
-  price           Float
-  originalPrice   Float?
-  category        String
-  inclusions      String[] @default([])
-  maxPersons      Int
-  badge           String?
-  images          String[] @default([])
-  overview        String?  @db.Text
-  highlights      String[] @default([])
-  itinerary       Json?
-  exclusions      String[] @default([])
-  isLive          Boolean  @default(true)
-  
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-  
-  bookings        Booking[]
-  reviews         Review[]
-  promoCodes      PromoCode[]
+  id            String   @id @default(cuid())
+  slug          String   @unique
+  title         String
+  duration      String
+  destinations  String[] @default([])
+  price         Float
+  originalPrice Float?
+  category      String
+  inclusions    String[] @default([])
+  maxPersons    Int
+  badge         String?
+  images        String[] @default([])
+  overview      String?  @db.Text
+  highlights    String[] @default([])
+  itinerary     Json?
+  exclusions    String[] @default([])
+  isLive        Boolean  @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  bookings   Booking[]
+  reviews    Review[]
+  promoCodes PromoCode[]
 }
 
 model SeoLandingPage {
-  id          String   @id @default(cuid())
-  slug        String   @unique
-  type        String   // e.g., "TAXI", "HOMESTAY", "TOUR"
+  id          String  @id @default(cuid())
+  slug        String  @unique
+  type        String // e.g., "TAXI", "HOMESTAY", "TOUR"
   title       String
-  description String?  @db.Text
+  description String? @db.Text
   h1Heading   String
-  content     String?  @db.Text
-  faqs        Json?    // Stores array of { question, answer }
-  imageUrl    String?  // Optional Hero image for the landing page
-  
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  
+  content     String? @db.Text
+  faqs        Json? // Stores array of { question, answer }
+  imageUrl    String? // Optional Hero image for the landing page
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
   @@index([type])
 }
 
 model PromoCode {
-  id              String   @id @default(cuid())
-  code            String   @unique
+  id              String  @id @default(cuid())
+  code            String  @unique
   discountPercent Float
   tourId          String?
-  tour            Tour?    @relation(fields: [tourId], references: [id], onDelete: SetNull)
-  isActive        Boolean  @default(true)
-  
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  tour            Tour?   @relation(fields: [tourId], references: [id], onDelete: SetNull)
+  isActive        Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([tourId])
   @@index([code])

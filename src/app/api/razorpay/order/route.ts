@@ -24,7 +24,7 @@ export async function POST(req: Request) {
       propertyId, vehicleId, guideProfileId, tourId,
       checkIn, checkOut, guests, amount,
       baseAmount, taxiAmount, guideAmount,
-      promoCode, discountAmount
+      promoCode, discountAmount, roomTypeId
     } = body;
 
     if (!propertyId && !vehicleId && !guideProfileId && !tourId) {
@@ -51,23 +51,55 @@ export async function POST(req: Request) {
         return NextResponse.json({ error: "Property not found" }, { status: 404 });
       }
 
-      const fifteenMinutesAgo = new Date(Date.now() - 15 * 60 * 1000);
-      const overlappingBookings = await prisma.booking.count({
-        where: {
-          propertyId,
-          OR: [
-            { status: "CONFIRMED" },
-            { status: "PENDING", createdAt: { gt: fifteenMinutesAgo } }
-          ],
-          AND: [
-            { checkIn: { lt: new Date(checkOut) } },
-            { checkOut: { gt: new Date(checkIn) } }
-          ]
+      // If roomTypeId is provided, we check availability for that specific room
+      if (roomTypeId) {
+        const roomType = await prisma.roomType.findUnique({
+          where: { id: roomTypeId }
+        });
+        if (!roomType) {
+          return NextResponse.json({ error: "Room type not found" }, { status: 404 });
         }
-      });
-      
-      if (property.totalRooms - overlappingBookings <= 0) {
-        return NextResponse.json({ error: "Dates are no longer available. Please try different dates." }, { status: 400 });
+        const fifteenMinutesAgo = new Date(Date.now() - 15 * 60 * 1000);
+        const overlappingBookings = await prisma.booking.count({
+          where: {
+            propertyId,
+            roomTypeId,
+            OR: [
+              { status: "CONFIRMED" },
+              { status: "PENDING", createdAt: { gt: fifteenMinutesAgo } }
+            ],
+            AND: [
+              { checkIn: { lt: new Date(checkOut) } },
+              { checkOut: { gt: new Date(checkIn) } }
+            ]
+          }
+        });
+        
+        // This is a simplified check (assumes base capacity without considering date-specific overrides)
+        // For a full production system, we'd reuse the logic from the check route.
+        if (roomType.totalUnits - overlappingBookings <= 0) {
+          return NextResponse.json({ error: "Room is no longer available. Please try different dates." }, { status: 400 });
+        }
+      } else {
+        // Legacy fallback
+        const fifteenMinutesAgo = new Date(Date.now() - 15 * 60 * 1000);
+        const overlappingBookings = await prisma.booking.count({
+          where: {
+            propertyId,
+            OR: [
+              { status: "CONFIRMED" },
+              { status: "PENDING", createdAt: { gt: fifteenMinutesAgo } }
+            ],
+            AND: [
+              { checkIn: { lt: new Date(checkOut) } },
+              { checkOut: { gt: new Date(checkIn) } }
+            ]
+          }
+        });
+        
+        if (property.totalRooms - overlappingBookings <= 0) {
+          return NextResponse.json({ error: "Dates are no longer available. Please try different dates." }, { status: 400 });
+        }
       }
     }
 
@@ -94,6 +126,7 @@ export async function POST(req: Request) {
       data: {
         userId: userId,
         propertyId: propertyId || null,
+        roomTypeId: roomTypeId || null,
         vehicleId: vehicleId || null,
         guideProfileId: guideProfileId || null,
         tourId: tourId || null,

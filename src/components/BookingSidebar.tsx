@@ -23,6 +23,9 @@ export default function BookingSidebar({ propertyId, pricePerNight, rating, isLo
   const [guests, setGuests] = useState<number>(1);
   const [nights, setNights] = useState<number>(1);
   const [isAvailable, setIsAvailable] = useState<boolean | null>(null);
+  const [availableRoomTypes, setAvailableRoomTypes] = useState<any[]>([]);
+  const [selectedRoomTypeId, setSelectedRoomTypeId] = useState<string | null>(null);
+  const [dynamicPrice, setDynamicPrice] = useState<number | null>(null);
   const [isChecking, setIsChecking] = useState<boolean>(false);
   const searchParams = useSearchParams();
 
@@ -111,6 +114,16 @@ export default function BookingSidebar({ propertyId, pricePerNight, rating, isLo
         const res = await fetch(`/api/stays/${propertyId}/check?in=${inStr}&out=${outStr}`);
         const data = await res.json();
         setIsAvailable(data.available);
+        setAvailableRoomTypes(data.availableRoomTypes || []);
+        
+        if (data.availableRoomTypes && data.availableRoomTypes.length > 0) {
+          // Auto-select first room
+          setSelectedRoomTypeId(data.availableRoomTypes[0].id);
+          setDynamicPrice(data.availableRoomTypes[0].totalPrice);
+        } else {
+          setSelectedRoomTypeId(null);
+          setDynamicPrice(null);
+        }
       } catch (error) {
         console.error("Availability check failed", error);
         setIsAvailable(false);
@@ -123,7 +136,15 @@ export default function BookingSidebar({ propertyId, pricePerNight, rating, isLo
     return () => clearTimeout(debounceTimer);
   }, [propertyId, checkIn, checkOut]);
 
-  const basePrice = pricePerNight * nights * guests;
+  // If dynamicPrice exists (from RoomTypes), it represents the total for the selected room type for the entire stay.
+  // Otherwise fallback to legacy formula for non-migrated properties
+  const basePrice = dynamicPrice !== null 
+    ? dynamicPrice 
+    : pricePerNight * nights * guests;
+  
+  const displayPricePerNight = dynamicPrice !== null && nights > 0
+    ? Math.round(dynamicPrice / nights)
+    : pricePerNight;
   
   const addonAmount = (taxiAmount * nights) + (guideAmount * nights);
   const subtotal = basePrice + addonAmount;
@@ -160,8 +181,8 @@ export default function BookingSidebar({ propertyId, pricePerNight, rating, isLo
     <div className="sticky top-28 bg-white rounded-2xl shadow-xl shadow-slate-200/50 border border-slate-200 p-6">
       <div className="flex items-end justify-between mb-6">
         <div>
-          <span className="text-2xl font-black text-slate-900">₹{pricePerNight.toLocaleString('en-IN')}</span>
-          <span className="text-slate-500 text-sm ml-1">/ night / guest</span>
+          <span className="text-2xl font-black text-slate-900">₹{displayPricePerNight.toLocaleString('en-IN')}</span>
+          <span className="text-slate-500 text-sm ml-1">/ night avg</span>
         </div>
         <div className="flex items-center gap-1 text-sm font-medium">
           <Star className="w-4 h-4 fill-slate-900 text-slate-900" /> {rating}
@@ -220,6 +241,45 @@ export default function BookingSidebar({ propertyId, pricePerNight, rating, isLo
         </div>
       )}
 
+      {isAvailable === true && availableRoomTypes.length > 0 && (
+        <div className="mb-4">
+          <label className="block text-[10px] font-bold uppercase text-slate-900 mb-2">Select Room Type</label>
+          <div className="space-y-2">
+            {availableRoomTypes.map(rt => (
+              <label 
+                key={rt.id} 
+                className={`flex items-center justify-between p-3 border rounded-xl cursor-pointer transition-colors ${
+                  selectedRoomTypeId === rt.id 
+                    ? 'border-sky-500 bg-sky-50' 
+                    : 'border-slate-200 hover:border-slate-300'
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  <input 
+                    type="radio" 
+                    name="roomType"
+                    className="w-4 h-4 text-sky-600"
+                    checked={selectedRoomTypeId === rt.id} 
+                    onChange={() => {
+                      setSelectedRoomTypeId(rt.id);
+                      setDynamicPrice(rt.totalPrice);
+                    }} 
+                  />
+                  <div>
+                    <span className="block font-bold text-slate-900 text-sm">{rt.name}</span>
+                    <span className="block text-xs text-slate-500">Up to {rt.capacity} guests</span>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <span className="block font-bold text-slate-900">₹{rt.pricePerNight.toLocaleString()} <span className="text-xs font-normal text-slate-500">avg/night</span></span>
+                  <span className="block text-xs font-semibold text-sky-600">Total: ₹{rt.totalPrice.toLocaleString()}</span>
+                </div>
+              </label>
+            ))}
+          </div>
+        </div>
+      )}
+
       {isAvailable === true ? (
         <button 
           onClick={() => setShowModal(true)}
@@ -237,7 +297,12 @@ export default function BookingSidebar({ propertyId, pricePerNight, rating, isLo
 
       <div className="mt-6 pt-6 border-t border-slate-100 space-y-3">
         <div className="flex justify-between text-slate-600 text-sm">
-          <span className="underline decoration-slate-300">₹{pricePerNight.toLocaleString('en-IN')} x {nights} nights x {guests} guests</span>
+          <span className="underline decoration-slate-300">
+            {dynamicPrice !== null 
+              ? `${nights} nights (Room rate)`
+              : `₹${pricePerNight.toLocaleString('en-IN')} x ${nights} nights x ${guests} guests`
+            }
+          </span>
           <span className="font-semibold text-slate-900">₹{basePrice.toLocaleString('en-IN')}</span>
         </div>
       </div>
@@ -406,7 +471,7 @@ export default function BookingSidebar({ propertyId, pricePerNight, rating, isLo
                   <div className="bg-white p-4 rounded-xl border border-slate-200 space-y-3">
                     <h3 className="text-sm font-bold text-slate-900 border-b border-slate-100 pb-2">Price Breakdown</h3>
                     <div className="flex justify-between text-sm text-slate-600">
-                      <span>Base Price ({nights} nights x {guests} guests)</span>
+                      <span>Base Price ({nights} nights)</span>
                       <span>₹{basePrice.toLocaleString('en-IN')}</span>
                     </div>
                     <div className="flex justify-between text-sm text-slate-600">
@@ -491,6 +556,7 @@ export default function BookingSidebar({ propertyId, pricePerNight, rating, isLo
                       selectedGuideId={selectedGuideId}
                       promoCode={appliedPromo || undefined}
                       discountAmount={discountAmount}
+                      roomTypeId={selectedRoomTypeId || undefined}
                     />
                     <button 
                       onClick={() => setModalStep(1)}

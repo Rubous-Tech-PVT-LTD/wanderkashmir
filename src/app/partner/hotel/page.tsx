@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Building2, Save, Plus, MapPin, IndianRupee, CheckCircle2, AlertTriangle, Lock, Award, Image as ImageIcon, LineChart as LineChartIcon, Zap, MessageCircle, BookOpen, Camera, Users } from "lucide-react";
+import { Building2, Save, Plus, MapPin, IndianRupee, CheckCircle2, AlertTriangle, Lock, Award, Image as ImageIcon, LineChart as LineChartIcon, Zap, MessageCircle, BookOpen, Camera, Users, Calendar as CalendarIcon } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, LineChart, Line, AreaChart, Area, PieChart, Pie, Cell } from 'recharts';
 import { useVendor } from "@/context/VendorContext";
 import { Download } from "lucide-react";
@@ -11,6 +11,7 @@ import toast from 'react-hot-toast';
 import { calculateDashboardMetrics } from "@/lib/chartUtils";
 import { format } from "date-fns";
 import Script from "next/script";
+import Link from "next/link";
 
 import { z } from "zod";
 import { useForm } from "react-hook-form";
@@ -568,6 +569,12 @@ export default function HotelDashboard({ properties = [], bookings = [] }: { pro
                         ) : (
                           <span className="inline-block bg-emerald-100 text-emerald-700 text-xs font-bold px-2 py-1 rounded-full">Live</span>
                         )}
+                        
+                        <Link href={`/partner/hotel/rooms/${prop.id}`} className="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors flex items-center gap-1" title="Manage Rooms & Calendar">
+                          <CalendarIcon className="w-4 h-4" />
+                          <span className="text-xs font-bold hidden sm:inline">Rooms</span>
+                        </Link>
+
                         <button onClick={() => handleEdit(prop)} className="p-1.5 text-slate-400 hover:text-sky-600 hover:bg-sky-50 rounded-lg transition-colors" title="Edit Property">
                           <Edit className="w-4 h-4" />
                         </button>
