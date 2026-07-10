@@ -193,7 +193,7 @@ export default function BookingSidebar({ propertyId, pricePerNight, rating, isLo
         </div>
       </div>
 
-      <div className="border border-slate-300 rounded-xl mb-4 overflow-hidden divide-y divide-slate-300">
+      <div className="border border-slate-300 rounded-xl mb-4 divide-y divide-slate-300">
         <div className="flex divide-x divide-slate-300">
           <div className="flex-1 p-3">
             <label className="block text-[10px] font-bold uppercase text-slate-900 mb-1">Check-in</label>
@@ -226,6 +226,7 @@ export default function BookingSidebar({ propertyId, pricePerNight, rating, isLo
         <div className="p-3 relative">
           <label className="block text-[10px] font-bold uppercase text-slate-900 mb-1">Guests & Rooms</label>
           <button 
+            type="button"
             className="w-full text-left text-sm outline-none bg-transparent text-slate-900 font-semibold flex items-center justify-between"
             onClick={() => setShowGuestSelector(!showGuestSelector)}
           >
@@ -239,11 +240,13 @@ export default function BookingSidebar({ propertyId, pricePerNight, rating, isLo
                 <span className="text-sm font-bold text-slate-800">Rooms</span>
                 <div className="flex items-center gap-3">
                   <button 
+                    type="button"
                     onClick={() => setRooms(Math.max(1, rooms - 1))}
                     className="w-8 h-8 rounded-full border border-slate-300 flex items-center justify-center text-slate-600 hover:bg-slate-50"
                   >-</button>
                   <span className="w-4 text-center font-bold text-sm">{rooms}</span>
                   <button 
+                    type="button"
                     onClick={() => setRooms(rooms + 1)}
                     className="w-8 h-8 rounded-full border border-slate-300 flex items-center justify-center text-slate-600 hover:bg-slate-50"
                   >+</button>
@@ -258,11 +261,13 @@ export default function BookingSidebar({ propertyId, pricePerNight, rating, isLo
                 </div>
                 <div className="flex items-center gap-3">
                   <button 
+                    type="button"
                     onClick={() => setAdults(Math.max(1, adults - 1))}
                     className="w-8 h-8 rounded-full border border-slate-300 flex items-center justify-center text-slate-600 hover:bg-slate-50"
                   >-</button>
                   <span className="w-4 text-center font-bold text-sm">{adults}</span>
                   <button 
+                    type="button"
                     onClick={() => setAdults(adults + 1)}
                     className="w-8 h-8 rounded-full border border-slate-300 flex items-center justify-center text-slate-600 hover:bg-slate-50"
                   >+</button>
@@ -277,11 +282,13 @@ export default function BookingSidebar({ propertyId, pricePerNight, rating, isLo
                 </div>
                 <div className="flex items-center gap-3">
                   <button 
+                    type="button"
                     onClick={() => setChildrenCount(Math.max(0, childrenCount - 1))}
                     className="w-8 h-8 rounded-full border border-slate-300 flex items-center justify-center text-slate-600 hover:bg-slate-50"
                   >-</button>
                   <span className="w-4 text-center font-bold text-sm">{childrenCount}</span>
                   <button 
+                    type="button"
                     onClick={() => setChildrenCount(childrenCount + 1)}
                     className="w-8 h-8 rounded-full border border-slate-300 flex items-center justify-center text-slate-600 hover:bg-slate-50"
                   >+</button>
@@ -289,6 +296,7 @@ export default function BookingSidebar({ propertyId, pricePerNight, rating, isLo
               </div>
               
               <button 
+                type="button"
                 onClick={() => setShowGuestSelector(false)}
                 className="w-full bg-sky-600 text-white font-bold py-2 rounded-lg mt-2 hover:bg-sky-700"
               >
