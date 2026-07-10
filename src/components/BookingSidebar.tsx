@@ -181,6 +181,26 @@ export default function BookingSidebar({ propertyId, pricePerNight, rating, isLo
     setPromoError("");
   };
 
+  const handleAdultsChange = (newAdults: number) => {
+    setAdults(newAdults);
+    const totalGuests = newAdults + childrenCount;
+    if (totalGuests > rooms * 2) {
+      setRooms(Math.ceil(totalGuests / 2));
+    } else if (totalGuests <= (rooms - 1) * 2 && rooms > 1) {
+      setRooms(Math.max(1, Math.ceil(totalGuests / 2)));
+    }
+  };
+
+  const handleChildrenChange = (newChildren: number) => {
+    setChildrenCount(newChildren);
+    const totalGuests = adults + newChildren;
+    if (totalGuests > rooms * 2) {
+      setRooms(Math.ceil(totalGuests / 2));
+    } else if (totalGuests <= (rooms - 1) * 2 && rooms > 1) {
+      setRooms(Math.max(1, Math.ceil(totalGuests / 2)));
+    }
+  };
+
   return (
     <div className="sticky top-28 bg-white rounded-2xl shadow-xl shadow-slate-200/50 border border-slate-200 p-6">
       <div className="flex items-end justify-between mb-6">
@@ -262,13 +282,13 @@ export default function BookingSidebar({ propertyId, pricePerNight, rating, isLo
                 <div className="flex items-center gap-3">
                   <button 
                     type="button"
-                    onClick={() => setAdults(Math.max(1, adults - 1))}
+                    onClick={() => handleAdultsChange(Math.max(1, adults - 1))}
                     className="w-8 h-8 rounded-full border border-slate-300 flex items-center justify-center text-slate-600 hover:bg-slate-50"
                   >-</button>
                   <span className="w-4 text-center font-bold text-sm">{adults}</span>
                   <button 
                     type="button"
-                    onClick={() => setAdults(adults + 1)}
+                    onClick={() => handleAdultsChange(adults + 1)}
                     className="w-8 h-8 rounded-full border border-slate-300 flex items-center justify-center text-slate-600 hover:bg-slate-50"
                   >+</button>
                 </div>
@@ -283,13 +303,13 @@ export default function BookingSidebar({ propertyId, pricePerNight, rating, isLo
                 <div className="flex items-center gap-3">
                   <button 
                     type="button"
-                    onClick={() => setChildrenCount(Math.max(0, childrenCount - 1))}
+                    onClick={() => handleChildrenChange(Math.max(0, childrenCount - 1))}
                     className="w-8 h-8 rounded-full border border-slate-300 flex items-center justify-center text-slate-600 hover:bg-slate-50"
                   >-</button>
                   <span className="w-4 text-center font-bold text-sm">{childrenCount}</span>
                   <button 
                     type="button"
-                    onClick={() => setChildrenCount(childrenCount + 1)}
+                    onClick={() => handleChildrenChange(childrenCount + 1)}
                     className="w-8 h-8 rounded-full border border-slate-300 flex items-center justify-center text-slate-600 hover:bg-slate-50"
                   >+</button>
                 </div>
