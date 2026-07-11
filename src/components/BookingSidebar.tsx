@@ -338,7 +338,8 @@ export default function BookingSidebar({ propertyId, pricePerNight, rating, isLo
           <label className="block text-[10px] font-bold uppercase text-slate-900 mb-2">Select Room Type</label>
           <div className="space-y-2">
             {availableRoomTypes.map(rt => {
-              const maxCapacity = rt.capacity * rooms;
+              const roomCapacity = 2; // Forcing 2 guests per room as per global business rules
+              const maxCapacity = roomCapacity * rooms;
               const isCapacityValid = (adults + childrenCount) <= maxCapacity;
               
               return (
@@ -368,7 +369,7 @@ export default function BookingSidebar({ propertyId, pricePerNight, rating, isLo
                     <div>
                       <span className="block font-bold text-slate-900 text-sm">{rt.name}</span>
                       <span className={`block text-xs ${isCapacityValid ? 'text-slate-500' : 'text-red-500 font-semibold'}`}>
-                        {isCapacityValid ? `Up to ${rt.capacity} guests/room` : `Max ${maxCapacity} guests for ${rooms} rooms`}
+                        {isCapacityValid ? `Up to 2 guests/room` : `Max ${maxCapacity} guests for ${rooms} rooms`}
                       </span>
                     </div>
                   </div>
