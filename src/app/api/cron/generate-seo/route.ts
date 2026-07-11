@@ -32,27 +32,28 @@ export async function GET(request: Request) {
     const existingSlugs = existingPages.map(p => p.slug);
 
     const prompt = `
-    You are an expert SEO copywriter for "WanderKashmir", a premium travel platform in Kashmir.
-    Your task is to generate exactly 1 unique, highly-searched SEO landing page for a Kashmir tourist route or homestay location.
+    You are a world-class SEO copywriter and local travel expert for "WanderKashmir", a premium travel platform in Kashmir.
+    Your task is to generate exactly 1 unique, highly-searched, high-converting SEO landing page for a Kashmir tourist route, homestay location, or specific travel package.
     
     IMPORTANT RULES:
     1. Do NOT use any of these existing routes: ${existingSlugs.join(", ")}
-    2. BE CREATIVE. You must invent a completely NEW route or homestay location in Kashmir. Use your deep knowledge of Jammu & Kashmir's geography (including offbeat and famous locations) to pick a unique topic. DO NOT repeat standard examples.
+    2. BE CREATIVE AND NICHE. Target high-intent, low-competition keywords (e.g. "Srinagar to Gurez Valley taxi fare", "best homestays near Dal Lake for families").
     3. The response MUST be a valid JSON object without any markdown wrapping.
     
     JSON STRUCTURE:
     {
       "slug": "the-url-slug-in-kebab-case",
-      "type": "TAXI" | "HOMESTAY",
-      "title": "SEO Meta Title (50-60 characters, include keywords like Book, Cab, Fare or Homestay)",
-      "description": "Meta description (150-160 chars, compelling for CTR)",
-      "h1Heading": "The main H1 heading for the page",
-      "content": "A detailed 2-3 paragraph SEO optimized content written in Markdown format. Mention WanderKashmir, safety, pricing, and scenic views.",
-      "imagePrompt": "A highly descriptive 1-sentence prompt for an AI image generator to create a realistic photo for this page. Make it specific to the location/topic. (e.g. 'A beautiful local Kashmiri homestay in Pahalgam with wooden architecture surrounded by pine trees, realistic photography, 8k resolution')",
+      "type": "TAXI" | "HOMESTAY" | "DESTINATION",
+      "title": "SEO Meta Title (50-60 characters, include power words, highly optimized for CTR)",
+      "description": "Meta description (150-160 chars, include primary keyword, USP, and a strong Call-To-Action)",
+      "h1Heading": "The main H1 heading for the page (Engaging and keyword-rich)",
+      "content": "A detailed, highly engaging 500-800 word SEO optimized article written in rich Markdown format. MUST include: 1. A captivating introduction. 2. Why book with WanderKashmir (safety, verified partners, transparent pricing). 3. H2 and H3 subheadings for readability. 4. Bullet points highlighting key features, local tips, or itineraries. 5. A strong concluding Call-To-Action to book now.",
+      "imagePrompt": "A highly descriptive 1-sentence prompt for an AI image generator to create a stunning, realistic, wide-angle cinematic photo for this page. (e.g. 'A cinematic golden hour shot of a traditional wooden homestay in Aru Valley surrounded by mist and pine trees, 8k resolution')",
       "faqs": [
-        { "question": "Question 1", "answer": "Answer 1" },
-        { "question": "Question 2", "answer": "Answer 2" },
-        { "question": "Question 3", "answer": "Answer 3" }
+        { "question": "Highly searched Question 1?", "answer": "Detailed Answer 1" },
+        { "question": "Highly searched Question 2?", "answer": "Detailed Answer 2" },
+        { "question": "Highly searched Question 3?", "answer": "Detailed Answer 3" },
+        { "question": "Highly searched Question 4?", "answer": "Detailed Answer 4" }
       ]
     }
     `;

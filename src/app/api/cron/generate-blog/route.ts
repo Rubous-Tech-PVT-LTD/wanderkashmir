@@ -31,26 +31,27 @@ export async function GET(request: Request) {
 
     // 4. Construct Prompt
     const prompt = `
-    You are an expert Travel Blogger for "WanderKashmir", a premium travel platform in Kashmir.
-    Your task is to generate exactly 1 unique, highly-searched Travel Blog article for Kashmir tourism.
+    You are a world-class Travel Blogger and Kashmir Destination Expert writing for "WanderKashmir", a premium travel platform.
+    Your task is to generate exactly 1 unique, viral-worthy, and highly informative Travel Blog article about Kashmir tourism.
     
     IMPORTANT RULES:
     1. Do NOT use any of these existing topics/slugs: ${existingSlugs.join(", ")}
-    2. BE CREATIVE. Use your deep knowledge of Kashmir travel trends to invent a completely new, engaging blog topic (e.g., hidden gems, itineraries, food guides, packing tips). DO NOT repeat standard examples.
+    2. BE NICHE AND TRENDING. Write about trending topics like "Hidden winter cafes in Gulmarg", "Ultimate 5-day Kashmir itinerary for couples", "What to pack for Kashmir in December", etc.
     3. The response MUST be a valid JSON object without any markdown wrapping.
     
     JSON STRUCTURE:
     {
       "slug": "the-url-slug-in-kebab-case",
       "type": "BLOG",
-      "title": "SEO Meta Title (50-60 characters)",
-      "description": "Meta description (150-160 chars, compelling for CTR)",
-      "h1Heading": "The main H1 heading for the blog article",
-      "content": "A detailed 4-5 paragraph SEO optimized content written in Markdown format. Make it an engaging article with headings. Mention WanderKashmir.",
-      "imagePrompt": "A highly descriptive 1-sentence prompt for an AI image generator to create a realistic photo for this blog. (e.g. 'A breathtaking view of snow-capped mountains in Gulmarg, Kashmir at sunrise, realistic photography, 8k resolution')",
+      "title": "Clickable SEO Meta Title (50-60 chars, use numbers or emotional triggers)",
+      "description": "Meta description (150-160 chars, hook the reader and include keywords)",
+      "h1Heading": "Catchy and Viral H1 Title for the blog",
+      "content": "A highly detailed, immersive 800-1000 word blog post written in rich Markdown format. MUST include: 1. A story-driven introduction that hooks the reader. 2. Multiple H2 and H3 subheadings to break up text. 3. Practical tips (best time to visit, how to reach, budget estimates). 4. Bullet points or numbered lists. 5. Native mentions of booking taxis, homestays, or tours through 'WanderKashmir' seamlessly integrated into the content. 6. An engaging conclusion asking readers for their thoughts.",
+      "imagePrompt": "A highly descriptive 1-sentence prompt for an AI image generator to create a breathtaking cover photo for this blog. (e.g. 'A breathtaking, ultra-realistic landscape of Dal Lake in winter at sunrise with shikaras breaking the ice, 8k resolution, cinematic lighting')",
       "faqs": [
-        { "question": "Question 1", "answer": "Answer 1" },
-        { "question": "Question 2", "answer": "Answer 2" }
+        { "question": "Commonly asked Question 1?", "answer": "Informative Answer 1" },
+        { "question": "Commonly asked Question 2?", "answer": "Informative Answer 2" },
+        { "question": "Commonly asked Question 3?", "answer": "Informative Answer 3" }
       ]
     }
     `;
