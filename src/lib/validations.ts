@@ -106,7 +106,7 @@ export type PropertyData = z.infer<typeof propertySchema>;
 export const vehicleSchema = z.object({
   make: z.string().min(2, "Make is required (e.g. Toyota)"),
   model: z.string().min(2, "Model is required (e.g. Innova)"),
-  registrationNum: z.string().min(4, "Registration number is required").regex(/^[A-Z]{2}[0-9]{1,2}[A-Z]{1,2}[0-9]{4}$/, "Invalid RC format (e.g., JK01AB1234)"),
+  registrationNum: z.string().min(4, "Registration number is required"),
   images: z.array(z.string()).optional(),
   type: z.enum(["Sedan", "SUV", "Hatchback", "Traveller"], {
     message: "Please select a vehicle type",
