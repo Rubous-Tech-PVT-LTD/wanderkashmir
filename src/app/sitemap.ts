@@ -78,6 +78,35 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     console.error("Error fetching guides for sitemap:", error)
   }
 
+  let seoUrls: MetadataRoute.Sitemap = []
+
+  try {
+    const seoPages = await prisma.seoLandingPage.findMany({
+      select: { slug: true, type: true, updatedAt: true },
+      take: 5000
+    })
+
+    const getBaseRoute = (type: string) => {
+      switch(type) {
+        case 'BLOG': return '/blog';
+        case 'HOMESTAY': return '/homestays';
+        case 'TAXI': return '/taxis';
+        case 'TOUR': return '/tours';
+        case 'DESTINATION': return '/destinations';
+        default: return '/page';
+      }
+    };
+
+    seoUrls = seoPages.map((page: any) => ({
+      url: `${baseUrl}${getBaseRoute(page.type)}/${page.slug}`,
+      lastModified: page.updatedAt,
+      changeFrequency: 'weekly',
+      priority: 0.9,
+    }))
+  } catch (error) {
+    console.error("Error fetching SEO pages for sitemap:", error)
+  }
+
   return [
     {
       url: baseUrl,
@@ -137,5 +166,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...tourUrls,
     ...vehicleUrls,
     ...guideUrls,
+    ...seoUrls,
   ]
 }
