@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState } from "react";
 import Image from "next/image";
@@ -26,25 +26,33 @@ export default function PhotoGalleryClient({ images, propertyName }: PhotoGaller
 
   const prevImage = (e?: React.MouseEvent) => {
     e?.stopPropagation();
-    setCurrentIndex((prev) => (prev === 0 ? images.length - 1 : prev - 1));
+    setCurrentIndex((prev) => (prev === 0 ? displayImages.length - 1 : prev - 1));
   };
 
   const nextImage = (e?: React.MouseEvent) => {
     e?.stopPropagation();
-    setCurrentIndex((prev) => (prev === images.length - 1 ? 0 : prev + 1));
+    setCurrentIndex((prev) => (prev === displayImages.length - 1 ? 0 : prev + 1));
   };
 
-  const mainImage = images[0];
+  // If there's a video anywhere in the array, move it to the front so it becomes the main cover
+  const displayImages = [...images];
+  const firstVideoIndex = displayImages.findIndex(isVideo);
+  if (firstVideoIndex > 0) {
+    const video = displayImages.splice(firstVideoIndex, 1)[0];
+    displayImages.unshift(video);
+  }
+
+  const mainImage = displayImages[0];
 
   return (
     <>
-      <div className={`grid gap-3 relative w-full ${images.length > 1 ? 'grid-cols-1 md:grid-cols-4 md:grid-rows-2 h-[45vh] md:h-[50vh]' : 'h-[50vh] md:h-[60vh]'}`}>
+      <div className={`grid gap-3 relative w-full ${displayImages.length > 1 ? 'grid-cols-1 md:grid-cols-4 md:grid-rows-2 h-[45vh] md:h-[50vh]' : 'h-[50vh] md:h-[60vh]'}`}>
         
         {/* Main Cover Photo */}
         <div 
           onClick={() => openLightbox(0)}
           className={`relative rounded-2xl md:rounded-l-2xl overflow-hidden group cursor-pointer ${
-            images.length > 1 ? 'md:col-span-2 md:row-span-2 h-full' : 'w-full h-full md:rounded-r-2xl'
+            displayImages.length > 1 ? 'md:col-span-2 md:row-span-2 h-full' : 'w-full h-full md:rounded-r-2xl'
           }`}
         >
           {isVideo(mainImage) ? (
@@ -69,7 +77,7 @@ export default function PhotoGalleryClient({ images, propertyName }: PhotoGaller
           <div className="absolute inset-0 bg-black/5 group-hover:bg-transparent transition-colors pointer-events-none" />
           
           {/* View all photos button placed inside cover photo */}
-          {images.length > 1 && (
+          {displayImages.length > 1 && (
             <button 
               type="button"
               onClick={(e) => {
@@ -85,17 +93,17 @@ export default function PhotoGalleryClient({ images, propertyName }: PhotoGaller
         </div>
         
         {/* Other thumbnails (Desktop Only) */}
-        {images.slice(1, 5).map((img: string, idx: number) => {
+        {displayImages.slice(1, 5).map((img: string, idx: number) => {
           const actualIndex = idx + 1;
-          const isLastThumb = idx === 3 && images.length > 5;
+          const isLastThumb = idx === 3 && displayImages.length > 5;
           return (
             <div 
               key={idx} 
               onClick={() => openLightbox(actualIndex)}
               className={`relative overflow-hidden group cursor-pointer hidden md:block ${
-                idx === 1 && images.length === 3 ? 'md:row-span-2' : ''
+                idx === 1 && displayImages.length === 3 ? 'md:row-span-2' : ''
               } ${
-                idx === 1 && images.length >= 5 ? 'rounded-tr-2xl' : ''
+                idx === 1 && displayImages.length >= 5 ? 'rounded-tr-2xl' : ''
               } ${
                 idx === 3 ? 'rounded-br-2xl' : ''
               }`}
@@ -123,7 +131,7 @@ export default function PhotoGalleryClient({ images, propertyName }: PhotoGaller
               
               {isLastThumb && (
                 <div className="absolute inset-0 bg-black/50 flex flex-col items-center justify-center text-white font-bold transition-all group-hover:bg-black/40">
-                  <span className="text-lg">+{images.length - 5}</span>
+                  <span className="text-lg">+{displayImages.length - 5}</span>
                   <span className="text-xs tracking-wider uppercase">More Photos</span>
                 </div>
               )}
@@ -141,7 +149,7 @@ export default function PhotoGalleryClient({ images, propertyName }: PhotoGaller
           {/* Header Controls */}
           <div className="flex items-center justify-between p-4 md:p-6 text-white shrink-0 z-20">
             <span className="text-sm font-semibold tracking-wide">
-              {propertyName} &mdash; {currentIndex + 1} of {images.length}
+              {propertyName} &mdash; {currentIndex + 1} of {displayImages.length}
             </span>
             <button 
               onClick={closeLightbox}
@@ -166,9 +174,9 @@ export default function PhotoGalleryClient({ images, propertyName }: PhotoGaller
               className="w-full h-[70vh] md:h-[80vh] relative mx-4"
               onClick={(e) => e.stopPropagation()}
             >
-              {isVideo(images[currentIndex]) ? (
+              {isVideo(displayImages[currentIndex]) ? (
                 <video 
-                  src={images[currentIndex]} 
+                  src={displayImages[currentIndex]} 
                   controls
                   autoPlay
                   playsInline
@@ -176,7 +184,7 @@ export default function PhotoGalleryClient({ images, propertyName }: PhotoGaller
                 />
               ) : (
                 <Image 
-                  src={images[currentIndex]} 
+                  src={displayImages[currentIndex]} 
                   alt={`${propertyName} - Gallery View`}
                   fill
                   className="object-contain"
@@ -199,7 +207,7 @@ export default function PhotoGalleryClient({ images, propertyName }: PhotoGaller
             className="hidden md:flex justify-center gap-2 p-6 overflow-x-auto bg-black/50 shrink-0 z-20"
             onClick={(e) => e.stopPropagation()}
           >
-            {images.map((img, idx) => (
+            {displayImages.map((img, idx) => (
               <div 
                 key={idx}
                 onClick={() => setCurrentIndex(idx)}
@@ -225,3 +233,4 @@ export default function PhotoGalleryClient({ images, propertyName }: PhotoGaller
     </>
   );
 }
+
