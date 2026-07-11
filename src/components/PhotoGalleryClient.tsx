@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Image from "next/image";
-import { ChevronLeft, ChevronRight, X, Grid } from "lucide-react";
+import { ChevronLeft, ChevronRight, X, Grid, Play } from "lucide-react";
 
 interface PhotoGalleryClientProps {
   images: string[];
@@ -10,6 +10,8 @@ interface PhotoGalleryClientProps {
 }
 
 export default function PhotoGalleryClient({ images, propertyName }: PhotoGalleryClientProps) {
+  const isVideo = (url: string) => url?.includes("/video/upload/") || /\.(mp4|webm|mov|ogg|avi|mkv)$/i.test(url || "");
+
   const [isOpen, setIsOpen] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
 
@@ -45,15 +47,26 @@ export default function PhotoGalleryClient({ images, propertyName }: PhotoGaller
             images.length > 1 ? 'md:col-span-2 md:row-span-2 h-full' : 'w-full h-full md:rounded-r-2xl'
           }`}
         >
-          <Image 
-            src={mainImage} 
-            alt={propertyName} 
-            fill 
-            sizes="(max-width: 768px) 100vw, 50vw"
-            className="object-cover transition-transform duration-700 group-hover:scale-105" 
-            priority
-          />
-          <div className="absolute inset-0 bg-black/5 group-hover:bg-transparent transition-colors" />
+          {isVideo(mainImage) ? (
+            <video 
+              src={mainImage} 
+              autoPlay
+              muted
+              loop
+              playsInline
+              className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" 
+            />
+          ) : (
+            <Image 
+              src={mainImage} 
+              alt={propertyName} 
+              fill 
+              sizes="(max-width: 768px) 100vw, 50vw"
+              className="object-cover transition-transform duration-700 group-hover:scale-105" 
+              priority
+            />
+          )}
+          <div className="absolute inset-0 bg-black/5 group-hover:bg-transparent transition-colors pointer-events-none" />
           
           {/* View all photos button placed inside cover photo */}
           {images.length > 1 && (
@@ -87,13 +100,25 @@ export default function PhotoGalleryClient({ images, propertyName }: PhotoGaller
                 idx === 3 ? 'rounded-br-2xl' : ''
               }`}
             >
-              <Image 
-                src={img} 
-                alt={`${propertyName} - ${actualIndex + 1}`} 
-                fill 
-                sizes="25vw"
-                className="object-cover transition-transform duration-700 group-hover:scale-105" 
-              />
+              {isVideo(img) ? (
+                <>
+                  <video 
+                    src={img} 
+                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" 
+                  />
+                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                    <Play className="w-8 h-8 text-white opacity-80 drop-shadow-md" />
+                  </div>
+                </>
+              ) : (
+                <Image 
+                  src={img} 
+                  alt={`${propertyName} - ${actualIndex + 1}`} 
+                  fill 
+                  sizes="25vw"
+                  className="object-cover transition-transform duration-700 group-hover:scale-105" 
+                />
+              )}
               <div className="absolute inset-0 bg-black/10 group-hover:bg-transparent transition-colors" />
               
               {isLastThumb && (
@@ -141,13 +166,23 @@ export default function PhotoGalleryClient({ images, propertyName }: PhotoGaller
               className="w-full h-[70vh] md:h-[80vh] relative mx-4"
               onClick={(e) => e.stopPropagation()}
             >
-              <Image 
-                src={images[currentIndex]} 
-                alt={`${propertyName} - Gallery View`}
-                fill
-                className="object-contain"
-                priority
-              />
+              {isVideo(images[currentIndex]) ? (
+                <video 
+                  src={images[currentIndex]} 
+                  controls
+                  autoPlay
+                  playsInline
+                  className="w-full h-full object-contain"
+                />
+              ) : (
+                <Image 
+                  src={images[currentIndex]} 
+                  alt={`${propertyName} - Gallery View`}
+                  fill
+                  className="object-contain"
+                  priority
+                />
+              )}
             </div>
 
             {/* Next Trigger */}
@@ -172,7 +207,16 @@ export default function PhotoGalleryClient({ images, propertyName }: PhotoGaller
                   currentIndex === idx ? 'border-orange-500 scale-105' : 'border-transparent opacity-60 hover:opacity-100'
                 }`}
               >
-                <Image src={img} alt="Thumb" fill className="object-cover" />
+                {isVideo(img) ? (
+                  <>
+                    <video src={img} className="w-full h-full object-cover" />
+                    <div className="absolute inset-0 flex items-center justify-center bg-black/20 pointer-events-none">
+                      <Play className="w-4 h-4 text-white drop-shadow-md" />
+                    </div>
+                  </>
+                ) : (
+                  <Image src={img} alt="Thumb" fill className="object-cover" />
+                )}
               </div>
             ))}
           </div>
