@@ -909,17 +909,9 @@ export default function TaxiDashboard({
               </div>
               
               <div className="flex-1 bg-white p-6 rounded-xl shadow-sm border border-slate-100">
-                <div className="flex justify-between items-center text-slate-600 mb-3">
-                  <span>Customer Pays</span>
-                  <span className="font-medium">₹{calcFare.toLocaleString('en-IN')}</span>
-                </div>
-                <div className="flex justify-between items-center text-orange-500 mb-4 pb-4 border-b border-slate-100">
-                  <span>Platform Fee ({(commissionRate * 100).toFixed(0)}%)</span>
-                  <span className="font-medium">- ₹{platformFee.toLocaleString('en-IN')}</span>
-                </div>
                 <div className="flex justify-between items-center">
                   <span className="font-bold text-slate-900 text-lg">Your Take-Home</span>
-                  <span className="text-2xl font-black text-sky-600">₹{netEarnings.toLocaleString('en-IN')}</span>
+                  <span className="text-2xl font-black text-sky-600">₹{calcFare.toLocaleString('en-IN')}</span>
                 </div>
               </div>
             </div>
@@ -938,3 +930,5 @@ export default function TaxiDashboard({
     </>
   );
 }
+
+

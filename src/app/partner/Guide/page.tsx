@@ -196,12 +196,6 @@ export default function GuideDashboard({ bookings = [], vendorProfileId, initial
   }, [hasInstantBooking, setValue]);
 
   const watchDailyRate = watch("dailyRate", 1500);
-
-  // Business Model Logic: 15% commission for Guides
-  const commissionRate = 0.15;
-  const platformFee = Math.round((watchDailyRate || 0) * commissionRate);
-  const netEarnings = (watchDailyRate || 0) - platformFee;
-
   const [isSaving, setIsSaving] = useState(false);
   const router = useRouter();
 
@@ -339,11 +333,6 @@ export default function GuideDashboard({ bookings = [], vendorProfileId, initial
                 )
               })}
             </div>
-          </div>
-          
-          <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
-            <h3 className="text-lg font-bold text-slate-900 mb-4">Commission Structure</h3>
-            <p className="text-slate-600 mb-4">As per our platform policy, WanderKashmir deducts a flat <strong className="text-slate-900">15% platform fee</strong> on all successful guide bookings.</p>
           </div>
         </div>
       )}
@@ -822,16 +811,6 @@ export default function GuideDashboard({ bookings = [], vendorProfileId, initial
                       </div>
                       {errors.dailyRate && <p className="text-orange-500 text-xs mt-1 font-medium">{errors.dailyRate.message}</p>}
                     </div>
-                    
-                    <div className="flex justify-between items-center text-sm pt-2">
-                      <span className="text-slate-500">Platform Fee (15%)</span>
-                      <span className="text-orange-500 font-medium">- ₹{platformFee.toLocaleString('en-IN')}</span>
-                    </div>
-                    <div className="h-px bg-slate-200 w-full my-2"></div>
-                    <div className="flex justify-between items-center">
-                      <span className="font-bold text-slate-900">Your Net Earnings (Per Day)</span>
-                      <span className="text-xl font-bold text-sky-600">₹{netEarnings.toLocaleString('en-IN')}</span>
-                    </div>
                   </div>
                 </div>
                 
@@ -946,3 +925,5 @@ export default function GuideDashboard({ bookings = [], vendorProfileId, initial
     </>
   );
 }
+
+

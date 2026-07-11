@@ -1,7 +1,7 @@
-"use client";
+﻿"use client";
 
 import { useState, useEffect } from "react";
-import { Home, Save, Plus, MapPin, IndianRupee, CheckCircle2, AlertTriangle, Lock, Award, Image as ImageIcon, LineChart as LineChartIcon, Zap, MessageCircle, BookOpen, Camera, Users, Edit, Trash2 } from "lucide-react";
+import { Home, Save, Plus, MapPin, IndianRupee, CheckCircle2, AlertTriangle, Lock, Award, Image as ImageIcon, LineChart as LineChartIcon, Zap, MessageCircle, BookOpen, Camera, Users, Edit, Trash2, Building2, Calendar as CalendarIcon } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, LineChart, Line, AreaChart, Area, PieChart, Pie, Cell } from 'recharts';
 import { Download } from "lucide-react";
 import { useVendor } from "@/context/VendorContext";
@@ -117,12 +117,6 @@ export default function HomestayDashboard({ bookings = [], properties = [] }: { 
   }, [hasInstantBooking, setValue]);
 
   const watchBasePrice = watch("basePrice", 1500);
-
-  // Business Model Logic: 8% commission for homestays
-  const commissionRate = 0.08;
-  const platformFee = Math.round((watchBasePrice || 0) * commissionRate);
-  const netEarnings = (watchBasePrice || 0) - platformFee;
-
   const [isUpgrading, setIsUpgrading] = useState(false);
 
   const handleSimulateUpgrade = async (planName: SubscriptionPlan, priceString: string) => {
@@ -477,11 +471,6 @@ export default function HomestayDashboard({ bookings = [], properties = [] }: { 
                 )
               })}
             </div>
-          </div>
-          
-          <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
-            <h3 className="text-lg font-bold text-slate-900 mb-4">Commission Structure</h3>
-            <p className="text-slate-600">As a local homestay, you are on our preferred tier. WanderKashmir deducts only a flat <strong className="text-slate-900">8% platform fee</strong> on successful bookings.</p>
           </div>
         </div>
       )}
@@ -994,7 +983,7 @@ export default function HomestayDashboard({ bookings = [], properties = [] }: { 
 
               {/* Pricing & Commission Breakdown */}
               <div className="bg-slate-50 p-6 rounded-xl border border-slate-200">
-                <h3 className="font-bold text-slate-900 mb-4">Pricing & Earnings (Per Night)</h3>
+                <h3 className="font-bold text-slate-900 mb-4">Pricing (Per Night)</h3>
                 <div className="space-y-4">
                   <div>
                     <label className="block text-sm font-medium text-slate-700 mb-2">Customer Pays (Base Price)</label>
@@ -1010,15 +999,7 @@ export default function HomestayDashboard({ bookings = [], properties = [] }: { 
                     {errors.basePrice && <p className="text-orange-500 text-xs mt-1 font-medium">{errors.basePrice.message}</p>}
                   </div>
                   
-                  <div className="flex justify-between items-center text-sm">
-                    <span className="text-slate-500">Platform Fee (8%)</span>
-                    <span className="text-orange-500 font-medium">- ₹{platformFee.toLocaleString('en-IN')}</span>
-                  </div>
-                  <div className="h-px bg-slate-200 w-full my-2"></div>
-                  <div className="flex justify-between items-center">
-                    <span className="font-bold text-slate-900">You Earn (Net Payout)</span>
-                    <span className="text-xl font-bold text-sky-600">₹{netEarnings.toLocaleString('en-IN')}</span>
-                  </div>
+                  
                 </div>
               </div>
 
@@ -1045,6 +1026,33 @@ export default function HomestayDashboard({ bookings = [], properties = [] }: { 
                     placeholder="4" 
                   />
                   {errors.maxGuests && <p className="text-orange-500 text-xs mt-1 font-medium">{errors.maxGuests.message}</p>}
+                </div>
+              </div>
+
+              {/* ROOM TYPES MANAGEMENT HELPER */}
+              <div className="bg-sky-50 p-6 rounded-xl border border-sky-200">
+                <div className="flex items-start gap-4">
+                  <div className="w-10 h-10 bg-sky-500 rounded-full flex items-center justify-center shrink-0">
+                    <Building2 className="w-5 h-5 text-white" />
+                  </div>
+                  <div className="w-full">
+                    <h3 className="font-bold text-slate-900">Manage Specific Rooms</h3>
+                    <p className="text-sm text-slate-600 mt-1 mb-4">
+                      To manage availability calendars for specific rooms or add categories like <strong>Standard or Deluxe</strong>, please save this property first, then click the button below.
+                    </p>
+                    {editingId ? (
+                      <Link 
+                        href={`/partner/hotel/rooms/${editingId}`} 
+                        className="inline-flex items-center gap-2 bg-sky-600 text-white px-4 py-2 rounded-lg font-bold shadow-sm hover:bg-sky-700 transition-colors"
+                      >
+                        <CalendarIcon className="w-4 h-4" /> Go to Room Types & Calendar
+                      </Link>
+                    ) : (
+                      <span className="inline-block bg-sky-100 text-sky-700 px-4 py-2 rounded-lg text-sm font-bold opacity-70">
+                        Please publish/save this property first to unlock Room Management
+                      </span>
+                    )}
+                  </div>
                 </div>
               </div>
 
@@ -1172,3 +1180,5 @@ export default function HomestayDashboard({ bookings = [], properties = [] }: { 
     </>
   );
 }
+
+

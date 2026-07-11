@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useEffect } from "react";
 import { Building2, Save, Plus, MapPin, IndianRupee, CheckCircle2, AlertTriangle, Lock, Award, Image as ImageIcon, LineChart as LineChartIcon, Zap, MessageCircle, BookOpen, Camera, Users, Calendar as CalendarIcon } from "lucide-react";
@@ -98,12 +98,6 @@ export default function HotelDashboard({ properties = [], bookings = [] }: { pro
   }, [hasInstantBooking, setValue]);
 
   const watchBasePrice = watch("pricePerNight", 4500);
-
-  // Business Model Logic: 15% commission for hotels
-  const commissionRate = 0.15;
-  const platformFee = Math.round((watchBasePrice || 0) * commissionRate);
-  const netEarnings = (watchBasePrice || 0) - platformFee;
-
   const [isUpgrading, setIsUpgrading] = useState(false);
 
   const handleSimulateUpgrade = async (planName: SubscriptionPlan, priceString: string) => {
@@ -490,11 +484,6 @@ export default function HotelDashboard({ properties = [], bookings = [] }: { pro
                 )
               })}
             </div>
-          </div>
-          
-          <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
-            <h3 className="text-lg font-bold text-slate-900 mb-4">Commission Structure</h3>
-            <p className="text-slate-600 mb-4">As per our platform policy for standard hotels, WanderKashmir deducts a flat <strong className="text-slate-900">15% platform fee</strong> on all successful bookings.</p>
           </div>
         </div>
       )}
@@ -1016,7 +1005,7 @@ export default function HotelDashboard({ properties = [], bookings = [] }: { pro
 
               {/* Pricing & Commission Breakdown */}
               <div className="bg-slate-50 p-6 rounded-xl border border-slate-200">
-                <h3 className="font-bold text-slate-900 mb-4">Pricing & Earnings (Per Night)</h3>
+                <h3 className="font-bold text-slate-900 mb-4">Pricing (Per Night)</h3>
                 <div className="space-y-4">
                   <div>
                     <label className="block text-sm font-medium text-slate-700 mb-2">Customer Pays (Base Price)</label>
@@ -1032,15 +1021,7 @@ export default function HotelDashboard({ properties = [], bookings = [] }: { pro
                     {errors.pricePerNight && <p className="text-orange-500 text-xs mt-1 font-medium">{errors.pricePerNight.message}</p>}
                   </div>
                   
-                  <div className="flex justify-between items-center text-sm">
-                    <span className="text-slate-500">Platform Fee (15%)</span>
-                    <span className="text-orange-500 font-medium">- ₹{platformFee.toLocaleString('en-IN')}</span>
-                  </div>
-                  <div className="h-px bg-slate-200 w-full my-2"></div>
-                  <div className="flex justify-between items-center">
-                    <span className="font-bold text-slate-900">You Earn (Net Payout)</span>
-                    <span className="text-xl font-bold text-sky-600">₹{netEarnings.toLocaleString('en-IN')}</span>
-                  </div>
+                  
                 </div>
               </div>
 
@@ -1106,6 +1087,33 @@ export default function HotelDashboard({ properties = [], bookings = [] }: { pro
                     className={`w-full border rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-sky-500/20 ${errors.bedDetails ? 'border-orange-500 focus:border-orange-500' : 'border-slate-200 focus:border-sky-500'}`} 
                     placeholder="e.g. 1 Single, 1 Double" 
                   />
+                </div>
+              </div>
+
+              {/* ROOM TYPES MANAGEMENT HELPER */}
+              <div className="bg-sky-50 p-6 rounded-xl border border-sky-200">
+                <div className="flex items-start gap-4">
+                  <div className="w-10 h-10 bg-sky-500 rounded-full flex items-center justify-center shrink-0">
+                    <Building2 className="w-5 h-5 text-white" />
+                  </div>
+                  <div className="w-full">
+                    <h3 className="font-bold text-slate-900">Manage Specific Room Types (Deluxe, Premium, etc.)</h3>
+                    <p className="text-sm text-slate-600 mt-1 mb-4">
+                      To add different categories of rooms like <strong>Deluxe, Super Deluxe, or Premium</strong> with their own pricing and availability calendars, please save this property first, then click the button below.
+                    </p>
+                    {editingId ? (
+                      <Link 
+                        href={`/partner/hotel/rooms/${editingId}`} 
+                        className="inline-flex items-center gap-2 bg-sky-600 text-white px-4 py-2 rounded-lg font-bold shadow-sm hover:bg-sky-700 transition-colors"
+                      >
+                        <CalendarIcon className="w-4 h-4" /> Go to Room Types & Calendar
+                      </Link>
+                    ) : (
+                      <span className="inline-block bg-sky-100 text-sky-700 px-4 py-2 rounded-lg text-sm font-bold opacity-70">
+                        Please publish/save this property first to unlock Room Types
+                      </span>
+                    )}
+                  </div>
                 </div>
               </div>
 
@@ -1232,3 +1240,5 @@ export default function HotelDashboard({ properties = [], bookings = [] }: { pro
     </>
   );
 }
+
+
