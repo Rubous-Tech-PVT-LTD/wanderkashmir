@@ -179,8 +179,8 @@ export default async function PropertyDetailPage({
                   Entire {property.vendorProfile.type.toLowerCase()} hosted by {property.vendorProfile.businessName}
                 </h2>
                 <p className="text-slate-500 flex flex-wrap items-center gap-4 text-sm mt-2">
-                  <span className="flex items-center gap-1"><Users className="w-4 h-4" /> {property.guests || 2} guests</span>
-                  <span className="flex items-center gap-1"><Home className="w-4 h-4" /> {property.bedrooms || 1} bedrooms</span>
+                  <span className="flex items-center gap-1"><Users className="w-4 h-4" /> {property.guests || 2} {(property.guests || 2) === 1 ? 'guest' : 'guests'}</span>
+                  <span className="flex items-center gap-1"><Home className="w-4 h-4" /> {property.bedrooms || 1} {(property.bedrooms || 1) === 1 ? 'bedroom' : 'bedrooms'}</span>
                   {property.bedDetails && (
                     <span className="flex items-center gap-1 text-slate-400 border-l border-slate-200 pl-4">{property.bedDetails}</span>
                   )}
