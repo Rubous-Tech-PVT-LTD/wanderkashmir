@@ -47,46 +47,43 @@ export async function getPayoutsSummary() {
       let amountPaid = 0;
 
       // Sum from properties
-      vendor.properties.forEach(prop => {
-        prop.bookings.forEach(booking => {
-          const amount = booking.baseAmount || booking.amount;
-          const vendorShare = amount * 0.85; // 85% to vendor
-          totalGenerated += amount;
-          if (booking.hotelPayoutStatus === "PAID") {
-            amountPaid += vendorShare;
-          } else {
-            pendingBalance += vendorShare;
-          }
-        });
-      });
+      const propertyBookings = vendor.properties.flatMap(p => p.bookings);
+      for (const booking of propertyBookings) {
+        const amount = booking.baseAmount || booking.amount;
+        const vendorShare = amount * 0.85; // 85% to vendor
+        totalGenerated += amount;
+        if (booking.hotelPayoutStatus === "PAID") {
+          amountPaid += vendorShare;
+        } else {
+          pendingBalance += vendorShare;
+        }
+      }
 
       // Sum from vehicles
-      vendor.vehicles.forEach(vehicle => {
-        vehicle.bookings.forEach(booking => {
-          const amount = booking.taxiAmount || booking.amount;
-          const vendorShare = amount * 0.85;
-          totalGenerated += amount;
-          if (booking.taxiPayoutStatus === "PAID") {
-            amountPaid += vendorShare;
-          } else {
-            pendingBalance += vendorShare;
-          }
-        });
-      });
+      const vehicleBookings = vendor.vehicles.flatMap(v => v.bookings);
+      for (const booking of vehicleBookings) {
+        const amount = booking.taxiAmount || booking.amount;
+        const vendorShare = amount * 0.85;
+        totalGenerated += amount;
+        if (booking.taxiPayoutStatus === "PAID") {
+          amountPaid += vendorShare;
+        } else {
+          pendingBalance += vendorShare;
+        }
+      }
 
       // Sum from guides
-      vendor.guideProfiles.forEach(guide => {
-        guide.bookings.forEach(booking => {
-          const amount = booking.guideAmount || booking.amount;
-          const vendorShare = amount * 0.90; // 90% to guides for example
-          totalGenerated += amount;
-          if (booking.guidePayoutStatus === "PAID") {
-            amountPaid += vendorShare;
-          } else {
-            pendingBalance += vendorShare;
-          }
-        });
-      });
+      const guideBookings = vendor.guideProfiles.flatMap(g => g.bookings);
+      for (const booking of guideBookings) {
+        const amount = booking.guideAmount || booking.amount;
+        const vendorShare = amount * 0.90; // 90% to guides for example
+        totalGenerated += amount;
+        if (booking.guidePayoutStatus === "PAID") {
+          amountPaid += vendorShare;
+        } else {
+          pendingBalance += vendorShare;
+        }
+      }
 
       return {
         vendorId: vendor.id,

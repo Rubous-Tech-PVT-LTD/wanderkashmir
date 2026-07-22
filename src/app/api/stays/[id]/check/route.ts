@@ -66,6 +66,12 @@ export async function GET(
       }
     });
 
+    // Pre-process overrides into a Map for O(1) lookup
+    const overrideMap = new Map();
+    inventoryOverrides.forEach(inv => {
+      overrideMap.set(`${inv.roomTypeId}_${new Date(inv.date).getTime()}`, inv);
+    });
+
     // 3. Evaluate each Room Type
     const availableRoomTypes = [];
     
@@ -74,22 +80,21 @@ export async function GET(
       let totalPrice = 0;
       
       for (const d of dates) {
-        // Find override for this specific date
-        const override = inventoryOverrides.find(
-          inv => inv.roomTypeId === roomType.id && new Date(inv.date).getTime() === d.getTime()
-        );
+        const dTime = d.getTime();
+        
+        // O(1) lookup for override
+        const override = overrideMap.get(`${roomType.id}_${dTime}`);
         
         // Base units available (either custom overridden limit or the total physical units)
         const baseUnits = override ? override.available : roomType.totalUnits;
         
         // Sum bookings that overlap with this specific date
-        const overlappingOnDate = overlappingBookings.filter(b => 
-          b.roomTypeId === roomType.id &&
-          b.checkIn && new Date(b.checkIn) <= d &&
-          b.checkOut && new Date(b.checkOut) > d
-        );
-        
-        const bookingsCount = overlappingOnDate.reduce((sum, b) => sum + (b.numberOfRooms || 1), 0);
+        let bookingsCount = 0;
+        for (const b of overlappingBookings) {
+          if (b.roomTypeId === roomType.id && b.checkIn && new Date(b.checkIn) <= d && b.checkOut && new Date(b.checkOut) > d) {
+            bookingsCount += (b.numberOfRooms || 1);
+          }
+        }
         
         const unitsLeft = baseUnits - bookingsCount;
         
