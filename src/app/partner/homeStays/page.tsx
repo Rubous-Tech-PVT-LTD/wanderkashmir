@@ -294,7 +294,8 @@ export default function HomestayDashboard({ bookings = [], properties = [] }: { 
           images: allImages,
           amenities: selectedAmenities,
           totalRooms: 1, // homestays are single units usually
-          guests: data.maxGuests
+          guests: data.maxGuests,
+          bedrooms: Math.ceil(data.maxGuests / 2)
         });
       } else {
         if (hasReachedLimit) {
@@ -311,7 +312,8 @@ export default function HomestayDashboard({ bookings = [], properties = [] }: { 
           images: allImages,
           amenities: selectedAmenities,
           totalRooms: 1, // homestays are single units usually
-          guests: data.maxGuests
+          guests: data.maxGuests,
+          bedrooms: Math.ceil(data.maxGuests / 2)
         });
       }
 
