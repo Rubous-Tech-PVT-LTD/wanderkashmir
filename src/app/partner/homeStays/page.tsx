@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useState, useEffect } from "react";
 import { Home, Save, Plus, MapPin, IndianRupee, CheckCircle2, AlertTriangle, Lock, Award, Image as ImageIcon, LineChart as LineChartIcon, Zap, MessageCircle, BookOpen, Camera, Users, Edit, Trash2, Building2, Calendar as CalendarIcon } from "lucide-react";
@@ -6,6 +6,7 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip,
 import { Download } from "lucide-react";
 import { useVendor } from "@/context/VendorContext";
 import Script from "next/script";
+import Link from "next/link";
 import dynamic from "next/dynamic";
 const ImageUpload = dynamic(() => import("@/components/ImageUpload"), { ssr: false });
 
@@ -249,10 +250,10 @@ export default function HomestayDashboard({ bookings = [], properties = [] }: { 
   const handleEdit = (property: any) => {
     reset({
       name: property.name,
-      description: property.description,
+      description: property.description || "",
       location: property.location,
       basePrice: property.pricePerNight,
-      maxGuests: property.maxGuests || 4,
+      maxGuests: property.guests || 4,
       instantBooking: false
     });
     setCoverPhoto(property.images?.[0] || "");
@@ -292,7 +293,8 @@ export default function HomestayDashboard({ bookings = [], properties = [] }: { 
           pricePerNight: data.basePrice,
           images: allImages,
           amenities: selectedAmenities,
-          totalRooms: 1 // homestays are single units usually
+          totalRooms: 1, // homestays are single units usually
+          guests: data.maxGuests
         });
       } else {
         if (hasReachedLimit) {
@@ -308,7 +310,8 @@ export default function HomestayDashboard({ bookings = [], properties = [] }: { 
           pricePerNight: data.basePrice,
           images: allImages,
           amenities: selectedAmenities,
-          totalRooms: 1 // homestays are single units usually
+          totalRooms: 1, // homestays are single units usually
+          guests: data.maxGuests
         });
       }
 
