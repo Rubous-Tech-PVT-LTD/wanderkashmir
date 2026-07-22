@@ -15,9 +15,11 @@ interface BookingSidebarProps {
   pricePerNight: number;
   rating: number;
   isLoggedIn: boolean;
+  propertyType?: string;
+  maxGuests?: number;
 }
 
-export default function BookingSidebar({ propertyId, pricePerNight, rating, isLoggedIn }: BookingSidebarProps) {
+export default function BookingSidebar({ propertyId, pricePerNight, rating, isLoggedIn, propertyType = "HOTEL", maxGuests = 2 }: BookingSidebarProps) {
   const [checkIn, setCheckIn] = useState<Date | null>(null);
   const [checkOut, setCheckOut] = useState<Date | null>(null);
   const [rooms, setRooms] = useState<number>(1);
@@ -182,22 +184,32 @@ export default function BookingSidebar({ propertyId, pricePerNight, rating, isLo
   };
 
   const handleAdultsChange = (newAdults: number) => {
-    setAdults(newAdults);
     const totalGuests = newAdults + childrenCount;
-    if (totalGuests > rooms * 2) {
-      setRooms(Math.ceil(totalGuests / 2));
-    } else if (totalGuests <= (rooms - 1) * 2 && rooms > 1) {
-      setRooms(Math.max(1, Math.ceil(totalGuests / 2)));
+    if (propertyType === "HOMESTAY" && totalGuests > maxGuests) {
+      return;
+    }
+    setAdults(newAdults);
+    if (propertyType !== "HOMESTAY") {
+      if (totalGuests > rooms * 2) {
+        setRooms(Math.ceil(totalGuests / 2));
+      } else if (totalGuests <= (rooms - 1) * 2 && rooms > 1) {
+        setRooms(Math.max(1, Math.ceil(totalGuests / 2)));
+      }
     }
   };
 
   const handleChildrenChange = (newChildren: number) => {
-    setChildrenCount(newChildren);
     const totalGuests = adults + newChildren;
-    if (totalGuests > rooms * 2) {
-      setRooms(Math.ceil(totalGuests / 2));
-    } else if (totalGuests <= (rooms - 1) * 2 && rooms > 1) {
-      setRooms(Math.max(1, Math.ceil(totalGuests / 2)));
+    if (propertyType === "HOMESTAY" && totalGuests > maxGuests) {
+      return;
+    }
+    setChildrenCount(newChildren);
+    if (propertyType !== "HOMESTAY") {
+      if (totalGuests > rooms * 2) {
+        setRooms(Math.ceil(totalGuests / 2));
+      } else if (totalGuests <= (rooms - 1) * 2 && rooms > 1) {
+        setRooms(Math.max(1, Math.ceil(totalGuests / 2)));
+      }
     }
   };
 
@@ -250,28 +262,30 @@ export default function BookingSidebar({ propertyId, pricePerNight, rating, isLo
             className="w-full text-left text-sm outline-none bg-transparent text-slate-900 font-semibold flex items-center justify-between"
             onClick={() => setShowGuestSelector(!showGuestSelector)}
           >
-            <span>{rooms} Room{rooms > 1 ? 's' : ''}, {adults} Adult{adults > 1 ? 's' : ''}{childrenCount > 0 ? `, ${childrenCount} Child${childrenCount > 1 ? 'ren' : ''}` : ''}</span>
+            <span>{propertyType !== "HOMESTAY" ? `${rooms} Room${rooms > 1 ? 's' : ''}, ` : ''}{adults} Adult{adults > 1 ? 's' : ''}{childrenCount > 0 ? `, ${childrenCount} Child${childrenCount > 1 ? 'ren' : ''}` : ''}</span>
           </button>
           
           {showGuestSelector && (
             <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-xl shadow-xl border border-slate-200 p-4 z-50">
               {/* Rooms */}
-              <div className="flex items-center justify-between mb-4">
-                <span className="text-sm font-bold text-slate-800">Rooms</span>
-                <div className="flex items-center gap-3">
-                  <button 
-                    type="button"
-                    onClick={() => setRooms(Math.max(1, rooms - 1))}
-                    className="w-8 h-8 rounded-full border border-slate-300 flex items-center justify-center text-slate-600 hover:bg-slate-50"
-                  >-</button>
-                  <span className="w-4 text-center font-bold text-sm">{rooms}</span>
-                  <button 
-                    type="button"
-                    onClick={() => setRooms(rooms + 1)}
-                    className="w-8 h-8 rounded-full border border-slate-300 flex items-center justify-center text-slate-600 hover:bg-slate-50"
-                  >+</button>
+              {propertyType !== "HOMESTAY" && (
+                <div className="flex items-center justify-between mb-4">
+                  <span className="text-sm font-bold text-slate-800">Rooms</span>
+                  <div className="flex items-center gap-3">
+                    <button 
+                      type="button"
+                      onClick={() => setRooms(Math.max(1, rooms - 1))}
+                      className="w-8 h-8 rounded-full border border-slate-300 flex items-center justify-center text-slate-600 hover:bg-slate-50"
+                    >-</button>
+                    <span className="w-4 text-center font-bold text-sm">{rooms}</span>
+                    <button 
+                      type="button"
+                      onClick={() => setRooms(rooms + 1)}
+                      className="w-8 h-8 rounded-full border border-slate-300 flex items-center justify-center text-slate-600 hover:bg-slate-50"
+                    >+</button>
+                  </div>
                 </div>
-              </div>
+              )}
               
               {/* Adults */}
               <div className="flex items-center justify-between mb-4">
@@ -404,7 +418,9 @@ export default function BookingSidebar({ propertyId, pricePerNight, rating, isLo
           <span className="underline decoration-slate-300">
             {dynamicPrice !== null 
               ? `${nights} nights x ${rooms} room(s)`
-              : `₹${pricePerNight.toLocaleString('en-IN')} x ${nights} nights x ${rooms} room(s)`
+              : propertyType === "HOMESTAY"
+                ? `₹${pricePerNight.toLocaleString('en-IN')} x ${nights} nights`
+                : `₹${pricePerNight.toLocaleString('en-IN')} x ${nights} nights x ${rooms} room(s)`
             }
           </span>
           <span className="font-semibold text-slate-900">₹{basePrice.toLocaleString('en-IN')}</span>
@@ -554,10 +570,12 @@ export default function BookingSidebar({ propertyId, pricePerNight, rating, isLo
                         <span className="block text-slate-500 text-xs uppercase font-bold mb-1">Duration</span>
                         <span className="font-semibold text-slate-900">{nights} Nights</span>
                       </div>
-                      <div>
-                        <span className="block text-slate-500 text-xs uppercase font-bold mb-1">Rooms</span>
-                        <span className="font-semibold text-slate-900">{rooms} Rooms</span>
-                      </div>
+                      {propertyType !== "HOMESTAY" && (
+                        <div>
+                          <span className="block text-slate-500 text-xs uppercase font-bold mb-1">Rooms</span>
+                          <span className="font-semibold text-slate-900">{rooms} Rooms</span>
+                        </div>
+                      )}
                       <div>
                         <span className="block text-slate-500 text-xs uppercase font-bold mb-1">Guests</span>
                         <span className="font-semibold text-slate-900">{adults + childrenCount} Guests</span>

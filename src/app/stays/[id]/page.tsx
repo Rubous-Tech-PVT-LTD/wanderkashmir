@@ -268,6 +268,8 @@ export default async function PropertyDetailPage({
                 pricePerNight={property.pricePerNight} 
                 rating={reviewStats.averageRating}
                 isLoggedIn={!!userId}
+                propertyType={property.vendorProfile.type}
+                maxGuests={property.guests || 2}
               />
             </Suspense>
 
