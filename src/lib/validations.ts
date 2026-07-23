@@ -5,7 +5,7 @@ export const vendorRegistrationSchema = z.object({
     message: "Please select a vendor type",
   }),
   businessName: z.string().min(3, "Business Name must be at least 3 characters").regex(/^[a-zA-Z0-9\s&'-]+$/, "Business Name contains invalid characters"),
-  gstNumber: z.string().regex(/^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/, "Invalid GST Number format").optional().or(z.literal("")),
+  gstNumber: z.string().trim().toUpperCase().min(15, "GST should be 15 characters").optional().or(z.literal("")),
   password: z.string().min(8, "Password must be at least 8 characters").regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/, "Password must contain uppercase, lowercase, number, and special character"),
   address: z.string().min(10, "Please provide a complete address"),
   latitude: z.preprocess((val) => (val === "" || val === null || isNaN(Number(val)) ? undefined : Number(val)), z.number().optional()),
@@ -29,20 +29,20 @@ export const vendorRegistrationSchema = z.object({
   accountHolderName: z.string().min(3, "Account holder name is required").regex(/^[a-zA-Z\s'-]+$/, "Account holder name contains invalid characters"),
   bankName: z.string().min(3, "Bank name is required"),
   accountNumber: z.string().min(9, "Account number must be at least 9 characters"),
-  ifscCode: z.string().trim().toUpperCase().regex(/^[A-Z]{4}0[A-Z0-9]{6}$/, "Invalid IFSC Code format"),
+  ifscCode: z.string().trim().toUpperCase().min(11, "IFSC Code should be 11 characters"),
   kycDocuments: z.array(z.string()).optional(),
   agreeToTerms: z.literal(true, {
     error: "You must agree to the terms of service"
   }),
   
   // Conditional Fields
-  panNumber: z.string().regex(/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/, "Invalid PAN format (e.g., ABCDE1234F)").optional().or(z.literal("")),
+  panNumber: z.string().trim().toUpperCase().min(10, "PAN must be 10 characters").optional().or(z.literal("")),
   tradeLicense: z.string().optional(),
   
   // Taxi specific
   taxiRole: z.string().optional(), // 'individual' or 'stand'
   vehicleType: z.string().optional(),
-  vehicleRegistration: z.string().regex(/^[A-Z]{2}[0-9]{1,2}[A-Z]{1,2}[0-9]{4}$/, "Invalid RC format (e.g., JK01AB1234)").optional().or(z.literal("")),
+  vehicleRegistration: z.string().trim().toUpperCase().min(4, "Registration (RC) is required").optional().or(z.literal("")),
   drivingLicense: z.string().optional(),
   
   // Guide specific
