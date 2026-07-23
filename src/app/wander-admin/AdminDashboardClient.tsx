@@ -592,10 +592,10 @@ export default function AdminDashboardClient({
       {/* Sidebar */}
       <div className="w-64 bg-slate-900 text-white min-h-screen p-6 flex flex-col">
         <div className="flex items-center gap-2 mb-12">
-          <div className="w-8 h-8 rounded-xl flex items-center justify-center bg-orange-500">
-            <ShieldCheck className="w-5 h-5 text-white" />
+          <div className="w-8 h-8 rounded-xl flex items-center justify-center bg-white overflow-hidden shadow-sm">
+            <img src="/icon.png" alt="WanderKashmir logo" className="w-full h-full object-cover" />
           </div>
-          <h1 className="text-xl font-bold tracking-tight">Admin<span className="text-orange-400">Panel</span></h1>
+          <h1 className="text-xl font-bold tracking-tight">Wander<span className="text-orange-400">Kashmir</span></h1>
         </div>
         
         <nav className="flex-1 space-y-2">
