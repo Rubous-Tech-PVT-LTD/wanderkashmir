@@ -126,6 +126,28 @@ export default async function BlogArticlePage({ params }: { params: Promise<{ sl
           </article>
         )}
 
+        {/* Call To Action Block */}
+        <div className="bg-gradient-to-br from-slate-900 to-indigo-900 rounded-3xl p-8 md:p-12 mb-16 text-center shadow-xl">
+          <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">Ready to Experience Kashmir?</h2>
+          <p className="text-indigo-100 text-lg mb-8 max-w-2xl mx-auto">
+            Turn your reading into reality. Book verified local tours and authentic homestays with WanderKashmir experts.
+          </p>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+            <Link 
+              href="/tours" 
+              className="w-full sm:w-auto px-8 py-4 bg-indigo-500 hover:bg-indigo-400 text-white font-bold rounded-xl transition-colors text-lg shadow-lg shadow-indigo-500/30"
+            >
+              Explore Tour Packages
+            </Link>
+            <Link 
+              href="/stays?type=Homestay" 
+              className="w-full sm:w-auto px-8 py-4 bg-white hover:bg-slate-50 text-indigo-900 font-bold rounded-xl transition-colors text-lg shadow-lg"
+            >
+              Find a Homestay
+            </Link>
+          </div>
+        </div>
+
         {/* Author Bio Box */}
         <div className="bg-indigo-50 rounded-3xl p-8 md:p-10 mb-16 flex flex-col md:flex-row items-center md:items-start gap-6 border border-indigo-100">
           <div className="w-20 h-20 bg-indigo-600 text-white rounded-full flex items-center justify-center flex-shrink-0 text-3xl font-bold shadow-lg">
