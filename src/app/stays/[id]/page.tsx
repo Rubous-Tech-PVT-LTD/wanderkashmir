@@ -33,11 +33,19 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
       ? property.vendorProfile.type.charAt(0).toUpperCase() + property.vendorProfile.type.slice(1).toLowerCase()
       : "Stay";
 
+  const images = property.images && property.images.length > 0 
+    ? property.images 
+    : ["https://images.unsplash.com/photo-1542718610-a1d656d1884c?auto=format&fit=crop&q=80&w=1200"];
+
   return {
     title: `${property.name} - ${typeLabel} in ${property.location} | WanderKashmir`,
     description: property.description 
       ? `${property.description.substring(0, 150)}...` 
       : `Book ${property.name}, a beautiful ${typeLabel} located in ${property.location} with WanderKashmir.`,
+    openGraph: {
+      images: images.map((url: string) => ({ url })),
+      type: "website",
+    },
   };
 }
 
@@ -131,6 +139,34 @@ export default async function PropertyDetailPage({
           </div>
         </div>
       )}
+
+      {/* ─── JSON-LD STRUCTURED DATA FOR GOOGLE RICH SNIPPETS ─── */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": property.vendorProfile?.type === 'HOTEL' ? 'Hotel' : 'LodgingBusiness',
+            "name": property.name,
+            "description": property.description,
+            "image": images,
+            "address": {
+              "@type": "PostalAddress",
+              "addressLocality": property.location,
+              "addressRegion": "Jammu and Kashmir",
+              "addressCountry": "IN"
+            },
+            "priceRange": `₹${property.pricePerNight} - ₹${property.pricePerNight * 2}`,
+            ...(reviewStats.totalCount > 0 && {
+              "aggregateRating": {
+                "@type": "AggregateRating",
+                "ratingValue": reviewStats.averageRating.toFixed(1),
+                "reviewCount": reviewStats.totalCount
+              }
+            })
+          })
+        }}
+      />
 
       {/* ─── BREADCRUMBS & TITLE ─── */}
       <div className="container-custom py-6">
