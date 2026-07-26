@@ -22,21 +22,25 @@ const images = [
     src: "https://res.cloudinary.com/dcmoseix9/image/upload/v1785046389/WhatsApp_Image_2026-07-26_at_11.14.13_AM_vev812.jpg",
     alt: "Breathtaking Kashmir scenic landscape and valley view",
     keyframe: "heroFadeFirst",
+    position: "object-top", // Ensure arms and sky at top are 100% visible
   },
   {
     src: "https://res.cloudinary.com/dcmoseix9/image/upload/q_auto/f_auto/v1781182033/ChatGPT_Image_Jun_11_2026_06_15_47_PM_npe0t1.png",
     alt: "Beautiful Kashmir landscape with snow-capped mountains and valleys",
     keyframe: "heroFadeSecond",
+    position: "object-center",
   },
   {
     src: "https://res.cloudinary.com/dcmoseix9/image/upload/q_auto/f_auto/v1781183474/ChatGPT_Image_Jun_11_2026_06_40_42_PM_cztzx7.png",
     alt: "Dal Lake houseboats with serene reflections on calm water",
     keyframe: "heroFadeThird",
+    position: "object-center",
   },
   {
     src: "https://res.cloudinary.com/dcmoseix9/image/upload/q_auto/f_auto/v1781183615/ChatGPT_Image_Jun_11_2026_06_43_20_PM_pnzlsf.png",
     alt: "Gulmarg meadows covered with wildflowers in summer",
     keyframe: "heroFadeFourth",
+    position: "object-center",
   },
 ];
 
@@ -77,7 +81,7 @@ export default function HeroCarousel() {
             // this image before the browser finishes parsing JS/CSS
             fetchPriority={index === 0 ? "high" : "auto"}
             sizes="100vw"
-            className="object-cover"
+            className={`object-cover ${img.position || "object-center"}`}
           />
         </div>
       ))}
