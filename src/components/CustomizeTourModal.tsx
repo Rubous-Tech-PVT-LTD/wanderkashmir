@@ -142,7 +142,7 @@ export default function CustomizeTourModal() {
           onClick={handleClose}
         >
           <div 
-            className="relative w-full max-w-2xl bg-white rounded-3xl shadow-2xl border border-slate-100 overflow-hidden my-auto animate-in zoom-in-95 duration-300 text-slate-800 flex flex-col max-h-[90vh]"
+            className="relative w-full max-w-2xl bg-white rounded-3xl shadow-2xl border border-slate-100 overflow-hidden my-auto animate-in zoom-in-95 duration-300 text-slate-800 flex flex-col max-h-[92vh] sm:max-h-[88vh]"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Modal Header */}
@@ -377,34 +377,34 @@ export default function CustomizeTourModal() {
               </form>
             ) : (
               /* Success Screen */
-              <div className="p-8 sm:p-12 text-center space-y-6 my-auto">
-                <div className="w-20 h-20 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto shadow-inner animate-bounce">
-                  <Check className="w-10 h-10 stroke-[3]" />
+              <div className="flex-1 overflow-y-auto p-6 sm:p-10 text-center space-y-5 custom-scrollbar my-auto">
+                <div className="w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto shadow-inner animate-bounce">
+                  <Check className="w-8 h-8 stroke-[3]" />
                 </div>
-                <div className="space-y-2">
-                  <h4 className="text-2xl sm:text-3xl font-extrabold text-slate-900">
+                <div className="space-y-1.5">
+                  <h4 className="text-xl sm:text-2xl font-extrabold text-slate-900">
                     Custom Tour Request Sent! 🎉
                   </h4>
-                  <p className="text-slate-600 max-w-md mx-auto text-sm sm:text-base leading-relaxed">
+                  <p className="text-slate-600 max-w-md mx-auto text-xs sm:text-sm leading-relaxed">
                     Thank you, <span className="font-bold text-slate-900">{name}</span>! Our Kashmir travel specialists have received your requirements and are preparing your tailored itinerary and price quote.
                   </p>
                 </div>
-                <div className="bg-orange-50 border border-orange-200 rounded-2xl p-4 max-w-md mx-auto text-left flex items-start gap-3">
-                  <Phone className="w-6 h-6 text-orange-600 shrink-0 mt-0.5" />
+                <div className="bg-orange-50 border border-orange-200 rounded-2xl p-3.5 max-w-md mx-auto text-left flex items-start gap-2.5">
+                  <Phone className="w-5 h-5 text-orange-600 shrink-0 mt-0.5" />
                   <div className="text-xs sm:text-sm text-orange-950">
                     <p className="font-bold">What happens next?</p>
-                    <p className="mt-0.5 text-orange-800">
+                    <p className="mt-0.5 text-orange-800 leading-snug">
                       We will contact you on <span className="font-semibold underline">{phone}</span> via WhatsApp / Phone within 2 hours with a comprehensive itinerary & best hotel options.
                     </p>
                   </div>
                 </div>
-                <div className="pt-2">
+                <div className="pt-2 pb-2">
                   <button
                     type="button"
                     onClick={handleClose}
-                    className="bg-slate-900 text-white px-8 py-3.5 rounded-full font-bold text-sm hover:bg-slate-800 transition-all shadow-md cursor-pointer"
+                    className="bg-slate-900 text-white px-7 py-3 rounded-full font-bold text-xs sm:text-sm hover:bg-slate-800 transition-all shadow-md cursor-pointer inline-flex items-center gap-2"
                   >
-                    Back to Explore Kashmir
+                    <span>Back to Explore Kashmir</span>
                   </button>
                 </div>
               </div>
