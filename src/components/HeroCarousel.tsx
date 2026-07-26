@@ -25,7 +25,7 @@ const images = [
     position: "object-center",
   },
   {
-    src: "https://res.cloudinary.com/dcmoseix9/image/upload/v1785046389/WhatsApp_Image_2026-07-26_at_11.14.13_AM_vev812.jpg",
+    src: "https://res.cloudinary.com/dcmoseix9/image/upload/v1785051891/file_00000000049482079aff0e6317218e06_m3hbcf.png",
     alt: "Breathtaking Kashmir scenic landscape and valley view",
     keyframe: "heroFadeSecond",
     position: "object-[center_12%]", // Shift slightly up to show more full image while keeping hands visible
