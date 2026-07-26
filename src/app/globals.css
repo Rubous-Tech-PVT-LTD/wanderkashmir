@@ -185,18 +185,27 @@
 
 @keyframes heroFadeSecond {
   0%   { opacity: 0; }
-  33%  { opacity: 0; }
-  38%  { opacity: 1; }
-  63%  { opacity: 1; }
-  66%  { opacity: 0; }
+  25%  { opacity: 0; }
+  28%  { opacity: 1; }
+  47%  { opacity: 1; }
+  50%  { opacity: 0; }
   100% { opacity: 0; }
 }
 
 @keyframes heroFadeThird {
   0%   { opacity: 0; }
-  66%  { opacity: 0; }
-  71%  { opacity: 1; }
-  96%  { opacity: 1; }
+  50%  { opacity: 0; }
+  53%  { opacity: 1; }
+  72%  { opacity: 1; }
+  75%  { opacity: 0; }
+  100% { opacity: 0; }
+}
+
+@keyframes heroFadeFourth {
+  0%   { opacity: 0; }
+  75%  { opacity: 0; }
+  78%  { opacity: 1; }
+  97%  { opacity: 1; }
   100% { opacity: 0; }
 }
 

@@ -19,28 +19,34 @@ import Image from "next/image";
 
 const images = [
   {
+    src: "https://res.cloudinary.com/dcmoseix9/image/upload/v1785046389/WhatsApp_Image_2026-07-26_at_11.14.13_AM_vev812.jpg",
+    alt: "Breathtaking Kashmir scenic landscape and valley view",
+    keyframe: "heroFadeFirst",
+  },
+  {
     src: "https://res.cloudinary.com/dcmoseix9/image/upload/q_auto/f_auto/v1781182033/ChatGPT_Image_Jun_11_2026_06_15_47_PM_npe0t1.png",
     alt: "Beautiful Kashmir landscape with snow-capped mountains and valleys",
-    keyframe: "heroFadeFirst",
+    keyframe: "heroFadeSecond",
   },
   {
     src: "https://res.cloudinary.com/dcmoseix9/image/upload/q_auto/f_auto/v1781183474/ChatGPT_Image_Jun_11_2026_06_40_42_PM_cztzx7.png",
     alt: "Dal Lake houseboats with serene reflections on calm water",
-    keyframe: "heroFadeSecond",
+    keyframe: "heroFadeThird",
   },
   {
     src: "https://res.cloudinary.com/dcmoseix9/image/upload/q_auto/f_auto/v1781183615/ChatGPT_Image_Jun_11_2026_06_43_20_PM_pnzlsf.png",
     alt: "Gulmarg meadows covered with wildflowers in summer",
-    keyframe: "heroFadeThird",
+    keyframe: "heroFadeFourth",
   },
 ];
 
 /**
- * Total cycle = 15s (3 slides × 5s each)
+ * Total cycle = 20s (4 slides × 5s each)
  *
- * heroFadeFirst:  Starts at 1 (immediately visible!) → holds until 30% → fades out 30–33%
- * heroFadeSecond: Invisible → fades in at 33–38% → holds 38–63% → fades out 63–66%
- * heroFadeThird:  Invisible → fades in at 66–71% → holds 71–96% → fades out 96–100%
+ * heroFadeFirst:  Starts at 1 (immediately visible!) → holds until 25% → covered by slide 2
+ * heroFadeSecond: Invisible → fades in at 25–28% → holds 28–47% → fades out 47–50%
+ * heroFadeThird:  Invisible → fades in at 50–53% → holds 53–72% → fades out 72–75%
+ * heroFadeFourth: Invisible → fades in at 75–78% → holds 78–97% → fades out 97–100%
  *
  * By starting the first slide at opacity:1 at 0%, the hero image is visible
  * immediately on page load → browser selects it as the LCP element → no
@@ -56,7 +62,7 @@ export default function HeroCarousel() {
           className="hero-slide absolute inset-0"
           style={{
             opacity: index === 0 ? 1 : 0,
-            animation: index === 0 ? "none" : `${img.keyframe} 15s ease-in-out infinite`,
+            animation: index === 0 ? "none" : `${img.keyframe} 20s ease-in-out infinite`,
             zIndex: index === 0 ? 0 : 1,
           }}
         >
