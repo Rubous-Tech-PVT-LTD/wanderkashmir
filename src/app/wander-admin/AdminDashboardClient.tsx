@@ -4,7 +4,7 @@ import { useState } from "react";
 import { 
   Users, Building2, Car, Map, LayoutDashboard, 
   CheckCircle2, Clock, IndianRupee, FileText, Eye, EyeOff, ShieldCheck,
-  AlertCircle, MapPin, X, XCircle, Globe, Mail
+  AlertCircle, MapPin, X, XCircle, Globe, Mail, Sparkles
 } from "lucide-react";
 import { approveVendor, rejectVendor } from "@/actions/vendor";
 import { approveListing, rejectListing } from "@/actions/listings";
@@ -25,6 +25,7 @@ import { getPaginatedVendors, getPaginatedProperties, getPaginatedUsers, getPagi
 const AdminMapView = dynamic(() => import("./AdminMapView"), { ssr: false });
 const AdminEmailsTab = dynamic(() => import("./AdminEmailsTab"), { ssr: false });
 const AdminPromoCodesTab = dynamic(() => import("./AdminPromoCodesTab"), { ssr: false });
+const AdminCustomToursTab = dynamic(() => import("./AdminCustomToursTab"), { ssr: false });
 
 // Define the type based on the props passed from Server
 type VendorProfile = {
@@ -608,6 +609,7 @@ export default function AdminDashboardClient({
             { id: "listings", label: "Listing Approvals", icon: Building2 },
             { id: "live_listings", label: "Live Listings", icon: MapPin },
             { id: "tours", label: "Tours", icon: Map },
+            { id: "custom_tours", label: "Custom Inquiries", icon: Sparkles },
             { id: "taxis", label: "Taxis", icon: Car },
             { id: "payouts", label: "Payouts", icon: IndianRupee },
             { id: "rejected", label: "Rejected Vendors", icon: XCircle },
@@ -684,6 +686,7 @@ export default function AdminDashboardClient({
 
         {/* Dynamic Content Area */}
         {activeTab === "tours" && <AdminToursTab />}
+        {activeTab === "custom_tours" && <AdminCustomToursTab />}
         {activeTab === "taxis" && <AdminTaxisTab />}
         {activeTab === "seo_pages" && <AdminSeoTab />}
         {activeTab === "bulk_emails" && <AdminEmailsTab />}

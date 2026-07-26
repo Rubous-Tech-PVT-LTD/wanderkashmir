@@ -451,3 +451,24 @@ model PromoCode {
   @@index([tourId])
   @@index([code])
 }
+
+model CustomTourRequest {
+  id              String   @id @default(cuid())
+  name            String
+  phone           String
+  email           String?
+  travelDates     String? // e.g. "2026-08-10 to 2026-08-15" or "5 Days / 4 Nights"
+  guestsCount     String   // e.g. "2 Adults, 1 Child"
+  destinations    String[] @default([]) // e.g. ["Srinagar", "Gulmarg", "Pahalgam"]
+  hotelType       String   @default("3 Star Standard") // "Budget", "3 Star Standard", "4 Star Luxury", "Houseboat", "Homestay"
+  cabType         String   @default("Sedan / SUV") // "Sedan / SUV", "Tempo Traveller", "Not Needed"
+  specialRequests String?  @db.Text
+  status          String   @default("PENDING") // PENDING, CONTACTED, QUOTED, BOOKED, CLOSED
+  adminNotes      String?  @db.Text
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status])
+  @@index([createdAt])
+}

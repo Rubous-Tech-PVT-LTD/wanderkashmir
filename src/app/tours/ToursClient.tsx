@@ -5,6 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { useState } from "react";
 import { Star, Clock, Users, MapPin, CheckCircle2, Heart, Filter } from "lucide-react";
+import CustomizeTourModal from "@/components/CustomizeTourModal";
 
 // Categories are now generated dynamically in the component
 
@@ -72,9 +73,12 @@ export default function ToursClient({ initialTours }: { initialTours: any[] }) {
             <h1 className="font-display text-4xl md:text-5xl font-bold mb-3">
               Tour Packages in Kashmir
             </h1>
-            <p className="text-sky-100 text-base max-w-xl mx-auto">
+            <p className="text-sky-100 text-base max-w-xl mx-auto mb-6">
               Hand-crafted itineraries by local experts. Everything included — stays, meals, transfers & guides.
             </p>
+            <div className="flex justify-center">
+              <CustomizeTourModal />
+            </div>
           </div>
         </div>
 
