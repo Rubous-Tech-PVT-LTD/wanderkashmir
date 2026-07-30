@@ -149,8 +149,8 @@ export default function AdminSeoTab() {
   };
 
   const filteredPages = pages.filter(p => 
-    p.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
-    p.slug.toLowerCase().includes(searchQuery.toLowerCase())
+    (p.title || "").toLowerCase().includes(searchQuery.toLowerCase()) || 
+    (p.slug || "").toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   const totalPages = Math.ceil(filteredPages.length / itemsPerPage);
@@ -400,7 +400,7 @@ export default function AdminSeoTab() {
                       <td className="p-4">
                         <div className="flex items-center gap-1.5 text-slate-500">
                           <LinkIcon className="w-3.5 h-3.5" />
-                          <span>/{page.type.toLowerCase() === "taxi" ? "taxis" : page.type.toLowerCase() === "homestay" ? "homestays" : page.type.toLowerCase() === "blog" ? "blog" : "tours"}/{page.slug}</span>
+                          <span>/{(page.type || "").toLowerCase() === "taxi" ? "taxis" : (page.type || "").toLowerCase() === "homestay" ? "homestays" : (page.type || "").toLowerCase() === "blog" ? "blog" : "tours"}/{page.slug}</span>
                         </div>
                       </td>
                       <td className="p-4 text-slate-500">
@@ -408,7 +408,7 @@ export default function AdminSeoTab() {
                       </td>
                       <td className="p-4 text-right space-x-2">
                         <Link 
-                          href={`/${page.type.toLowerCase() === "taxi" ? "taxis" : page.type.toLowerCase() === "homestay" ? "homestays" : page.type.toLowerCase() === "blog" ? "blog" : "tours"}/${page.slug}`}
+                          href={`/${(page.type || "").toLowerCase() === "taxi" ? "taxis" : (page.type || "").toLowerCase() === "homestay" ? "homestays" : (page.type || "").toLowerCase() === "blog" ? "blog" : "tours"}/${page.slug}`}
                           target="_blank"
                           className="inline-flex p-2 text-slate-400 hover:text-[#0284c7] hover:bg-[#0284c7]/10 rounded-lg transition-colors"
                           title="View Live Page"
