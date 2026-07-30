@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import Image from "next/image";
+import ImageWithFallback from "@/components/ImageWithFallback";
 import { MapPin, Search, Star, Heart } from "lucide-react";
 
 export interface PropertyItem {
@@ -213,7 +213,7 @@ export default function StaysClient({ initialProperties, initialQuery = "" }: { 
                 
                 {/* Left: Image */}
                 <div className="w-full md:w-[260px] md:min-w-[260px] h-64 md:h-full relative flex-shrink-0 group">
-                  <Image 
+                  <ImageWithFallback 
                     src={property.image} 
                     alt={property.name} 
                     fill 
@@ -365,7 +365,7 @@ export default function StaysClient({ initialProperties, initialQuery = "" }: { 
           )}
 
           <div className="relative w-full max-w-5xl h-[85vh]">
-            <Image 
+            <ImageWithFallback 
               src={galleryImages[currentImageIndex]} 
               alt="Property view" 
               fill
