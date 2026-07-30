@@ -1,7 +1,7 @@
 import { Metadata } from "next";
 import { notFound } from "next/navigation";
 import prisma from "@/lib/prisma";
-import Image from "next/image";
+import ImageWithFallback from "@/components/ImageWithFallback";
 import Link from "next/link";
 import { ChevronRight, Calendar, User, ArrowLeft } from "lucide-react";
 import Footer from "@/components/Footer";
@@ -97,10 +97,9 @@ export default async function BlogArticlePage({ params }: { params: Promise<{ sl
           </p>
         </header>
 
-        {/* Hero Image */}
         {page.imageUrl && (
-          <div className="w-full aspect-[21/9] min-h-[300px] md:min-h-[400px] relative rounded-3xl overflow-hidden shadow-xl mb-16">
-            <Image 
+          <div className="w-full aspect-[21/9] min-h-[300px] md:minh-[400px] relative rounded-3xl overflow-hidden shadow-xl mb-16">
+            <ImageWithFallback 
               src={page.imageUrl} 
               alt={page.h1Heading} 
               fill 

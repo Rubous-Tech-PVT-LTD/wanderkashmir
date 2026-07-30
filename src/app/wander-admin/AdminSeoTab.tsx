@@ -11,6 +11,8 @@ export default function AdminSeoTab() {
   const [isEditing, setIsEditing] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
   const [formData, setFormData] = useState({
     id: "",
     slug: "",
@@ -150,6 +152,14 @@ export default function AdminSeoTab() {
     p.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
     p.slug.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  const totalPages = Math.ceil(filteredPages.length / itemsPerPage);
+  const paginatedPages = filteredPages.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+
+  // Reset to first page when search changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery]);
 
   return (
     <div className="space-y-6">
@@ -374,7 +384,7 @@ export default function AdminSeoTab() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 text-sm">
-                  {filteredPages.map((page) => (
+                  {paginatedPages.map((page) => (
                     <tr key={page.id} className="hover:bg-slate-50/50 transition-colors">
                       <td className="p-4">
                         <span className={`px-2 py-1 text-xs font-semibold rounded-full ${
@@ -424,6 +434,31 @@ export default function AdminSeoTab() {
                   ))}
                 </tbody>
               </table>
+              
+              {/* Pagination Controls */}
+              {totalPages > 1 && (
+                <div className="flex items-center justify-between p-4 border-t border-slate-100 bg-slate-50/50">
+                  <div className="text-sm text-slate-500">
+                    Showing {(currentPage - 1) * itemsPerPage + 1} to {Math.min(currentPage * itemsPerPage, filteredPages.length)} of {filteredPages.length} entries
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                      disabled={currentPage === 1}
+                      className="px-3 py-1 text-sm border border-slate-200 rounded-md hover:bg-slate-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      Previous
+                    </button>
+                    <button
+                      onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                      disabled={currentPage === totalPages}
+                      className="px-3 py-1 text-sm border border-slate-200 rounded-md hover:bg-slate-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      Next
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           </>
           )}

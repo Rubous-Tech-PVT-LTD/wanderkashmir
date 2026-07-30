@@ -1,5 +1,5 @@
 import Link from "next/link";
-import Image from "next/image";
+import ImageWithFallback from "@/components/ImageWithFallback";
 import { Star, Heart } from "lucide-react";
 
 interface PropertyProps {
@@ -47,7 +47,7 @@ export default function PropertyCard({
 
         {/* Image */}
         <div className="relative aspect-[4/3] overflow-hidden">
-          <Image
+          <ImageWithFallback
             src={image}
             alt={name}
             fill

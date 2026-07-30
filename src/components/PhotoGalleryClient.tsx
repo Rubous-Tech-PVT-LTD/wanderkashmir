@@ -1,7 +1,7 @@
-﻿"use client";
+"use client";
 
 import { useState } from "react";
-import Image from "next/image";
+import ImageWithFallback from "@/components/ImageWithFallback";
 import { ChevronLeft, ChevronRight, X, Grid, Play } from "lucide-react";
 
 interface PhotoGalleryClientProps {
@@ -65,12 +65,12 @@ export default function PhotoGalleryClient({ images, propertyName }: PhotoGaller
               className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" 
             />
           ) : (
-            <Image 
+            <ImageWithFallback 
               src={mainImage} 
               alt={propertyName} 
               fill 
-              sizes="(max-width: 768px) 100vw, 50vw"
-              className="object-cover transition-transform duration-700 group-hover:scale-105" 
+              sizes="(max-width: 768px) 100vw, 66vw"
+              className="object-cover transition-transform duration-700 hover:scale-105"
               priority
             />
           )}
@@ -119,12 +119,12 @@ export default function PhotoGalleryClient({ images, propertyName }: PhotoGaller
                   </div>
                 </>
               ) : (
-                <Image 
+                <ImageWithFallback 
                   src={img} 
-                  alt={`${propertyName} - ${actualIndex + 1}`} 
+                  alt={`${propertyName} photo ${idx + 2}`} 
                   fill 
-                  sizes="25vw"
-                  className="object-cover transition-transform duration-700 group-hover:scale-105" 
+                  sizes="(max-width: 768px) 50vw, 33vw"
+                  className="object-cover transition-transform duration-700 group-hover:scale-110"
                 />
               )}
               <div className="absolute inset-0 bg-black/10 group-hover:bg-transparent transition-colors" />
@@ -183,10 +183,10 @@ export default function PhotoGalleryClient({ images, propertyName }: PhotoGaller
                   className="w-full h-full object-contain"
                 />
               ) : (
-                <Image 
+                <ImageWithFallback 
                   src={displayImages[currentIndex]} 
-                  alt={`${propertyName} - Gallery View`}
-                  fill
+                  alt={`${propertyName} photo ${currentIndex + 1}`} 
+                  fill 
                   className="object-contain"
                   priority
                 />
@@ -223,7 +223,7 @@ export default function PhotoGalleryClient({ images, propertyName }: PhotoGaller
                     </div>
                   </>
                 ) : (
-                  <Image src={img} alt="Thumb" fill className="object-cover" />
+                  <ImageWithFallback src={img} alt="Thumb" fill className="object-cover" />
                 )}
               </div>
             ))}
