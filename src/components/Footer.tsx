@@ -28,25 +28,25 @@ const XIcon = ({ className }: { className?: string }) => (
 const footerLinks = {
   Explore: [
     { label: "Hotels & Resorts", href: "/stays?type=hotel" },
-    { label: "Homestays", href: "/stays?type=homestay" },
+    { label: "Traditional Homestays", href: "/stays?type=homestay" },
     { label: "Dal Lake Houseboats", href: "/stays?type=houseboat" },
-    { label: "Tour Packages", href: "/tours" },
+    { label: "Cultural Tour Packages", href: "/tours" },
     { label: "Local Guides", href: "/guides" },
     { label: "Taxi Booking", href: "/taxis" },
   ],
   Destinations: [
-    { label: "Srinagar", href: "/stays/srinagar" },
-    { label: "Gulmarg", href: "/stays/gulmarg" },
-    { label: "Pahalgam", href: "/stays/pahalgam" },
-    { label: "Sonamarg", href: "/stays/sonamarg" },
-    { label: "Ladakh", href: "/stays/ladakh" },
-    { label: "Jammu", href: "/stays/jammu" },
+    { label: "Srinagar", href: "/destinations" },
+    { label: "Gulmarg", href: "/destinations" },
+    { label: "Pahalgam", href: "/destinations" },
+    { label: "Sonamarg", href: "/destinations" },
+    { label: "Ladakh", href: "/destinations" },
+    { label: "Jammu", href: "/destinations" },
   ],
   Company: [
     { label: "About Us", href: "/about" },
     { label: "Our Vision", href: "/our-vision" },
     { label: "Blog", href: "/blog" },
-    { label: "Careers", href: "/careers" },
+    { label: "Careers (Coming Soon)", href: "#" },
     { label: "Press", href: "/press" },
     { label: "Partner With Us", href: "/partner/register" },
     { label: "Contact", href: "/contact" },
@@ -125,7 +125,7 @@ export default function Footer() {
               </a>
               <div className="flex items-center gap-2.5 text-sm">
                 <MapPin className="w-4 h-4 text-[var(--primary)] flex-shrink-0" />
-                Residency Road, Srinagar, J&K — 190001
+                Hati Gam Anantnag , Jammu and kashmir 192401
               </div>
             </div>
             {/* Social */}

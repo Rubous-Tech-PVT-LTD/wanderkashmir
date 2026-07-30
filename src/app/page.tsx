@@ -441,15 +441,13 @@ export default async function Home() {
         {/* Hero Content */}
         <div className="relative z-10 container-custom mb-32 md:mb-0 pt-16 md:pt-0 md:mt-12 text-left">
           <h1 className="text-[3rem] md:text-[4.5rem] font-bold text-white leading-[1.1] drop-shadow-xl tracking-tight mb-2">
-            Discover <span className="text-orange-500">Paradise</span> <br className="hidden md:block" />
+            Discover the <span className="text-orange-500">Real</span> <br className="hidden md:block" />
             <div className="text-[#38bdf8] font-normal drop-shadow-md mt-2 flex items-baseline justify-start gap-4" style={{ fontFamily: "var(--font-dancing-script), 'Dancing Script', cursive" }}>
-              <span className="text-[2.5rem] md:text-[3.5rem]">in</span>
               <span className="text-[4.5rem] md:text-[6rem]">Kashmir</span>
             </div>
           </h1>
           <p className="text-white text-base md:text-lg font-medium drop-shadow-lg max-w-2xl tracking-wide mt-4 mb-6">
-            Book Homestays, Hotels, Taxis & Tour Packages<br />
-            <span className="font-normal opacity-90">Explore the Beauty of Heaven on Earth</span>
+            Authentic Village Stays • Local Culture • Hidden Experiences
           </p>
           <div className="flex flex-wrap items-center gap-3.5 mt-2">
             <Link 
@@ -593,7 +591,7 @@ export default async function Home() {
             
             <div className="lg:col-span-2">
               <div className="mb-6">
-                <h2 className="text-2xl font-bold text-slate-900">Popular Tour Packages</h2>
+                <h2 className="text-2xl font-bold text-slate-900">Popular Cultural Tour Packages</h2>
                 <p className="text-sm text-slate-500 mt-1">Curated packages for unforgettable experiences</p>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

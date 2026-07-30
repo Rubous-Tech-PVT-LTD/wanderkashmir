@@ -43,8 +43,8 @@ function LazyDatePickerField({ label, selected, onChange, minDate, placeholderTe
 
 export default function SearchBar() {
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState("Tour Packages");
-  const tabs = ["Tour Packages", "Homestays", "Hotels", "Taxis", "Travel Guide"];
+  const [activeTab, setActiveTab] = useState("Cultural Tour Packages");
+  const tabs = ["Cultural Tour Packages", "Traditional Homestays", "Hotels", "Taxis", "Travel Guide"];
 
   const [destination, setDestination] = useState("");
   const [checkIn, setCheckIn] = useState<Date | null>(null);
@@ -60,9 +60,9 @@ export default function SearchBar() {
 
     let route = "/stays";
     if (activeTab === "Hotels") route = "/stays?type=Hotel";
-    if (activeTab === "Homestays") route = "/stays?type=Homestay";
+    if (activeTab === "Traditional Homestays") route = "/stays?type=Homestay";
+    if (activeTab === "Cultural Tour Packages") route = "/tours";
     if (activeTab === "Taxis") route = "/taxis";
-    if (activeTab === "Tour Packages") route = "/tours";
     if (activeTab === "Travel Guide") route = "/guides";
 
     const queryString = queryParams.toString();
@@ -94,7 +94,7 @@ export default function SearchBar() {
       <div className="flex flex-col md:flex-row items-center divide-y md:divide-y-0 md:divide-x divide-slate-100 bg-white p-2">
 
         {/* HOMESTAYS & HOTELS */}
-        {(activeTab === "Homestays" || activeTab === "Hotels") && (
+        {(activeTab === "Traditional Homestays" || activeTab === "Hotels") && (
           <>
             <div className="flex-[1.5] w-full p-2 hover:bg-slate-50 rounded-xl transition-colors cursor-text group">
               <label htmlFor="destination-input" className="block text-[11px] font-bold text-slate-800 ml-8 mb-1">Where are you going?</label>
@@ -202,7 +202,7 @@ export default function SearchBar() {
         )}
 
         {/* TOUR PACKAGES */}
-        {activeTab === "Tour Packages" && (
+        {activeTab === "Cultural Tour Packages" && (
           <>
             <div className="flex-[1.5] w-full p-2 hover:bg-slate-50 rounded-xl transition-colors cursor-text group">
               <label htmlFor="tour-dest-input" className="block text-[11px] font-bold text-slate-800 ml-8 mb-1">Where to?</label>
