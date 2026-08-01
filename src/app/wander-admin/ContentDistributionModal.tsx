@@ -1,9 +1,10 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { X, CheckCircle, RefreshCw, Wand2, FileText, Send, Loader2, Save, Play, Copy, Trash2, Check } from "lucide-react";
+import { Wand2, X, RefreshCw, Copy, Check, Save, Loader2, Trash2, FileText } from "lucide-react";
 import { getContentAssets, updateContentAssetStatus, updateContentAsset, deleteContentAsset, duplicateContentAsset } from "@/actions/admin-content";
 import { ContentPreviewRenderer } from "./ContentPreviewRenderer";
+import { SlideEditor } from "./SlideEditor";
 
 const PLATFORMS = ['instagram', 'facebook', 'linkedin', 'reddit', 'twitter', 'pinterest', 'email', 'whatsapp'];
 
@@ -72,12 +73,12 @@ export default function ContentDistributionModal({
     return assets.find(a => a.platform === platform);
   };
 
-  const processJobInWorker = async (jobId: string, platform: string) => {
+  const processJobInWorker = async (jobId: string, platform: string, options: any = {}) => {
     try {
-      await fetch("/api/admin/content-jobs/worker", {
+      await fetch(`/api/admin/content-jobs/worker`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ jobId }),
+        body: JSON.stringify({ jobId, options }),
       });
       // The SSE stream will catch the result and update the UI automatically
     } catch (err) {
@@ -85,7 +86,7 @@ export default function ContentDistributionModal({
     }
   };
 
-  const generatePlatform = async (platform: string) => {
+  const generatePlatform = async (platform: string, options: any = {}) => {
     setGenerationStatuses(prev => ({ ...prev, [platform]: 'Queued' }));
     try {
       // 1. Create Job
@@ -97,7 +98,7 @@ export default function ContentDistributionModal({
       const data = await res.json();
       if (res.ok && data.success && data.jobs.length > 0) {
         // 2. Trigger Worker
-        processJobInWorker(data.jobs[0].id, platform);
+        processJobInWorker(data.jobs[0].id, platform, options);
       } else {
         throw new Error(data.error);
       }
@@ -301,11 +302,22 @@ export default function ContentDistributionModal({
                         {/* Content Viewer/Editor */}
                         {isEditing ? (
                           <div className="space-y-4">
-                            <textarea
-                              value={editingContent}
-                              onChange={(e) => setEditingContent(e.target.value)}
-                              className="w-full h-96 p-4 border border-slate-200 rounded-xl focus:ring-2 focus:ring-[#0284c7] focus:border-transparent font-mono text-sm"
-                            />
+                            {(activePlatform === 'instagram' || activePlatform === 'facebook') ? (
+                              <SlideEditor 
+                                editingContent={editingContent}
+                                setEditingContent={setEditingContent}
+                                onRegenerateSlide={(index) => {
+                                  generatePlatform(activePlatform, { regenerateSlideIndex: index });
+                                  setIsEditing(false); // Close editor to see live preview update
+                                }}
+                              />
+                            ) : (
+                              <textarea
+                                value={editingContent}
+                                onChange={(e) => setEditingContent(e.target.value)}
+                                className="w-full h-96 p-4 border border-slate-200 rounded-xl focus:ring-2 focus:ring-[#0284c7] focus:border-transparent font-mono text-sm"
+                              />
+                            )}
                             <div className="flex justify-end gap-3">
                               <button onClick={() => setIsEditing(false)} className="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-lg">Cancel</button>
                               <button onClick={() => handleSave(activeAsset.id)} disabled={saving} className="px-4 py-2 bg-[#0284c7] hover:bg-[#0369a1] text-white rounded-lg flex items-center gap-2">

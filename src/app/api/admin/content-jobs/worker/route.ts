@@ -6,13 +6,13 @@ export const maxDuration = 60; // For Vercel Free Tier this might still time out
 
 export async function POST(request: Request) {
   try {
-    const { jobId } = await request.json();
+    const { jobId, options } = await request.json();
     
     if (!jobId) {
       return NextResponse.json({ error: "jobId is required" }, { status: 400 });
     }
 
-    const result = await ContentWorkerService.processJob(jobId);
+    const result = await ContentWorkerService.processJob(jobId, options || {});
     
     if (!result.success) {
       return NextResponse.json({ error: result.error }, { status: 500 });

@@ -3,7 +3,7 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 import prisma from "@/lib/prisma";
 
 export class ContentWorkerService {
-  static async processJob(jobId: string) {
+  static async processJob(jobId: string, options: any = {}) {
     const job = await ContentJobRepository.getJob(jobId);
     if (!job || job.status !== "PENDING") return { success: false, error: "Invalid or already processed job" };
 
@@ -21,7 +21,7 @@ export class ContentWorkerService {
       const genAI = new GoogleGenerativeAI(apiKey);
       const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
-      const prompt = this.buildPrompt(job.platform, page);
+      const prompt = this.buildPrompt(job.platform, page, options);
       
       await ContentJobRepository.updateJobProgress(jobId, 50, "GENERATING");
 
@@ -35,11 +35,23 @@ export class ContentWorkerService {
 
       // Save to ContentAssets
       const assetTitle = parsedJson.title || parsedJson.subject || `${job.platform} content for ${page.title}`;
-      const stringifiedContent = JSON.stringify(parsedJson, null, 2);
+      let stringifiedContent = JSON.stringify(parsedJson, null, 2);
 
       const existingAsset = await prisma.contentAsset.findUnique({
         where: { seoPageId_platform: { seoPageId: page.id, platform: job.platform.toLowerCase() } }
       });
+
+      // If this was a granular regeneration for a specific slide, we splice the newly generated slide into the existing JSON array.
+      if (options.regenerateSlideIndex !== undefined && existingAsset && existingAsset.jsonData) {
+        const currentData: any = existingAsset.jsonData;
+        if (currentData.slides && parsedJson.slides && parsedJson.slides.length > 0) {
+          // Splice in the single regenerated slide. (Gemini may return an array of 1, or try to return 5 but we told it to only focus on 1)
+          // We take the first slide from the result and place it at the requested index.
+          currentData.slides[options.regenerateSlideIndex] = parsedJson.slides[0];
+          parsedJson.slides = currentData.slides;
+          stringifiedContent = JSON.stringify(parsedJson, null, 2);
+        }
+      }
 
       if (existingAsset) {
         await prisma.contentAsset.update({
@@ -81,23 +93,31 @@ export class ContentWorkerService {
     }
   }
 
-  private static buildPrompt(platform: string, page: any) {
+  private static buildPrompt(platform: string, page: any, options: any = {}) {
     let platformInstructions = "";
+    
+    // Granular Regeneration Context
+    const granularInstruction = options.regenerateSlideIndex !== undefined
+      ? `\n\nCRITICAL INSTRUCTION: You are ONLY regenerating Slide ${options.regenerateSlideIndex + 1}. Return a JSON object with a "slides" array containing EXACTLY ONE slide (the regenerated slide). Do not return the other slides. Do not return caption or hashtags. Maintain the tone and context of the carousel.` 
+      : "";
+
     switch (platform) {
       case 'instagram':
-        platformInstructions = `Generate an Instagram Carousel (10 Slides).
-Each slide must have: slideNumber, title, body (30-60 words), and imagePrompt.
+        platformInstructions = `Generate an Instagram Carousel (Exactly 5 Slides).
+Each slide must have: slideNumber, title, body (maximum 40-50 words), and imagePrompt.
+The 5th (final) slide MUST contain a Call To Action (CTA) encouraging users to save, share, or visit Wander Kashmir.
 Also generate: caption, hashtags, and cta.
 The carousel should educate users.
 Image prompts rule: Ultra realistic, Travel photography, Golden hour lighting, Professional DSLR, No text inside image, No watermark, No logo, 4K, 9:16, Highly detailed.
-Return JSON format: { "slides": [{ "slideNumber": number, "title": string, "body": string, "imagePrompt": string }], "caption": string, "hashtags": string[], "cta": string }`;
+Return JSON format: { "slides": [{ "slideNumber": number, "title": string, "body": string, "imagePrompt": string }], "caption": string, "hashtags": string[], "cta": string }${granularInstruction}`;
         break;
       case 'facebook':
-        platformInstructions = `Generate a Facebook Carousel (10 Slides).
-Each slide must have: slideNumber, title, body, and imagePrompt.
+        platformInstructions = `Generate a Facebook Carousel (Exactly 5 Slides).
+Each slide must have: slideNumber, title, body (maximum 40-50 words), and imagePrompt.
+The 5th (final) slide MUST contain a Call To Action (CTA) encouraging users to save, share, or visit Wander Kashmir.
 Also generate: caption (longer than Instagram), hashtags, and cta.
 Image prompts rule: Ultra realistic, Travel photography, Golden hour lighting, Professional DSLR, No text inside image, No watermark, No logo, 4K, Highly detailed.
-Return JSON format: { "slides": [{ "slideNumber": number, "title": string, "body": string, "imagePrompt": string }], "caption": string, "hashtags": string[], "cta": string }`;
+Return JSON format: { "slides": [{ "slideNumber": number, "title": string, "body": string, "imagePrompt": string }], "caption": string, "hashtags": string[], "cta": string }${granularInstruction}`;
         break;
       case 'linkedin':
         platformInstructions = `Generate a LinkedIn Post and Article.
