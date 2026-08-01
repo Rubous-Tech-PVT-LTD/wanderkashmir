@@ -162,6 +162,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: 'yearly',
       priority: 0.5,
     },
+    {
+      url: `${baseUrl}/llms.txt`,
+      lastModified: new Date(),
+      changeFrequency: 'weekly',
+      priority: 0.9,
+    },
     ...propertyUrls,
     ...tourUrls,
     ...vehicleUrls,
