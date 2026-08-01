@@ -125,6 +125,50 @@ export default async function RootLayout({
       <head>
         {/* Preconnect to Cloudinary CDN — opens TCP+TLS handshake early */}
         <link rel="preconnect" href="https://res.cloudinary.com" crossOrigin="anonymous" />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@graph": [
+                {
+                  "@type": "Organization",
+                  "@id": "https://www.wanderkashmir.com/#organization",
+                  "name": "WanderKashmir",
+                  "url": "https://www.wanderkashmir.com",
+                  "logo": "https://www.wanderkashmir.com/icon.png",
+                  "description": "Book verified hotels, homestays, houseboats, taxi services and tour packages across Jammu & Kashmir.",
+                  "contactPoint": {
+                    "@type": "ContactPoint",
+                    "telephone": "+91-9999999999", // Replace with real number if available
+                    "contactType": "customer service",
+                    "areaServed": "IN",
+                    "availableLanguage": ["en", "hi", "ur"]
+                  },
+                  "sameAs": [
+                    "https://www.facebook.com/wanderkashmir",
+                    "https://www.instagram.com/wanderkashmir",
+                    "https://twitter.com/wanderkashmir"
+                  ]
+                },
+                {
+                  "@type": "WebSite",
+                  "@id": "https://www.wanderkashmir.com/#website",
+                  "url": "https://www.wanderkashmir.com",
+                  "name": "WanderKashmir",
+                  "publisher": {
+                    "@id": "https://www.wanderkashmir.com/#organization"
+                  },
+                  "potentialAction": {
+                    "@type": "SearchAction",
+                    "target": "https://www.wanderkashmir.com/stays?q={search_term_string}",
+                    "query-input": "required name=search_term_string"
+                  }
+                }
+              ]
+            })
+          }}
+        />
       </head>
       <body className="antialiased" suppressHydrationWarning>
         <ClerkProvider

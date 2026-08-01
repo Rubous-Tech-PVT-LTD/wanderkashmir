@@ -431,6 +431,28 @@ export default async function Home() {
 
   return (
     <main className="min-h-screen bg-white">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "TravelAgency",
+            "name": "WanderKashmir",
+            "image": "https://www.wanderkashmir.com/icon.png",
+            "@id": "https://www.wanderkashmir.com",
+            "url": "https://www.wanderkashmir.com",
+            "telephone": "+91-9999999999",
+            "priceRange": "$$",
+            "address": {
+              "@type": "PostalAddress",
+              "addressLocality": "Srinagar",
+              "addressRegion": "JK",
+              "addressCountry": "IN"
+            },
+            "description": "Book verified hotels, homestays, houseboats, taxi services and tour packages across Jammu & Kashmir."
+          })
+        }}
+      />
       <Navbar />
 
       {/* ─── HERO ─────────────────────────────────────────── */}
@@ -442,9 +464,9 @@ export default async function Home() {
         <div className="relative z-10 container-custom mb-32 md:mb-0 pt-16 md:pt-0 md:mt-12 text-left">
           <h1 className="text-[3rem] md:text-[4.5rem] font-bold text-white leading-[1.1] drop-shadow-xl tracking-tight mb-2">
             Discover the <span className="text-orange-500">Real</span> <br className="hidden md:block" />
-            <div className="text-[#38bdf8] font-normal drop-shadow-md mt-2 flex items-baseline justify-start gap-4" style={{ fontFamily: "var(--font-dancing-script), 'Dancing Script', cursive" }}>
-              <span className="text-[4.5rem] md:text-[6rem]">Kashmir</span>
-            </div>
+            <span className="block text-[#38bdf8] font-normal drop-shadow-md mt-2 text-[4.5rem] md:text-[6rem]" style={{ fontFamily: "var(--font-dancing-script), 'Dancing Script', cursive" }}>
+              Kashmir
+            </span>
           </h1>
           <p className="text-white text-base md:text-lg font-medium drop-shadow-lg max-w-2xl tracking-wide mt-4 mb-6">
             Authentic Village Stays • Local Culture • Hidden Experiences

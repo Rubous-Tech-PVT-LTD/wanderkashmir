@@ -59,8 +59,27 @@ export default async function StaysPage({ searchParams }: { searchParams: Promis
     };
   });
 
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    "itemListElement": formattedProperties.slice(0, 10).map((prop, index) => ({
+      "@type": "ListItem",
+      "position": index + 1,
+      "item": {
+        "@type": prop.type === "Hotel" ? "Hotel" : "LodgingBusiness",
+        "url": `https://www.wanderkashmir.com/stays/${prop.id}`,
+        "name": prop.name,
+        "image": prop.image
+      }
+    }))
+  };
+
   return (
     <main className="min-h-screen bg-slate-50">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       <Navbar />
       <StaysClient initialProperties={formattedProperties} initialQuery={initialQuery} />
       <Footer />
