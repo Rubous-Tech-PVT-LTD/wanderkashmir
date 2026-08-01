@@ -47,9 +47,10 @@ export default function StaysClient({ initialProperties, initialQuery = "" }: { 
   let filtered = initialProperties.filter((p) => {
     if (searchQuery) {
       const q = searchQuery.toLowerCase();
-      const matchName = p.name.toLowerCase().includes(q);
+      const name = p.name.toLowerCase();
       const loc = p.location.toLowerCase();
-      const matchLoc = loc.includes(q);
+      
+      let isMatch = name.includes(q) || loc.includes(q);
       
       const matchSrinagar = q === 'srinagar' && (loc.includes('dal lake') || loc.includes('nigeen'));
       const matchGulmarg = q === 'gulmarg' && loc.includes('tangmarg');
@@ -57,7 +58,13 @@ export default function StaysClient({ initialProperties, initialQuery = "" }: { 
       const matchSonamarg = q === 'sonamarg' && loc.includes('gagangeer');
       const matchLadakh = q === 'ladakh' && loc.includes('leh');
 
-      if (!matchName && !matchLoc && !matchSrinagar && !matchGulmarg && !matchPahalgam && !matchSonamarg && !matchLadakh) {
+      // If no exact match, split the query and check if ANY significant word matches
+      if (!isMatch) {
+        const queryWords = q.split(/\s+/).filter(w => w.length > 2 && w !== 'stays' && w !== 'bookings' && w !== 'homestays' && w !== 'hotels');
+        isMatch = queryWords.some(word => name.includes(word) || loc.includes(word));
+      }
+
+      if (!isMatch && !matchSrinagar && !matchGulmarg && !matchPahalgam && !matchSonamarg && !matchLadakh) {
         return false;
       }
     }
