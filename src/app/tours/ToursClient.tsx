@@ -119,7 +119,7 @@ export default function ToursClient({ initialTours }: { initialTours: any[] }) {
             {paginatedTours.map((tour) => (
               <Link
                 key={tour.id}
-                href={tour.isLive ? `/tours/${tour.slug}` : `https://wa.me/919999999999?text=I'm%20interested%20in%20the%20${encodeURIComponent(tour.title)}`}
+                href={tour.isLive ? `/tours/${tour.slug}` : `https://wa.me/916005888754?text=I'm%20interested%20in%20the%20${encodeURIComponent(tour.title)}`}
                 target={tour.isLive ? undefined : "_blank"}
                 className="group block"
               >

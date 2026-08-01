@@ -130,7 +130,7 @@ export default async function TaxiSeoPage({ params }: { params: Promise<{ slug: 
                 View Cabs & Prices
               </Link>
               <a 
-                href="https://wa.me/917006871321" 
+                href="https://wa.me/916005888754" 
                 target="_blank" 
                 rel="noreferrer"
                 className="px-8 py-3.5 bg-green-500 text-white rounded-full font-medium hover:bg-green-600 transition-all transform hover:-translate-y-0.5 shadow-lg shadow-green-500/30"

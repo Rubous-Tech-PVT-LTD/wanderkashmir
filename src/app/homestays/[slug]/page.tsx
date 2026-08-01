@@ -214,7 +214,7 @@ export default async function HomestaySeoPage({ params }: { params: Promise<{ sl
             </div>
             <div className="mt-10 text-center">
                <Link 
-                href={`/stays?q=${slugWords.join(' ')}`} 
+                href={`/stays?q=${encodeURIComponent(slugWords.join(' '))}`} 
                 className="px-8 py-3 bg-[#0284c7] text-white rounded-full font-medium hover:bg-[#0369a1] transition-colors shadow-sm inline-block"
               >
                 View All {slugWords.length > 0 ? slugWords.map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ') : ''} Stays
