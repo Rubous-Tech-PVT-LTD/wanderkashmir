@@ -34,8 +34,8 @@ export default async function StaysPage({ searchParams }: { searchParams: Promis
 
   // Map database properties to the PropertyItem format expected by StaysClient
   const formattedProperties: PropertyItem[] = propertiesData.map((prop) => {
-    // Determine the main image
-    let imageUrl = getValidImageUrl((prop as any).images);
+    const propData: any = prop;
+    let imageUrl = getValidImageUrl(propData.images);
 
     // Capitalize the vendor type nicely (e.g. "HOTEL" -> "Hotel")
     const typeLabel = prop.vendorProfile?.type 
