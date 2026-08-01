@@ -484,10 +484,70 @@ model ContentAsset {
   title         String?
   content       String?        @db.Text
   jsonData      Json?
-  publishStatus String         @default("Draft")
+  publishStatus String         @default("Draft") // Draft, Pending Review, Approved, Scheduled, Published, Archived
   
+  scheduledFor  DateTime?
+  publishedPlatformId String?  // ID returned from the external API (e.g., Instagram Post ID)
+  
+  // Analytics
+  views         Int            @default(0)
+  clicks        Int            @default(0)
+  shares        Int            @default(0)
+  engagement    Int            @default(0)
+
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
 
+  versions      ContentAssetVersion[]
+  auditLogs     ContentAuditLog[]
+
   @@unique([seoPageId, platform])
+}
+
+model ContentGenerationJob {
+  id               String         @id @default(cuid())
+  seoLandingPageId String
+  status           String         @default("PENDING") // PENDING, GENERATING, COMPLETED, FAILED
+  progress         Int            @default(0) // 0 to 100
+  platform         String         // The specific platform being generated
+  error            String?        @db.Text
+  logs             Json?
+  
+  startedAt        DateTime?
+  finishedAt       DateTime?
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+}
+
+model ContentAssetVersion {
+  id          String       @id @default(cuid())
+  assetId     String
+  asset       ContentAsset @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  content     String?      @db.Text
+  jsonData    Json?
+  versionNote String?
+  
+  createdAt   DateTime     @default(now())
+}
+
+model ContentAuditLog {
+  id          String       @id @default(cuid())
+  assetId     String
+  asset       ContentAsset @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  action      String       // Generated, Edited, Approved, Published, Deleted, Restored
+  user        String       @default("System")
+  ip          String?
+  
+  timestamp   DateTime     @default(now())
+}
+
+model ContentSettings {
+  id                 String   @id @default(cuid())
+  brandVoice         String   @default("Professional and engaging")
+  defaultCta         String   @default("Book your trip today!")
+  hashtags           String[] @default(["#WanderKashmir", "#KashmirTourism"])
+  defaultPromptRules String?  @db.Text
+  temperature        Float    @default(0.7)
+  
+  updatedAt          DateTime @updatedAt
 }

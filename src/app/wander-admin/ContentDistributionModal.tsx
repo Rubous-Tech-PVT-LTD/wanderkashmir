@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { X, CheckCircle, RefreshCw, Wand2, FileText, Send, Loader2, Save, Play, Copy, Trash2, Check } from "lucide-react";
 import { getContentAssets, updateContentAssetStatus, updateContentAsset, deleteContentAsset, duplicateContentAsset } from "@/actions/admin-content";
+import { ContentPreviewRenderer } from "./ContentPreviewRenderer";
 
 const PLATFORMS = ['instagram', 'facebook', 'linkedin', 'reddit', 'twitter', 'pinterest', 'email', 'whatsapp'];
 
@@ -24,6 +25,38 @@ export default function ContentDistributionModal({
 
   useEffect(() => {
     fetchAssets();
+    
+    // Connect to SSE for job progress tracking
+    const eventSource = new EventSource(`/api/admin/content-jobs/${page.id}/stream`);
+    
+    eventSource.onmessage = (event) => {
+      try {
+        const jobs = JSON.parse(event.data);
+        const newStatuses: Record<string, string> = {};
+        
+        jobs.forEach((job: any) => {
+          // Only process the most recent job for each platform
+          if (!newStatuses[job.platform]) {
+            newStatuses[job.platform] = job.status === 'COMPLETED' ? 'Completed' : 
+                                        job.status === 'FAILED' ? 'Failed' : 
+                                        job.status === 'GENERATING' ? 'Generating' : 'Queued';
+          }
+        });
+        
+        setGenerationStatuses(prev => {
+          // If a job newly completed, we should refetch assets to show it
+          const newlyCompleted = jobs.find((j: any) => j.status === 'COMPLETED' && prev[j.platform] !== 'Completed');
+          if (newlyCompleted) {
+            fetchAssets();
+          }
+          return { ...prev, ...newStatuses };
+        });
+      } catch (err) {
+        console.error("SSE parsing error", err);
+      }
+    };
+
+    return () => eventSource.close();
   }, [page.id]);
 
   const fetchAssets = async () => {
@@ -39,22 +72,32 @@ export default function ContentDistributionModal({
     return assets.find(a => a.platform === platform);
   };
 
-  const generatePlatform = async (platform: string) => {
-    setGenerationStatuses(prev => ({ ...prev, [platform]: 'Generating' }));
+  const processJobInWorker = async (jobId: string, platform: string) => {
     try {
-      const res = await fetch("/api/admin/generate-content", {
+      await fetch("/api/admin/content-jobs/worker", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ seoPageId: page.id, platform }),
+        body: JSON.stringify({ jobId }),
+      });
+      // The SSE stream will catch the result and update the UI automatically
+    } catch (err) {
+      console.error("Failed to call worker", err);
+    }
+  };
+
+  const generatePlatform = async (platform: string) => {
+    setGenerationStatuses(prev => ({ ...prev, [platform]: 'Queued' }));
+    try {
+      // 1. Create Job
+      const res = await fetch("/api/admin/content-jobs", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ seoPageId: page.id, platforms: [platform] }),
       });
       const data = await res.json();
-      if (res.ok && data.success) {
-        setGenerationStatuses(prev => ({ ...prev, [platform]: 'Completed' }));
-        // Replace or add the new asset in state
-        setAssets(prev => {
-          const filtered = prev.filter(a => a.platform !== platform);
-          return [data.asset, ...filtered];
-        });
+      if (res.ok && data.success && data.jobs.length > 0) {
+        // 2. Trigger Worker
+        processJobInWorker(data.jobs[0].id, platform);
       } else {
         throw new Error(data.error);
       }
@@ -69,10 +112,24 @@ export default function ContentDistributionModal({
     PLATFORMS.forEach(p => statuses[p] = 'Queued');
     setGenerationStatuses(statuses);
 
-    // Fire all requests asynchronously (they will resolve independently)
-    PLATFORMS.forEach(platform => {
-      generatePlatform(platform);
-    });
+    try {
+      // 1. Create all 8 jobs at once
+      const res = await fetch("/api/admin/content-jobs", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ seoPageId: page.id, platforms: PLATFORMS }),
+      });
+      const data = await res.json();
+      
+      if (res.ok && data.success) {
+        // 2. Trigger worker for each job independently (Vercel Free Tier Queue Runner pattern)
+        data.jobs.forEach((job: any) => {
+          processJobInWorker(job.id, job.platform);
+        });
+      }
+    } catch (err) {
+      console.error("Failed to generate all", err);
+    }
   };
 
   const handleSave = async (assetId: string) => {
@@ -258,8 +315,8 @@ export default function ContentDistributionModal({
                             </div>
                           </div>
                         ) : (
-                          <div className="bg-slate-50 p-6 rounded-xl border border-slate-100 whitespace-pre-wrap font-mono text-sm overflow-x-auto text-slate-800">
-                            {activeAsset.content}
+                          <div className="bg-slate-50 p-6 rounded-xl border border-slate-100 overflow-x-auto">
+                            <ContentPreviewRenderer platform={activePlatform} asset={activeAsset} />
                           </div>
                         )}
                       </div>
