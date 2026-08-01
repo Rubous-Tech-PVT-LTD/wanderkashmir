@@ -5,6 +5,8 @@ import prisma from "@/lib/prisma";
 
 import { Metadata } from "next";
 
+import { getValidImageUrl } from "@/lib/imageUtils";
+
 export const metadata: Metadata = {
   title: "Kashmir Hotels & Stays | WanderKashmir",
   description: "Find and book the best hotels, homestays, and houseboats in Srinagar, Gulmarg, Pahalgam, and more.",
@@ -33,11 +35,7 @@ export default async function StaysPage({ searchParams }: { searchParams: Promis
   // Map database properties to the PropertyItem format expected by StaysClient
   const formattedProperties: PropertyItem[] = propertiesData.map((prop) => {
     // Determine the main image
-    let imageUrl = "https://images.unsplash.com/photo-1542718610-a1d656d1884c?auto=format&fit=crop&q=80&w=800"; // fallback
-    const propData: any = prop;
-    if (propData.images && propData.images.length > 0) {
-      imageUrl = propData.images[0];
-    }
+    let imageUrl = getValidImageUrl((prop as any).images);
 
     // Capitalize the vendor type nicely (e.g. "HOTEL" -> "Hotel")
     const typeLabel = prop.vendorProfile?.type 

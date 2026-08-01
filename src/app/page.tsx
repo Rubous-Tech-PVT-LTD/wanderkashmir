@@ -6,6 +6,7 @@ import PropertyCard from "@/components/PropertyCard";
 import HeroCarousel from "@/components/HeroCarousel";
 import ComingSoonButton from "@/components/ComingSoonButton";
 import CustomizeTourModal from "@/components/CustomizeTourModal";
+import { getValidImageUrl } from "@/lib/imageUtils";
 
 import PopularSeoRoutes from "@/components/PopularSeoRoutes";
 import Link from "next/link";
@@ -104,10 +105,7 @@ async function getFeaturedProperties() {
         price: p.pricePerNight,
         rating: 4.5 + Math.random() * 0.5,
         reviews: Math.floor(Math.random() * 150) + 10,
-        image:
-          (p as any).images && (p as any).images.length > 0
-            ? (p as any).images[0]
-            : (i % 2 === 0
+        image: getValidImageUrl((p as any).images, i % 2 === 0
               ? "https://images.unsplash.com/photo-1542718610-a1d656d1884c?auto=format&fit=crop&q=80&w=800"
               : "https://images.unsplash.com/photo-1605537964076-2cb0caf302d9?auto=format&fit=crop&q=80&w=800"),
         featured: true,
