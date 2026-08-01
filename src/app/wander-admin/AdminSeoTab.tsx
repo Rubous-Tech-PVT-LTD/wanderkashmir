@@ -4,6 +4,8 @@ import { useState, useEffect } from "react";
 import { Plus, Edit2, Trash2, Globe, Search, Link as LinkIcon, Wand2, RefreshCw, PenTool } from "lucide-react";
 import Link from "next/link";
 import { triggerSeoGeneration, triggerBlogGeneration } from "@/actions/admin-seo";
+import ContentDistributionModal from "./ContentDistributionModal";
+import { Share2 } from "lucide-react";
 
 export default function AdminSeoTab() {
   const [pages, setPages] = useState<any[]>([]);
@@ -11,6 +13,7 @@ export default function AdminSeoTab() {
   const [isEditing, setIsEditing] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
+  const [activeDistributionPage, setActiveDistributionPage] = useState<any | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
   const [formData, setFormData] = useState({
@@ -423,6 +426,13 @@ export default function AdminSeoTab() {
                           <Edit2 className="w-4 h-4" />
                         </button>
                         <button
+                          onClick={() => setActiveDistributionPage(page)}
+                          className="p-2 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors"
+                          title="Generate Social Content"
+                        >
+                          <Share2 className="w-4 h-4" />
+                        </button>
+                        <button
                           onClick={() => handleDelete(page.id)}
                           className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                           title="Delete"
@@ -463,6 +473,13 @@ export default function AdminSeoTab() {
           </>
           )}
         </div>
+      )}
+
+      {activeDistributionPage && (
+        <ContentDistributionModal 
+          page={activeDistributionPage} 
+          onClose={() => setActiveDistributionPage(null)} 
+        />
       )}
     </div>
   );

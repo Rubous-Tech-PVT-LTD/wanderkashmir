@@ -434,6 +434,8 @@ model SeoLandingPage {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  contentAssets ContentAsset[]
+
   @@index([type])
 }
 
@@ -471,4 +473,21 @@ model CustomTourRequest {
 
   @@index([status])
   @@index([createdAt])
+}
+
+model ContentAsset {
+  id            String         @id @default(cuid())
+  seoPageId     String
+  seoPage       SeoLandingPage @relation(fields: [seoPageId], references: [id], onDelete: Cascade)
+  platform      String         // "instagram", "facebook", "linkedin", "reddit", "twitter", "pinterest", "email", "whatsapp"
+  contentType   String         // e.g., "carousel", "article", "thread", "message", "pin"
+  title         String?
+  content       String?        @db.Text
+  jsonData      Json?
+  publishStatus String         @default("Draft")
+  
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  @@unique([seoPageId, platform])
 }
