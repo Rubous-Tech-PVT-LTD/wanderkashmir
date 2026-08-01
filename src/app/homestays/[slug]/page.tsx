@@ -161,12 +161,10 @@ export default async function HomestaySeoPage({ params }: { params: Promise<{ sl
             <h2 className="text-3xl font-bold text-slate-900 mb-8 text-center">Available Homestays in this area</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {matchedHomestays.map((property: any) => {
-                const imageUrl = property.images && property.images.length > 0 
-                  ? property.images[0] 
-                  : "https://images.unsplash.com/photo-1542718610-a1d656d1884c?auto=format&fit=crop&q=80&w=800";
+                const imageUrl = getValidImageUrl(property.images);
                   
                 return (
-                  <Link href={`/property/${property.id}`} key={property.id} className="group flex flex-col bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-all border border-slate-100">
+                  <Link href={`/stays/${property.id}`} key={property.id} className="group flex flex-col bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-all border border-slate-100">
                     <div className="relative aspect-[4/3] w-full overflow-hidden">
                       <Image
                         src={imageUrl}
