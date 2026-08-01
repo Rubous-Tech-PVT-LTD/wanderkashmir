@@ -8,6 +8,7 @@ import Footer from "@/components/Footer";
 import Navbar from "@/components/Navbar";
 import { marked } from "marked";
 import { getValidImageUrl } from "@/lib/imageUtils";
+import { JsonLd } from "@/components/JsonLd";
 
 export const revalidate = 3600; // ISR: Revalidate every hour for instant load times
 
@@ -66,38 +67,46 @@ export default async function HomestaySeoPage({ params }: { params: Promise<{ sl
     return matches > 0;
   });
 
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.wanderkashmir.com';
+  const url = `${baseUrl}/homestays/${page.slug}`;
+
+  const schemas: any[] = [
+    {
+      "@context": "https://schema.org",
+      "@type": "LodgingBusiness",
+      "name": page.title,
+      "description": page.description,
+      "url": url,
+      "address": {
+        "@type": "PostalAddress",
+        "addressRegion": "Jammu and Kashmir",
+        "addressCountry": "IN"
+      },
+      ...(page.imageUrl && { "image": page.imageUrl })
+    }
+  ];
+
+  if (faqs.length > 0) {
+    schemas.push({
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "mainEntity": faqs.map((faq) => ({
+        "@type": "Question",
+        "name": faq.question,
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": faq.answer
+        }
+      }))
+    });
+  }
+
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col">
+      {schemas.map((schema, idx) => (
+        <JsonLd key={idx} data={schema} />
+      ))}
       <Navbar />
-
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{
-          __html: JSON.stringify({
-            "@context": "https://schema.org",
-            "@type": "LodgingBusiness",
-            "name": page.title,
-            "description": page.description,
-            "url": `https://wanderkashmir.com/homestays/${page.slug}`,
-            "address": {
-              "@type": "PostalAddress",
-              "addressRegion": "Jammu and Kashmir",
-              "addressCountry": "IN"
-            },
-            ...(page.imageUrl && { "image": page.imageUrl }),
-            ...(faqs.length > 0 && {
-              "mainEntity": faqs.map((faq) => ({
-                "@type": "Question",
-                "name": faq.question,
-                "acceptedAnswer": {
-                  "@type": "Answer",
-                  "text": faq.answer
-                }
-              }))
-            })
-          }),
-        }}
-      />
 
       <main className="flex-1 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12 w-full pt-32">
         <nav className="flex items-center gap-2 text-sm text-slate-500 mb-8">

@@ -8,6 +8,7 @@ import Footer from "@/components/Footer";
 import Navbar from "@/components/Navbar";
 import { marked } from "marked";
 import { getValidImageUrl } from "@/lib/imageUtils";
+import { JsonLd } from "@/components/JsonLd";
 
 export const revalidate = 3600; // ISR
 
@@ -58,8 +59,58 @@ export default async function BlogArticlePage({ params }: { params: Promise<{ sl
     const parsedContent = page.content ? await marked.parse(page.content) : "";
     const safeContent = parsedContent;
 
+    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.wanderkashmir.com';
+    const url = `${baseUrl}/blog/${resolvedParams.slug}`;
+
+    const schemas: any[] = [
+      {
+        "@context": "https://schema.org",
+        "@type": "Article",
+        "headline": page.h1Heading,
+        "description": page.description,
+        "image": page.imageUrl ? [page.imageUrl] : [],
+        "datePublished": page.createdAt.toISOString(),
+        "dateModified": page.updatedAt.toISOString(),
+        "author": {
+          "@type": "Organization",
+          "name": "WanderKashmir",
+          "url": baseUrl
+        },
+        "publisher": {
+          "@type": "Organization",
+          "name": "WanderKashmir",
+          "logo": {
+            "@type": "ImageObject",
+            "url": `${baseUrl}/icon.png`
+          }
+        },
+        "mainEntityOfPage": {
+          "@type": "WebPage",
+          "@id": url
+        }
+      }
+    ];
+
+    if (page.faqs && Array.isArray(page.faqs) && page.faqs.length > 0) {
+      schemas.push({
+        "@context": "https://schema.org",
+        "@type": "FAQPage",
+        "mainEntity": page.faqs.map((faq: any) => ({
+          "@type": "Question",
+          "name": faq.question,
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": faq.answer
+          }
+        }))
+      });
+    }
+
   return (
     <main className="min-h-screen bg-slate-50 flex flex-col">
+      {schemas.map((schema, idx) => (
+        <JsonLd key={idx} data={schema} />
+      ))}
       <Navbar />
       
       <div className="flex-1 max-w-4xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8 md:py-12">

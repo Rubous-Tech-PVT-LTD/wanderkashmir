@@ -8,6 +8,7 @@ import Footer from "@/components/Footer";
 import Navbar from "@/components/Navbar";
 import { marked } from "marked";
 import { getValidImageUrl } from "@/lib/imageUtils";
+import { JsonLd } from "@/components/JsonLd";
 
 export const revalidate = 3600; // ISR: Revalidate every hour for instant load times
 
@@ -66,39 +67,54 @@ export default async function TaxiSeoPage({ params }: { params: Promise<{ slug: 
 
   const rates = matchedRateCard ? (matchedRateCard.rates as Record<string, number>) : null;
 
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.wanderkashmir.com';
+  const url = `${baseUrl}/taxis/${page.slug}`;
+
+  const schemas: any[] = [
+    {
+      "@context": "https://schema.org",
+      "@type": "Service",
+      "name": page.title,
+      "description": page.description,
+      "url": url,
+      "provider": {
+        "@type": "LocalBusiness",
+        "name": "WanderKashmir",
+        "address": {
+          "@type": "PostalAddress",
+          "addressRegion": "Jammu and Kashmir",
+          "addressCountry": "IN"
+        }
+      },
+      "areaServed": {
+        "@type": "State",
+        "name": "Jammu and Kashmir"
+      },
+      ...(page.imageUrl && { "image": page.imageUrl })
+    }
+  ];
+
+  if (faqs.length > 0) {
+    schemas.push({
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "mainEntity": faqs.map((faq) => ({
+        "@type": "Question",
+        "name": faq.question,
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": faq.answer
+        }
+      }))
+    });
+  }
+
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col">
+      {schemas.map((schema, idx) => (
+        <JsonLd key={idx} data={schema} />
+      ))}
       <Navbar />
-
-      {/* JSON-LD Schema for LocalBusiness / Service */}
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{
-          __html: JSON.stringify({
-            "@context": "https://schema.org",
-            "@type": "LocalBusiness",
-            "name": page.title,
-            "description": page.description,
-            "url": `https://wanderkashmir.com/taxis/${page.slug}`,
-            "address": {
-              "@type": "PostalAddress",
-              "addressRegion": "Jammu and Kashmir",
-              "addressCountry": "IN"
-            },
-            ...(page.imageUrl && { "image": page.imageUrl }),
-            ...(faqs.length > 0 && {
-              "mainEntity": faqs.map((faq) => ({
-                "@type": "Question",
-                "name": faq.question,
-                "acceptedAnswer": {
-                  "@type": "Answer",
-                  "text": faq.answer
-                }
-              }))
-            })
-          }),
-        }}
-      />
 
       <main className="flex-1 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12 w-full pt-32">
         {/* Breadcrumb */}
