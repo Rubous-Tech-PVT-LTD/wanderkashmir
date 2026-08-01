@@ -135,7 +135,7 @@ export default async function HomestaySeoPage({ params }: { params: Promise<{ sl
               <div className="absolute inset-0 bg-gradient-to-r from-[#166534]/5 to-transparent z-10 md:hidden" />
               <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent z-10 md:hidden" />
               <Image 
-                src={page.imageUrl} 
+                src={getValidImageUrl([page.imageUrl])} 
                 alt={page.h1Heading} 
                 fill 
                 className="object-cover"

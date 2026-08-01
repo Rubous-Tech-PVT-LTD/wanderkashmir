@@ -7,6 +7,7 @@ import { ChevronRight, MapPin, CheckCircle, Car, ChevronDown } from "lucide-reac
 import Footer from "@/components/Footer";
 import Navbar from "@/components/Navbar";
 import { marked } from "marked";
+import { getValidImageUrl } from "@/lib/imageUtils";
 
 export const revalidate = 3600; // ISR: Revalidate every hour for instant load times
 
@@ -144,7 +145,7 @@ export default async function TaxiSeoPage({ params }: { params: Promise<{ slug: 
               <div className="absolute inset-0 bg-gradient-to-r from-[#0284c7]/5 to-transparent z-10 md:hidden" />
               <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent z-10 md:hidden" />
               <Image 
-                src={page.imageUrl} 
+                src={getValidImageUrl([page.imageUrl])} 
                 alt={page.h1Heading} 
                 fill 
                 className="object-cover"

@@ -2,6 +2,7 @@ import prisma from "@/lib/prisma";
 import Link from "next/link";
 import { ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
 import Image from "next/image";
+import { getValidImageUrl } from "@/lib/imageUtils";
 
 // Revalidate occasionally, or make it dynamic
 export const dynamic = 'force-dynamic';
@@ -66,7 +67,7 @@ export default async function DestinationsPage({
                     <div className="relative h-48 w-full overflow-hidden bg-slate-100">
                       {route.imageUrl ? (
                         <Image
-                          src={route.imageUrl}
+                          src={getValidImageUrl([route.imageUrl])}
                           alt={route.title}
                           fill
                           className="object-cover group-hover:scale-105 transition-transform duration-500"

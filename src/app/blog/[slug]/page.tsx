@@ -7,6 +7,7 @@ import { ChevronRight, Calendar, User, ArrowLeft } from "lucide-react";
 import Footer from "@/components/Footer";
 import Navbar from "@/components/Navbar";
 import { marked } from "marked";
+import { getValidImageUrl } from "@/lib/imageUtils";
 
 export const revalidate = 3600; // ISR
 
@@ -98,9 +99,9 @@ export default async function BlogArticlePage({ params }: { params: Promise<{ sl
         </header>
 
         {page.imageUrl && (
-          <div className="w-full aspect-[21/9] min-h-[300px] md:minh-[400px] relative rounded-3xl overflow-hidden shadow-xl mb-16">
+          <div className="relative w-full aspect-[21/9] max-h-[500px] rounded-3xl overflow-hidden shadow-xl mb-16">
             <ImageWithFallback 
-              src={page.imageUrl} 
+              src={getValidImageUrl([page.imageUrl])} 
               alt={page.h1Heading} 
               fill 
               className="object-cover"
