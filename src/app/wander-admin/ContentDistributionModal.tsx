@@ -18,6 +18,7 @@ export default function ContentDistributionModal({
   const [assets, setAssets] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [generationStatuses, setGenerationStatuses] = useState<Record<string, string>>({});
+  const [generationErrors, setGenerationErrors] = useState<Record<string, string>>({});
   const [activePlatform, setActivePlatform] = useState<string>('instagram');
   const [editingContent, setEditingContent] = useState<string>("");
   const [isEditing, setIsEditing] = useState(false);
@@ -34,6 +35,7 @@ export default function ContentDistributionModal({
       try {
         const jobs = JSON.parse(event.data);
         const newStatuses: Record<string, string> = {};
+        const newErrors: Record<string, string> = {};
         
         jobs.forEach((job: any) => {
           // Only process the most recent job for each platform
@@ -41,6 +43,10 @@ export default function ContentDistributionModal({
             newStatuses[job.platform] = job.status === 'COMPLETED' ? 'Completed' : 
                                         job.status === 'FAILED' ? 'Failed' : 
                                         job.status === 'GENERATING' ? 'Generating' : 'Queued';
+            
+            if (job.status === 'FAILED' && job.error) {
+              newErrors[job.platform] = job.error;
+            }
           }
         });
         
@@ -52,6 +58,8 @@ export default function ContentDistributionModal({
           }
           return { ...prev, ...newStatuses };
         });
+        
+        setGenerationErrors(prev => ({ ...prev, ...newErrors }));
       } catch (err) {
         console.error("SSE parsing error", err);
       }
@@ -88,6 +96,11 @@ export default function ContentDistributionModal({
 
   const generatePlatform = async (platform: string, options: any = {}) => {
     setGenerationStatuses(prev => ({ ...prev, [platform]: 'Queued' }));
+    setGenerationErrors(prev => {
+      const next = { ...prev };
+      delete next[platform];
+      return next;
+    });
     try {
       // 1. Create Job
       const res = await fetch("/api/admin/content-jobs", {
@@ -276,6 +289,20 @@ export default function ContentDistributionModal({
                       <div className="flex flex-col items-center justify-center py-20 text-slate-400">
                         <Wand2 className="w-12 h-12 mb-4 animate-pulse text-[#0284c7]" />
                         <p>AI is crafting content for {activePlatform}...</p>
+                      </div>
+                    ) : genStatus === 'Failed' ? (
+                      <div className="flex flex-col items-center justify-center py-20 text-red-500 text-center px-6">
+                        <X className="w-12 h-12 mb-4 opacity-50" />
+                        <h4 className="text-lg font-bold mb-2">Generation Failed</h4>
+                        <p className="text-sm opacity-80 max-w-xl bg-red-50 p-4 rounded-lg border border-red-100 whitespace-pre-wrap text-left font-mono">
+                          {generationErrors[activePlatform] || "An unknown error occurred during generation."}
+                        </p>
+                        <button 
+                          onClick={() => generatePlatform(activePlatform)}
+                          className="mt-6 px-4 py-2 bg-red-100 hover:bg-red-200 text-red-700 rounded-lg font-medium transition-colors"
+                        >
+                          Try Again
+                        </button>
                       </div>
                     ) : activeAsset ? (
                       <div className="space-y-6">
