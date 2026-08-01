@@ -50,10 +50,23 @@ export function ContentPreviewRenderer({ platform, asset }: { platform: string, 
                   </button>
                 )}
                 
-                {/* Slide Content */}
-                <div className="flex-1 flex flex-col justify-center items-center">
-                  <h3 className="font-bold text-2xl mb-3 text-slate-800">{data.slides[activeSlide].title}</h3>
-                  <p className="text-sm text-slate-600 mb-6">{data.slides[activeSlide].body}</p>
+                {/* Slide Content (With Realistic Background Image) */}
+                <div 
+                  className="flex-1 flex flex-col justify-center items-center relative overflow-hidden rounded-md"
+                  style={{
+                    backgroundImage: `url('https://picsum.photos/seed/${encodeURIComponent(data.slides[activeSlide].title || 'kashmir')}/800/800')`,
+                    backgroundSize: 'cover',
+                    backgroundPosition: 'center'
+                  }}
+                >
+                  {/* Dark Gradient Overlay for Text Readability */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-black/30" />
+                  
+                  {/* Text Overlay */}
+                  <div className="relative z-10 p-6 flex flex-col h-full justify-end pb-12">
+                    <h3 className="font-bold text-2xl mb-3 text-white drop-shadow-md">{data.slides[activeSlide].title}</h3>
+                    <p className="text-sm text-slate-200 drop-shadow mb-2 line-clamp-4">{data.slides[activeSlide].body}</p>
+                  </div>
                 </div>
                 
                 {/* Image Prompt Box (Simulating the visual photo) */}
