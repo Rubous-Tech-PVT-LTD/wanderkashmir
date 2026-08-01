@@ -21,9 +21,10 @@ export async function GET(
       const pushUpdate = async () => {
         if (!isConnected) return;
         try {
-          // Fetch current job status
+          // Fetch current job status ordered by descending creation
           const jobs = await prisma.contentGenerationJob.findMany({
             where: { seoLandingPageId: seoPageId },
+            orderBy: { createdAt: 'desc' }
           });
           
           const data = JSON.stringify(jobs);

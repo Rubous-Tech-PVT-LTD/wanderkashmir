@@ -37,24 +37,33 @@ export class ContentWorkerService {
       const assetTitle = parsedJson.title || parsedJson.subject || `${job.platform} content for ${page.title}`;
       const stringifiedContent = JSON.stringify(parsedJson, null, 2);
 
-      await prisma.contentAsset.upsert({
-        where: { seoPageId_platform: { seoPageId: page.id, platform: job.platform.toLowerCase() } },
-        update: {
-          title: assetTitle,
-          content: stringifiedContent, 
-          jsonData: parsedJson,
-          publishStatus: "Draft",
-        },
-        create: {
-          seoPageId: page.id,
-          platform: job.platform.toLowerCase(),
-          title: assetTitle,
-          content: stringifiedContent,
-          jsonData: parsedJson,
-          contentType: job.platform,
-          publishStatus: "Draft",
-        }
+      const existingAsset = await prisma.contentAsset.findUnique({
+        where: { seoPageId_platform: { seoPageId: page.id, platform: job.platform.toLowerCase() } }
       });
+
+      if (existingAsset) {
+        await prisma.contentAsset.update({
+          where: { id: existingAsset.id },
+          data: {
+            title: assetTitle,
+            content: stringifiedContent, 
+            jsonData: parsedJson,
+            publishStatus: "Draft",
+          }
+        });
+      } else {
+        await prisma.contentAsset.create({
+          data: {
+            seoPageId: page.id,
+            platform: job.platform.toLowerCase(),
+            title: assetTitle,
+            content: stringifiedContent,
+            jsonData: parsedJson,
+            contentType: job.platform,
+            publishStatus: "Draft",
+          }
+        });
+      }
 
       // Update Audit Log
       const asset = await prisma.contentAsset.findUnique({ where: { seoPageId_platform: { seoPageId: page.id, platform: job.platform.toLowerCase() } } });
