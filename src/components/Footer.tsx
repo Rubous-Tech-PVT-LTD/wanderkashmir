@@ -138,9 +138,9 @@ export default function Footer() {
             <div className="flex gap-3">
               {[
                 { Icon: InstagramIcon, href: "https://instagram.com/wander__kashmir", label: "Instagram" },
-                { Icon: FacebookIcon, href: "https://facebook.com/wander__kashmir", label: "Facebook" },
-                { Icon: YoutubeIcon, href: "https://youtube.com/@wander__kashmir", label: "YouTube" },
-                { Icon: XIcon, href: "https://x.com/wander__kashmir", label: "Twitter" },
+                { Icon: FacebookIcon, href: "https://facebook.com/wanderkashmir", label: "Facebook" },
+                { Icon: YoutubeIcon, href: "https://youtube.com/@wanderkashmir", label: "YouTube" },
+                { Icon: XIcon, href: "https://x.com/wanderkashmir", label: "Twitter" },
                 { Icon: LinkedinIcon, href: "https://www.linkedin.com/company/wander-kashmir/", label: "LinkedIn" },
               ].map(({ Icon, href, label }) => (
                 <a
