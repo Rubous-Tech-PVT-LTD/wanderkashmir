@@ -149,6 +149,8 @@ export default function TourDetailClient({ initialTour }: { initialTour: any }) 
                     src={tour.images?.[activeImage] || "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=900&q=80"}
                     alt={tour.title}
                     fill
+                    sizes="(max-width: 1024px) 100vw, 66vw"
+                    priority
                     className="object-cover transition-all duration-500"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
@@ -882,7 +884,9 @@ export default function TourDetailClient({ initialTour }: { initialTour: any }) 
                           isLoggedIn={isSignedIn || false}
                           checkIn={travelDate?.toISOString() || new Date().toISOString()}
                           checkOut={travelDate ? new Date(travelDate.getTime() + (parseInt(tour.duration.split(' ')[0]) || 1) * 86400000).toISOString() : new Date().toISOString()}
-                          guests={activePersons}
+                          rooms={1}
+                          adults={activePersons}
+                          childrenCount={0}
                           nights={parseInt(tour.duration.split(' ')[0]) || 1}
                           guestName={guestName}
                           guestPhone={guestPhone}

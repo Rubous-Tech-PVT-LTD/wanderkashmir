@@ -38,7 +38,22 @@ export default async function ToursPage() {
     orderBy: {
       createdAt: 'desc'
     },
-    take: 100
+    take: 100,
+    select: {
+      id: true,
+      slug: true,
+      isLive: true,
+      title: true,
+      images: true,
+      badge: true,
+      category: true,
+      duration: true,
+      destinations: true,
+      inclusions: true,
+      originalPrice: true,
+      price: true,
+      createdAt: true
+    }
   });
 
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.wanderkashmir.com';

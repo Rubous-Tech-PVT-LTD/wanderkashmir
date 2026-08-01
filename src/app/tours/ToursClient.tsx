@@ -116,7 +116,7 @@ export default function ToursClient({ initialTours }: { initialTours: any[] }) {
 
           {/* Tour cards */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {paginatedTours.map((tour) => (
+            {paginatedTours.map((tour, index) => (
               <Link
                 key={tour.id}
                 href={tour.isLive ? `/tours/${tour.slug}` : `https://wa.me/916005888754?text=I'm%20interested%20in%20the%20${encodeURIComponent(tour.title)}`}
@@ -131,6 +131,7 @@ export default function ToursClient({ initialTours }: { initialTours: any[] }) {
                       alt={tour.title} 
                       fill 
                       unoptimized
+                      priority={index < 4}
                       className="object-cover transition-transform duration-500 hover:scale-105" 
                       sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                     />
