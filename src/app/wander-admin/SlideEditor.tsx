@@ -43,7 +43,7 @@ export function SlideEditor({
 
   const deleteSlide = (index: number) => {
     if (confirm("Are you sure you want to delete this slide?")) {
-      const newSlides = slides.filter((_, i) => i !== index);
+      const newSlides = slides.filter((_: any, i: number) => i !== index);
       setEditingContent(JSON.stringify({ ...parsed, slides: newSlides }, null, 2));
     }
   };
