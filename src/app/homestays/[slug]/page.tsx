@@ -7,6 +7,7 @@ import { ChevronRight, Home, Heart, Coffee, MapPin, Star, ChevronDown } from "lu
 import Footer from "@/components/Footer";
 import Navbar from "@/components/Navbar";
 import { marked } from "marked";
+import { getValidImageUrl } from "@/lib/imageUtils";
 
 export const revalidate = 3600; // ISR: Revalidate every hour for instant load times
 
