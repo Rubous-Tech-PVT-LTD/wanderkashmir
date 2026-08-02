@@ -9,14 +9,18 @@ interface ImageWithFallbackProps extends ImageProps {
 
 export default function ImageWithFallback(props: ImageWithFallbackProps) {
   const { src, fallbackSrc = 'https://images.unsplash.com/photo-1542718610-a1d656d1884c?auto=format&fit=crop&q=80&w=800', ...rest } = props;
-  const [imgSrc, setImgSrc] = useState(src);
+  const [error, setError] = React.useState(false);
+
+  React.useEffect(() => {
+    setError(false);
+  }, [src]);
 
   return (
     <Image
       {...rest}
-      src={imgSrc}
+      src={error ? fallbackSrc : src}
       onError={() => {
-        setImgSrc(fallbackSrc);
+        setError(true);
       }}
     />
   );
