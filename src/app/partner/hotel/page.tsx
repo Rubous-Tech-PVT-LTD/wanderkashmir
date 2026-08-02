@@ -932,7 +932,7 @@ export default function HotelDashboard({ properties = [], bookings = [] }: { pro
                     rows={4} 
                     {...register("description")}
                     className={`w-full border rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-sky-500/20 ${errors.description ? 'border-orange-500 focus:border-orange-500' : 'border-slate-200 focus:border-sky-500'}`} 
-                    placeholder="Describe your hotel..." 
+                    placeholder="e.g., Welcome to our beautiful retreat in the heart of Srinagar. We offer cozy rooms, stunning views, and free WiFi. Book your perfect Kashmir stay today..." 
                   />
                   {errors.description && <p className="text-orange-500 text-xs mt-1 font-medium">{errors.description.message}</p>}
                 </div>

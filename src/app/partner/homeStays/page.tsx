@@ -917,7 +917,7 @@ export default function HomestayDashboard({ bookings = [], properties = [] }: { 
                     rows={4} 
                     {...register("description")}
                     className={`w-full border rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-sky-500/20 ${errors.description ? 'border-orange-500 focus:border-orange-500' : 'border-slate-200 focus:border-sky-500'}`} 
-                    placeholder="Describe the cultural experience..." 
+                    placeholder="e.g., Experience authentic Kashmiri hospitality at our homestay in Pahalgam. Enjoy home-cooked Wazwan, mountain views, and cozy rooms. Book your perfect Kashmir stay today..." 
                   />
                   {errors.description && <p className="text-orange-500 text-xs mt-1 font-medium">{errors.description.message}</p>}
                 </div>
