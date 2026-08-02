@@ -176,6 +176,7 @@ export default function PhotoGalleryClient({ images, propertyName }: PhotoGaller
             >
               {isVideo(displayImages[currentIndex]) ? (
                 <video 
+                  key={`vid-${currentIndex}`}
                   src={displayImages[currentIndex]} 
                   controls
                   autoPlay
@@ -184,6 +185,7 @@ export default function PhotoGalleryClient({ images, propertyName }: PhotoGaller
                 />
               ) : (
                 <ImageWithFallback 
+                  key={`img-${currentIndex}`}
                   src={displayImages[currentIndex]} 
                   alt={`${propertyName} photo ${currentIndex + 1}`} 
                   fill 

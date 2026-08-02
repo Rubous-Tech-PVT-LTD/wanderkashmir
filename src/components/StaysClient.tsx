@@ -373,6 +373,7 @@ export default function StaysClient({ initialProperties, initialQuery = "" }: { 
 
           <div className="relative w-full max-w-5xl h-[85vh]">
             <ImageWithFallback 
+              key={currentImageIndex}
               src={galleryImages[currentImageIndex]} 
               alt="Property view" 
               fill
