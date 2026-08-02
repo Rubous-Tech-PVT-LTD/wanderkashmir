@@ -76,11 +76,11 @@ export async function POST(request: Request) {
     const vendorProfile = specificVendorProfileId 
       ? await prisma.vendorProfile.findUnique({
           where: { id: specificVendorProfileId },
-          select: { isApproved: true, status: true, rejectionReason: true, businessName: true, email: true }
+          select: { isApproved: true, status: true, rejectionReason: true, businessName: true, email: true, type: true }
         })
       : await prisma.vendorProfile.findFirst({
           where: { userId: user.id },
-          select: { isApproved: true, status: true, rejectionReason: true, businessName: true, email: true }
+          select: { isApproved: true, status: true, rejectionReason: true, businessName: true, email: true, type: true }
         });
 
     return NextResponse.json({ 
@@ -90,6 +90,7 @@ export async function POST(request: Request) {
       rejectionReason: vendorProfile?.rejectionReason ?? null,
       businessName: vendorProfile?.businessName ?? null,
       vendorEmail: vendorProfile?.email ?? user.email,
+      vendorType: vendorProfile?.type ?? null,
     });
   } catch (error) {
     console.error("Vendor Login Error:", error);

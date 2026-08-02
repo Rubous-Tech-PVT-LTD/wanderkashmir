@@ -50,8 +50,17 @@ export default function VendorLoginPage() {
         return;
       }
 
-      // Approved → go to dashboard
-      router.push("/partner/dashboard");
+      // Approved → go to specific dashboard based on type
+      let dashboardRoute = "/partner/hotel"; // Default fallback
+      if (data.vendorType === "HOMESTAY") {
+        dashboardRoute = "/partner/homeStays";
+      } else if (data.vendorType === "TAXI") {
+        dashboardRoute = "/partner/Taxi_Driver";
+      } else if (data.vendorType === "GUIDE") {
+        dashboardRoute = "/partner/Guide";
+      }
+
+      router.push(dashboardRoute);
       router.refresh();
     } catch (err: any) {
       setError(err.message);
