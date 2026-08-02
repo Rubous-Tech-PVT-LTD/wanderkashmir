@@ -43,6 +43,15 @@ const nextConfig: NextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
+  async redirects() {
+    return [
+      {
+        source: '/dashboard',
+        destination: '/partner/hotel',
+        permanent: true,
+      },
+    ]
+  },
 };
 
 export default nextConfig;
