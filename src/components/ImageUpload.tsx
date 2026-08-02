@@ -59,7 +59,7 @@ export default function ImageUpload({
     }
   };
 
-  const isLimitReached = photos.length >= photoLimit && videos.length >= videoLimit;
+  const isLimitReached = (photoLimit !== undefined && photos.length >= photoLimit) || (videoLimit !== undefined && videos.length >= videoLimit);
 
   return (
     <div className="flex flex-wrap gap-4">
@@ -79,7 +79,9 @@ export default function ImageUpload({
             )}
             <button 
               type="button"
-              onClick={() => {
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
                 const filtered = uploadedPhotos.filter((_, i) => i !== idx);
                 if (typeof setUploadedPhotos === "function") {
                   setUploadedPhotos(filtered);
