@@ -21,7 +21,7 @@ export async function addRoomType(propertyId: string, data: any) {
       }
     });
 
-    revalidatePath("/partner/dashboard");
+    revalidatePath("/partner", "layout");
     return { success: true, roomType };
   } catch (error) {
     console.error("Error adding room type:", error);
@@ -89,7 +89,7 @@ export async function deleteRoomType(id: string) {
       where: { id }
     });
 
-    revalidatePath("/partner/dashboard");
+    revalidatePath("/partner", "layout");
     return { success: true };
   } catch (error) {
     console.error("Error deleting room type:", error);

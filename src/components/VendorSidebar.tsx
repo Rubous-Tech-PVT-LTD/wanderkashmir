@@ -64,13 +64,13 @@ export default function VendorSidebar({ isOpen = false, onClose }: VendorSidebar
   const getLinks = () => {
     switch (vendorType) {
       case "hotel":
-        return [{ name: "Hotel Dashboard", href: "/partner/dashboard", icon: Building2 }];
+        return [{ name: "Hotel Dashboard", href: "/partner/hotel", icon: Building2 }];
       case "homestay":
-        return [{ name: "Homestays Dashboard", href: "/partner/dashboard", icon: Home }];
+        return [{ name: "Homestays Dashboard", href: "/partner/homeStays", icon: Home }];
       case "taxi":
-        return [{ name: "Transport Dashboard", href: "/partner/dashboard", icon: Car }];
+        return [{ name: "Transport Dashboard", href: "/partner/Taxi_Driver", icon: Car }];
       case "guide":
-        return [{ name: "Guide Dashboard", href: "/partner/dashboard", icon: UserCircle2 }];
+        return [{ name: "Guide Dashboard", href: "/partner/Guide", icon: UserCircle2 }];
       default:
         return [];
     }

@@ -29,7 +29,7 @@ export async function addDriver(data: { name: string; phone: string; drivingLice
       }
     });
 
-    revalidatePath("/partner/dashboard");
+    revalidatePath("/partner", "layout");
     return { success: true, driver };
   } catch (error: any) {
     console.error("Failed to add driver", error);
@@ -61,7 +61,7 @@ export async function updateDriver(driverId: string, data: { name: string; phone
       }
     });
 
-    revalidatePath("/partner/dashboard");
+    revalidatePath("/partner", "layout");
     return { success: true, driver };
   } catch (error: any) {
     console.error("Failed to update driver", error);
@@ -86,7 +86,7 @@ export async function deleteDriver(driverId: string) {
 
     await prisma.driver.delete({ where: { id: driverId } });
 
-    revalidatePath("/partner/dashboard");
+    revalidatePath("/partner", "layout");
     return { success: true };
   } catch (error: any) {
     console.error("Failed to delete driver", error);
@@ -123,7 +123,7 @@ export async function addRateOverride(data: { routePlace: string; customPrice: n
       }
     });
 
-    revalidatePath("/partner/dashboard");
+    revalidatePath("/partner", "layout");
     return { success: true, rateOverride };
   } catch (error: any) {
     console.error("Failed to add rate override", error);
@@ -186,7 +186,7 @@ export async function assignDriverAndVehicle(bookingId: string, driverId: string
         }
       }
 
-    revalidatePath("/partner/dashboard");
+    revalidatePath("/partner", "layout");
     return { success: true, booking };
   } catch (error: any) {
     console.error("Failed to assign driver and vehicle", error);

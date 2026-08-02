@@ -23,7 +23,7 @@ export default function VendorEntryPage() {
   // Do NOT watch `isRegistered` as a dependency — that would skip Step 4.
   useEffect(() => {
     if (isRegistered) {
-      window.location.href = "/partner/dashboard";
+      window.location.href = "/partner";
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // run only on mount
@@ -140,7 +140,7 @@ export default function VendorEntryPage() {
   };
 
   const handleCompleteRegistration = () => {
-    window.location.href = "/partner/dashboard";
+    window.location.href = "/partner";
   };
 
   const FileUploadBox = ({ title, desc }: { title: string, desc: string }) => (

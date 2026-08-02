@@ -89,7 +89,7 @@ export default function RoomManagementPage({ params }: { params: Promise<{ prope
   return (
     <div className="max-w-5xl mx-auto p-6">
       <div className="mb-6 flex items-center gap-4">
-        <Link href="/partner/dashboard" className="p-2 bg-slate-100 rounded-full hover:bg-slate-200 transition-colors">
+        <Link href="/partner/hotel" className="p-2 bg-slate-100 rounded-full hover:bg-slate-200 transition-colors">
           <ArrowLeft className="w-5 h-5 text-slate-700" />
         </Link>
         <h1 className="text-3xl font-bold text-slate-900">Manage Rooms</h1>

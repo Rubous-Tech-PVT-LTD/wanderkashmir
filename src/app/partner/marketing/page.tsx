@@ -21,7 +21,7 @@ export default async function MarketingBadgesPage() {
       });
 
   if (!vendorProfile || !vendorProfile.isApproved) {
-    redirect("/partner/dashboard");
+    redirect("/partner");
   }
 
   const businessName = vendorProfile.businessName || "Your Business";
