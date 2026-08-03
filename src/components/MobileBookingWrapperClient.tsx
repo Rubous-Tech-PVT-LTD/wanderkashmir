@@ -29,15 +29,15 @@ export default function MobileBookingWrapperClient({
   return (
     <>
       {/* Sticky Bottom Bar */}
-      <div className="fixed bottom-0 left-0 right-0 bg-[#18181B] text-white p-4 flex items-center justify-between z-40 lg:hidden shadow-[0_-4px_20px_rgba(0,0,0,0.15)] border-t border-slate-800 pb-safe">
+      <div className="fixed bottom-0 left-0 right-0 bg-[#18181B] text-white py-2.5 px-4 flex items-center justify-between z-40 lg:hidden shadow-[0_-4px_20px_rgba(0,0,0,0.15)] border-t border-slate-800">
         <div className="flex flex-col">
           <div className="flex items-end gap-2">
-            <span className="text-xl font-bold">₹ {pricePerNight.toLocaleString('en-IN')}</span>
+            <span className="text-xl font-bold leading-none">₹ {pricePerNight.toLocaleString('en-IN')}</span>
           </div>
-          <span className="text-xs text-zinc-400 mt-1">
+          <span className="text-[11px] text-zinc-400 mt-1 leading-tight">
             + ₹ {taxesAndFees.toLocaleString('en-IN')} taxes & fees
           </span>
-          <span className="text-xs text-zinc-500 mt-0.5">
+          <span className="text-[10px] text-zinc-500 leading-tight">
             Per Night ({maxGuests} Adults)
           </span>
         </div>
