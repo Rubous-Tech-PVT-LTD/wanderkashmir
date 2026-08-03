@@ -7,7 +7,7 @@ import { useCallback, useState } from "react";
 
 function ReviewCard({ review }: { review: any }) {
   const [expanded, setExpanded] = useState(false);
-  const isLong = review.text && review.text.length > 200;
+  const isLong = review.text && review.text.length > 120;
 
   return (
     <div className="bg-slate-50 rounded-xl p-5 border border-slate-100 h-full flex flex-col">
