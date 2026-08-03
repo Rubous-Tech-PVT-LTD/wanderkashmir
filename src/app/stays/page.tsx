@@ -12,6 +12,8 @@ export const metadata: Metadata = {
   description: "Find and book the best hotels, homestays, and houseboats in Srinagar, Gulmarg, Pahalgam, and more.",
 };
 
+import { getGooglePlaceReviews } from "@/actions/google-reviews";
+
 export const revalidate = 60; // Fetch fresh data every 60 seconds
 
 export default async function StaysPage({ searchParams }: { searchParams: Promise<{ [key: string]: string | string[] | undefined }> }) {
@@ -25,6 +27,7 @@ export default async function StaysPage({ searchParams }: { searchParams: Promis
     },
     include: {
       vendorProfile: true, // Needed to get the type (Hotel, Homestay, etc)
+      reviews: true,
     },
     orderBy: {
       createdAt: 'desc'
@@ -33,7 +36,7 @@ export default async function StaysPage({ searchParams }: { searchParams: Promis
   });
 
   // Map database properties to the PropertyItem format expected by StaysClient
-  const formattedProperties: PropertyItem[] = propertiesData.map((prop) => {
+  const formattedProperties: PropertyItem[] = await Promise.all(propertiesData.map(async (prop) => {
     const propData: any = prop;
     let imageUrl = getValidImageUrl(propData.images);
 
@@ -42,20 +45,39 @@ export default async function StaysPage({ searchParams }: { searchParams: Promis
       ? prop.vendorProfile.type.charAt(0).toUpperCase() + prop.vendorProfile.type.slice(1).toLowerCase()
       : "Hotel";
 
+    let rating = 0;
+    let reviewsCount = 0;
+
+    if (prop.reviews && prop.reviews.length > 0) {
+      const totalRating = prop.reviews.reduce((sum, r) => sum + r.rating, 0);
+      rating = totalRating / prop.reviews.length;
+      reviewsCount = prop.reviews.length;
+    } else if (prop.googlePlaceId) {
+      try {
+        const googleData = await getGooglePlaceReviews(prop.googlePlaceId);
+        if (googleData) {
+          rating = googleData.rating || 0;
+          reviewsCount = googleData.userRatingsTotal || 0;
+        }
+      } catch (e) {
+        console.error("Failed to fetch google reviews for", prop.name);
+      }
+    }
+
     return {
       id: prop.id,
       name: prop.name,
       type: typeLabel,
       location: prop.location,
       price: prop.pricePerNight,
-      rating: 4.5, // Default rating for now
-      reviews: Math.floor(Math.random() * 50) + 10, // Random reviews between 10 and 60
+      rating: Number(rating.toFixed(1)),
+      reviews: reviewsCount,
       image: imageUrl,
       images: propData.images && propData.images.length > 0 ? propData.images : [imageUrl],
       imageCount: propData.images ? propData.images.length : 1,
       featured: false,
     };
-  });
+  }));
 
   const jsonLd = {
     "@context": "https://schema.org",

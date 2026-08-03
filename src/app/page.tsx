@@ -95,22 +95,43 @@ async function getFeaturedProperties() {
       },
       take: 4,
       orderBy: { createdAt: "desc" },
-      include: { vendorProfile: true },
+      include: { vendorProfile: true, reviews: true },
     });
 
     if (dbProperties.length > 0) {
-      return dbProperties.map((p, i) => ({
-        id: p.id,
-        name: p.name,
-        type: p.vendorProfile.type === "HOTEL" ? "Hotel" : "Homestay",
-        location: p.location,
-        price: p.pricePerNight,
-        rating: 4.5 + Math.random() * 0.5,
-        reviews: Math.floor(Math.random() * 150) + 10,
-        image: getValidImageUrl((p as any).images, i % 2 === 0
-              ? "https://images.unsplash.com/photo-1542718610-a1d656d1884c?auto=format&fit=crop&q=80&w=800"
-              : "https://images.unsplash.com/photo-1605537964076-2cb0caf302d9?auto=format&fit=crop&q=80&w=800"),
-        featured: true,
+      return await Promise.all(dbProperties.map(async (p, i) => {
+        let rating = 0;
+        let reviewsCount = 0;
+
+        if (p.reviews && (p as any).reviews.length > 0) {
+          const totalRating = (p as any).reviews.reduce((sum: number, r: any) => sum + r.rating, 0);
+          rating = totalRating / (p as any).reviews.length;
+          reviewsCount = (p as any).reviews.length;
+        } else if (p.googlePlaceId) {
+          try {
+            const googleData = await getGooglePlaceReviews(p.googlePlaceId);
+            if (googleData) {
+              rating = googleData.rating || 0;
+              reviewsCount = googleData.userRatingsTotal || 0;
+            }
+          } catch (e) {
+            console.error("Failed to fetch google reviews for", p.name);
+          }
+        }
+
+        return {
+          id: p.id,
+          name: p.name,
+          type: p.vendorProfile.type === "HOTEL" ? "Hotel" : "Homestay",
+          location: p.location,
+          price: p.pricePerNight,
+          rating: Number(rating.toFixed(1)),
+          reviews: reviewsCount,
+          image: getValidImageUrl((p as any).images, i % 2 === 0
+                ? "https://images.unsplash.com/photo-1542718610-a1d656d1884c?auto=format&fit=crop&q=80&w=800"
+                : "https://images.unsplash.com/photo-1605537964076-2cb0caf302d9?auto=format&fit=crop&q=80&w=800"),
+          featured: true,
+        };
       }));
     }
   } catch (error) {
