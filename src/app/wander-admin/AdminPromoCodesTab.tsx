@@ -8,7 +8,8 @@ import {
   togglePromoCodeStatus, 
   approvePromoCode,
   deletePromoCode, 
-  getToursForPromo 
+  getToursForPromo,
+  toggleHomepagePromo
 } from "@/actions/promo-codes";
 import toast from "react-hot-toast";
 
@@ -92,6 +93,16 @@ export default function AdminPromoCodesTab() {
       fetchData();
     } else {
       toast.error("Failed to update approval status");
+    }
+  };
+
+  const handleHomepageToggle = async (id: string, currentStatus: boolean) => {
+    const res = await toggleHomepagePromo(id, !currentStatus);
+    if (res.success) {
+      toast.success(currentStatus ? "Removed from homepage" : "Featured on homepage");
+      fetchData();
+    } else {
+      toast.error("Failed to update homepage status");
     }
   };
 
@@ -208,6 +219,7 @@ export default function AdminPromoCodesTab() {
                   <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase">Vendor</th>
                   <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase">Status</th>
                   <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase">Active</th>
+                  <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase text-center">Homepage</th>
                   <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase text-right">Actions</th>
                 </tr>
               </thead>
@@ -235,6 +247,16 @@ export default function AdminPromoCodesTab() {
                       >
                         {promo.isActive ? <CheckCircle className="w-3.5 h-3.5" /> : <XCircle className="w-3.5 h-3.5" />}
                         {promo.isActive ? "Active" : "Inactive"}
+                      </button>
+                    </td>
+                    <td className="px-6 py-4 flex justify-center mt-1">
+                      <button 
+                        onClick={() => handleHomepageToggle(promo.id, promo.showOnHomepage)}
+                        disabled={promo.status !== "APPROVED" || !promo.isActive}
+                        className={`flex items-center gap-1.5 px-3 py-1 text-xs font-bold rounded-full ${promo.showOnHomepage ? 'bg-orange-100 text-orange-700' : 'bg-slate-100 text-slate-500'} disabled:opacity-50`}
+                      >
+                        {promo.showOnHomepage ? <CheckCircle className="w-3.5 h-3.5" /> : <XCircle className="w-3.5 h-3.5" />}
+                        {promo.showOnHomepage ? "Featured" : "Hidden"}
                       </button>
                     </td>
                     <td className="px-6 py-4 text-right">

@@ -41,24 +41,27 @@ export async function getVendorPromoCodes(vendorProfileId: string) {
   }
 }
 
-export async function getActiveGlobalPromos() {
+export async function getHomepagePromos() {
   try {
     const promos = await prisma.promoCode.findMany({
       where: {
         isActive: true,
         status: "APPROVED",
-        tourId: null,
-        propertyId: null,
-        vehicleId: null,
-        guideProfileId: null
+        showOnHomepage: true
+      },
+      include: {
+        tour: { select: { title: true } },
+        property: { select: { name: true } },
+        vehicle: { select: { make: true, model: true } },
+        guideProfile: { select: { vendorProfile: { select: { user: { select: { name: true } } } } } },
       },
       orderBy: { createdAt: "desc" },
       take: 3 // limit to top 3 newest global promos
     });
     return { success: true, promos };
   } catch (error) {
-    console.error("Failed to fetch global promos", error);
-    return { success: false, error: "Failed to fetch global promos" };
+    console.error("Failed to fetch homepage promos", error);
+    return { success: false, error: "Failed to fetch homepage promos" };
   }
 }
 
@@ -110,6 +113,20 @@ export async function togglePromoCodeStatus(id: string, isActive: boolean) {
     return { success: true };
   } catch (error) {
     console.error("Failed to toggle promo code status", error);
+    return { success: false, error: "Failed to toggle status" };
+  }
+}
+
+export async function toggleHomepagePromo(id: string, showOnHomepage: boolean) {
+  try {
+    await prisma.promoCode.update({
+      where: { id },
+      data: { showOnHomepage }
+    });
+    revalidatePath("/wander-admin");
+    return { success: true };
+  } catch (error) {
+    console.error("Failed to toggle homepage status", error);
     return { success: false, error: "Failed to toggle status" };
   }
 }

@@ -469,6 +469,7 @@ model PromoCode {
 
   status   String  @default("APPROVED") // APPROVED, PENDING, REJECTED
   isActive Boolean @default(true)
+  showOnHomepage Boolean @default(false)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

@@ -10,7 +10,7 @@ import { getValidImageUrl } from "@/lib/imageUtils";
 import { getGooglePlaceReviews } from "@/actions/google-reviews";
 import GoogleReviewsList from "@/components/GoogleReviewsList";
 import PromoPopup from "@/components/PromoPopup";
-import { getActiveGlobalPromos } from "@/actions/promo-codes";
+import { getHomepagePromos } from "@/actions/promo-codes";
 
 import PopularSeoRoutes from "@/components/PopularSeoRoutes";
 import Link from "next/link";
@@ -437,7 +437,7 @@ export default async function Home() {
     getFeaturedGuides(),
     getFeaturedTaxis(),
     getGooglePlaceReviews(wanderKashmirPlaceId),
-    getActiveGlobalPromos()
+    getHomepagePromos()
   ]);
 
   // Fetch tours from DB

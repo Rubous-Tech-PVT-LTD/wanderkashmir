@@ -8,6 +8,10 @@ interface Promo {
   id: string;
   code: string;
   discountPercent: number;
+  tour?: { title: string } | null;
+  property?: { name: string } | null;
+  vehicle?: { make: string; model: string } | null;
+  guideProfile?: { vendorProfile?: { user?: { name: string | null } | null } | null } | null;
 }
 
 export default function PromoPopup({ promos }: { promos: Promo[] }) {
@@ -81,7 +85,18 @@ export default function PromoPopup({ promos }: { promos: Promo[] }) {
           </div>
           
           <p className="text-indigo-100 text-sm mb-4 leading-relaxed">
-            Get <span className="font-bold text-orange-400">{promo.discountPercent}% OFF</span> on all tours, hotels, and taxis!
+            Get <span className="font-bold text-orange-400">{promo.discountPercent}% OFF</span>{" "}
+            {promo.tour ? (
+              <span>on the <strong>{promo.tour.title}</strong> package!</span>
+            ) : promo.property ? (
+              <span>on your stay at <strong>{promo.property.name}</strong>!</span>
+            ) : promo.vehicle ? (
+              <span>on bookings for <strong>{promo.vehicle.make} {promo.vehicle.model}</strong>!</span>
+            ) : promo.guideProfile ? (
+              <span>on tours with guide <strong>{promo.guideProfile.vendorProfile?.user?.name || 'this guide'}</strong>!</span>
+            ) : (
+              <span>on all tours, hotels, and taxis!</span>
+            )}
           </p>
 
           <div 
