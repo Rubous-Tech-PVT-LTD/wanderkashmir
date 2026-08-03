@@ -299,10 +299,6 @@ export default async function PropertyDetailPage({
                 </div>
               </div>
             </div>
-            {/* Optional Trip Add-ons Selection */}
-            {addonsRes.success && (
-              <AddonsSelectorClient taxis={addonsRes.taxis || []} guides={addonsRes.guides || []} />
-            )}
 
             {/* Questions & Answers Section */}
             {Array.isArray(property.faqs) && property.faqs.length > 0 && (
