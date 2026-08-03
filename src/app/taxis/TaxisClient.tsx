@@ -464,7 +464,7 @@ export default function TaxisClient() {
 
           {/* Map View */}
           <div className="flex-1 hidden lg:block relative z-0">
-            <div className="sticky top-28 bg-white p-2 rounded-3xl shadow-sm border border-slate-200 h-[calc(100vh-140px)] min-h-[500px]">
+            <div className="bg-white p-2 rounded-3xl shadow-sm border border-slate-200 h-[calc(100vh-140px)] min-h-[500px]">
               <MapView 
                 pickup={pickupCoords} 
                 dropoff={dropoffCoords} 

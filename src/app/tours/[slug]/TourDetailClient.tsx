@@ -488,7 +488,7 @@ export default function TourDetailClient({ initialTour }: { initialTour: any }) 
 
             {/* Right — Booking Widget */}
             <div className="lg:col-span-1">
-              <div className="sticky top-24 space-y-4">
+              <div className="space-y-4">
                 {/* Price Card */}
                 <div className="bg-white rounded-2xl shadow-md border border-slate-100 p-5">
                   <div className="flex items-baseline gap-2 mb-1">

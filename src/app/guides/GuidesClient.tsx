@@ -137,7 +137,7 @@ export default function GuidesClient({ initialGuides }: { initialGuides: any[] }
               {/* Filters Sidebar + Grid (Simplified for length) */}
               <div className="flex flex-col lg:flex-row gap-8">
                 <aside className="w-full lg:w-64 flex-shrink-0">
-                  <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-5 sticky top-28">
+                  <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-5">
                     <h3 className="font-semibold text-slate-900 flex items-center gap-2 mb-4"><Filter className="w-4 h-4 text-slate-500" /> Filters</h3>
                     
                     <div className="mb-6">

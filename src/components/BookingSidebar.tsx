@@ -214,7 +214,7 @@ export default function BookingSidebar({ propertyId, pricePerNight, rating, isLo
   };
 
   return (
-    <div className="sticky top-28 bg-white rounded-2xl shadow-xl shadow-slate-200/50 border border-slate-200 p-6">
+    <div className="bg-white rounded-2xl shadow-xl shadow-slate-200/50 border border-slate-200 p-6">
       <div className="flex items-end justify-between mb-6">
         <div>
           <span className="text-2xl font-black text-slate-900">₹{displayPricePerNight.toLocaleString('en-IN')}</span>

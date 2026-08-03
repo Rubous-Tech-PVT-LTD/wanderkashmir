@@ -321,7 +321,7 @@ export default function CheckoutClient({
 
         {/* Booking Summary Sidebar */}
         <aside className="w-full lg:w-96 flex-shrink-0">
-          <div className="bg-white rounded-2xl shadow-xl shadow-slate-200/50 border border-slate-200 p-6 sticky top-28">
+          <div className="bg-white rounded-2xl shadow-xl shadow-slate-200/50 border border-slate-200 p-6">
             <h2 className="text-lg font-bold text-slate-900 mb-4 pb-4 border-b border-slate-100">Booking Summary</h2>
             
             {/* Service Details */}
