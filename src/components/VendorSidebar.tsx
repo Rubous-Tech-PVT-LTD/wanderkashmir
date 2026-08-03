@@ -36,7 +36,7 @@ export default function VendorSidebar({ isOpen = false, onClose }: VendorSidebar
           isOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
         }`}>
           <div className="p-6 border-b border-slate-800 flex items-center justify-between">
-            <Link href="/partner/dashboard" className="flex items-center gap-2" onClick={onClose}>
+            <Link href="/partner" className="flex items-center gap-2" onClick={onClose}>
               <div className="w-8 h-8 bg-sky-500 rounded-lg flex items-center justify-center">
                 <LayoutDashboard className="w-5 h-5 text-white" />
               </div>
@@ -102,7 +102,7 @@ export default function VendorSidebar({ isOpen = false, onClose }: VendorSidebar
         isOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
       }`}>
         <div className="p-6 border-b border-slate-800 flex items-center justify-between">
-          <Link href="/partner/dashboard" className="flex items-center gap-2" onClick={onClose}>
+          <Link href="/partner" className="flex items-center gap-2" onClick={onClose}>
             <div className="w-8 h-8 bg-sky-500 rounded-lg flex items-center justify-center">
               <LayoutDashboard className="w-5 h-5 text-white" />
             </div>
