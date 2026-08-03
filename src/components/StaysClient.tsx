@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import ImageWithFallback from "@/components/ImageWithFallback";
-import { MapPin, Search, Star, Heart } from "lucide-react";
+import { MapPin, Search, Star, Heart, Filter, ArrowUp } from "lucide-react";
 
 export interface PropertyItem {
   id: string;
@@ -23,6 +23,7 @@ export default function StaysClient({ initialProperties, initialQuery = "" }: { 
   const [searchQuery, setSearchQuery] = useState(initialQuery);
   const [selectedType, setSelectedType] = useState<string[]>([]);
   const [selectedAmenities, setSelectedAmenities] = useState<string[]>([]);
+  const [isMobileFiltersOpen, setIsMobileFiltersOpen] = useState(false);
   const [minRating, setMinRating] = useState<number | null>(null);
   const [maxPrice, setMaxPrice] = useState<number>(10000);
   const [sortBy, setSortBy] = useState("Recommended");
@@ -100,16 +101,22 @@ export default function StaysClient({ initialProperties, initialQuery = "" }: { 
                 <option>Price: High to Low</option>
               </select>
             </div>
-            <button className="flex items-center gap-2 bg-white border border-slate-200 px-4 py-2 rounded-lg text-sm font-medium hover:bg-slate-50 transition-colors shadow-sm">
+            <button className="flex items-center gap-2 bg-white border border-slate-200 px-4 py-2 rounded-lg text-sm font-medium hover:bg-slate-50 transition-colors shadow-sm hidden md:flex">
               <MapPin className="w-4 h-4" /> Map View
+            </button>
+            <button 
+              onClick={() => setIsMobileFiltersOpen(!isMobileFiltersOpen)}
+              className="lg:hidden flex items-center gap-2 bg-white border border-slate-200 px-4 py-2 rounded-lg text-sm font-medium hover:bg-slate-50 transition-colors shadow-sm"
+            >
+              <Filter className="w-4 h-4" /> Filters
             </button>
           </div>
         </div>
 
         <div className="flex flex-col lg:flex-row gap-8">
           {/* ─── SIDEBAR FILTERS ────────────────────────── */}
-          <aside className="w-full lg:w-72 flex-shrink-0">
-            <div className="bg-white rounded-2xl border border-slate-100 p-6 shadow-sm sticky top-24">
+          <aside className={`w-full lg:w-72 flex-shrink-0 ${isMobileFiltersOpen ? 'block' : 'hidden lg:block'}`}>
+            <div className="bg-white rounded-2xl border border-slate-100 p-6 shadow-sm">
               <div className="flex items-center justify-between mb-6">
                 <h3 className="font-bold text-slate-900 text-lg">Filters</h3>
                 <button 
@@ -208,6 +215,17 @@ export default function StaysClient({ initialProperties, initialQuery = "" }: { 
                     </label>
                   ))}
                 </div>
+              </div>
+
+              {/* Back to Top */}
+              <div className="pt-8 mt-6 border-t border-slate-100 flex justify-center">
+                <button 
+                  onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                  className="flex items-center gap-2 text-sm font-medium text-slate-500 hover:text-[var(--primary)] transition-colors"
+                >
+                  <ArrowUp className="w-4 h-4" />
+                  Back to Top
+                </button>
               </div>
 
             </div>
