@@ -229,6 +229,73 @@ export default function StaysClient({ initialProperties, initialQuery = "" }: { 
               </div>
 
             </div>
+
+            {/* ─── MAP & FOR YOU WIDGET (STICKY) ────────────────────────── */}
+            <div className="sticky top-24 space-y-6 hidden lg:block mt-6">
+              {/* Map Widget */}
+              <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden relative group cursor-pointer h-32">
+                <img src="/images/map-placeholder.png" alt="Map View" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" onError={(e) => { e.currentTarget.src = 'https://images.unsplash.com/photo-1524661135-423995f22d0b?auto=format&fit=crop&q=80&w=800' }} />
+                <div className="absolute inset-0 bg-white/20 group-hover:bg-transparent transition-colors"></div>
+                <div className="absolute inset-0 flex items-center justify-center p-4">
+                  <button className="bg-white text-sky-600 font-bold px-6 py-2 rounded-xl shadow-lg border border-slate-100 w-full hover:bg-sky-50 transition-colors flex items-center justify-center gap-2">
+                    EXPLORE ON MAP <MapPin className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+
+              {/* For You Widget */}
+              <div className="bg-white rounded-2xl border border-slate-100 p-6 shadow-sm">
+                <h3 className="font-bold text-slate-900 text-lg mb-5">For You</h3>
+                
+                <div className="space-y-4">
+                  <label className="flex items-center justify-between cursor-pointer group">
+                    <div className="flex items-center gap-3">
+                      <input type="checkbox" className="w-4 h-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500" />
+                      <span className="text-slate-600 group-hover:text-slate-900 transition-colors">Rush Deal</span>
+                    </div>
+                    <span className="text-xs text-slate-400">(131)</span>
+                  </label>
+                  
+                  <label className="flex items-center justify-between cursor-pointer group">
+                    <div className="flex items-center gap-3">
+                      <input type="checkbox" className="w-4 h-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500" />
+                      <span className="text-slate-600 group-hover:text-slate-900 transition-colors">Last Minute Deals</span>
+                    </div>
+                  </label>
+                  
+                  <label className="flex items-center justify-between cursor-pointer group">
+                    <div className="flex items-center gap-3">
+                      <input type="checkbox" className="w-4 h-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500" />
+                      <span className="text-slate-600 group-hover:text-slate-900 transition-colors">Free Cancellation</span>
+                    </div>
+                    <span className="text-xs text-slate-400">(478)</span>
+                  </label>
+                  
+                  <label className="flex items-center justify-between cursor-pointer group">
+                    <div className="flex items-center gap-3">
+                      <input type="checkbox" className="w-4 h-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500" />
+                      <span className="text-slate-600 group-hover:text-slate-900 transition-colors">Breakfast Included</span>
+                    </div>
+                    <span className="text-xs text-slate-400">(630)</span>
+                  </label>
+                  
+                  <label className="flex items-center justify-between cursor-pointer group">
+                    <div className="flex items-center gap-3">
+                      <input type="checkbox" className="w-4 h-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500" />
+                      <span className="text-slate-600 group-hover:text-slate-900 transition-colors leading-tight">Breakfast + Lunch/Dinner<br/>Included</span>
+                    </div>
+                    <span className="text-xs text-slate-400">(444)</span>
+                  </label>
+                </div>
+                
+                <div className="mt-5 pt-4 border-t border-slate-100">
+                  <button className="text-sky-600 font-semibold text-sm hover:text-sky-700 transition-colors">
+                    Show 6 more
+                  </button>
+                </div>
+              </div>
+            </div>
+
           </aside>
 
           {/* ─── LISTINGS ────────────────────────── */}

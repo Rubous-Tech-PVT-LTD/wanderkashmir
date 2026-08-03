@@ -100,6 +100,8 @@ export const propertySchema = z.object({
   beds: z.number().min(1).optional(),
   guests: z.number().min(1).optional(),
   bedDetails: z.string().optional(),
+  breakfastIncluded: z.boolean().default(false),
+  dinnerIncluded: z.boolean().default(false),
 });
 
 export type PropertyData = z.infer<typeof propertySchema>;

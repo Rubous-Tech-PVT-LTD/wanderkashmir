@@ -295,7 +295,9 @@ export default function HomestayClient({ bookings = [], properties = [] }: { boo
           amenities: selectedAmenities,
           totalRooms: 1, // homestays are single units usually
           guests: data.maxGuests,
-          bedrooms: Math.ceil(data.maxGuests / 2)
+          bedrooms: Math.ceil(data.maxGuests / 2),
+          breakfastIncluded: data.breakfastIncluded,
+          dinnerIncluded: data.dinnerIncluded
         });
       } else {
         if (hasReachedLimit) {
@@ -313,7 +315,9 @@ export default function HomestayClient({ bookings = [], properties = [] }: { boo
           amenities: selectedAmenities,
           totalRooms: 1, // homestays are single units usually
           guests: data.maxGuests,
-          bedrooms: Math.ceil(data.maxGuests / 2)
+          bedrooms: Math.ceil(data.maxGuests / 2),
+          breakfastIncluded: data.breakfastIncluded,
+          dinnerIncluded: data.dinnerIncluded
         });
       }
 
@@ -1014,8 +1018,25 @@ export default function HomestayClient({ bookings = [], properties = [] }: { boo
                     </div>
                     {errors.basePrice && <p className="text-orange-500 text-xs mt-1 font-medium">{errors.basePrice.message}</p>}
                   </div>
-                  
-                  
+                  <div className="pt-2 border-t border-slate-200 mt-4 space-y-3">
+                    <label className="block text-sm font-medium text-slate-700 mb-2">Meal Inclusions (Mandatory)</label>
+                    <label className="flex items-center gap-3 p-3 border border-slate-200 rounded-lg cursor-pointer hover:bg-slate-50 transition-colors">
+                      <input 
+                        type="checkbox"
+                        {...register("breakfastIncluded")}
+                        className="w-5 h-5 rounded border-slate-300 text-sky-600 focus:ring-sky-500"
+                      />
+                      <span className="font-medium text-slate-700">Breakfast Included</span>
+                    </label>
+                    <label className="flex items-center gap-3 p-3 border border-slate-200 rounded-lg cursor-pointer hover:bg-slate-50 transition-colors">
+                      <input 
+                        type="checkbox"
+                        {...register("dinnerIncluded")}
+                        className="w-5 h-5 rounded border-slate-300 text-sky-600 focus:ring-sky-500"
+                      />
+                      <span className="font-medium text-slate-700">Dinner Included</span>
+                    </label>
+                  </div>
                 </div>
               </div>
 

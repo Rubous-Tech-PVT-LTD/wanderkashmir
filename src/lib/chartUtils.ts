@@ -3,7 +3,7 @@ import { format, subDays, isAfter, startOfDay, endOfDay, subWeeks, subMonths } f
 export function calculateDashboardMetrics(bookings: any[], vendorType: "HOTEL" | "HOMESTAY" | "TAXI" | "GUIDE", timeRange: string) {
   let totalRevenue = 0;
   let totalBookings = bookings.length;
-  let totalViews = totalBookings * 15 || 120; // fallback if 0
+  let totalViews = totalBookings * 15;
   let growthRevenue = 0;
   let growthBookings = 0;
   let growthViews = 0;
@@ -36,7 +36,7 @@ export function calculateDashboardMetrics(bookings: any[], vendorType: "HOTEL" |
 
       chartData.push({
         name: dateString,
-        views: dayCount * 15 || ((i * 3) % 15) + 5, // pseudo-random fallback
+        views: dayCount * 15,
         revenue: dayRevenue,
         bookings: dayCount,
       });
@@ -57,7 +57,7 @@ export function calculateDashboardMetrics(bookings: any[], vendorType: "HOTEL" |
 
       chartData.push({
         name: `Week ${4 - i}`,
-        views: weekCount * 15 || ((i * 12) % 40) + 20,
+        views: weekCount * 15,
         revenue: weekRevenue,
         bookings: weekCount,
       });
@@ -78,18 +78,17 @@ export function calculateDashboardMetrics(bookings: any[], vendorType: "HOTEL" |
 
       chartData.push({
         name: format(monthEnd, "MMM"),
-        views: monthCount * 15 || ((i * 45) % 100) + 50,
+        views: monthCount * 15,
         revenue: monthRevenue,
         bookings: monthCount,
       });
     }
   }
 
-  // Calculate deterministic growth percentages for realism
-  const seed = totalBookings + (timeRange === "7D" ? 1 : timeRange === "30D" ? 2 : 3);
-  growthRevenue = (seed * 7) % 20 + 5;
-  growthBookings = (seed * 5) % 15 + 5;
-  growthViews = (seed * 11) % 25 + 5;
+  // Set growth to 0 since we don't have prior period comparison logic currently
+  growthRevenue = 0;
+  growthBookings = 0;
+  growthViews = 0;
 
   return {
     totalRevenue,
