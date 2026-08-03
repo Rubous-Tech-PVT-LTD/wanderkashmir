@@ -2,6 +2,7 @@
 
 import { Star, ChevronLeft, ChevronRight } from "lucide-react";
 import useEmblaCarousel from "embla-carousel-react";
+import Autoplay from "embla-carousel-autoplay";
 import { useCallback, useState } from "react";
 
 function ReviewCard({ review }: { review: any }) {
@@ -42,8 +43,9 @@ function ReviewCard({ review }: { review: any }) {
   );
 }
 
-export default function GoogleReviewsList({ reviews, rating, totalRatings }: { reviews: any[], rating: number, totalRatings: number }) {
-  const [emblaRef, emblaApi] = useEmblaCarousel({ align: "start", loop: false });
+export default function GoogleReviewsList({ reviews, rating, totalRatings, autoPlay = false }: { reviews: any[], rating: number, totalRatings: number, autoPlay?: boolean }) {
+  const plugins = autoPlay ? [Autoplay({ delay: 3000, stopOnInteraction: true })] : [];
+  const [emblaRef, emblaApi] = useEmblaCarousel({ align: "start", loop: autoPlay }, plugins);
 
   const scrollPrev = useCallback(() => {
     if (emblaApi) emblaApi.scrollPrev();

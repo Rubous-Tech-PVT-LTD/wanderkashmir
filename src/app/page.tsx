@@ -704,6 +704,7 @@ export default async function Home() {
                 reviews={wkReviews.reviews}
                 rating={wkReviews.rating}
                 totalRatings={wkReviews.userRatingsTotal}
+                autoPlay={true}
               />
             </div>
           </div>
