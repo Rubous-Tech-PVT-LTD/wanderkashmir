@@ -316,6 +316,20 @@ export default async function PropertyDetailPage({
                 <ReviewForm entityType="PROPERTY" entityId={id} />
               </div>
               
+              <div className="mt-16 mb-10 max-w-md mx-auto w-full border-t border-slate-100 pt-10">
+                <h3 className="text-xl font-bold text-slate-900 mb-6 text-center">Ready to Book?</h3>
+                <Suspense fallback={<div className="h-[400px] bg-slate-50 rounded-2xl animate-pulse"></div>}>
+                  <BookingSidebar 
+                    propertyId={property.id} 
+                    pricePerNight={property.pricePerNight} 
+                    rating={reviewStats.averageRating}
+                    isLoggedIn={!!userId}
+                    propertyType={property.vendorProfile.type}
+                    maxGuests={property.guests || 2}
+                  />
+                </Suspense>
+              </div>
+
               {googleData && (
                 <GoogleReviewsList 
                   reviews={googleData.reviews} 

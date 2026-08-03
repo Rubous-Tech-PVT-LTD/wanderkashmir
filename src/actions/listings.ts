@@ -49,8 +49,8 @@ export async function addProperty(data: PropertyData) {
         guests: parsedData.data.guests ?? 2,
         bedDetails: parsedData.data.bedDetails,
         googlePlaceId: parsedData.data.googlePlaceId,
-        breakfastIncluded: parsedData.data.breakfastIncluded,
-        dinnerIncluded: parsedData.data.dinnerIncluded,
+        breakfastIncluded: parsedData.data.breakfastIncluded ?? false,
+        dinnerIncluded: parsedData.data.dinnerIncluded ?? false,
       }
     });
 
@@ -104,6 +104,8 @@ export async function updateProperty(propertyId: string, data: PropertyData) {
         guests: parsedData.data.guests ?? 2,
         bedDetails: parsedData.data.bedDetails,
         googlePlaceId: parsedData.data.googlePlaceId,
+        breakfastIncluded: parsedData.data.breakfastIncluded ?? false,
+        dinnerIncluded: parsedData.data.dinnerIncluded ?? false,
       }
     });
 
