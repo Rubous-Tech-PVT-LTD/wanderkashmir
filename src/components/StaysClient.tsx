@@ -253,7 +253,6 @@ export default function StaysClient({ initialProperties, initialQuery = "" }: { 
                       <input type="checkbox" className="w-4 h-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500" />
                       <span className="text-slate-600 group-hover:text-slate-900 transition-colors">Rush Deal</span>
                     </div>
-                    <span className="text-xs text-slate-400">(131)</span>
                   </label>
                   
                   <label className="flex items-center justify-between cursor-pointer group">
@@ -268,7 +267,6 @@ export default function StaysClient({ initialProperties, initialQuery = "" }: { 
                       <input type="checkbox" className="w-4 h-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500" />
                       <span className="text-slate-600 group-hover:text-slate-900 transition-colors">Free Cancellation</span>
                     </div>
-                    <span className="text-xs text-slate-400">(478)</span>
                   </label>
                   
                   <label className="flex items-center justify-between cursor-pointer group">
@@ -276,7 +274,6 @@ export default function StaysClient({ initialProperties, initialQuery = "" }: { 
                       <input type="checkbox" className="w-4 h-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500" />
                       <span className="text-slate-600 group-hover:text-slate-900 transition-colors">Breakfast Included</span>
                     </div>
-                    <span className="text-xs text-slate-400">(630)</span>
                   </label>
                   
                   <label className="flex items-center justify-between cursor-pointer group">
@@ -284,7 +281,6 @@ export default function StaysClient({ initialProperties, initialQuery = "" }: { 
                       <input type="checkbox" className="w-4 h-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500" />
                       <span className="text-slate-600 group-hover:text-slate-900 transition-colors leading-tight">Breakfast + Lunch/Dinner<br/>Included</span>
                     </div>
-                    <span className="text-xs text-slate-400">(444)</span>
                   </label>
                 </div>
                 
