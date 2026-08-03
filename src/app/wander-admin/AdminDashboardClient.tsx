@@ -107,6 +107,8 @@ type PropertyProfile = {
   status: string;
   rejectionReason: string | null;
   googlePlaceId?: string | null;
+  description?: string | null;
+  faqs?: any;
   createdAt: Date;
   vendorProfile: {
     businessName: string;
@@ -180,9 +182,12 @@ export default function AdminDashboardClient({
   const [selectedPropertyDetails, setSelectedPropertyDetails] = useState<PropertyProfile | null>(null);
   const [rejectingProperty, setRejectingProperty] = useState<PropertyProfile | null>(null);
   const [propertyRejectionRemarks, setPropertyRejectionRemarks] = useState("");
-  const [selectedBookingDetails, setSelectedBookingDetails] = useState<any | null>(null);
   const [adminGooglePlaceId, setAdminGooglePlaceId] = useState("");
   const [isEditingGooglePlaceId, setIsEditingGooglePlaceId] = useState(false);
+  const [adminDescription, setAdminDescription] = useState("");
+  const [adminFaqs, setAdminFaqs] = useState<{question: string, answer: string}[]>([]);
+  const [isEditingSeo, setIsEditingSeo] = useState(false);
+  const [selectedBookingDetails, setSelectedBookingDetails] = useState<any | null>(null);
   const router = useRouter();
 
   // Filtering & Search States
@@ -2037,6 +2042,151 @@ export default function AdminDashboardClient({
                       >
                         Cancel
                       </button>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* SEO & FAQs Section */}
+              <div className="pt-6 border-t border-slate-100 mt-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider">SEO & FAQs</h3>
+                  {!isEditingSeo ? (
+                    <button 
+                      onClick={() => {
+                        setAdminDescription(selectedPropertyDetails.description || "");
+                        setAdminFaqs(Array.isArray(selectedPropertyDetails.faqs) ? selectedPropertyDetails.faqs : []);
+                        setIsEditingSeo(true);
+                      }}
+                      className="px-3 py-1.5 text-sm font-bold text-sky-600 bg-sky-50 rounded-lg hover:bg-sky-100 transition"
+                    >
+                      Edit SEO
+                    </button>
+                  ) : (
+                    <div className="flex items-center gap-2">
+                      <button 
+                        onClick={() => setIsEditingSeo(false)}
+                        className="px-3 py-1.5 text-sm font-bold text-slate-600 bg-slate-100 rounded-lg hover:bg-slate-200 transition"
+                      >
+                        Cancel
+                      </button>
+                      <button 
+                        onClick={async () => {
+                          setIsProcessing(selectedPropertyDetails.id + '-seo');
+                          const { updatePropertySeoDetails } = await import("@/actions/admin-management");
+                          const res = await updatePropertySeoDetails(selectedPropertyDetails.id, adminDescription, adminFaqs);
+                          setIsProcessing(null);
+                          if (res.success) {
+                            toast.success("SEO & FAQs saved!");
+                            setSelectedPropertyDetails(prev => prev ? {...prev, description: adminDescription, faqs: adminFaqs} : null);
+                            setIsEditingSeo(false);
+                            fetchData();
+                          } else {
+                            toast.error(res.error || "Failed to save SEO details");
+                          }
+                        }}
+                        disabled={isProcessing === selectedPropertyDetails.id + '-seo'}
+                        className="px-3 py-1.5 text-sm font-bold text-white bg-sky-500 rounded-lg hover:bg-sky-600 transition disabled:opacity-50"
+                      >
+                        {isProcessing === selectedPropertyDetails.id + '-seo' ? "Saving..." : "Save"}
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+                {isEditingSeo ? (
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-semibold text-slate-700 mb-1">Property Description (SEO / Detail)</label>
+                      <textarea
+                        className="w-full border border-slate-200 rounded-lg p-3 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500"
+                        rows={5}
+                        placeholder="Write a descriptive overview for SEO and guests..."
+                        value={adminDescription}
+                        onChange={(e) => setAdminDescription(e.target.value)}
+                      />
+                    </div>
+                    
+                    <div>
+                      <div className="flex items-center justify-between mb-2">
+                        <label className="block text-sm font-semibold text-slate-700">Frequently Asked Questions (FAQs)</label>
+                        <button 
+                          onClick={() => setAdminFaqs([...adminFaqs, { question: "", answer: "" }])}
+                          className="px-2 py-1 text-xs font-bold bg-slate-100 hover:bg-slate-200 text-slate-700 rounded transition"
+                        >
+                          + Add FAQ
+                        </button>
+                      </div>
+                      
+                      {adminFaqs.length === 0 && (
+                        <p className="text-sm text-slate-500 italic">No FAQs added yet.</p>
+                      )}
+                      
+                      <div className="space-y-3">
+                        {adminFaqs.map((faq, idx) => (
+                          <div key={idx} className="p-3 bg-slate-50 border border-slate-200 rounded-lg relative group">
+                            <button 
+                              onClick={() => {
+                                const newFaqs = [...adminFaqs];
+                                newFaqs.splice(idx, 1);
+                                setAdminFaqs(newFaqs);
+                              }}
+                              className="absolute top-2 right-2 p-1 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded"
+                            >
+                              <X className="w-4 h-4" />
+                            </button>
+                            <input 
+                              type="text" 
+                              value={faq.question}
+                              onChange={(e) => {
+                                const newFaqs = [...adminFaqs];
+                                newFaqs[idx].question = e.target.value;
+                                setAdminFaqs(newFaqs);
+                              }}
+                              placeholder="Question (e.g. How far is it from city center?)"
+                              className="w-full mb-2 border border-slate-200 rounded-md px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-sky-500"
+                            />
+                            <textarea 
+                              value={faq.answer}
+                              onChange={(e) => {
+                                const newFaqs = [...adminFaqs];
+                                newFaqs[idx].answer = e.target.value;
+                                setAdminFaqs(newFaqs);
+                              }}
+                              placeholder="Answer..."
+                              rows={2}
+                              className="w-full border border-slate-200 rounded-md px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-sky-500"
+                            />
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {selectedPropertyDetails.description && (
+                      <div>
+                        <h4 className="text-xs font-semibold text-slate-500 mb-1">Description</h4>
+                        <p className="text-sm text-slate-700 whitespace-pre-wrap">{selectedPropertyDetails.description}</p>
+                      </div>
+                    )}
+                    
+                    {Array.isArray(selectedPropertyDetails.faqs) && selectedPropertyDetails.faqs.length > 0 && (
+                      <div>
+                        <h4 className="text-xs font-semibold text-slate-500 mb-2">FAQs</h4>
+                        <div className="space-y-2">
+                          {selectedPropertyDetails.faqs.map((faq: any, idx: number) => (
+                            <div key={idx} className="bg-slate-50 p-3 rounded-lg border border-slate-100 text-sm">
+                              <p className="font-semibold text-slate-900">Q: {faq.question}</p>
+                              <p className="text-slate-600 mt-1">A: {faq.answer}</p>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    
+                    {!selectedPropertyDetails.description && (!selectedPropertyDetails.faqs || selectedPropertyDetails.faqs.length === 0) && (
+                      <p className="text-sm text-slate-500">No SEO description or FAQs added.</p>
                     )}
                   </div>
                 )}

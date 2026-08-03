@@ -166,6 +166,7 @@ model Property {
   googlePlaceId   String?
   breakfastIncluded Boolean     @default(false)
   dinnerIncluded    Boolean     @default(false)
+  faqs              Json?       // Stores array of { question, answer }
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
