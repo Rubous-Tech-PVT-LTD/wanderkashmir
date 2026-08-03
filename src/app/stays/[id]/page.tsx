@@ -19,6 +19,8 @@ import PropertyDescription from "@/components/PropertyDescription";
 import { getReviews, getReviewStats } from "@/actions/reviews";
 import { Metadata } from "next";
 import PhotoGalleryClient from "@/components/PhotoGalleryClient";
+import { getGooglePlaceReviews } from "@/actions/google-reviews";
+import GoogleReviewsList from "@/components/GoogleReviewsList";
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
   const { id } = await params;
@@ -96,6 +98,15 @@ export default async function PropertyDetailPage({
   const reviewsRes = await getReviews("PROPERTY", id);
   const dbReviews = reviewsRes.success ? reviewsRes.reviews : [];
 
+  let googleData = null;
+  if (property.googlePlaceId) {
+    googleData = await getGooglePlaceReviews(property.googlePlaceId);
+  }
+
+  // Use Google Reviews for Schema if available, otherwise use native DB reviews
+  const schemaRatingValue = googleData?.rating || reviewStats.averageRating;
+  const schemaReviewCount = googleData?.userRatingsTotal || reviewStats.totalCount;
+
   return (
     <main className="min-h-screen bg-white pt-24">
       <Navbar />
@@ -158,11 +169,11 @@ export default async function PropertyDetailPage({
                 "addressCountry": "IN"
               },
               "priceRange": `₹${property.pricePerNight} - ₹${property.pricePerNight * 2}`,
-              ...(reviewStats.totalCount > 0 && {
+              ...(schemaReviewCount > 0 && {
                 "aggregateRating": {
                   "@type": "AggregateRating",
-                  "ratingValue": reviewStats.averageRating.toFixed(1),
-                  "reviewCount": reviewStats.totalCount
+                  "ratingValue": schemaRatingValue.toFixed(1),
+                  "reviewCount": schemaReviewCount
                 }
               })
             },
@@ -192,7 +203,7 @@ export default async function PropertyDetailPage({
         <div className="flex items-center gap-4 text-sm text-slate-600">
           <div className="flex items-center gap-1 font-medium text-slate-900">
             <Star className="w-4 h-4 fill-orange-400 text-orange-400" />
-            {reviewStats.averageRating.toFixed(1)} <span className="text-slate-500 font-normal">({reviewStats.totalCount} reviews)</span>
+            {schemaRatingValue.toFixed(1)} <span className="text-slate-500 font-normal">({schemaReviewCount} reviews)</span>
           </div>
           <div className="flex items-center gap-1">
             <MapPin className="w-4 h-4 text-slate-400" />
@@ -304,6 +315,14 @@ export default async function PropertyDetailPage({
               <div className="mt-12">
                 <ReviewForm entityType="PROPERTY" entityId={id} />
               </div>
+              
+              {googleData && (
+                <GoogleReviewsList 
+                  reviews={googleData.reviews} 
+                  rating={googleData.rating} 
+                  totalRatings={googleData.userRatingsTotal} 
+                />
+              )}
             </div>
           </div>
 

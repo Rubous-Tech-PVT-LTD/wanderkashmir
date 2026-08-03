@@ -90,6 +90,7 @@ export const propertySchema = z.object({
   location: z.string().min(5, "Please provide the full location"),
   latitude: z.number().optional(),
   longitude: z.number().optional(),
+  googlePlaceId: z.string().optional(),
   description: z.string().min(20, "Description should be at least 20 characters").optional(),
   pricePerNight: z.number().min(0, "Price cannot be negative"),
   images: z.array(z.string()).optional(),

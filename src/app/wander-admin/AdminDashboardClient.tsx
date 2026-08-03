@@ -62,6 +62,7 @@ type PropertyProfile = {
   isApproved: boolean;
   status: string;
   rejectionReason: string | null;
+  googlePlaceId?: string | null;
   createdAt: Date;
   vendorProfile: {
     businessName: string;
@@ -136,6 +137,7 @@ export default function AdminDashboardClient({
   const [rejectingProperty, setRejectingProperty] = useState<PropertyProfile | null>(null);
   const [propertyRejectionRemarks, setPropertyRejectionRemarks] = useState("");
   const [selectedBookingDetails, setSelectedBookingDetails] = useState<any | null>(null);
+  const [adminGooglePlaceId, setAdminGooglePlaceId] = useState("");
   const router = useRouter();
 
   // Filtering & Search States
@@ -1870,7 +1872,7 @@ export default function AdminDashboardClient({
                 <h2 className="text-xl font-bold text-slate-900">Property Details</h2>
                 <p className="text-sm text-slate-500">{selectedPropertyDetails.vendorProfile.businessName}</p>
               </div>
-              <button onClick={() => setSelectedPropertyDetails(null)} className="p-2 bg-slate-50 text-slate-500 rounded-full hover:bg-slate-100 hover:text-slate-800 transition-colors">
+              <button onClick={() => { setSelectedPropertyDetails(null); setAdminGooglePlaceId(""); }} className="p-2 bg-slate-50 text-slate-500 rounded-full hover:bg-slate-100 hover:text-slate-800 transition-colors">
                 <X className="w-5 h-5" />
               </button>
             </div>
@@ -1906,11 +1908,43 @@ export default function AdminDashboardClient({
                   {selectedPropertyDetails.images.length === 0 && <div className="col-span-3 text-slate-400 text-sm">No photos provided</div>}
                 </div>
               </div>
+
+              <div className="pt-6 border-t border-slate-100">
+                <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider mb-2">Google Place ID (Admin Override)</h3>
+                <div className="flex items-center gap-3">
+                  <input 
+                    type="text" 
+                    value={adminGooglePlaceId || selectedPropertyDetails.googlePlaceId || ""}
+                    onChange={(e) => setAdminGooglePlaceId(e.target.value)}
+                    placeholder="Enter Google Place ID"
+                    className="flex-1 border border-slate-200 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500"
+                  />
+                  <button 
+                    onClick={async () => {
+                      setIsProcessing(selectedPropertyDetails.id + '-gpid');
+                      const { updatePropertyGooglePlaceId } = await import("@/actions/admin-management");
+                      const res = await updatePropertyGooglePlaceId(selectedPropertyDetails.id, adminGooglePlaceId);
+                      setIsProcessing(null);
+                      if (res.success) {
+                        toast.success("Google Place ID updated!");
+                        setSelectedPropertyDetails(prev => prev ? {...prev, googlePlaceId: adminGooglePlaceId} : null);
+                        fetchData();
+                      } else {
+                        toast.error(res.error || "Failed to update Place ID");
+                      }
+                    }}
+                    disabled={isProcessing === selectedPropertyDetails.id + '-gpid'}
+                    className="px-4 py-2 bg-sky-500 text-white font-bold rounded-lg hover:bg-sky-600 disabled:opacity-50"
+                  >
+                    {isProcessing === selectedPropertyDetails.id + '-gpid' ? "Saving..." : "Save"}
+                  </button>
+                </div>
+              </div>
             </div>
 
             <div className="p-6 border-t border-slate-100 bg-slate-50 flex justify-end gap-3">
               <button 
-                onClick={() => setSelectedPropertyDetails(null)}
+                onClick={() => { setSelectedPropertyDetails(null); setAdminGooglePlaceId(""); }}
                 className="px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm font-medium hover:bg-slate-50 transition-colors"
               >
                 Close

@@ -48,6 +48,7 @@ export async function addProperty(data: PropertyData) {
         beds: parsedData.data.beds ?? 1,
         guests: parsedData.data.guests ?? 2,
         bedDetails: parsedData.data.bedDetails,
+        googlePlaceId: parsedData.data.googlePlaceId,
       }
     });
 
@@ -100,6 +101,7 @@ export async function updateProperty(propertyId: string, data: PropertyData) {
         beds: parsedData.data.beds ?? 1,
         guests: parsedData.data.guests ?? 2,
         bedDetails: parsedData.data.bedDetails,
+        googlePlaceId: parsedData.data.googlePlaceId,
       }
     });
 

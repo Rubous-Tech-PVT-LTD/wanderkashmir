@@ -921,6 +921,17 @@ export default function HomestayClient({ bookings = [], properties = [] }: { boo
                   />
                   {errors.description && <p className="text-orange-500 text-xs mt-1 font-medium">{errors.description.message}</p>}
                 </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">Google Place ID (Optional)</label>
+                  <p className="text-xs text-slate-500 mb-2">Add your Google Place ID to display your 5-star Google Reviews on WanderKashmir!</p>
+                  <input 
+                    type="text" 
+                    {...register("googlePlaceId")}
+                    className={`w-full border rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-sky-500/20 border-slate-200 focus:border-sky-500`} 
+                    placeholder="e.g. ChIJN1t_tDeuEmsRUsoyG83frY4" 
+                  />
+                </div>
               </div>
 
               {/* PHOTO UPLOAD (FEATURE GATED) */}
