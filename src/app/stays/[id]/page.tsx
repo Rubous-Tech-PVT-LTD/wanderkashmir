@@ -12,6 +12,7 @@ import { getAvailableAddons } from "@/actions/addons";
 // Lazy Loaded Components
 const Footer = dynamic(() => import("@/components/Footer"));
 const BookingSidebar = dynamic(() => import("@/components/BookingSidebar"));
+const MobileBookingWrapperClient = dynamic(() => import("@/components/MobileBookingWrapperClient"));
 const AddonsSelectorClient = dynamic(() => import("@/components/AddonsSelectorClient"));
 const ReviewList = dynamic(() => import("@/components/ReviewList"));
 const ReviewForm = dynamic(() => import("@/components/ReviewForm"));
@@ -338,19 +339,16 @@ export default async function PropertyDetailPage({
                 <ReviewForm entityType="PROPERTY" entityId={id} />
               </div>
               
-              <div className="lg:hidden mt-16 mb-10 max-w-md mx-auto w-full border-t border-slate-100 pt-10">
-                <h3 className="text-xl font-bold text-slate-900 mb-6 text-center">Ready to Book?</h3>
-                <Suspense fallback={<div className="h-[400px] bg-slate-50 rounded-2xl animate-pulse"></div>}>
-                  <BookingSidebar 
-                    propertyId={property.id} 
-                    pricePerNight={property.pricePerNight} 
-                    rating={reviewStats.averageRating}
-                    isLoggedIn={!!userId}
-                    propertyType={property.vendorProfile.type}
-                    maxGuests={property.guests || 2}
-                  />
-                </Suspense>
-              </div>
+              <Suspense fallback={<div className="h-16 lg:hidden"></div>}>
+                <MobileBookingWrapperClient 
+                  propertyId={property.id} 
+                  pricePerNight={property.pricePerNight} 
+                  rating={reviewStats.averageRating}
+                  isLoggedIn={!!userId}
+                  propertyType={property.vendorProfile.type}
+                  maxGuests={property.guests || 2}
+                />
+              </Suspense>
 
               {googleData && (
                 <GoogleReviewsList 
