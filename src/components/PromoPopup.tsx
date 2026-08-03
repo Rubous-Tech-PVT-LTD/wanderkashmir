@@ -1,0 +1,101 @@
+"use client";
+
+import { useState, useEffect } from "react";
+import { Tag, X, Sparkles } from "lucide-react";
+import toast from "react-hot-toast";
+
+interface Promo {
+  id: string;
+  code: string;
+  discountPercent: number;
+}
+
+export default function PromoPopup({ promos }: { promos: Promo[] }) {
+  const [isVisible, setIsVisible] = useState(false);
+
+  useEffect(() => {
+    if (!promos || promos.length === 0) return;
+
+    // Check if user already dismissed the promo popup for these specific codes
+    const dismissedCodes = JSON.parse(localStorage.getItem("dismissedPromos") || "[]");
+    
+    // If we only have 1 active promo, check if it's dismissed
+    const activePromo = promos[0];
+    if (dismissedCodes.includes(activePromo.code)) {
+      return;
+    }
+
+    const handleScroll = () => {
+      // Show popup after scrolling down 300px
+      if (window.scrollY > 300) {
+        setIsVisible(true);
+        window.removeEventListener("scroll", handleScroll);
+      }
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [promos]);
+
+  if (!isVisible || !promos || promos.length === 0) return null;
+
+  const promo = promos[0]; // Display the most recent active promo
+
+  const handleDismiss = () => {
+    setIsVisible(false);
+    
+    // Save to local storage so we don't show this specific promo again
+    const dismissedCodes = JSON.parse(localStorage.getItem("dismissedPromos") || "[]");
+    if (!dismissedCodes.includes(promo.code)) {
+      dismissedCodes.push(promo.code);
+      localStorage.setItem("dismissedPromos", JSON.stringify(dismissedCodes));
+    }
+  };
+
+  const copyToClipboard = () => {
+    navigator.clipboard.writeText(promo.code);
+    toast.success("Promo code copied!");
+  };
+
+  return (
+    <div className="fixed bottom-6 right-6 z-50 animate-in slide-in-from-bottom-8 fade-in duration-500 max-w-sm w-full">
+      <div className="bg-gradient-to-br from-indigo-900 to-slate-900 rounded-2xl shadow-2xl p-1 pb-4 relative overflow-hidden group">
+        {/* Decorative elements */}
+        <div className="absolute top-0 right-0 w-32 h-32 bg-orange-500/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
+        <div className="absolute bottom-0 left-0 w-32 h-32 bg-sky-500/20 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2" />
+        
+        {/* Close Button */}
+        <button 
+          onClick={handleDismiss}
+          className="absolute top-3 right-3 text-white/50 hover:text-white transition-colors z-10 bg-white/10 hover:bg-white/20 rounded-full p-1"
+        >
+          <X className="w-4 h-4" />
+        </button>
+
+        <div className="relative z-10 px-5 pt-5 pb-1">
+          <div className="flex items-center gap-2 mb-3">
+            <div className="bg-orange-500 text-white p-1.5 rounded-lg shadow-inner">
+              <Sparkles className="w-4 h-4" />
+            </div>
+            <h3 className="text-white font-bold text-lg">Special Offer!</h3>
+          </div>
+          
+          <p className="text-indigo-100 text-sm mb-4 leading-relaxed">
+            Get <span className="font-bold text-orange-400">{promo.discountPercent}% OFF</span> on all tours, hotels, and taxis!
+          </p>
+
+          <div 
+            onClick={copyToClipboard}
+            className="bg-white/10 hover:bg-white/20 border border-white/20 rounded-xl p-3 flex items-center justify-between cursor-pointer transition-colors"
+          >
+            <div className="flex items-center gap-2">
+              <Tag className="w-4 h-4 text-orange-400" />
+              <span className="font-mono font-bold text-white tracking-widest">{promo.code}</span>
+            </div>
+            <span className="text-xs font-bold text-white bg-white/20 px-2 py-1 rounded-md">COPY</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}

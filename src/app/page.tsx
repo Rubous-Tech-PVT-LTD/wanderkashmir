@@ -9,6 +9,8 @@ import CustomizeTourModal from "@/components/CustomizeTourModal";
 import { getValidImageUrl } from "@/lib/imageUtils";
 import { getGooglePlaceReviews } from "@/actions/google-reviews";
 import GoogleReviewsList from "@/components/GoogleReviewsList";
+import PromoPopup from "@/components/PromoPopup";
+import { getActiveGlobalPromos } from "@/actions/promo-codes";
 
 import PopularSeoRoutes from "@/components/PopularSeoRoutes";
 import Link from "next/link";
@@ -429,12 +431,13 @@ const whyUs = [
 
 export default async function Home() {
   const wanderKashmirPlaceId = "ChIJUZCKLqkR4jgRN3yVZt9_LYE";
-  const [featuredProperties, locationCounts, featuredGuides, featuredTaxis, wkReviews] = await Promise.all([
+  const [featuredProperties, locationCounts, featuredGuides, featuredTaxis, wkReviews, activePromosRes] = await Promise.all([
     getFeaturedProperties(),
     getDestinationCounts(),
     getFeaturedGuides(),
     getFeaturedTaxis(),
-    getGooglePlaceReviews(wanderKashmirPlaceId)
+    getGooglePlaceReviews(wanderKashmirPlaceId),
+    getActiveGlobalPromos()
   ]);
 
   // Fetch tours from DB
@@ -733,6 +736,10 @@ export default async function Home() {
       )}
 
       <PopularSeoRoutes />
+
+      {activePromosRes.success && activePromosRes.promos && activePromosRes.promos.length > 0 && (
+        <PromoPopup promos={activePromosRes.promos} />
+      )}
 
       <Footer />
     </main>

@@ -41,6 +41,27 @@ export async function getVendorPromoCodes(vendorProfileId: string) {
   }
 }
 
+export async function getActiveGlobalPromos() {
+  try {
+    const promos = await prisma.promoCode.findMany({
+      where: {
+        isActive: true,
+        status: "APPROVED",
+        tourId: null,
+        propertyId: null,
+        vehicleId: null,
+        guideProfileId: null
+      },
+      orderBy: { createdAt: "desc" },
+      take: 3 // limit to top 3 newest global promos
+    });
+    return { success: true, promos };
+  } catch (error) {
+    console.error("Failed to fetch global promos", error);
+    return { success: false, error: "Failed to fetch global promos" };
+  }
+}
+
 export async function createPromoCode(
   code: string, 
   discountPercent: number, 

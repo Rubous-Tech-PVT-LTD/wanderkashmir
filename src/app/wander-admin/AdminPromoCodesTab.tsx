@@ -157,21 +157,27 @@ export default function AdminPromoCodesTab() {
               <option value="GUIDE">Guides</option>
             </select>
           </div>
-          <div>
-            <label className="block text-sm font-bold text-slate-700 mb-1">Target Item</label>
-            <select 
-              value={targetId}
-              onChange={(e) => setTargetId(e.target.value)}
-              disabled={targetType === "GLOBAL"}
-              className="w-full border border-slate-200 p-2.5 rounded-lg focus:ring-2 focus:ring-orange-500 outline-none bg-white disabled:bg-slate-50"
-            >
-              <option value="">{targetType === "GLOBAL" ? "N/A" : "Select an item"}</option>
-              {targetType === "TOUR" && tours.map(t => <option key={t.id} value={t.id}>{t.title}</option>)}
-              {targetType === "PROPERTY" && properties.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
-              {targetType === "VEHICLE" && vehicles.map(v => <option key={v.id} value={v.id}>{v.make} {v.model}</option>)}
-              {targetType === "GUIDE" && guides.map(g => <option key={g.id} value={g.id}>{g.name}</option>)}
-            </select>
-          </div>
+          {targetType !== "GLOBAL" && (
+            <div>
+              <label className="block text-sm font-bold text-slate-700 mb-1">Target Item</label>
+              <select 
+                value={targetId}
+                onChange={(e) => setTargetId(e.target.value)}
+                className="w-full border border-slate-200 p-2.5 rounded-lg focus:ring-2 focus:ring-orange-500 outline-none bg-white shadow-sm ring-2 ring-orange-100"
+              >
+                <option value="">
+                  {targetType === "TOUR" && "Select a specific Tour Package"}
+                  {targetType === "PROPERTY" && "Select a specific Hotel/Homestay"}
+                  {targetType === "VEHICLE" && "Select a specific Taxi"}
+                  {targetType === "GUIDE" && "Select a specific Guide"}
+                </option>
+                {targetType === "TOUR" && tours.map(t => <option key={t.id} value={t.id}>{t.title}</option>)}
+                {targetType === "PROPERTY" && properties.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                {targetType === "VEHICLE" && vehicles.map(v => <option key={v.id} value={v.id}>{v.make} {v.model}</option>)}
+                {targetType === "GUIDE" && guides.map(g => <option key={g.id} value={g.id}>{g.name}</option>)}
+              </select>
+            </div>
+          )}
           <button 
             type="submit" 
             disabled={isSubmitting}
