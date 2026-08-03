@@ -127,6 +127,28 @@ export async function updatePropertyGooglePlaceId(propertyId: string, googlePlac
   }
 }
 
+export async function updatePropertyImages(propertyId: string, images: string[]) {
+  try {
+    const userId = await getCurrentUserId();
+    if (!userId) return { success: false, error: "Unauthorized" };
+
+    const dbUser = await prisma.user.findUnique({ where: { id: userId } });
+    if (!dbUser || dbUser.role !== "ADMIN") return { success: false, error: "Forbidden" };
+
+    await prisma.property.update({
+      where: { id: propertyId },
+      data: { images }
+    });
+
+    revalidatePath("/wander-admin");
+    revalidatePath(`/stays/${propertyId}`);
+    return { success: true };
+  } catch (error) {
+    console.error("Error updating property images:", error);
+    return { success: false, error: "Failed to update images." };
+  }
+}
+
 // USER MANAGEMENT
 export async function banUser(targetUserId: string, reason: string) {
   try {

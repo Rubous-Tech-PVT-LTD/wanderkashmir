@@ -26,6 +26,50 @@ const AdminMapView = dynamic(() => import("./AdminMapView"), { ssr: false });
 const AdminEmailsTab = dynamic(() => import("./AdminEmailsTab"), { ssr: false });
 const AdminPromoCodesTab = dynamic(() => import("./AdminPromoCodesTab"), { ssr: false });
 const AdminCustomToursTab = dynamic(() => import("./AdminCustomToursTab"), { ssr: false });
+const ImageUpload = dynamic(() => import("@/components/ImageUpload"), { ssr: false });
+
+function PropertyImagesAdmin({ property, onSaved }: { property: any, onSaved: (newImages: string[]) => void }) {
+  const [uploadedPhotos, setUploadedPhotos] = useState<string[]>(property.images || []);
+  const [isSaving, setIsSaving] = useState(false);
+
+  const handleSave = async () => {
+    setIsSaving(true);
+    const { updatePropertyImages } = await import("@/actions/admin-management");
+    const res = await updatePropertyImages(property.id, uploadedPhotos);
+    setIsSaving(false);
+    if (res.success) {
+      toast.success("Property media updated!");
+      onSaved(uploadedPhotos);
+    } else {
+      toast.error(res.error || "Failed to update media");
+    }
+  };
+
+  const hasChanged = JSON.stringify(uploadedPhotos) !== JSON.stringify(property.images || []);
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between mb-2">
+        <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider">Manage Media (Photos/Videos)</h3>
+        {hasChanged && (
+          <button 
+            onClick={handleSave} 
+            disabled={isSaving}
+            className="px-3 py-1.5 bg-sky-500 text-white text-sm font-bold rounded-lg hover:bg-sky-600 disabled:opacity-50 transition-colors"
+          >
+            {isSaving ? "Saving..." : "Save Changes"}
+          </button>
+        )}
+      </div>
+      <ImageUpload 
+        uploadedPhotos={uploadedPhotos} 
+        setUploadedPhotos={setUploadedPhotos} 
+        photoLimit={100} 
+        videoLimit={10} 
+      />
+    </div>
+  );
+}
 
 // Define the type based on the props passed from Server
 type VendorProfile = {
@@ -1900,15 +1944,13 @@ export default function AdminDashboardClient({
                 </div>
               </div>
 
-              <div>
-                <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider mb-2">Photos</h3>
-                <div className="grid grid-cols-3 gap-3">
-                  {selectedPropertyDetails.images.map((img, idx) => (
-                    <img key={idx} src={img} alt={`Property ${idx}`} className="w-full h-32 object-cover rounded-lg" />
-                  ))}
-                  {selectedPropertyDetails.images.length === 0 && <div className="col-span-3 text-slate-400 text-sm">No photos provided</div>}
-                </div>
-              </div>
+              <PropertyImagesAdmin 
+                property={selectedPropertyDetails} 
+                onSaved={(newImages) => {
+                  setSelectedPropertyDetails(prev => prev ? {...prev, images: newImages} : null);
+                  fetchData();
+                }}
+              />
 
               <div className="pt-6 border-t border-slate-100">
                 <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider mb-2">Google Place ID (Admin Override)</h3>
