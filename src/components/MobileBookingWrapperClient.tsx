@@ -44,7 +44,7 @@ export default function MobileBookingWrapperClient({
         
         <button
           onClick={() => setIsOpen(true)}
-          className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg shadow-lg active:scale-95 transition-all text-sm"
+          className="bg-orange-600 hover:bg-orange-700 text-white font-bold py-2.5 px-5 rounded-lg shadow-lg active:scale-95 transition-all text-sm"
         >
           SELECT ROOM
         </button>
