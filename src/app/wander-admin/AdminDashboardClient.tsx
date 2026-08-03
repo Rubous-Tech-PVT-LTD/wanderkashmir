@@ -138,6 +138,7 @@ export default function AdminDashboardClient({
   const [propertyRejectionRemarks, setPropertyRejectionRemarks] = useState("");
   const [selectedBookingDetails, setSelectedBookingDetails] = useState<any | null>(null);
   const [adminGooglePlaceId, setAdminGooglePlaceId] = useState("");
+  const [isEditingGooglePlaceId, setIsEditingGooglePlaceId] = useState(false);
   const router = useRouter();
 
   // Filtering & Search States
@@ -1911,34 +1912,92 @@ export default function AdminDashboardClient({
 
               <div className="pt-6 border-t border-slate-100">
                 <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider mb-2">Google Place ID (Admin Override)</h3>
-                <div className="flex items-center gap-3">
-                  <input 
-                    type="text" 
-                    value={adminGooglePlaceId || selectedPropertyDetails.googlePlaceId || ""}
-                    onChange={(e) => setAdminGooglePlaceId(e.target.value)}
-                    placeholder="Enter Google Place ID"
-                    className="flex-1 border border-slate-200 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500"
-                  />
-                  <button 
-                    onClick={async () => {
-                      setIsProcessing(selectedPropertyDetails.id + '-gpid');
-                      const { updatePropertyGooglePlaceId } = await import("@/actions/admin-management");
-                      const res = await updatePropertyGooglePlaceId(selectedPropertyDetails.id, adminGooglePlaceId);
-                      setIsProcessing(null);
-                      if (res.success) {
-                        toast.success("Google Place ID updated!");
-                        setSelectedPropertyDetails(prev => prev ? {...prev, googlePlaceId: adminGooglePlaceId} : null);
-                        fetchData();
-                      } else {
-                        toast.error(res.error || "Failed to update Place ID");
-                      }
-                    }}
-                    disabled={isProcessing === selectedPropertyDetails.id + '-gpid'}
-                    className="px-4 py-2 bg-sky-500 text-white font-bold rounded-lg hover:bg-sky-600 disabled:opacity-50"
-                  >
-                    {isProcessing === selectedPropertyDetails.id + '-gpid' ? "Saving..." : "Save"}
-                  </button>
-                </div>
+                
+                {selectedPropertyDetails.googlePlaceId && !isEditingGooglePlaceId ? (
+                  <div className="flex items-center justify-between bg-slate-50 border border-slate-200 rounded-lg p-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-sky-100 rounded-full flex items-center justify-center">
+                        <MapPin className="w-5 h-5 text-sky-600" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-bold text-slate-900">Saved Place ID</p>
+                        <p className="text-sm text-slate-500 font-mono mt-0.5">{selectedPropertyDetails.googlePlaceId}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <button 
+                        onClick={() => {
+                          setAdminGooglePlaceId(selectedPropertyDetails.googlePlaceId || "");
+                          setIsEditingGooglePlaceId(true);
+                        }}
+                        className="px-3 py-1.5 text-sm font-bold text-sky-600 bg-sky-50 rounded-lg hover:bg-sky-100 transition"
+                      >
+                        Edit
+                      </button>
+                      <button 
+                        onClick={async () => {
+                          if (confirm("Are you sure you want to delete this Place ID? Reviews will no longer show.")) {
+                            setIsProcessing(selectedPropertyDetails.id + '-delete-gpid');
+                            const { updatePropertyGooglePlaceId } = await import("@/actions/admin-management");
+                            const res = await updatePropertyGooglePlaceId(selectedPropertyDetails.id, "");
+                            setIsProcessing(null);
+                            if (res.success) {
+                              toast.success("Google Place ID deleted!");
+                              setSelectedPropertyDetails(prev => prev ? {...prev, googlePlaceId: null} : null);
+                              setAdminGooglePlaceId("");
+                              fetchData();
+                            } else {
+                              toast.error(res.error || "Failed to delete Place ID");
+                            }
+                          }
+                        }}
+                        disabled={isProcessing === selectedPropertyDetails.id + '-delete-gpid'}
+                        className="px-3 py-1.5 text-sm font-bold text-rose-600 bg-rose-50 rounded-lg hover:bg-rose-100 transition disabled:opacity-50"
+                      >
+                        {isProcessing === selectedPropertyDetails.id + '-delete-gpid' ? "..." : "Delete"}
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-3">
+                    <input 
+                      type="text" 
+                      value={adminGooglePlaceId}
+                      onChange={(e) => setAdminGooglePlaceId(e.target.value)}
+                      placeholder="Enter Google Place ID"
+                      className="flex-1 border border-slate-200 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500"
+                    />
+                    <button 
+                      onClick={async () => {
+                        setIsProcessing(selectedPropertyDetails.id + '-gpid');
+                        const { updatePropertyGooglePlaceId } = await import("@/actions/admin-management");
+                        const res = await updatePropertyGooglePlaceId(selectedPropertyDetails.id, adminGooglePlaceId);
+                        setIsProcessing(null);
+                        if (res.success) {
+                          toast.success("Google Place ID saved!");
+                          setSelectedPropertyDetails(prev => prev ? {...prev, googlePlaceId: adminGooglePlaceId} : null);
+                          setIsEditingGooglePlaceId(false);
+                          fetchData();
+                        } else {
+                          toast.error(res.error || "Failed to save Place ID");
+                        }
+                      }}
+                      disabled={isProcessing === selectedPropertyDetails.id + '-gpid' || !adminGooglePlaceId.trim()}
+                      className="px-4 py-2 bg-sky-500 text-white font-bold rounded-lg hover:bg-sky-600 disabled:opacity-50"
+                    >
+                      {isProcessing === selectedPropertyDetails.id + '-gpid' ? "Saving..." : "Save"}
+                    </button>
+                    
+                    {isEditingGooglePlaceId && (
+                      <button 
+                        onClick={() => setIsEditingGooglePlaceId(false)}
+                        className="px-4 py-2 bg-slate-100 text-slate-600 font-bold rounded-lg hover:bg-slate-200"
+                      >
+                        Cancel
+                      </button>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
 
