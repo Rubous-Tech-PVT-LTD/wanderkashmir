@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import prisma from "@/lib/prisma";
 import ImageWithFallback from "@/components/ImageWithFallback";
 import Link from "next/link";
-import { ChevronRight, Calendar, User, ArrowLeft } from "lucide-react";
+import { ChevronRight, Calendar, User, ArrowLeft, ChevronDown } from "lucide-react";
 import Footer from "@/components/Footer";
 import Navbar from "@/components/Navbar";
 import { marked } from "marked";
@@ -175,6 +175,30 @@ export default async function BlogArticlePage({ params }: { params: Promise<{ sl
               dangerouslySetInnerHTML={{ __html: safeContent }} 
             />
           </article>
+        )}
+
+        {/* FAQs */}
+        {page.faqs && Array.isArray(page.faqs) && page.faqs.length > 0 && (
+          <div className="mb-16">
+            <h2 className="text-3xl font-bold text-slate-900 mb-8 text-center">
+              Frequently Asked Questions
+            </h2>
+            <div className="max-w-3xl mx-auto space-y-4">
+              {page.faqs.map((faq: any, idx: number) => (
+                <details key={idx} className="group bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden [&_summary::-webkit-details-marker]:hidden">
+                  <summary className="flex cursor-pointer items-center justify-between gap-1.5 p-6 text-slate-900 font-semibold hover:bg-slate-50 transition-colors">
+                    <span className="text-lg pr-4">{faq.question}</span>
+                    <span className="shrink-0 bg-slate-100 p-1.5 rounded-full text-slate-500 group-open:-rotate-180 transition-transform duration-300">
+                      <ChevronDown className="w-5 h-5" />
+                    </span>
+                  </summary>
+                  <div className="p-6 pt-0 text-slate-600 leading-relaxed border-t border-slate-50 mt-2 bg-slate-50/50">
+                    {faq.answer}
+                  </div>
+                </details>
+              ))}
+            </div>
+          </div>
         )}
 
         {/* Call To Action Block */}
