@@ -38,10 +38,10 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
     : ["https://images.unsplash.com/photo-1542718610-a1d656d1884c?auto=format&fit=crop&q=80&w=1200"];
 
   return {
-    title: `${property.name} - ${typeLabel} in ${property.location} | WanderKashmir`,
+    title: `Book ${property.name}, ${property.location} | Best ${typeLabel}`,
     description: property.description 
-      ? `${property.description.substring(0, 150)}...` 
-      : `Book ${property.name}, a beautiful ${typeLabel} located in ${property.location} with WanderKashmir.`,
+      ? `${property.description.substring(0, 120).trim()}... Enjoy top-rated amenities, verified reviews, and secure booking. Reserve today!` 
+      : `Book ${property.name}, a beautiful ${typeLabel} located in ${property.location}. Enjoy top-rated amenities, verified reviews, and secure booking with WanderKashmir.`,
     openGraph: {
       images: images.map((url: string) => ({ url })),
       type: "website",
@@ -144,27 +144,38 @@ export default async function PropertyDetailPage({
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
-          __html: JSON.stringify({
-            "@context": "https://schema.org",
-            "@type": property.vendorProfile?.type === 'HOTEL' ? 'Hotel' : 'LodgingBusiness',
-            "name": property.name,
-            "description": property.description,
-            "image": images,
-            "address": {
-              "@type": "PostalAddress",
-              "addressLocality": property.location,
-              "addressRegion": "Jammu and Kashmir",
-              "addressCountry": "IN"
+          __html: JSON.stringify([
+            {
+              "@context": "https://schema.org",
+              "@type": property.vendorProfile?.type === 'HOTEL' ? 'Hotel' : 'LodgingBusiness',
+              "name": property.name,
+              "description": property.description,
+              "image": images,
+              "address": {
+                "@type": "PostalAddress",
+                "addressLocality": property.location,
+                "addressRegion": "Jammu and Kashmir",
+                "addressCountry": "IN"
+              },
+              "priceRange": `₹${property.pricePerNight} - ₹${property.pricePerNight * 2}`,
+              ...(reviewStats.totalCount > 0 && {
+                "aggregateRating": {
+                  "@type": "AggregateRating",
+                  "ratingValue": reviewStats.averageRating.toFixed(1),
+                  "reviewCount": reviewStats.totalCount
+                }
+              })
             },
-            "priceRange": `₹${property.pricePerNight} - ₹${property.pricePerNight * 2}`,
-            ...(reviewStats.totalCount > 0 && {
-              "aggregateRating": {
-                "@type": "AggregateRating",
-                "ratingValue": reviewStats.averageRating.toFixed(1),
-                "reviewCount": reviewStats.totalCount
-              }
-            })
-          })
+            {
+              "@context": "https://schema.org",
+              "@type": "BreadcrumbList",
+              "itemListElement": [
+                { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://www.wanderkashmir.com" },
+                { "@type": "ListItem", "position": 2, "name": "Stays", "item": "https://www.wanderkashmir.com/stays" },
+                { "@type": "ListItem", "position": 3, "name": property.name, "item": `https://www.wanderkashmir.com/stays/${property.id}` }
+              ]
+            }
+          ])
         }}
       />
 
@@ -177,7 +188,7 @@ export default async function PropertyDetailPage({
           <span>/</span>
           <span className="text-slate-900 font-medium">{property.name}</span>
         </div>
-        <h1 className="text-3xl md:text-4xl font-bold text-slate-900 mb-2">{property.name}</h1>
+        <h1 className="text-3xl md:text-4xl font-bold text-slate-900 mb-2">{property.name} - {property.vendorProfile?.type === 'HOTEL' ? 'Hotel' : 'Homestay'} in {property.location}</h1>
         <div className="flex items-center gap-4 text-sm text-slate-600">
           <div className="flex items-center gap-1 font-medium text-slate-900">
             <Star className="w-4 h-4 fill-orange-400 text-orange-400" />
