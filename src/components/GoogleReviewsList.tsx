@@ -44,6 +44,15 @@ function ReviewCard({ review }: { review: any }) {
 }
 
 export default function GoogleReviewsList({ reviews, rating, totalRatings, autoPlay = false }: { reviews: any[], rating: number, totalRatings: number, autoPlay?: boolean }) {
+  let displayReviews = [...reviews];
+  
+  // If autoPlay is enabled but we have less than 4 reviews, duplicate them so the carousel has enough items to loop/scroll smoothly
+  if (autoPlay && displayReviews.length > 0 && displayReviews.length < 4) {
+    while (displayReviews.length < 5) {
+      displayReviews = [...displayReviews, ...reviews];
+    }
+  }
+
   const plugins = autoPlay ? [Autoplay({ delay: 3000, stopOnInteraction: true })] : [];
   const [emblaRef, emblaApi] = useEmblaCarousel({ align: "start", loop: autoPlay }, plugins);
 
@@ -55,7 +64,7 @@ export default function GoogleReviewsList({ reviews, rating, totalRatings, autoP
     if (emblaApi) emblaApi.scrollNext();
   }, [emblaApi]);
 
-  if (!reviews || reviews.length === 0) return null;
+  if (!displayReviews || displayReviews.length === 0) return null;
 
   return (
     <div className="mt-12 bg-white rounded-2xl border border-slate-100 p-8 shadow-sm">
@@ -80,7 +89,7 @@ export default function GoogleReviewsList({ reviews, rating, totalRatings, autoP
         </div>
         
         {/* Navigation Buttons */}
-        {reviews.length > 2 && (
+        {displayReviews.length > 2 && (
           <div className="flex gap-2 hidden md:flex">
             <button 
               onClick={scrollPrev} 
@@ -100,7 +109,7 @@ export default function GoogleReviewsList({ reviews, rating, totalRatings, autoP
 
       <div className="overflow-hidden" ref={emblaRef}>
         <div className="flex -ml-4">
-          {reviews.map((review, i) => (
+          {displayReviews.map((review, i) => (
             <div key={i} className="pl-4 min-w-0 flex-[0_0_100%] md:flex-[0_0_50%] lg:flex-[0_0_33.333%]">
               <ReviewCard review={review} />
             </div>
@@ -108,7 +117,7 @@ export default function GoogleReviewsList({ reviews, rating, totalRatings, autoP
         </div>
       </div>
       
-      {reviews.length > 2 && (
+      {displayReviews.length > 2 && (
         <div className="flex justify-center gap-2 mt-6 md:hidden">
           <button 
             onClick={scrollPrev} 
