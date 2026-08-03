@@ -145,7 +145,7 @@ export default function CheckoutClient({
     setPromoError("");
     
     // Validate with server
-    const res = await validatePromoCode(promoInput.trim().toUpperCase(), tour?.id);
+    const res = await validatePromoCode(promoInput.trim().toUpperCase(), { tourId: tour?.id });
     if (res.success && res.discountPercent) {
       setAppliedPromo(promoInput.trim().toUpperCase());
       setDiscountPercent(res.discountPercent);
@@ -459,6 +459,8 @@ export default function CheckoutClient({
                 checkIn={checkIn?.toISOString().split("T")[0] || ""}
                 checkOut={checkOut?.toISOString().split("T")[0] || ""}
                 guests={guests}
+                adults={guests}
+                childrenCount={0}
                 nights={nights}
                 guestName={guestName}
                 guestPhone={guestPhone}

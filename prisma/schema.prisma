@@ -132,8 +132,9 @@ model VendorProfile {
   rateOverrides TaxiStandRateOverride[]
   guideProfiles GuideProfile[]
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+  PromoCode PromoCode[]
 
   @@index([userId])
   @@index([type, status])
@@ -143,30 +144,30 @@ model VendorProfile {
 }
 
 model Property {
-  id              String        @id @default(cuid())
-  vendorProfileId String
-  vendorProfile   VendorProfile @relation(fields: [vendorProfileId], references: [id], onDelete: Cascade)
-  isApproved      Boolean       @default(false)
-  status          String        @default("PENDING")
-  rejectionReason String?
-  name            String
-  location        String
-  latitude        Float?
-  longitude       Float?
-  description     String?
-  pricePerNight   Float
-  availableRooms  Int           @default(1)
-  totalRooms      Int           @default(1)
-  bedrooms        Int           @default(1)
-  beds            Int           @default(1)
-  guests          Int           @default(2)
-  bedDetails      String? // "6 Queen Beds, 3 Double Beds"
-  images          String[]      @default([])
-  amenities       String[]      @default([])
-  googlePlaceId   String?
-  breakfastIncluded Boolean     @default(false)
-  dinnerIncluded    Boolean     @default(false)
-  faqs              Json?       // Stores array of { question, answer }
+  id                String        @id @default(cuid())
+  vendorProfileId   String
+  vendorProfile     VendorProfile @relation(fields: [vendorProfileId], references: [id], onDelete: Cascade)
+  isApproved        Boolean       @default(false)
+  status            String        @default("PENDING")
+  rejectionReason   String?
+  name              String
+  location          String
+  latitude          Float?
+  longitude         Float?
+  description       String?
+  pricePerNight     Float
+  availableRooms    Int           @default(1)
+  totalRooms        Int           @default(1)
+  bedrooms          Int           @default(1)
+  beds              Int           @default(1)
+  guests            Int           @default(2)
+  bedDetails        String? // "6 Queen Beds, 3 Double Beds"
+  images            String[]      @default([])
+  amenities         String[]      @default([])
+  googlePlaceId     String?
+  breakfastIncluded Boolean       @default(false)
+  dinnerIncluded    Boolean       @default(false)
+  faqs              Json? // Stores array of { question, answer }
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -174,6 +175,7 @@ model Property {
   bookings  Booking[]
   reviews   Review[]
   roomTypes RoomType[]
+  PromoCode PromoCode[]
 
   @@index([status, isApproved])
   @@index([location])
@@ -229,8 +231,9 @@ model Vehicle {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  bookings Booking[]
-  reviews  Review[]
+  bookings  Booking[]
+  reviews   Review[]
+  PromoCode PromoCode[]
 }
 
 model Driver {
@@ -303,8 +306,9 @@ model GuideProfile {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  bookings Booking[]
-  reviews  Review[]
+  bookings  Booking[]
+  reviews   Review[]
+  PromoCode PromoCode[]
 }
 
 model Booking {
@@ -330,14 +334,14 @@ model Booking {
   roomTypeId String?
   roomType   RoomType? @relation(fields: [roomTypeId], references: [id], onDelete: SetNull)
 
-  checkIn       DateTime?
-  checkOut      DateTime?
-  guests        Int?
-  numberOfRooms Int       @default(1)
-  adults        Int       @default(1)
-  childrenCount Int       @default(0)
-  guestName     String?
-  guestPhone    String?
+  checkIn         DateTime?
+  checkOut        DateTime?
+  guests          Int?
+  numberOfRooms   Int       @default(1)
+  adults          Int       @default(1)
+  childrenCount   Int       @default(0)
+  guestName       String?
+  guestPhone      String?
   specialRequests String?
   otherGuests     Json?
 
@@ -444,17 +448,36 @@ model SeoLandingPage {
 }
 
 model PromoCode {
-  id              String  @id @default(cuid())
-  code            String  @unique
+  id              String @id @default(cuid())
+  code            String @unique
   discountPercent Float
-  tourId          String?
-  tour            Tour?   @relation(fields: [tourId], references: [id], onDelete: SetNull)
-  isActive        Boolean @default(true)
+
+  tourId String?
+  tour   Tour?   @relation(fields: [tourId], references: [id], onDelete: SetNull)
+
+  propertyId String?
+  property   Property? @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+
+  vehicleId String?
+  vehicle   Vehicle? @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+
+  guideProfileId String?
+  guideProfile   GuideProfile? @relation(fields: [guideProfileId], references: [id], onDelete: Cascade)
+
+  vendorProfileId String?
+  vendorProfile   VendorProfile? @relation(fields: [vendorProfileId], references: [id], onDelete: Cascade)
+
+  status   String  @default("APPROVED") // APPROVED, PENDING, REJECTED
+  isActive Boolean @default(true)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@index([tourId])
+  @@index([propertyId])
+  @@index([vehicleId])
+  @@index([guideProfileId])
+  @@index([vendorProfileId])
   @@index([code])
 }
 
@@ -464,7 +487,7 @@ model CustomTourRequest {
   phone           String
   email           String?
   travelDates     String? // e.g. "2026-08-10 to 2026-08-15" or "5 Days / 4 Nights"
-  guestsCount     String   // e.g. "2 Adults, 1 Child"
+  guestsCount     String // e.g. "2 Adults, 1 Child"
   destinations    String[] @default([]) // e.g. ["Srinagar", "Gulmarg", "Pahalgam"]
   hotelType       String   @default("3 Star Standard") // "Budget", "3 Star Standard", "4 Star Luxury", "Houseboat", "Homestay"
   cabType         String   @default("Sedan / SUV") // "Sedan / SUV", "Tempo Traveller", "Not Needed"
@@ -483,44 +506,44 @@ model ContentAsset {
   id            String         @id @default(cuid())
   seoPageId     String
   seoPage       SeoLandingPage @relation(fields: [seoPageId], references: [id], onDelete: Cascade)
-  platform      String         // "instagram", "facebook", "linkedin", "reddit", "twitter", "pinterest", "email", "whatsapp"
-  contentType   String         // e.g., "carousel", "article", "thread", "message", "pin"
+  platform      String // "instagram", "facebook", "linkedin", "reddit", "twitter", "pinterest", "email", "whatsapp"
+  contentType   String // e.g., "carousel", "article", "thread", "message", "pin"
   title         String?
   content       String?        @db.Text
   jsonData      Json?
   publishStatus String         @default("Draft") // Draft, Pending Review, Approved, Scheduled, Published, Archived
-  
-  scheduledFor  DateTime?
-  publishedPlatformId String?  // ID returned from the external API (e.g., Instagram Post ID)
-  
+
+  scheduledFor        DateTime?
+  publishedPlatformId String? // ID returned from the external API (e.g., Instagram Post ID)
+
   // Analytics
-  views         Int            @default(0)
-  clicks        Int            @default(0)
-  shares        Int            @default(0)
-  engagement    Int            @default(0)
+  views      Int @default(0)
+  clicks     Int @default(0)
+  shares     Int @default(0)
+  engagement Int @default(0)
 
-  createdAt     DateTime       @default(now())
-  updatedAt     DateTime       @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  versions      ContentAssetVersion[]
-  auditLogs     ContentAuditLog[]
+  versions  ContentAssetVersion[]
+  auditLogs ContentAuditLog[]
 
   @@unique([seoPageId, platform])
 }
 
 model ContentGenerationJob {
-  id               String         @id @default(cuid())
+  id               String  @id @default(cuid())
   seoLandingPageId String
-  status           String         @default("PENDING") // PENDING, GENERATING, COMPLETED, FAILED
-  progress         Int            @default(0) // 0 to 100
-  platform         String         // The specific platform being generated
-  error            String?        @db.Text
+  status           String  @default("PENDING") // PENDING, GENERATING, COMPLETED, FAILED
+  progress         Int     @default(0) // 0 to 100
+  platform         String // The specific platform being generated
+  error            String? @db.Text
   logs             Json?
-  
-  startedAt        DateTime?
-  finishedAt       DateTime?
-  createdAt        DateTime       @default(now())
-  updatedAt        DateTime       @updatedAt
+
+  startedAt  DateTime?
+  finishedAt DateTime?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
 }
 
 model ContentAssetVersion {
@@ -530,19 +553,19 @@ model ContentAssetVersion {
   content     String?      @db.Text
   jsonData    Json?
   versionNote String?
-  
-  createdAt   DateTime     @default(now())
+
+  createdAt DateTime @default(now())
 }
 
 model ContentAuditLog {
-  id          String       @id @default(cuid())
-  assetId     String
-  asset       ContentAsset @relation(fields: [assetId], references: [id], onDelete: Cascade)
-  action      String       // Generated, Edited, Approved, Published, Deleted, Restored
-  user        String       @default("System")
-  ip          String?
-  
-  timestamp   DateTime     @default(now())
+  id      String       @id @default(cuid())
+  assetId String
+  asset   ContentAsset @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  action  String // Generated, Edited, Approved, Published, Deleted, Restored
+  user    String       @default("System")
+  ip      String?
+
+  timestamp DateTime @default(now())
 }
 
 model ContentSettings {
@@ -552,6 +575,6 @@ model ContentSettings {
   hashtags           String[] @default(["#WanderKashmir", "#KashmirTourism"])
   defaultPromptRules String?  @db.Text
   temperature        Float    @default(0.7)
-  
-  updatedAt          DateTime @updatedAt
+
+  updatedAt DateTime @updatedAt
 }

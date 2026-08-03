@@ -166,7 +166,7 @@ export default function BookingSidebar({ propertyId, pricePerNight, rating, isLo
     setPromoError("");
     
     // Validate with server
-    const res = await validatePromoCode(promoInput.trim().toUpperCase()); // No tourId passed for hotels
+    const res = await validatePromoCode(promoInput.trim().toUpperCase(), { propertyId });
     if (res.success && res.discountPercent) {
       setAppliedPromo(promoInput.trim().toUpperCase());
       setDiscountPercent(res.discountPercent);

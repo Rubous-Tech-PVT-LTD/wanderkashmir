@@ -7,15 +7,13 @@ export async function getPromoCodes() {
   try {
     const promoCodes = await prisma.promoCode.findMany({
       include: {
-        tour: {
-          select: {
-            title: true,
-          }
-        }
+        tour: { select: { title: true } },
+        property: { select: { name: true } },
+        vehicle: { select: { make: true, model: true } },
+        guideProfile: { select: { vendorProfile: { select: { user: { select: { name: true } } } } } },
+        vendorProfile: { select: { businessName: true } }
       },
-      orderBy: {
-        createdAt: "desc"
-      }
+      orderBy: { createdAt: "desc" }
     });
     return { success: true, data: promoCodes };
   } catch (error) {
@@ -24,7 +22,32 @@ export async function getPromoCodes() {
   }
 }
 
-export async function createPromoCode(code: string, discountPercent: number, tourId: string | null) {
+export async function getVendorPromoCodes(vendorProfileId: string) {
+  try {
+    const promoCodes = await prisma.promoCode.findMany({
+      where: { vendorProfileId },
+      include: {
+        tour: { select: { title: true } },
+        property: { select: { name: true } },
+        vehicle: { select: { make: true, model: true } },
+        guideProfile: { select: { vendorProfile: { select: { user: { select: { name: true } } } } } },
+      },
+      orderBy: { createdAt: "desc" }
+    });
+    return { success: true, data: promoCodes };
+  } catch (error) {
+    console.error("Failed to fetch vendor promo codes", error);
+    return { success: false, error: "Failed to fetch promo codes" };
+  }
+}
+
+export async function createPromoCode(
+  code: string, 
+  discountPercent: number, 
+  targets: { tourId?: string | null, propertyId?: string | null, vehicleId?: string | null, guideProfileId?: string | null },
+  vendorProfileId?: string | null,
+  isAdmin: boolean = true
+) {
   try {
     const codeExists = await prisma.promoCode.findUnique({
       where: { code }
@@ -38,11 +61,17 @@ export async function createPromoCode(code: string, discountPercent: number, tou
       data: {
         code,
         discountPercent,
-        tourId: tourId || null,
+        tourId: targets.tourId || null,
+        propertyId: targets.propertyId || null,
+        vehicleId: targets.vehicleId || null,
+        guideProfileId: targets.guideProfileId || null,
+        vendorProfileId: vendorProfileId || null,
         isActive: true,
+        status: isAdmin ? "APPROVED" : "PENDING",
       }
     });
     revalidatePath("/wander-admin");
+    if (vendorProfileId) revalidatePath("/partner");
     return { success: true, data: promo };
   } catch (error) {
     console.error("Failed to create promo code", error);
@@ -64,6 +93,23 @@ export async function togglePromoCodeStatus(id: string, isActive: boolean) {
   }
 }
 
+export async function approvePromoCode(id: string, isApproved: boolean) {
+  try {
+    await prisma.promoCode.update({
+      where: { id },
+      data: { 
+        status: isApproved ? "APPROVED" : "REJECTED",
+        isActive: isApproved, // Deactivate if rejected
+      }
+    });
+    revalidatePath("/wander-admin");
+    return { success: true };
+  } catch (error) {
+    console.error("Failed to approve promo code", error);
+    return { success: false, error: "Failed to update status" };
+  }
+}
+
 export async function deletePromoCode(id: string) {
   try {
     await prisma.promoCode.delete({
@@ -77,7 +123,10 @@ export async function deletePromoCode(id: string) {
   }
 }
 
-export async function validatePromoCode(code: string, tourId?: string) {
+export async function validatePromoCode(
+  code: string, 
+  targets?: { tourId?: string | null, propertyId?: string | null, vehicleId?: string | null, guideProfileId?: string | null }
+) {
   try {
     const promo = await prisma.promoCode.findUnique({
       where: { code },
@@ -87,12 +136,23 @@ export async function validatePromoCode(code: string, tourId?: string) {
       return { success: false, error: "Invalid promo code" };
     }
 
-    if (!promo.isActive) {
-      return { success: false, error: "Promo code is inactive" };
+    if (!promo.isActive || promo.status !== "APPROVED") {
+      return { success: false, error: "Promo code is inactive or pending approval" };
     }
 
-    if (promo.tourId && promo.tourId !== tourId) {
-      return { success: false, error: "Promo code is not applicable for this tour" };
+    // Check if the promo code applies globally (no specific targets set on the promo code)
+    const isGlobal = !promo.tourId && !promo.propertyId && !promo.vehicleId && !promo.guideProfileId;
+
+    if (!isGlobal) {
+      let isMatch = false;
+      if (targets?.tourId && promo.tourId === targets.tourId) isMatch = true;
+      if (targets?.propertyId && promo.propertyId === targets.propertyId) isMatch = true;
+      if (targets?.vehicleId && promo.vehicleId === targets.vehicleId) isMatch = true;
+      if (targets?.guideProfileId && promo.guideProfileId === targets.guideProfileId) isMatch = true;
+
+      if (!isMatch) {
+        return { success: false, error: "Promo code is not applicable for this service" };
+      }
     }
 
     return { success: true, discountPercent: promo.discountPercent };
@@ -104,12 +164,24 @@ export async function validatePromoCode(code: string, tourId?: string) {
 
 export async function getToursForPromo() {
   try {
-    const tours = await prisma.tour.findMany({
-      select: { id: true, title: true }
+    const tours = await prisma.tour.findMany({ select: { id: true, title: true } });
+    const properties = await prisma.property.findMany({ select: { id: true, name: true } });
+    const vehicles = await prisma.vehicle.findMany({ select: { id: true, make: true, model: true } });
+    
+    // Using a simplified query for guides to avoid deep relation errors if fields missing
+    const rawGuides = await prisma.guideProfile.findMany({ 
+      select: { id: true, vendorProfile: { select: { user: { select: { name: true } } } } } 
     });
-    return { success: true, data: tours };
+    
+    return { 
+      success: true, 
+      tours, 
+      properties, 
+      vehicles,
+      guides: rawGuides.map(g => ({ id: g.id, name: g.vendorProfile?.user?.name || "Unknown Guide" }))
+    };
   } catch (error) {
-    console.error('Failed to fetch tours', error);
-    return { success: false, error: 'Failed to fetch tours' };
+    console.error('Failed to fetch services for promo', error);
+    return { success: false, error: 'Failed to fetch services' };
   }
 }

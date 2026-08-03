@@ -20,6 +20,7 @@ import RatesTab from "@/components/vendor/TaxiStand/RatesTab";
 import TripsTab from "@/components/vendor/TaxiStand/TripsTab";
 import dynamic from "next/dynamic";
 const ImageUpload = dynamic(() => import("@/components/ImageUpload"), { ssr: false });
+import VendorPromoCodesTab from "@/components/VendorPromoCodesTab";
 
 // Extend VehicleData with local UI fields that aren't in DB yet
 const taxiListingSchema = z.object({
@@ -350,7 +351,7 @@ export default function TaxiClient({
       </div>
 
       <div className="flex gap-6 border-b border-slate-200 mb-8 overflow-x-auto whitespace-nowrap">
-        {["overview", "vehicles", isStand && "drivers", "rates", "trips"].filter(Boolean).map((tab) => (
+        {["overview", "vehicles", isStand && "drivers", "rates", "trips", "promo"].filter(Boolean).map((tab) => (
           <button
             key={tab as string}
             onClick={() => setActiveTab(tab as string)}
@@ -368,6 +369,17 @@ export default function TaxiClient({
 
       {activeTab === "rates" && (
         <RatesTab rateOverrides={rateOverrides} />
+      )}
+
+      {/* PROMO MODULE */}
+      {activeTab === "promo" && (
+        <VendorPromoCodesTab
+          vendorProfileId={vendorProfileId || ""}
+          vendorType="TAXI"
+          properties={[]}
+          vehicles={vehicles}
+          guideProfile={null}
+        />
       )}
 
       {activeTab === "overview" && (
@@ -602,7 +614,7 @@ export default function TaxiClient({
                 <div className="border border-slate-100 bg-slate-50 rounded-xl p-4">
                   <h3 className="font-bold text-sm text-slate-900 mb-1">Promotional Offers</h3>
                   <p className="text-xs text-slate-500 mb-3">Create custom discounts and coupon codes.</p>
-                  <button onClick={() => toast.success("Promo code builder opening soon!")} className="text-xs font-bold text-indigo-600 bg-indigo-50 px-3 py-1.5 rounded-md hover:bg-indigo-100 transition-colors w-full">Create Offer</button>
+                  <button onClick={() => setActiveTab("promo")} className="text-xs font-bold text-indigo-600 bg-indigo-50 px-3 py-1.5 rounded-md hover:bg-indigo-100 transition-colors w-full">Create Offer</button>
                 </div>
 
                 <div className="border border-slate-100 bg-slate-50 rounded-xl p-4">

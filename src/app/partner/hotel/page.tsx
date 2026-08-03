@@ -33,5 +33,5 @@ export default async function HotelDashboardPage() {
     orderBy: { createdAt: "desc" },
   });
 
-  return <HotelClient properties={properties} bookings={bookings} />;
+  return <HotelClient vendorProfileId={session.vendorProfileId} properties={properties} bookings={bookings} />;
 }

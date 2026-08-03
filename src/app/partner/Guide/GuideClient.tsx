@@ -19,6 +19,7 @@ import dynamic from "next/dynamic";
 const ImageUpload = dynamic(() => import("@/components/ImageUpload"), { ssr: false });
 import { saveGuideProfile } from "@/actions/guide";
 import { useRouter } from "next/navigation";
+import VendorPromoCodesTab from "@/components/VendorPromoCodesTab";
 
 // --- ZOD SCHEMA FOR GUIDE PROFILE ---
 const guideProfileSchema = z.object({
@@ -261,7 +262,7 @@ export default function GuideClient({ bookings = [], vendorProfileId, initialGui
       </div>
 
       <div className="flex gap-6 border-b border-slate-200 mb-8 overflow-x-auto whitespace-nowrap">
-        {["overview", "profile", "bookings"].map((tab) => (
+        {["overview", "profile", "bookings", "promo"].map((tab) => (
           <button
             key={tab}
             onClick={() => { setActiveTab(tab); setIsEditMode(false); }}
@@ -335,6 +336,17 @@ export default function GuideClient({ bookings = [], vendorProfileId, initialGui
             </div>
           </div>
         </div>
+      )}
+
+      {/* PROMO MODULE */}
+      {activeTab === "promo" && (
+        <VendorPromoCodesTab
+          vendorProfileId={vendorProfileId || ""}
+          vendorType="GUIDE"
+          properties={[]}
+          vehicles={[]}
+          guideProfile={initialGuideProfile}
+        />
       )}
 
       {/* OVERVIEW MODULE */}
@@ -656,7 +668,7 @@ export default function GuideClient({ bookings = [], vendorProfileId, initialGui
                 <div className="border border-slate-100 bg-slate-50 rounded-xl p-4">
                   <h3 className="font-bold text-sm text-slate-900 mb-1">Promotional Offers</h3>
                   <p className="text-xs text-slate-500 mb-3">Create custom discounts for group tours.</p>
-                  <button onClick={() => toast.success("Promo code builder opening soon!")} className="text-xs font-bold text-indigo-600 bg-indigo-50 px-3 py-1.5 rounded-md hover:bg-indigo-100 transition-colors w-full">Create Offer</button>
+                  <button onClick={() => setActiveTab("promo")} className="text-xs font-bold text-indigo-600 bg-indigo-50 px-3 py-1.5 rounded-md hover:bg-indigo-100 transition-colors w-full">Create Offer</button>
                 </div>
 
                 <div className="border border-slate-100 bg-slate-50 rounded-xl p-4">

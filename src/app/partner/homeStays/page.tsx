@@ -33,5 +33,5 @@ export default async function HomestayDashboardPage() {
     orderBy: { createdAt: "desc" },
   });
 
-  return <HomestayClient properties={properties} bookings={bookings} />;
+  return <HomestayClient vendorProfileId={session.vendorProfileId} properties={properties} bookings={bookings} />;
 }

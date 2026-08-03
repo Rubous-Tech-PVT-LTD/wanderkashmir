@@ -29,7 +29,15 @@ const SINGLEDAY_PRICES: Record<string, number> = {
   "16 Seater": 80,
 };
 
-export default function TaxisClient() {
+export default function TaxisClient({ 
+  rateCards = [], 
+  imagesMap = {}, 
+  verifiedDrivers = [] 
+}: { 
+  rateCards?: any[]; 
+  imagesMap?: Record<string, string>; 
+  verifiedDrivers?: any[]; 
+}) {
   const { isSignedIn } = useUser();
   const [showBookingModal, setShowBookingModal] = useState(false);
   const [bookingStep, setBookingStep] = useState(1);
@@ -665,6 +673,8 @@ export default function TaxisClient() {
                           checkIn={(rideType === "SINGLE" ? pickupDate : startDate)?.toISOString() || new Date().toISOString()}
                           checkOut={(rideType === "SINGLE" ? pickupDate : endDate)?.toISOString() || new Date().toISOString()}
                           guests={bookingFor === "SELF" ? 1 : otherGuests.length + 1}
+                          adults={bookingFor === "SELF" ? 1 : otherGuests.length + 1}
+                          childrenCount={0}
                           nights={rideType === "SINGLE" ? 1 : Math.max(1, Math.ceil(((endDate?.getTime() || 0) - (startDate?.getTime() || 0)) / (1000 * 60 * 60 * 24)))}
                           guestName={guestName}
                           guestPhone={guestPhone}
