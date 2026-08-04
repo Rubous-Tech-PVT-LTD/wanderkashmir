@@ -76,6 +76,8 @@ export default async function StaysPage({ searchParams }: { searchParams: Promis
       images: propData.images && propData.images.length > 0 ? propData.images : [imageUrl],
       imageCount: propData.images ? propData.images.length : 1,
       featured: false,
+      amenities: propData.amenities || [],
+      description: propData.description || "",
     };
   }));
 

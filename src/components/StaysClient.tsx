@@ -17,6 +17,8 @@ export interface PropertyItem {
   images: string[];
   imageCount: number;
   featured: boolean;
+  amenities: string[];
+  description: string;
 }
 
 export default function StaysClient({ initialProperties, initialQuery = "" }: { initialProperties: PropertyItem[], initialQuery?: string }) {
@@ -365,17 +367,29 @@ export default function StaysClient({ initialProperties, initialQuery = "" }: { 
                     </div>
 
                     <div className="space-y-2 mt-4">
-                      <div className="flex items-start gap-2 text-sm text-emerald-700 font-medium">
-                        <svg className="w-4 h-4 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 15.546c-.523 0-1.046.151-1.5.454a2.704 2.704 0 01-3 0 2.704 2.704 0 00-3 0 2.704 2.704 0 01-3 0 2.704 2.704 0 00-3 0 2.704 2.704 0 01-3 0 2.701 2.701 0 00-1.5-.454M9 6v2m3-2v2m3-2v2M9 3h.01M12 3h.01M15 3h.01M21 21v-7a2 2 0 00-2-2H5a2 2 0 00-2 2v7h18zm-3-9v-2a2 2 0 00-2-2H8a2 2 0 00-2 2v2h12z" />
-                        </svg>
-                        <span className="line-clamp-1">Enjoy local Kashmiri Kahwa on arrival</span>
-                      </div>
+                      {property.amenities && property.amenities.length > 0 ? (
+                        <div className="flex items-start gap-2 text-sm text-emerald-700 font-medium">
+                          <svg className="w-4 h-4 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                          </svg>
+                          <span className="line-clamp-1">{property.amenities[0]}</span>
+                        </div>
+                      ) : (
+                        <div className="flex items-start gap-2 text-sm text-emerald-700 font-medium">
+                          <svg className="w-4 h-4 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 15.546c-.523 0-1.046.151-1.5.454a2.704 2.704 0 01-3 0 2.704 2.704 0 00-3 0 2.704 2.704 0 01-3 0 2.704 2.704 0 00-3 0 2.704 2.704 0 01-3 0 2.701 2.701 0 00-1.5-.454M9 6v2m3-2v2m3-2v2M9 3h.01M12 3h.01M15 3h.01M21 21v-7a2 2 0 00-2-2H5a2 2 0 00-2 2v7h18zm-3-9v-2a2 2 0 00-2-2H8a2 2 0 00-2 2v2h12z" />
+                          </svg>
+                          <span className="line-clamp-1">Enjoy local Kashmiri Kahwa on arrival</span>
+                        </div>
+                      )}
+                      
                       <div className="flex items-start gap-2 text-sm text-blue-800">
                         <svg className="w-4 h-4 mt-0.5 text-blue-500 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24">
                           <path d="M12 2l2.4 7.4h7.6l-6 4.6 2.3 7.4-6.3-4.8-6.3 4.8 2.3-7.4-6-4.6h7.6z" />
                         </svg>
-                        <span className="line-clamp-1">Stunning ambiance, delightful local cuisine, family-friendly activities.</span>
+                        <span className="line-clamp-1">
+                          {property.description ? property.description.substring(0, 80) + '...' : 'Stunning ambiance, delightful local cuisine, family-friendly activities.'}
+                        </span>
                       </div>
                     </div>
                   </div>
