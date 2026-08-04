@@ -151,14 +151,14 @@ export async function generateEmailWithAiAction(prompt: string) {
     You MUST include the placeholder [NAME] (with square brackets) wherever appropriate to represent the vendor's business name (e.g. "Hi [NAME]").
     
     CRITICAL URL INSTRUCTIONS:
-    1. NEVER use subdomains like "vendor.indiahiles.com" or paths like "/dashboard/listings" or similar in URLs/links.
-    2. All vendor and partner routes are hosted on the main domain: "https://indiahiles.com"
-    3. The main vendor portal link is: "https://indiahiles.com/partner"
+    1. ALWAYS use the subdomain "https://vendor.indiahiles.com" for all vendor and partner portal links.
+    2. Do NOT use paths like "/partner" on the main domain.
+    3. The main vendor portal link is: "https://vendor.indiahiles.com"
     4. Link to specific dashboard sections if relevant:
-       - Hotels: "https://indiahiles.com/partner/hotel"
-       - Homestays: "https://indiahiles.com/partner/homeStays"
-       - Taxis: "https://indiahiles.com/partner/Taxi_Driver"
-       - Guides: "https://indiahiles.com/partner/Guide"
+       - Hotels: "https://vendor.indiahiles.com/hotel"
+       - Homestays: "https://vendor.indiahiles.com/homeStays"
+       - Taxis: "https://vendor.indiahiles.com/Taxi_Driver"
+       - Guides: "https://vendor.indiahiles.com/Guide"
     
     The user wants an email about: "${prompt}"
     
