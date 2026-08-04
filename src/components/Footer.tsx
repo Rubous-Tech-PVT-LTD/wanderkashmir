@@ -141,7 +141,7 @@ export default function Footer() {
                 { Icon: FacebookIcon, href: "https://facebook.com/indiahiles", label: "Facebook" },
                 { Icon: YoutubeIcon, href: "https://youtube.com/@indiahiles", label: "YouTube" },
                 { Icon: XIcon, href: "https://x.com/indiahiles", label: "Twitter" },
-                { Icon: LinkedinIcon, href: "https://www.linkedin.com/company/wander-kashmir/", label: "LinkedIn" },
+                { Icon: LinkedinIcon, href: "https://www.linkedin.com/company/indiahiles/", label: "LinkedIn" },
               ].map(({ Icon, href, label }) => (
                 <a
                   key={label}
