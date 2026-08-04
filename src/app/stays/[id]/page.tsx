@@ -169,7 +169,14 @@ export default async function PropertyDetailPage({
                 "addressRegion": "Jammu and Kashmir",
                 "addressCountry": "IN"
               },
-              "priceRange": `₹${property.pricePerNight} - ₹${property.pricePerNight * 2}`,
+              "priceRange": `₹${property.pricePerNight}`,
+              "offers": {
+                "@type": "Offer",
+                "priceCurrency": "INR",
+                "price": property.pricePerNight,
+                "availability": "https://schema.org/InStock",
+                "url": `https://www.wanderkashmir.com/stays/${property.id}`
+              },
               ...(schemaReviewCount > 0 && {
                 "aggregateRating": {
                   "@type": "AggregateRating",

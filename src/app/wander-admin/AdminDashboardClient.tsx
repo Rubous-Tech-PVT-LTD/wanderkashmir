@@ -2164,16 +2164,21 @@ export default function AdminDashboardClient({
                   </div>
                 ) : (
                   <div className="space-y-4">
-                    {selectedPropertyDetails.description && (
-                      <div>
+                    {selectedPropertyDetails.description ? (
+                      <div className="mb-4">
                         <h4 className="text-xs font-semibold text-slate-500 mb-1">Description</h4>
                         <p className="text-sm text-slate-700 whitespace-pre-wrap">{selectedPropertyDetails.description}</p>
                       </div>
+                    ) : (
+                      <div className="mb-4">
+                        <h4 className="text-xs font-semibold text-slate-500 mb-1">Description</h4>
+                        <p className="text-sm text-slate-500 italic">No SEO description added.</p>
+                      </div>
                     )}
                     
-                    {Array.isArray(selectedPropertyDetails.faqs) && selectedPropertyDetails.faqs.length > 0 && (
-                      <div>
-                        <h4 className="text-xs font-semibold text-slate-500 mb-2">FAQs</h4>
+                    <div>
+                      <h4 className="text-xs font-semibold text-slate-500 mb-2">FAQs</h4>
+                      {Array.isArray(selectedPropertyDetails.faqs) && selectedPropertyDetails.faqs.length > 0 ? (
                         <div className="space-y-2">
                           {selectedPropertyDetails.faqs.map((faq: any, idx: number) => (
                             <div key={idx} className="bg-slate-50 p-3 rounded-lg border border-slate-100 text-sm">
@@ -2182,12 +2187,10 @@ export default function AdminDashboardClient({
                             </div>
                           ))}
                         </div>
-                      </div>
-                    )}
-                    
-                    {!selectedPropertyDetails.description && (!selectedPropertyDetails.faqs || selectedPropertyDetails.faqs.length === 0) && (
-                      <p className="text-sm text-slate-500">No SEO description or FAQs added.</p>
-                    )}
+                      ) : (
+                        <p className="text-sm text-slate-500 italic">No FAQs added yet.</p>
+                      )}
+                    </div>
                   </div>
                 )}
               </div>

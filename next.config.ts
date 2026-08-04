@@ -50,6 +50,11 @@ const nextConfig: NextConfig = {
         destination: '/partner/hotel',
         permanent: true,
       },
+      {
+        source: '/tours/winter-kashmir-trip',
+        destination: '/tours',
+        permanent: true,
+      },
     ]
   },
 };

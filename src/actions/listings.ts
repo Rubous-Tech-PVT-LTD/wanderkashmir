@@ -109,6 +109,14 @@ export async function updateProperty(propertyId: string, data: PropertyData) {
       }
     });
 
+    // Auto-sync room prices for Homestays since they usually don't manage individual room pricing manually
+    if (vendorProfile.type === "HOMESTAY") {
+      await prisma.roomType.updateMany({
+        where: { propertyId: propertyId },
+        data: { basePrice: parsedData.data.pricePerNight }
+      });
+    }
+
     revalidatePath("/partner/hotel");
     revalidatePath("/partner/homeStays");
 
