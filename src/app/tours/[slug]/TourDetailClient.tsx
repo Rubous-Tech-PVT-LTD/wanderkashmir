@@ -596,7 +596,7 @@ export default function TourDetailClient({ initialTour }: { initialTour: any }) 
                   </button>
 
                   <a 
-                    href={`https://wa.me/916005888754?text=${encodeURIComponent(`Hello WanderKashmir, I would like to request a custom quote for the tour: *${tour.title}*.`)}`} 
+                    href={`https://wa.me/916005888754?text=${encodeURIComponent(`Hello Indiahiles, I would like to request a custom quote for the tour: *${tour.title}*.`)}`} 
                     target="_blank" 
                     rel="noopener noreferrer" 
                     className="w-full btn-secondary py-3 rounded-xl text-sm justify-center flex items-center"
@@ -625,7 +625,7 @@ export default function TourDetailClient({ initialTour }: { initialTour: any }) 
                       +91 60058 88754
                     </a>
                     <a 
-                      href={`https://wa.me/916005888754?text=${encodeURIComponent(`Hello WanderKashmir, I need help planning my trip for ${tour.title}.`)}`} 
+                      href={`https://wa.me/916005888754?text=${encodeURIComponent(`Hello Indiahiles, I need help planning my trip for ${tour.title}.`)}`} 
                       target="_blank" 
                       rel="noopener noreferrer" 
                       className="w-full flex items-center gap-2.5 px-4 py-2.5 bg-sky-50 border border-sky-200 rounded-xl text-sm text-sky-700 hover:bg-sky-100 transition-colors"
@@ -858,7 +858,7 @@ export default function TourDetailClient({ initialTour }: { initialTour: any }) 
                       className="mt-1 flex-shrink-0 w-4 h-4 text-orange-600 rounded border-orange-300 focus:ring-orange-500" 
                     />
                     <label htmlFor="policy-modal" className="text-sm text-slate-700 leading-relaxed cursor-pointer select-none">
-                      I agree to WanderKashmir's <span className="text-orange-600 font-semibold hover:underline">Cancellation & Date Change Policy</span>. 
+                      I agree to Indiahiles's <span className="text-orange-600 font-semibold hover:underline">Cancellation & Date Change Policy</span>. 
                       (Free cancellation up to 7 days before travel. Changes subject to availability.)
                     </label>
                   </div>

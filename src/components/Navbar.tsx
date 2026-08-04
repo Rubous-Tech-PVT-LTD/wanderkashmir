@@ -87,7 +87,7 @@ export default function Navbar() {
             <div className="flex items-center justify-center transition-transform group-hover:-rotate-12">
               <Image
                 src="/icon.png"
-                alt="WanderKashmir logo"
+                alt="Indiahiles logo"
                 width={36}
                 height={36}
                 className="rounded-md object-cover shadow-sm"
@@ -96,7 +96,7 @@ export default function Navbar() {
             </div>
             <div className="flex flex-col">
               <span className="font-display font-bold text-[1.35rem] tracking-tight text-[var(--primary)] leading-none mt-1">
-                Wander<span className="text-slate-900">Kashmir</span>
+                India<span className="text-slate-900">hiles</span>
               </span>
               <span className="text-[9px] text-slate-500 font-medium tracking-wider mt-0.5 uppercase">
                 A product by Gtm Adventures LLP
@@ -163,7 +163,7 @@ export default function Navbar() {
               <div className="flex items-center justify-center">
                 <Image
                   src="/icon.png"
-                  alt="WanderKashmir logo"
+                  alt="Indiahiles logo"
                   width={36}
                   height={36}
                   className="rounded-md object-cover shadow-sm"
@@ -171,7 +171,7 @@ export default function Navbar() {
               </div>
               <div className="flex flex-col">
                 <span className="font-display text-xl font-bold text-slate-900 leading-none mt-1">
-                  Wander<span className="text-[var(--primary)]">Kashmir</span>
+                  India<span className="text-[var(--primary)]">hiles</span>
                 </span>
                 <span className="text-[9px] text-slate-500 font-medium tracking-wider mt-0.5 uppercase">
                   A product by Gtm Adventures LLP

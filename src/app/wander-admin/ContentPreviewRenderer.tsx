@@ -31,7 +31,7 @@ export function ContentPreviewRenderer({ platform, asset }: { platform: string, 
           {/* Mock Header */}
           <div className="p-3 flex items-center gap-2 border-b border-slate-100">
             <div className="w-8 h-8 rounded-full bg-slate-200" />
-            <span className="font-semibold text-sm">wanderkashmir</span>
+            <span className="font-semibold text-sm">indiahiles</span>
           </div>
           
           {/* Mock Interactive Image Carousel */}
@@ -103,7 +103,7 @@ export function ContentPreviewRenderer({ platform, asset }: { platform: string, 
             
             {/* Caption */}
             <div className="text-sm mt-3">
-              <span className="font-semibold mr-2">wanderkashmir</span>
+              <span className="font-semibold mr-2">indiahiles</span>
               <span className="whitespace-pre-wrap">{data.caption}</span>
             </div>
             {data.hashtags && (
@@ -124,8 +124,8 @@ export function ContentPreviewRenderer({ platform, asset }: { platform: string, 
               <div className="w-10 h-10 rounded-full bg-slate-200 shrink-0" />
               <div>
                 <div className="flex items-center gap-1">
-                  <span className="font-bold">Wander Kashmir</span>
-                  <span className="text-slate-500">@WanderKashmir</span>
+                  <span className="font-bold">Indiahiles</span>
+                  <span className="text-slate-500">@Indiahiles</span>
                 </div>
                 <p className="mt-1 whitespace-pre-wrap">{tweet.body}</p>
               </div>

@@ -3,7 +3,7 @@ import Footer from "@/components/Footer";
 import { Eye, Users, Heart, Globe, Sparkles } from "lucide-react";
 
 export const metadata = {
-  title: "Our Vision | WanderKashmir",
+  title: "Our Vision | Indiahiles",
   description: "Transforming Kashmir's tourism by bringing every village into the digital world.",
 };
 
@@ -45,7 +45,7 @@ export default function OurVisionPage() {
                 </div>
                 <h3 className="text-xl font-bold text-slate-900 mb-3 mt-0">Our Mission</h3>
                 <p className="text-slate-600 text-base m-0 leading-relaxed">
-                  To empower local communities by giving every village home a digital identity. Through Wander Kashmir, local hosts can showcase their properties, connect with travellers from around the world, and generate sustainable income while preserving their traditions and way of life.
+                  To empower local communities by giving every village home a digital identity. Through Indiahiles, local hosts can showcase their properties, connect with travellers from around the world, and generate sustainable income while preserving their traditions and way of life.
                 </p>
               </div>
 
@@ -76,7 +76,7 @@ export default function OurVisionPage() {
                 <Sparkles className="w-8 h-8" />
               </div>
               <p className="text-2xl md:text-3xl font-bold text-slate-900 mb-10 leading-tight">
-                Wander Kashmir is committed to making every village discoverable, every local host visible, and every journey more authentic.
+                Indiahiles is committed to making every village discoverable, every local host visible, and every journey more authentic.
               </p>
               <div className="inline-block bg-slate-900 text-white px-10 py-5 rounded-full font-bold text-xl tracking-wide shadow-xl shadow-slate-900/20 hover:scale-105 transition-transform duration-300">
                 One Village. One Story. One Platform.

@@ -89,7 +89,7 @@ export async function POST(request: Request) {
     // 3. Construct Prompt
     const platformInstructions = getPlatformPrompt(platform);
     
-    const prompt = `You are the Content Distribution Agent for Wander Kashmir.
+    const prompt = `You are the Content Distribution Agent for Indiahiles.
 Your responsibility is to generate platform-specific content for the ${platform} platform based on a previously created SEO page.
 
 WRITING STYLE RULES:

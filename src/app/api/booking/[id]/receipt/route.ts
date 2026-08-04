@@ -35,7 +35,7 @@ export async function GET(req: Request, context: { params: Promise<{ id: string 
     const pdfBuffer = await generateInvoicePDF(booking);
 
     // Return as downloadable file
-    const filename = `WanderKashmir_Invoice_${booking.id.slice(-8)}.pdf`;
+    const filename = `Indiahiles_Invoice_${booking.id.slice(-8)}.pdf`;
 
     return new NextResponse(pdfBuffer as any, {
       status: 200,

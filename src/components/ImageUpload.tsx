@@ -109,7 +109,7 @@ export default function ImageUpload({
             
             {photos.length < photoLimit && (
               <CldUploadWidget 
-                uploadPreset="wanderkashmir_preset" 
+                uploadPreset="indiahiles_preset" 
                 onSuccess={handleUpload}
                 options={{
                   multiple: true,
@@ -145,7 +145,7 @@ export default function ImageUpload({
             
             {videos.length < videoLimit && (
               <CldUploadWidget 
-                uploadPreset="wanderkashmir_preset" 
+                uploadPreset="indiahiles_preset" 
                 onSuccess={handleUpload}
                 options={{
                   multiple: true,

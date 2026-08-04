@@ -313,20 +313,20 @@ export async function approveListing(id: string, type: 'PROPERTY' | 'VEHICLE') {
     if (vendorEmail) {
       try {
         await resend.emails.send({
-          from: 'WanderKashmir <support@wanderkashmir.com>',
+          from: 'Indiahiles <support@indiahiles.com>',
           to: vendorEmail,
           subject: `Listing Approved: ${itemName} 🎉`,
           html: `
             <div style="font-family: sans-serif; color: #333; max-width: 600px; margin: 0 auto;">
               <h2 style="color: #0f172a;">Hi ${vendorName},</h2>
               <p>Great news! Your listing for <strong>${itemName}</strong> has been successfully <strong>approved</strong>.</p>
-              <p>It is now live on WanderKashmir and visible to thousands of travelers.</p>
+              <p>It is now live on Indiahiles and visible to thousands of travelers.</p>
               <div style="background-color: #f8fafc; padding: 16px; border-radius: 8px; margin: 20px 0;">
                 <p style="margin: 0;">🔗 <strong>View your Dashboard:</strong></p>
-                <a href="https://wanderkashmir.com/partner" style="color: #0ea5e9; font-weight: bold; font-size: 16px; text-decoration: none;">wanderkashmir.com/partner</a>
+                <a href="https://indiahiles.com/partner" style="color: #0ea5e9; font-weight: bold; font-size: 16px; text-decoration: none;">indiahiles.com/partner</a>
               </div>
-              <p>If you have any questions, feel free to contact us at support@wanderkashmir.com.</p>
-              <p>Best Regards,<br/><strong>The WanderKashmir Team</strong></p>
+              <p>If you have any questions, feel free to contact us at support@indiahiles.com.</p>
+              <p>Best Regards,<br/><strong>The Indiahiles Team</strong></p>
             </div>
           `
         });

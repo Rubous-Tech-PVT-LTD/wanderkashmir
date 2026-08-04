@@ -3,8 +3,8 @@ import Footer from "@/components/Footer";
 import { Mail, Phone, MapPin } from "lucide-react";
 
 export const metadata = {
-  title: "Contact Us | WanderKashmir",
-  description: "Get in touch with WanderKashmir.",
+  title: "Contact Us | Indiahiles",
+  description: "Get in touch with Indiahiles.",
 };
 
 export default function ContactPage() {
@@ -31,7 +31,7 @@ export default function ContactPage() {
             <div className="p-6 bg-slate-50 rounded-xl border border-slate-100">
               <Mail className="w-8 h-8 text-emerald-500 mx-auto mb-4" />
               <h3 className="font-bold text-slate-900 mb-2">Email</h3>
-              <p className="text-slate-600">support@wanderkashmir.com</p>
+              <p className="text-slate-600">support@indiahiles.com</p>
             </div>
             <div className="p-6 bg-slate-50 rounded-xl border border-slate-100">
               <MapPin className="w-8 h-8 text-rose-500 mx-auto mb-4" />

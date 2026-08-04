@@ -186,7 +186,7 @@ export default function AdminCustomToursTab() {
         <div className="grid grid-cols-1 gap-4">
           {filteredInquiries.map((inq) => {
             const cleanPhone = inq.phone?.replace(/[^0-9]/g, "") || "";
-            const waMsg = encodeURIComponent(`Hi ${inq.name}, thanks for your custom tour inquiry on WanderKashmir! We saw you are interested in visiting ${inq.destinations?.join(", ") || "Kashmir"} for ${inq.guestsCount}. Here is our customized itinerary and best quote for you:`);
+            const waMsg = encodeURIComponent(`Hi ${inq.name}, thanks for your custom tour inquiry on Indiahiles! We saw you are interested in visiting ${inq.destinations?.join(", ") || "Kashmir"} for ${inq.guestsCount}. Here is our customized itinerary and best quote for you:`);
             const waLink = `https://wa.me/${cleanPhone.startsWith("91") ? cleanPhone : "91" + cleanPhone}?text=${waMsg}`;
 
             return (

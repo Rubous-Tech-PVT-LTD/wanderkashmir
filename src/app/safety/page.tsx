@@ -2,7 +2,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 
 export const metadata = {
-  title: "Safety Guidelines | WanderKashmir",
+  title: "Safety Guidelines | Indiahiles",
   description: "Safety guidelines for traveling in Kashmir.",
 };
 

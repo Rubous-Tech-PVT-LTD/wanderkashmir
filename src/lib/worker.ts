@@ -16,7 +16,7 @@ export async function generateInvoicePDF(booking: any): Promise<Buffer> {
   const grayColor = rgb(0.3, 0.3, 0.3);
 
   // Header
-  page.drawText("WanderKashmir", { x: 50, y: height - 60, size: 24, font: boldFont, color: primaryColor });
+  page.drawText("Indiahiles", { x: 50, y: height - 60, size: 24, font: boldFont, color: primaryColor });
   page.drawText("INVOICE & BOOKING CONFIRMATION", { x: 50, y: height - 90, size: 12, font, color: grayColor });
 
   // Booking Details
@@ -39,7 +39,7 @@ export async function generateInvoicePDF(booking: any): Promise<Buffer> {
 
   // Service Details
   let serviceName = "Custom Package";
-  let vendorName = "WanderKashmir";
+  let vendorName = "Indiahiles";
   let vendorPhone = "+91 60058 88754"; // Default support
   let vendorAddress = "Srinagar, Kashmir";
   
@@ -83,8 +83,8 @@ export async function generateInvoicePDF(booking: any): Promise<Buffer> {
     thickness: 1,
     color: rgb(0.8, 0.8, 0.8),
   });
-  page.drawText("Thank you for booking with WanderKashmir!", { x: 50, y: 70, size: 10, font: boldFont, color: grayColor });
-  page.drawText("For support, contact support@wanderkashmir.com or call +91 60058 88754", { x: 50, y: 50, size: 10, font, color: grayColor });
+  page.drawText("Thank you for booking with Indiahiles!", { x: 50, y: 70, size: 10, font: boldFont, color: grayColor });
+  page.drawText("For support, contact support@indiahiles.com or call +91 60058 88754", { x: 50, y: 50, size: 10, font, color: grayColor });
 
   const pdfBytes = await pdfDoc.save();
   return Buffer.from(pdfBytes);
@@ -118,26 +118,26 @@ export async function processBookingEmailInBackground(bookingId: string) {
     else if (booking.guideProfile) serviceName = "Guide Service";
 
     await resend.emails.send({
-      from: 'WanderKashmir <support@wanderkashmir.com>',
+      from: 'Indiahiles <support@indiahiles.com>',
       to: booking.user.email,
       subject: `Booking Confirmed: ${serviceName} 🎉`,
       html: `
         <div style="font-family: sans-serif; color: #333; max-width: 600px; margin: 0 auto;">
           <h2>Hi ${booking.user.name},</h2>
-          <p>Thank you for choosing WanderKashmir!</p>
+          <p>Thank you for choosing Indiahiles!</p>
           <p>Your booking for <strong>${serviceName}</strong> has been successfully confirmed.</p>
           <p>We have attached your official booking invoice and ticket to this email as a PDF.</p>
           <br/>
           <p>If you have any questions or need to make changes, please reply to this email or contact our support team.</p>
-          <p>📧 Email: support@wanderkashmir.com<br/>
+          <p>📧 Email: support@indiahiles.com<br/>
           📞 WhatsApp: +91 60058 88754</p>
           <br/>
-          <p>Best Regards,<br/><strong>The WanderKashmir Team</strong></p>
+          <p>Best Regards,<br/><strong>The Indiahiles Team</strong></p>
         </div>
       `,
       attachments: [
         {
-          filename: `WanderKashmir_Invoice_${booking.id.slice(-8)}.pdf`,
+          filename: `Indiahiles_Invoice_${booking.id.slice(-8)}.pdf`,
           content: pdfBuffer,
         }
       ]

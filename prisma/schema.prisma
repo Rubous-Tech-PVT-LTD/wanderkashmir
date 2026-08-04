@@ -573,7 +573,7 @@ model ContentSettings {
   id                 String   @id @default(cuid())
   brandVoice         String   @default("Professional and engaging")
   defaultCta         String   @default("Book your trip today!")
-  hashtags           String[] @default(["#WanderKashmir", "#KashmirTourism"])
+  hashtags           String[] @default(["#Indiahiles", "#KashmirTourism"])
   defaultPromptRules String?  @db.Text
   temperature        Float    @default(0.7)
 

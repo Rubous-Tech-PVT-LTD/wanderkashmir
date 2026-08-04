@@ -10,7 +10,7 @@ export default function AdminEmailsTab() {
   const [bodyHtml, setBodyHtml] = useState(
     `<div style="font-family: 'Segoe UI', Arial, sans-serif; max-w: 600px; margin: 0 auto; color: #334155; line-height: 1.6; border: 1px solid #e2e8f0; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.03);">
   <div style="background: linear-gradient(135deg, #f97316 0%, #ea580c 100%); padding: 32px; text-align: center; color: white;">
-    <h1 style="margin: 0; font-size: 24px; font-weight: 800;">WanderKashmir Partner Update</h1>
+    <h1 style="margin: 0; font-size: 24px; font-weight: 800;">Indiahiles Partner Update</h1>
   </div>
   <div style="padding: 32px; background: #ffffff;">
     <p style="font-size: 16px; margin-top: 0;">Hi <strong>[NAME]</strong>,</p>
@@ -24,14 +24,14 @@ export default function AdminEmailsTab() {
     <p>Please log in to your dashboard to inspect your listings or complete your details.</p>
     
     <div style="text-align: center; margin: 32px 0;">
-      <a href="https://wanderkashmir.com/partner" style="background: #f97316; color: white; padding: 14px 28px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block; box-shadow: 0 4px 6px rgba(249,115,22,0.2);">Go to Partner Dashboard</a>
+      <a href="https://indiahiles.com/partner" style="background: #f97316; color: white; padding: 14px 28px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block; box-shadow: 0 4px 6px rgba(249,115,22,0.2);">Go to Partner Dashboard</a>
     </div>
 
     <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 24px 0;" />
-    <p style="font-size: 14px; color: #64748b; margin-bottom: 0;">Warm regards,<br/><strong>WanderKashmir Admin Team</strong></p>
+    <p style="font-size: 14px; color: #64748b; margin-bottom: 0;">Warm regards,<br/><strong>Indiahiles Admin Team</strong></p>
   </div>
   <div style="padding: 16px; text-align: center; background: #f8fafc; font-size: 12px; color: #94a3b8; border-top: 1px solid #e2e8f0;">
-    © 2024 WanderKashmir. All rights reserved.
+    © 2024 Indiahiles. All rights reserved.
   </div>
 </div>`
   );
@@ -446,7 +446,7 @@ export default function AdminEmailsTab() {
             </div>
             
             <div className="p-4 bg-white border-b border-slate-100 flex flex-col gap-1 text-xs text-slate-500 shrink-0">
-              <p><strong>From:</strong> WanderKashmir Updates &lt;updates@wanderkashmir.com&gt;</p>
+              <p><strong>From:</strong> Indiahiles Updates &lt;updates@indiahiles.com&gt;</p>
               <p><strong>Subject:</strong> {subject || "(No Subject)"}</p>
             </div>
 

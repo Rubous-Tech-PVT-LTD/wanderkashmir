@@ -7,12 +7,12 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const { slug } = await params;
   const tour = await prisma.tour.findUnique({ where: { slug } });
   
-  if (!tour) return { title: "Tour Not Found | WanderKashmir" };
+  if (!tour) return { title: "Tour Not Found | Indiahiles" };
   
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.wanderkashmir.com';
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.indiahiles.com';
   const url = `${baseUrl}/tours/${slug}`;
   const images = tour.images && tour.images.length > 0 ? tour.images : ["https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=1200&q=80"];
-  const description = tour.overview ? `${tour.overview.substring(0, 150)}...` : `Book the ${tour.title} (${tour.duration}) with WanderKashmir. Best price guaranteed.`;
+  const description = tour.overview ? `${tour.overview.substring(0, 150)}...` : `Book the ${tour.title} (${tour.duration}) with Indiahiles. Best price guaranteed.`;
 
   return {
     title: `${tour.title} (${tour.duration}) | Best Kashmir Tour Package`,
@@ -21,7 +21,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
       ...tour.destinations,
       "Kashmir Tour Package",
       `${tour.category} Tour Kashmir`,
-      "WanderKashmir Tours",
+      "Indiahiles Tours",
       tour.title,
       "Kashmir Holiday Itinerary"
     ],
@@ -29,16 +29,16 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
       canonical: url,
     },
     openGraph: {
-      title: `${tour.title} | WanderKashmir`,
+      title: `${tour.title} | Indiahiles`,
       description,
       url,
-      siteName: "WanderKashmir",
+      siteName: "Indiahiles",
       images: images.map(imgUrl => ({ url: imgUrl })),
       type: "website",
     },
     twitter: {
       card: "summary_large_image",
-      title: `${tour.title} | WanderKashmir`,
+      title: `${tour.title} | Indiahiles`,
       description,
       images: [images[0]],
     }
@@ -85,7 +85,7 @@ export default async function TourPage({ params }: { params: Promise<{ slug: str
     }))
   };
 
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.wanderkashmir.com';
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.indiahiles.com';
   const itineraryList = Array.isArray(tour.itinerary) ? (tour.itinerary as any[]).map((day: any, idx: number) => ({
     "@type": "TouristAttraction",
     "name": `Day ${idx + 1}: ${day.title || day.day || "Kashmir Tour"}`,
@@ -98,7 +98,7 @@ export default async function TourPage({ params }: { params: Promise<{ slug: str
       {
         "@type": ["Product", "TouristTrip"],
         "name": tour.title,
-        "description": tour.overview || `Experience ${tour.title} with WanderKashmir.`,
+        "description": tour.overview || `Experience ${tour.title} with Indiahiles.`,
         "image": tour.images && tour.images.length > 0 ? tour.images : ["https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=1200&q=80"],
         "touristType": [tour.category, "Leisure", "Family", "Adventure"],
         "url": `${baseUrl}/tours/${slug}`,
@@ -111,7 +111,7 @@ export default async function TourPage({ params }: { params: Promise<{ slug: str
         },
         "provider": {
           "@type": "TravelAgency",
-          "name": "WanderKashmir",
+          "name": "Indiahiles",
           "url": baseUrl
         },
         ...(itineraryList.length > 0 && { "itinerary": itineraryList }),

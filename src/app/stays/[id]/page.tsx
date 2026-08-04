@@ -30,7 +30,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
     include: { vendorProfile: true }
   });
   
-  if (!property) return { title: "Property Not Found | WanderKashmir" };
+  if (!property) return { title: "Property Not Found | Indiahiles" };
   
   const typeLabel = property.vendorProfile?.type 
       ? property.vendorProfile.type.charAt(0).toUpperCase() + property.vendorProfile.type.slice(1).toLowerCase()
@@ -44,7 +44,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
     title: `Book ${property.name}, ${property.location} | Best ${typeLabel}`,
     description: property.description 
       ? property.description.substring(0, 160).trim() + (property.description.length > 160 ? "..." : "")
-      : `Book ${property.name}, a beautiful ${typeLabel} located in ${property.location}. Enjoy top-rated amenities, verified reviews, and secure booking with WanderKashmir.`,
+      : `Book ${property.name}, a beautiful ${typeLabel} located in ${property.location}. Enjoy top-rated amenities, verified reviews, and secure booking with Indiahiles.`,
     openGraph: {
       images: images.map((url: string) => ({ url })),
       type: "website",
@@ -175,7 +175,7 @@ export default async function PropertyDetailPage({
                 "priceCurrency": "INR",
                 "price": property.pricePerNight,
                 "availability": "https://schema.org/InStock",
-                "url": `https://www.wanderkashmir.com/stays/${property.id}`
+                "url": `https://www.indiahiles.com/stays/${property.id}`
               },
               ...(schemaReviewCount > 0 && {
                 "aggregateRating": {
@@ -189,9 +189,9 @@ export default async function PropertyDetailPage({
               "@context": "https://schema.org",
               "@type": "BreadcrumbList",
               "itemListElement": [
-                { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://www.wanderkashmir.com" },
-                { "@type": "ListItem", "position": 2, "name": "Stays", "item": "https://www.wanderkashmir.com/stays" },
-                { "@type": "ListItem", "position": 3, "name": property.name, "item": `https://www.wanderkashmir.com/stays/${property.id}` }
+                { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://www.indiahiles.com" },
+                { "@type": "ListItem", "position": 2, "name": "Stays", "item": "https://www.indiahiles.com/stays" },
+                { "@type": "ListItem", "position": 3, "name": property.name, "item": `https://www.indiahiles.com/stays/${property.id}` }
               ]
             }
           ])

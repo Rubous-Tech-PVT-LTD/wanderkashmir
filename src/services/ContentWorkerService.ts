@@ -110,7 +110,7 @@ export class ContentWorkerService {
       case 'instagram':
         platformInstructions = `Generate an Instagram Carousel (Exactly 5 Slides).
 Each slide must have: slideNumber, title, body (maximum 40-50 words), and imagePrompt.
-The 5th (final) slide MUST contain a Call To Action (CTA) encouraging users to save, share, or visit Wander Kashmir.
+The 5th (final) slide MUST contain a Call To Action (CTA) encouraging users to save, share, or visit Indiahiles.
 Also generate: caption, hashtags, and cta.
 The carousel should educate users.
 Image prompts rule: Ultra realistic, Travel photography, Golden hour lighting, Professional DSLR, No text inside image, No watermark, No logo, 4K, 9:16, Highly detailed.
@@ -119,7 +119,7 @@ Return JSON format: { "slides": [{ "slideNumber": number, "title": string, "body
       case 'facebook':
         platformInstructions = `Generate a Facebook Carousel (Exactly 5 Slides).
 Each slide must have: slideNumber, title, body (maximum 40-50 words), and imagePrompt.
-The 5th (final) slide MUST contain a Call To Action (CTA) encouraging users to save, share, or visit Wander Kashmir.
+The 5th (final) slide MUST contain a Call To Action (CTA) encouraging users to save, share, or visit Indiahiles.
 Also generate: caption (longer than Instagram), hashtags, and cta.
 Image prompts rule: Ultra realistic, Travel photography, Golden hour lighting, Professional DSLR, No text inside image, No watermark, No logo, 4K, Highly detailed.
 Return JSON format: { "slides": [{ "slideNumber": number, "title": string, "body": string, "imagePrompt": string }], "caption": string, "hashtags": string[], "cta": string }${granularInstruction}`;
@@ -160,7 +160,7 @@ Return JSON format: { "message": string }`;
         platformInstructions = `Generate content for ${platform}. Return JSON: { "content": string }`;
     }
     
-    return `You are the Content Distribution Agent for Wander Kashmir.
+    return `You are the Content Distribution Agent for Indiahiles.
 Your responsibility is to generate platform-specific content for the ${platform} platform based on a previously created SEO page.
 
 WRITING STYLE RULES:

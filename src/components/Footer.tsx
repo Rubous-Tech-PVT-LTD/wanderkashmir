@@ -123,11 +123,11 @@ export default function Footer() {
                 +91 60058 88754
               </a>
               <a
-                href="mailto:support@wanderkashmir.com"
+                href="mailto:support@indiahiles.com"
                 className="text-sm text-slate-400 hover:text-white transition-colors flex items-center gap-3"
               >
                 <Mail className="w-4 h-4 text-[var(--primary)]" />
-                support@wanderkashmir.com
+                support@indiahiles.com
               </a>
               <div className="flex items-center gap-2.5 text-sm">
                 <MapPin className="w-4 h-4 text-[var(--primary)] flex-shrink-0" />
@@ -138,9 +138,9 @@ export default function Footer() {
             <div className="flex gap-3">
               {[
                 { Icon: InstagramIcon, href: "https://instagram.com/wander__kashmir", label: "Instagram" },
-                { Icon: FacebookIcon, href: "https://facebook.com/wanderkashmir", label: "Facebook" },
-                { Icon: YoutubeIcon, href: "https://youtube.com/@wanderkashmir", label: "YouTube" },
-                { Icon: XIcon, href: "https://x.com/wanderkashmir", label: "Twitter" },
+                { Icon: FacebookIcon, href: "https://facebook.com/indiahiles", label: "Facebook" },
+                { Icon: YoutubeIcon, href: "https://youtube.com/@indiahiles", label: "YouTube" },
+                { Icon: XIcon, href: "https://x.com/indiahiles", label: "Twitter" },
                 { Icon: LinkedinIcon, href: "https://www.linkedin.com/company/wander-kashmir/", label: "LinkedIn" },
               ].map(({ Icon, href, label }) => (
                 <a
@@ -180,7 +180,7 @@ export default function Footer() {
       <div className="border-t border-white/5">
         <div className="container-custom py-6 flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-slate-500">
           <p>
-            © {new Date().getFullYear()} WanderKashmir. All rights reserved.
+            © {new Date().getFullYear()} Indiahiles. All rights reserved.
             Made with ❤️ in Kashmir.
           </p>
           <div className="flex items-center gap-6">

@@ -21,14 +21,14 @@ export async function sendBookingConfirmation(
 
   try {
     const { data, error } = await resend.emails.send({
-      from: 'WanderKashmir <bookings@wanderkashmir.com>', // MUST BE A VERIFIED DOMAIN IN RESEND
+      from: 'Indiahiles <bookings@indiahiles.com>', // MUST BE A VERIFIED DOMAIN IN RESEND
       to: guestEmail,
-      subject: `Booking Confirmed: ${bookingDetails.propertyName || "WanderKashmir Trip"}`,
+      subject: `Booking Confirmed: ${bookingDetails.propertyName || "Indiahiles Trip"}`,
       html: `
         <div style="font-family: sans-serif; max-w: 600px; margin: 0 auto;">
           <h2>Booking Confirmed!</h2>
           <p>Hi ${guestName},</p>
-          <p>Thank you for booking with WanderKashmir. Your payment has been received and your booking is confirmed.</p>
+          <p>Thank you for booking with Indiahiles. Your payment has been received and your booking is confirmed.</p>
           
           <div style="background-color: #f8fafc; padding: 20px; border-radius: 8px; margin: 20px 0;">
             <h3>Booking Details</h3>
@@ -40,7 +40,7 @@ export async function sendBookingConfirmation(
           </div>
           
           <p>We look forward to hosting you in Kashmir!</p>
-          <p>Best regards,<br>The WanderKashmir Team</p>
+          <p>Best regards,<br>The Indiahiles Team</p>
         </div>
       `,
     });
@@ -67,13 +67,13 @@ export async function sendPasswordResetEmail(email: string, resetToken: string) 
 
   try {
     const { data, error } = await resend.emails.send({
-      from: 'WanderKashmir Support <support@wanderkashmir.com>', // MUST BE A VERIFIED DOMAIN
+      from: 'Indiahiles Support <support@indiahiles.com>', // MUST BE A VERIFIED DOMAIN
       to: email,
-      subject: `Reset Your WanderKashmir Password`,
+      subject: `Reset Your Indiahiles Password`,
       html: `
         <div style="font-family: sans-serif; max-w: 600px; margin: 0 auto; padding: 20px;">
           <h2 style="color: #333;">Reset Your Password</h2>
-          <p>You recently requested to reset your password for your WanderKashmir account. Click the button below to reset it. This link is valid for 1 hour.</p>
+          <p>You recently requested to reset your password for your Indiahiles account. Click the button below to reset it. This link is valid for 1 hour.</p>
           
           <div style="text-align: center; margin: 30px 0;">
             <a href="${resetLink}" style="background-color: #f97316; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold;">
@@ -84,7 +84,7 @@ export async function sendPasswordResetEmail(email: string, resetToken: string) 
           <p>If you did not request a password reset, please ignore this email or reply to let us know. This password reset is only valid for the next hour.</p>
           
           <p style="color: #666; font-size: 14px;">
-            Best regards,<br>The WanderKashmir Team
+            Best regards,<br>The Indiahiles Team
           </p>
           <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;">
           <p style="color: #999; font-size: 12px;">If you're having trouble clicking the password reset button, copy and paste the URL below into your web browser:<br>${resetLink}</p>
@@ -120,7 +120,7 @@ export async function sendBulkEmailToVendors(
       const personalizedHtml = contentTemplate.replace(/\[NAME\]/g, vendor.businessName);
 
       return {
-        from: 'WanderKashmir Updates <updates@wanderkashmir.com>',
+        from: 'Indiahiles Updates <updates@indiahiles.com>',
         to: vendor.email,
         subject: subject,
         html: personalizedHtml,

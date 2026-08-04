@@ -67,7 +67,7 @@ export default async function HomestaySeoPage({ params }: { params: Promise<{ sl
     return matches > 0;
   });
 
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.wanderkashmir.com';
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.indiahiles.com';
   const url = `${baseUrl}/homestays/${page.slug}`;
 
   const schemas: any[] = [

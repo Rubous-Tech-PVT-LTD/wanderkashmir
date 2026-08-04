@@ -31,7 +31,7 @@ export async function GET(request: Request) {
 
     // 4. Construct Prompt
     const prompt = `
-    You are a world-class Travel Blogger and Kashmir Destination Expert writing for "WanderKashmir", a premium travel platform.
+    You are a world-class Travel Blogger and Kashmir Destination Expert writing for "Indiahiles", a premium travel platform.
     Your task is to generate exactly 1 unique, viral-worthy, and highly informative Travel Blog article about Kashmir tourism.
     
     IMPORTANT RULES:
@@ -46,7 +46,7 @@ export async function GET(request: Request) {
       "title": "Clickable SEO Meta Title (50-60 chars, use numbers or emotional triggers)",
       "description": "Meta description (150-160 chars, hook the reader and include keywords)",
       "h1Heading": "Catchy and Viral H1 Title for the blog",
-      "content": "An authoritative, 1000-1500 word blog post written in rich Markdown format, strictly following the MakeMyTrip (MMT) SEO content style. YOU MUST INCLUDE: 1. A 'Table of Contents' style summary at the top if applicable. 2. A 'Quick Information' markdown table (e.g., Ideal for, Best Time, Key Highlights). 3. Story-driven engaging content broken down with clear H2 (##) and H3 (###) subheadings. 4. Practical travel tips (budget estimates, what to pack, local etiquette). 5. Native mentions of booking taxis, homestays, or tours through 'WanderKashmir' seamlessly integrated as helpful resources, not just ads. Use bullet points and bold text to make it highly scannable.",
+      "content": "An authoritative, 1000-1500 word blog post written in rich Markdown format, strictly following the MakeMyTrip (MMT) SEO content style. YOU MUST INCLUDE: 1. A 'Table of Contents' style summary at the top if applicable. 2. A 'Quick Information' markdown table (e.g., Ideal for, Best Time, Key Highlights). 3. Story-driven engaging content broken down with clear H2 (##) and H3 (###) subheadings. 4. Practical travel tips (budget estimates, what to pack, local etiquette). 5. Native mentions of booking taxis, homestays, or tours through 'Indiahiles' seamlessly integrated as helpful resources, not just ads. Use bullet points and bold text to make it highly scannable.",
       "imagePrompt": "A highly descriptive 1-sentence prompt for an AI image generator to create a breathtaking cover photo for this blog. (e.g. 'A breathtaking, ultra-realistic landscape of Dal Lake in winter at sunrise with shikaras breaking the ice, 8k resolution, cinematic lighting')",
       "faqs": [
         { "question": "Commonly asked Question 1?", "answer": "Informative Answer 1" },

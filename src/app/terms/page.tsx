@@ -3,8 +3,8 @@ import Footer from "@/components/Footer";
 import { Shield, BookOpen, AlertCircle, Scale, CreditCard } from "lucide-react";
 
 export const metadata = {
-  title: "Terms of Service | WanderKashmir",
-  description: "Terms and conditions for users and vendors of WanderKashmir.",
+  title: "Terms of Service | Indiahiles",
+  description: "Terms and conditions for users and vendors of Indiahiles.",
 };
 
 export default function TermsOfServicePage() {
@@ -24,7 +24,7 @@ export default function TermsOfServicePage() {
         <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-8 md:p-12 prose prose-slate max-w-none">
           
           <p className="text-slate-600 lead text-lg">
-            Welcome to WanderKashmir. By accessing our platform or registering as a vendor (Hotel, Homestay, Taxi Driver, or Guide), you agree to comply with and be bound by the following market-standard terms and conditions.
+            Welcome to Indiahiles. By accessing our platform or registering as a vendor (Hotel, Homestay, Taxi Driver, or Guide), you agree to comply with and be bound by the following market-standard terms and conditions.
           </p>
 
           <hr className="my-8 border-slate-200" />
@@ -35,10 +35,10 @@ export default function TermsOfServicePage() {
               <div className="w-10 h-10 bg-sky-100 rounded-lg flex items-center justify-center text-sky-600">
                 <BookOpen className="w-5 h-5" />
               </div>
-              <h2 className="text-2xl font-bold text-slate-900 m-0">1. Role of WanderKashmir</h2>
+              <h2 className="text-2xl font-bold text-slate-900 m-0">1. Role of Indiahiles</h2>
             </div>
             <p className="text-slate-600">
-              WanderKashmir acts strictly as an aggregator and technology platform. We facilitate connections between travelers and local vendors in Jammu & Kashmir. We do not own, operate, or directly provide any of the properties, vehicles, or guided tours listed on our platform. The respective vendor is solely responsible for delivering the service.
+              Indiahiles acts strictly as an aggregator and technology platform. We facilitate connections between travelers and local vendors in Jammu & Kashmir. We do not own, operate, or directly provide any of the properties, vehicles, or guided tours listed on our platform. The respective vendor is solely responsible for delivering the service.
             </p>
           </div>
 
@@ -70,8 +70,8 @@ export default function TermsOfServicePage() {
               We operate on a transparent commission model designed to boost local tourism:
             </p>
             <ul className="list-disc pl-5 text-slate-600 space-y-2">
-              <li><strong>Platform Fee:</strong> WanderKashmir charges a standard commission (e.g., 8% to 15% depending on your vendor tier) on successful bookings.</li>
-              <li><strong>Payment Collection:</strong> WanderKashmir (GTM) acts as the authorized payment collection agent and collects 100% of the booking payments securely on behalf of the vendors.</li>
+              <li><strong>Platform Fee:</strong> Indiahiles charges a standard commission (e.g., 8% to 15% depending on your vendor tier) on successful bookings.</li>
+              <li><strong>Payment Collection:</strong> Indiahiles (GTM) acts as the authorized payment collection agent and collects 100% of the booking payments securely on behalf of the vendors.</li>
               <li><strong>Payout Cycle:</strong> Payouts to vendors are initiated only after the guest has successfully checked in or the trip has commenced. Payouts are transferred directly to the registered bank account.</li>
               <li><strong>Customer Payments:</strong> Guests pay 100% upfront via our secure payment gateway to confirm bookings.</li>
             </ul>
@@ -103,14 +103,14 @@ export default function TermsOfServicePage() {
               <h2 className="text-2xl font-bold text-slate-900 m-0">5. Code of Conduct & Local Laws</h2>
             </div>
             <p className="text-slate-600">
-              Kashmir is a culturally rich and sensitive region. Both guests and vendors are expected to show mutual respect. Illegal activities, unauthorized partying, or disrespecting local sentiments will lead to an immediate ban from the platform. WanderKashmir holds the right to terminate any user or vendor profile without prior notice if they violate these policies.
+              Kashmir is a culturally rich and sensitive region. Both guests and vendors are expected to show mutual respect. Illegal activities, unauthorized partying, or disrespecting local sentiments will lead to an immediate ban from the platform. Indiahiles holds the right to terminate any user or vendor profile without prior notice if they violate these policies.
             </p>
           </div>
 
           <div className="bg-slate-50 border border-slate-200 p-6 rounded-xl mt-12">
             <h3 className="text-lg font-bold text-slate-900 mb-2">Legal Jurisdiction</h3>
             <p className="text-sm text-slate-600">
-              These terms are governed by the laws of India. Any disputes arising from the use of WanderKashmir shall be subject to the exclusive jurisdiction of the courts located in Srinagar, Jammu & Kashmir.
+              These terms are governed by the laws of India. Any disputes arising from the use of Indiahiles shall be subject to the exclusive jurisdiction of the courts located in Srinagar, Jammu & Kashmir.
             </p>
           </div>
 

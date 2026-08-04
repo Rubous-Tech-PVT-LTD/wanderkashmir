@@ -32,7 +32,7 @@ export async function GET(request: Request) {
     const existingSlugs = existingPages.map(p => p.slug);
 
     const prompt = `
-    You are a world-class SEO copywriter and local travel expert for "WanderKashmir", a premium travel platform in Kashmir.
+    You are a world-class SEO copywriter and local travel expert for "Indiahiles", a premium travel platform in Kashmir.
     Your task is to generate exactly 1 unique, highly-searched, high-converting SEO landing page for a Kashmir tourist route, homestay location, or specific travel package.
     
     IMPORTANT RULES:
@@ -47,7 +47,7 @@ export async function GET(request: Request) {
       "title": "SEO Meta Title (50-60 characters, include power words, highly optimized for CTR)",
       "description": "Meta description (150-160 chars, include primary keyword, USP, and a strong Call-To-Action)",
       "h1Heading": "The main H1 heading for the page (Engaging and keyword-rich)",
-      "content": "A highly structured, 800-1200 word SEO optimized article in rich Markdown format, strictly following the MakeMyTrip (MMT) SEO content style. YOU MUST INCLUDE: 1. A captivating introduction. 2. A 'Quick Facts / At a Glance' section using a Markdown table (e.g., Best Time to Visit, Ideal Duration, Nearest Airport, Weather). 3. 'Top Things to Do / Places to Visit' with detailed H3 subheadings and bullet points. 4. 'How to Reach' guide. 5. 'Best Time to Visit' detailed explanation. 6. Why book with WanderKashmir seamlessly integrated. Use H2s (##) for main sections and H3s (###) for subsections to create a highly readable, scannable structure. No generic fluff; be extremely specific and authoritative.",
+      "content": "A highly structured, 800-1200 word SEO optimized article in rich Markdown format, strictly following the MakeMyTrip (MMT) SEO content style. YOU MUST INCLUDE: 1. A captivating introduction. 2. A 'Quick Facts / At a Glance' section using a Markdown table (e.g., Best Time to Visit, Ideal Duration, Nearest Airport, Weather). 3. 'Top Things to Do / Places to Visit' with detailed H3 subheadings and bullet points. 4. 'How to Reach' guide. 5. 'Best Time to Visit' detailed explanation. 6. Why book with Indiahiles seamlessly integrated. Use H2s (##) for main sections and H3s (###) for subsections to create a highly readable, scannable structure. No generic fluff; be extremely specific and authoritative.",
       "imagePrompt": "A highly descriptive 1-sentence prompt for an AI image generator to create a stunning, realistic, wide-angle cinematic photo for this page. (e.g. 'A cinematic golden hour shot of a traditional wooden homestay in Aru Valley surrounded by mist and pine trees, 8k resolution')",
       "faqs": [
         { "question": "Highly searched Question 1?", "answer": "Detailed Answer 1" },

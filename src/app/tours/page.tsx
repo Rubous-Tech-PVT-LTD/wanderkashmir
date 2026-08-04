@@ -4,29 +4,29 @@ import { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "Best Kashmir Tour Packages (2026/2027) | Family, Honeymoon & Adventure Itineraries",
-  description: "Explore 100% customizable Kashmir tour packages with local guides, private cabs, houseboats & luxury stays. Best price guaranteed by WanderKashmir.",
+  description: "Explore 100% customizable Kashmir tour packages with local guides, private cabs, houseboats & luxury stays. Best price guaranteed by Indiahiles.",
   keywords: [
     "Kashmir Tour Packages",
     "Srinagar Gulmarg Pahalgam Tour",
     "Kashmir Honeymoon Package",
     "Kashmir Family Holiday",
-    "WanderKashmir Tours",
+    "Indiahiles Tours",
     "Kashmir Holiday Itinerary",
     "Kashmir Tour Price"
   ],
   alternates: {
-    canonical: "https://www.wanderkashmir.com/tours",
+    canonical: "https://www.indiahiles.com/tours",
   },
   openGraph: {
-    title: "Best Kashmir Tour Packages | WanderKashmir",
+    title: "Best Kashmir Tour Packages | Indiahiles",
     description: "Explore customizable Kashmir tour packages with local guides, private cabs, houseboats & stays. Best price guaranteed.",
-    url: "https://www.wanderkashmir.com/tours",
-    siteName: "WanderKashmir",
+    url: "https://www.indiahiles.com/tours",
+    siteName: "Indiahiles",
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Best Kashmir Tour Packages | WanderKashmir",
+    title: "Best Kashmir Tour Packages | Indiahiles",
     description: "Hand-crafted itineraries by local experts. Everything included — stays, meals, transfers & guides.",
   }
 };
@@ -56,7 +56,7 @@ export default async function ToursPage() {
     }
   });
 
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.wanderkashmir.com';
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.indiahiles.com';
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "ItemList",

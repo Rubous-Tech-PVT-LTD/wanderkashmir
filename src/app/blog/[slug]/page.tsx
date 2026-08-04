@@ -59,7 +59,7 @@ export default async function BlogArticlePage({ params }: { params: Promise<{ sl
     const parsedContent = page.content ? await marked.parse(page.content) : "";
     const safeContent = parsedContent;
 
-    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.wanderkashmir.com';
+    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.indiahiles.com';
     const url = `${baseUrl}/blog/${resolvedParams.slug}`;
 
     const schemas: any[] = [
@@ -73,12 +73,12 @@ export default async function BlogArticlePage({ params }: { params: Promise<{ sl
         "dateModified": page.updatedAt.toISOString(),
         "author": {
           "@type": "Organization",
-          "name": "WanderKashmir",
+          "name": "Indiahiles",
           "url": baseUrl
         },
         "publisher": {
           "@type": "Organization",
-          "name": "WanderKashmir",
+          "name": "Indiahiles",
           "logo": {
             "@type": "ImageObject",
             "url": `${baseUrl}/icon.png`
@@ -132,7 +132,7 @@ export default async function BlogArticlePage({ params }: { params: Promise<{ sl
           <div className="flex items-center gap-4 text-sm font-medium text-slate-500 mb-6">
             <span className="flex items-center gap-1.5 bg-indigo-50 text-indigo-700 px-3 py-1.5 rounded-full">
               <User className="w-4 h-4" />
-              WanderKashmir Experts
+              Indiahiles Experts
             </span>
             <span className="flex items-center gap-1.5">
               <Calendar className="w-4 h-4" />
@@ -205,7 +205,7 @@ export default async function BlogArticlePage({ params }: { params: Promise<{ sl
         <div className="bg-gradient-to-br from-slate-900 to-indigo-900 rounded-3xl p-8 md:p-12 mb-16 text-center shadow-xl">
           <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">Ready to Experience Kashmir?</h2>
           <p className="text-indigo-100 text-lg mb-8 max-w-2xl mx-auto">
-            Turn your reading into reality. Book verified local tours and authentic homestays with WanderKashmir experts.
+            Turn your reading into reality. Book verified local tours and authentic homestays with Indiahiles experts.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <Link 
@@ -229,7 +229,7 @@ export default async function BlogArticlePage({ params }: { params: Promise<{ sl
             W
           </div>
           <div className="text-center md:text-left">
-            <h3 className="text-xl font-bold text-slate-900 mb-2">Written by WanderKashmir</h3>
+            <h3 className="text-xl font-bold text-slate-900 mb-2">Written by Indiahiles</h3>
             <p className="text-slate-600 leading-relaxed">
               We are a team of passionate local experts dedicated to helping you experience the true beauty of Kashmir. Book your taxis, homestays, and tour packages securely with us.
             </p>

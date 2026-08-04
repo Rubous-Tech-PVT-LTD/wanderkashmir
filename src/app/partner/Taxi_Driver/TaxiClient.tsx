@@ -126,7 +126,7 @@ export default function TaxiClient({
         key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
         amount: orderData.amount,
         currency: orderData.currency,
-        name: "WanderKashmir",
+        name: "Indiahiles",
         description: `${planName} Subscription`,
         image: "/images/razorpay.svg",
         order_id: orderData.id,
@@ -544,7 +544,7 @@ export default function TaxiClient({
               </div>
               
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <a href="https://wa.me/916005888754?text=Hi%20WanderKashmir%20Support,%20I%20am%20a%20Pro%20Vendor" target="_blank" rel="noopener noreferrer" className="bg-white/10 hover:bg-white/20 transition-colors p-4 rounded-xl flex items-center gap-3 border border-white/5">
+                <a href="https://wa.me/916005888754?text=Hi%20Indiahiles%20Support,%20I%20am%20a%20Pro%20Vendor" target="_blank" rel="noopener noreferrer" className="bg-white/10 hover:bg-white/20 transition-colors p-4 rounded-xl flex items-center gap-3 border border-white/5">
                   <div className="w-10 h-10 bg-emerald-500 rounded-full flex items-center justify-center shrink-0 shadow-sm">
                     <MessageCircle className="w-5 h-5 text-white" />
                   </div>

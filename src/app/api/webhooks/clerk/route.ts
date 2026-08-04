@@ -54,7 +54,7 @@ export async function POST(req: Request) {
     const { id, email_addresses, first_name, last_name } = evt.data
     
     const email = email_addresses[0]?.email_address
-    const name = `${first_name || ''} ${last_name || ''}`.trim() || 'WanderKashmir User'
+    const name = `${first_name || ''} ${last_name || ''}`.trim() || 'Indiahiles User'
 
     try {
       await prisma.user.create({
@@ -76,7 +76,7 @@ export async function POST(req: Request) {
     const { id, email_addresses, first_name, last_name } = evt.data
     
     const email = email_addresses[0]?.email_address
-    const name = `${first_name || ''} ${last_name || ''}`.trim() || 'WanderKashmir User'
+    const name = `${first_name || ''} ${last_name || ''}`.trim() || 'Indiahiles User'
 
     try {
       await prisma.user.upsert({

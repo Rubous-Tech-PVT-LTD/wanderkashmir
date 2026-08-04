@@ -85,7 +85,7 @@ export default function CheckoutClient({
           </div>
           <h1 className="text-3xl font-black text-slate-900 mb-4">Booking Confirmed!</h1>
           <p className="text-slate-500 mb-8">
-            Thank you for booking with WanderKashmir. Your booking details have been sent to your email.
+            Thank you for booking with Indiahiles. Your booking details have been sent to your email.
           </p>
           <a href="/dashboard" className="btn-primary w-full inline-block text-center py-3">
             Go to My Dashboard

@@ -160,7 +160,7 @@ export default function VendorEntryPage() {
         <div className="max-w-4xl mx-auto">
           <div className="mb-12 text-center">
             <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Vendor Onboarding</h1>
-            <p className="text-slate-500 mt-2">Partner with WanderKashmir by completing your legal profile.</p>
+            <p className="text-slate-500 mt-2">Partner with Indiahiles by completing your legal profile.</p>
 
             {status === "REJECTED" && (
               <div className="max-w-2xl mx-auto mt-6 bg-red-50 border border-red-200 rounded-xl p-6 text-left">
@@ -575,7 +575,7 @@ export default function VendorEntryPage() {
                       className="mt-1 w-4 h-4 rounded border-slate-300 text-sky-500 focus:ring-sky-500"
                     />
                     <label htmlFor="agreeToTerms" className="text-sm text-slate-600 leading-relaxed cursor-pointer">
-                      I agree to WanderKashmir's <a href="/terms" target="_blank" className="text-sky-600 font-medium hover:underline">Terms of Service</a>, <a href="/terms" target="_blank" className="text-sky-600 font-medium hover:underline">Privacy Policy</a>, and the <a href="/terms" target="_blank" className="text-sky-600 font-medium hover:underline">Vendor Agreement</a>. I confirm that all uploaded documents are authentic and legally valid.
+                      I agree to Indiahiles's <a href="/terms" target="_blank" className="text-sky-600 font-medium hover:underline">Terms of Service</a>, <a href="/terms" target="_blank" className="text-sky-600 font-medium hover:underline">Privacy Policy</a>, and the <a href="/terms" target="_blank" className="text-sky-600 font-medium hover:underline">Vendor Agreement</a>. I confirm that all uploaded documents are authentic and legally valid.
                     </label>
                   </div>
                   {errors.agreeToTerms && <p className="text-orange-500 text-xs font-medium mt-2 ml-7">{errors.agreeToTerms.message}</p>}

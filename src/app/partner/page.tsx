@@ -87,7 +87,7 @@ export default function VendorLoginPage() {
             </div>
             <div>
               <p className="text-white font-black text-lg leading-tight">Application Rejected</p>
-              <p className="text-red-200 text-sm">WanderKashmir Partner Program</p>
+              <p className="text-red-200 text-sm">Indiahiles Partner Program</p>
             </div>
           </div>
 
@@ -134,7 +134,7 @@ export default function VendorLoginPage() {
             </div>
             <div>
               <p className="text-white font-black text-lg leading-tight">Application Under Review</p>
-              <p className="text-slate-400 text-sm">WanderKashmir Partner Program</p>
+              <p className="text-slate-400 text-sm">Indiahiles Partner Program</p>
             </div>
           </div>
 

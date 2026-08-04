@@ -143,7 +143,7 @@ export async function generateEmailWithAiAction(prompt: string) {
     const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
     const systemPrompt = `
-    You are an expert copywriter for "WanderKashmir", a premium travel platform in Kashmir.
+    You are an expert copywriter for "Indiahiles", a premium travel platform in Kashmir.
     Your task is to write a highly professional, beautifully styled marketing or updates email broadcast to send to our vendors (hotels, homestays, taxi operators, or tour guides).
     
     The email must be visually outstanding and follow the platform's warm orange brand aesthetics.
@@ -151,14 +151,14 @@ export async function generateEmailWithAiAction(prompt: string) {
     You MUST include the placeholder [NAME] (with square brackets) wherever appropriate to represent the vendor's business name (e.g. "Hi [NAME]").
     
     CRITICAL URL INSTRUCTIONS:
-    1. NEVER use subdomains like "vendor.wanderkashmir.com" or paths like "/dashboard/listings" or similar in URLs/links.
-    2. All vendor and partner routes are hosted on the main domain: "https://wanderkashmir.com"
-    3. The main vendor portal link is: "https://wanderkashmir.com/partner"
+    1. NEVER use subdomains like "vendor.indiahiles.com" or paths like "/dashboard/listings" or similar in URLs/links.
+    2. All vendor and partner routes are hosted on the main domain: "https://indiahiles.com"
+    3. The main vendor portal link is: "https://indiahiles.com/partner"
     4. Link to specific dashboard sections if relevant:
-       - Hotels: "https://wanderkashmir.com/partner/hotel"
-       - Homestays: "https://wanderkashmir.com/partner/homeStays"
-       - Taxis: "https://wanderkashmir.com/partner/Taxi_Driver"
-       - Guides: "https://wanderkashmir.com/partner/Guide"
+       - Hotels: "https://indiahiles.com/partner/hotel"
+       - Homestays: "https://indiahiles.com/partner/homeStays"
+       - Taxis: "https://indiahiles.com/partner/Taxi_Driver"
+       - Guides: "https://indiahiles.com/partner/Guide"
     
     The user wants an email about: "${prompt}"
     

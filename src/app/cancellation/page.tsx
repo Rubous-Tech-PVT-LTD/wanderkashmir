@@ -2,8 +2,8 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 
 export const metadata = {
-  title: "Cancellation Policy | WanderKashmir",
-  description: "Cancellation policy for bookings on WanderKashmir.",
+  title: "Cancellation Policy | Indiahiles",
+  description: "Cancellation policy for bookings on Indiahiles.",
 };
 
 export default function CancellationPage() {
