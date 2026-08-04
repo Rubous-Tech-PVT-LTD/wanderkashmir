@@ -101,7 +101,7 @@ export default function Footer() {
           <div className="lg:col-span-2">
             <Link href="/" className="flex items-center gap-2.5 mb-5 group">
               <div className="w-9 h-9 flex items-center justify-center">
-                <img src="/icon.png" alt="Indiahiles logo" className="w-full h-full object-cover rounded-md shadow-sm" />
+                <img src="/brand-icon.png" alt="Indiahiles logo" className="w-full h-full object-cover rounded-md shadow-sm" />
               </div>
               <div className="flex flex-col">
                 <span className="font-display text-2xl font-bold text-white leading-none mt-1">
