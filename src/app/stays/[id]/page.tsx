@@ -145,7 +145,7 @@ export default async function PropertyDetailPage({
               </Link>
               
               <div className="mt-6 text-center text-[10px] font-bold tracking-widest text-slate-400 uppercase">
-                WANDERKASHMIR // BOOKING CONFIRMATION
+                INDIAHILES // BOOKING CONFIRMATION
               </div>
             </div>
           </div>

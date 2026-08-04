@@ -75,7 +75,7 @@ export default function ResetPasswordPage() {
           <div className="w-10 h-10 rounded-xl bg-orange-500 flex items-center justify-center text-white font-bold text-xl group-hover:bg-orange-600 transition-colors">
             W
           </div>
-          <span className="text-2xl font-bold text-slate-900 tracking-tight">Wander<span className="text-orange-500">Kashmir</span></span>
+          <span className="text-2xl font-bold text-slate-900 tracking-tight">India<span className="text-orange-500">hiles</span></span>
         </Link>
         <h2 className="text-center text-3xl font-extrabold text-slate-900">
           Set New Password
