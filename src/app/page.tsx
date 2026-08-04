@@ -489,9 +489,9 @@ export default async function Home() {
         {/* Hero Content */}
         <div className="relative z-10 container-custom mb-32 md:mb-0 pt-16 md:pt-0 md:mt-12 text-left">
           <h1 className="text-[3rem] md:text-[4.5rem] font-bold text-white leading-[1.1] drop-shadow-xl tracking-tight mb-2">
-            Discover the <span className="text-orange-500">Real</span> <br className="hidden md:block" />
-            <span className="block text-[#38bdf8] font-normal drop-shadow-md mt-2 text-[4.5rem] md:text-[6rem]" style={{ fontFamily: "var(--font-dancing-script), 'Dancing Script', cursive" }}>
-              Kashmir
+            Discover the <span className="text-white">Real</span> <br className="hidden md:block" />
+            <span className="block bg-gradient-to-r from-[#F97316] via-[#FB923C] to-[#EA580C] text-transparent bg-clip-text font-normal drop-shadow-md mt-2 text-[4.5rem] md:text-[6rem] leading-[1.3] py-2" style={{ fontFamily: "var(--font-dancing-script), 'Dancing Script', cursive" }}>
+              INDIA
             </span>
           </h1>
           <p className="text-white text-base md:text-lg font-medium drop-shadow-lg max-w-2xl tracking-wide mt-4 mb-6">
