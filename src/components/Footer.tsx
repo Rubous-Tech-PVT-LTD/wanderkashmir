@@ -105,7 +105,7 @@ export default function Footer() {
               </div>
               <div className="flex flex-col">
                 <span className="font-display text-2xl font-bold text-white leading-none mt-1">
-                  <span className="text-[var(--primary)]">India</span>hiles
+                  <span className="text-[#f97316]">India</span>hiles
                 </span>
                 <span className="text-[9px] text-slate-400 font-medium tracking-wider mt-1 uppercase">A product by Gtm Adventures LLP</span>
               </div>

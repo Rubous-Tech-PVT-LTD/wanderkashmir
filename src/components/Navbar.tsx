@@ -96,7 +96,7 @@ export default function Navbar() {
             </div>
             <div className="flex flex-col">
                 <span className="font-display font-bold text-xl tracking-tight text-slate-900 leading-none mt-1">
-                  <span className="text-[var(--primary)]">India</span>hiles
+                  <span className="text-[#f97316]">India</span>hiles
               </span>
               <span className="text-[9px] text-slate-500 font-medium tracking-wider mt-0.5 uppercase">
                 A product by Gtm Adventures LLP
@@ -171,7 +171,7 @@ export default function Navbar() {
               </div>
               <div className="flex flex-col">
                 <span className="font-display text-xl font-bold text-slate-900 leading-none mt-1">
-                  <span className="text-[var(--primary)]">India</span>hiles
+                  <span className="text-[#f97316]">India</span>hiles
                 </span>
                 <span className="text-[9px] text-slate-500 font-medium tracking-wider mt-0.5 uppercase">
                   A product by Gtm Adventures LLP
