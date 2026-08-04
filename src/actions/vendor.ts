@@ -124,7 +124,7 @@ export async function registerVendor(data: VendorRegistrationData) {
               <!-- Header -->
               <div style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); padding: 40px 40px 32px; text-align: center;">
                 <div style="display: inline-flex; align-items: center; gap: 8px; margin-bottom: 20px;">
-                  <span style="font-size: 20px; font-weight: 900; color: white; letter-spacing: -0.5px;">India<span style="color: #f97316;">hiles</span></span>
+                  <span style="font-size: 20px; font-weight: 900; color: white; letter-spacing: -0.5px;"><span style="color: #f97316;">India</span>hiles</span>
                 </div>
                 <div style="width: 72px; height: 72px; background: rgba(249,115,22,0.15); border-radius: 50%; margin: 0 auto 16px; display: flex; align-items: center; justify-content: center;">
                   <span style="font-size: 36px;">📋</span>

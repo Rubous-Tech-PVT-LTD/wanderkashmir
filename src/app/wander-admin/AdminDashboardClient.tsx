@@ -648,7 +648,7 @@ export default function AdminDashboardClient({
           <div className="w-8 h-8 rounded-xl flex items-center justify-center bg-white overflow-hidden shadow-sm">
             <img src="/icon.png" alt="Indiahiles logo" className="w-full h-full object-cover" />
           </div>
-          <h1 className="text-xl font-bold tracking-tight">India<span className="text-orange-400">hiles</span></h1>
+          <h1 className="text-xl font-bold tracking-tight"><span className="text-orange-400">India</span>hiles</h1>
         </div>
         
         <nav className="flex-1 space-y-2">

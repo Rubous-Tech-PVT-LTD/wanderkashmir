@@ -57,7 +57,7 @@ export default async function MarketingBadgesPage() {
               <div className="p-3">
                 <p className="text-[10px] uppercase font-bold text-slate-500 tracking-wider mb-0.5">Listed on</p>
                 <p className="text-base font-black text-slate-900 leading-none font-display">
-                  India<span className="text-sky-500">hiles</span>
+                  <span className="text-sky-500">India</span>hiles
                 </p>
               </div>
             </div>
@@ -85,7 +85,7 @@ export default async function MarketingBadgesPage() {
               <div className="p-3">
                 <p className="text-[10px] uppercase font-bold text-slate-400 tracking-wider mb-0.5">Listed on</p>
                 <p className="text-base font-black text-white leading-none font-display">
-                  India<span className="text-sky-400">hiles</span>
+                  <span className="text-sky-400">India</span>hiles
                 </p>
               </div>
             </div>
