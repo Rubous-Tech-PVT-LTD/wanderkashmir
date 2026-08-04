@@ -43,7 +43,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   return {
     title: `Book ${property.name}, ${property.location} | Best ${typeLabel}`,
     description: property.description 
-      ? `${property.description.substring(0, 120).trim()}... Enjoy top-rated amenities, verified reviews, and secure booking. Reserve today!` 
+      ? property.description.substring(0, 160).trim() + (property.description.length > 160 ? "..." : "")
       : `Book ${property.name}, a beautiful ${typeLabel} located in ${property.location}. Enjoy top-rated amenities, verified reviews, and secure booking with WanderKashmir.`,
     openGraph: {
       images: images.map((url: string) => ({ url })),
