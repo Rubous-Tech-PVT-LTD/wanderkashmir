@@ -19,7 +19,8 @@ import Image from "next/image";
 
 const images = [
   {
-    src: "https://res.cloudinary.com/dcmoseix9/image/upload/v1785878634/ChatGPT_Image_Aug_5_2026_02_53_41_AM_bed8pa.png",
+    src: "https://res.cloudinary.com/dcmoseix9/image/upload/v1785051891/file_00000000049482079aff0e6317218e06_m3hbcf.png",
+    mobileSrc: "https://res.cloudinary.com/dcmoseix9/image/upload/v1785878634/ChatGPT_Image_Aug_5_2026_02_53_41_AM_bed8pa.png",
     alt: "Breathtaking Kashmir scenic landscape and valley view",
     keyframe: "heroFadeFirst",
     position: "object-[center_12%]", // Shift slightly up to show more full image while keeping hands visible
@@ -70,19 +71,43 @@ export default function HeroCarousel() {
             zIndex: index === 0 ? 0 : 1,
           }}
         >
-          <Image
-            src={img.src}
-            alt={img.alt}
-            fill
-            // Only the first image is LCP-critical — priority + eager loading
-            priority={index === 0}
-            loading={index === 0 ? "eager" : "lazy"}
-            // fetchPriority="high" signals the preload scanner to prioritize
-            // this image before the browser finishes parsing JS/CSS
-            fetchPriority={index === 0 ? "high" : "auto"}
-            sizes="100vw"
-            className={`w-full h-full max-w-full ${index === 0 ? "object-contain md:object-cover" : "object-cover"} ${img.position || "object-center"}`}
-          />
+          {img.mobileSrc ? (
+            <>
+              {/* Desktop Image */}
+              <Image
+                src={img.src}
+                alt={img.alt}
+                fill
+                priority={index === 0}
+                loading={index === 0 ? "eager" : "lazy"}
+                fetchPriority={index === 0 ? "high" : "auto"}
+                sizes="100vw"
+                className={`hidden md:block object-cover ${img.position || "object-center"}`}
+              />
+              {/* Mobile Image */}
+              <Image
+                src={img.mobileSrc}
+                alt={img.alt}
+                fill
+                priority={index === 0}
+                loading={index === 0 ? "eager" : "lazy"}
+                fetchPriority={index === 0 ? "high" : "auto"}
+                sizes="100vw"
+                className={`block md:hidden object-contain max-w-full ${img.position || "object-center"}`}
+              />
+            </>
+          ) : (
+            <Image
+              src={img.src}
+              alt={img.alt}
+              fill
+              priority={index === 0}
+              loading={index === 0 ? "eager" : "lazy"}
+              fetchPriority={index === 0 ? "high" : "auto"}
+              sizes="100vw"
+              className={`object-cover ${img.position || "object-center"}`}
+            />
+          )}
         </div>
       ))}
 
