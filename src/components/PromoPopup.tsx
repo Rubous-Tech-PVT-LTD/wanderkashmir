@@ -58,7 +58,37 @@ export default function PromoPopup({ promos }: { promos: Promo[] }) {
 
   const copyToClipboard = () => {
     navigator.clipboard.writeText(promo.code);
-    toast.success("Promo code copied!");
+    toast.custom((t) => (
+      <div
+        className={`${
+          t.visible ? 'animate-in slide-in-from-top-2 fade-in duration-300' : 'animate-out slide-out-to-top-2 fade-out duration-300'
+        } max-w-sm w-full bg-slate-900 shadow-2xl rounded-2xl pointer-events-auto flex border border-white/10 overflow-hidden`}
+      >
+        <div className="flex-1 p-3 px-4">
+          <div className="flex items-center gap-3">
+            <div className="flex-shrink-0 bg-orange-500/20 text-orange-400 p-2 rounded-xl">
+              <Tag className="w-5 h-5" />
+            </div>
+            <div>
+              <p className="text-sm font-bold text-white">
+                Promo code copied!
+              </p>
+              <p className="text-xs text-slate-400 mt-0.5">
+                Paste at checkout to claim your discount.
+              </p>
+            </div>
+          </div>
+        </div>
+        <div className="flex border-l border-white/10">
+          <button
+            onClick={() => toast.dismiss(t.id)}
+            className="w-full p-4 flex items-center justify-center text-slate-400 hover:text-white hover:bg-white/5 transition-colors"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+      </div>
+    ), { duration: 4000 });
   };
 
   return (
