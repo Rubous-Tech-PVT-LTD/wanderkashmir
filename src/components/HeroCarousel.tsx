@@ -19,7 +19,7 @@ import Image from "next/image";
 
 const images = [
   {
-    src: "https://res.cloudinary.com/dcmoseix9/image/upload/v1785051891/file_00000000049482079aff0e6317218e06_m3hbcf.png",
+    src: "https://res.cloudinary.com/dcmoseix9/image/upload/v1785878634/ChatGPT_Image_Aug_5_2026_02_53_41_AM_bed8pa.png",
     alt: "Breathtaking Kashmir scenic landscape and valley view",
     keyframe: "heroFadeFirst",
     position: "object-[center_12%]", // Shift slightly up to show more full image while keeping hands visible
