@@ -5,6 +5,7 @@ import { ClerkProvider } from '@clerk/nextjs'
 import { auth, currentUser } from "@clerk/nextjs/server";
 import prisma from "@/lib/prisma";
 import ToasterProvider from "@/components/ToasterProvider";
+import GlobalPopup from "@/components/GlobalPopup";
 import { getVendorSession } from "@/lib/auth";
 import { Plus_Jakarta_Sans, Inter, Dancing_Script } from "next/font/google";
 
@@ -195,6 +196,7 @@ export default async function RootLayout({
           <VendorProvider initialProfile={initialProfile}>
             {children}
             <ToasterProvider />
+            <GlobalPopup />
           </VendorProvider>
         </ClerkProvider>
       </body>
