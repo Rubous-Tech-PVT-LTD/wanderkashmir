@@ -81,7 +81,7 @@ export default function HeroCarousel() {
             // this image before the browser finishes parsing JS/CSS
             fetchPriority={index === 0 ? "high" : "auto"}
             sizes="100vw"
-            className={`object-cover ${img.position || "object-center"}`}
+            className={`w-full h-full max-w-full ${index === 0 ? "object-contain md:object-cover" : "object-cover"} ${img.position || "object-center"}`}
           />
         </div>
       ))}
