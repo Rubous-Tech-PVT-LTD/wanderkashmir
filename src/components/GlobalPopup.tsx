@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { X, Gift, LogIn, AlertTriangle, ArrowRight } from "lucide-react";
 import { usePathname } from "next/navigation";
+import { getActivePopup } from "@/actions/site-popups";
 
 export default function GlobalPopup() {
   const [popup, setPopup] = useState<any>(null);
@@ -10,10 +11,9 @@ export default function GlobalPopup() {
   const pathname = usePathname();
 
   useEffect(() => {
-    // Determine which popup to fetch based on path (we fetch directly from API)
+    // Determine which popup to fetch based on path
     const fetchActivePopup = async () => {
       try {
-        const { getActivePopup } = await import("@/actions/site-popups");
         const res = await getActivePopup(pathname);
         
         if (res.success && res.popup) {
