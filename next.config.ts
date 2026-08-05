@@ -54,7 +54,7 @@ const nextConfig: NextConfig = {
           },
         ],
         destination: 'https://indiahiles.com/:path*',
-        permanent: true,
+        statusCode: 301,
       },
       {
         source: '/:path*',
@@ -65,7 +65,7 @@ const nextConfig: NextConfig = {
           },
         ],
         destination: 'https://indiahiles.com/:path*',
-        permanent: true,
+        statusCode: 301,
       },
       {
         source: '/dashboard',
