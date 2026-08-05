@@ -25,6 +25,7 @@ import { getPaginatedVendors, getPaginatedProperties, getPaginatedUsers, getPagi
 const AdminMapView = dynamic(() => import("./AdminMapView"), { ssr: false });
 const AdminEmailsTab = dynamic(() => import("./AdminEmailsTab"), { ssr: false });
 const AdminPromoCodesTab = dynamic(() => import("./AdminPromoCodesTab"), { ssr: false });
+const AdminPopupsTab = dynamic(() => import("./AdminPopupsTab"), { ssr: false });
 const AdminCustomToursTab = dynamic(() => import("./AdminCustomToursTab"), { ssr: false });
 const ImageUpload = dynamic(() => import("@/components/ImageUpload"), { ssr: false });
 
@@ -669,6 +670,7 @@ export default function AdminDashboardClient({
             { id: "seo_pages", label: "SEO Pages", icon: Globe },
             { id: "bulk_emails", label: "Bulk Emails", icon: Mail },
             { id: "promo_codes", label: "Promo Codes", icon: CheckCircle2 },
+            { id: "site_popups", label: "Site Popups", icon: Sparkles },
           ].map((item) => (
             <button
               key={item.id}
@@ -743,6 +745,7 @@ export default function AdminDashboardClient({
         {activeTab === "seo_pages" && <AdminSeoTab />}
         {activeTab === "bulk_emails" && <AdminEmailsTab />}
         {activeTab === "promo_codes" && <AdminPromoCodesTab />}
+        {activeTab === "site_popups" && <AdminPopupsTab />}
 
         {activeTab === "approvals" && (
           <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
