@@ -20,7 +20,7 @@ import Image from "next/image";
 const images = [
   {
     src: "https://res.cloudinary.com/dcmoseix9/image/upload/v1785051891/file_00000000049482079aff0e6317218e06_m3hbcf.png",
-    mobileSrc: "https://res.cloudinary.com/dcmoseix9/image/upload/v1785878634/ChatGPT_Image_Aug_5_2026_02_53_41_AM_bed8pa.png",
+    mobileSrc: "https://res.cloudinary.com/dcmoseix9/image/upload/v1785920903/ChatGPT_Image_Aug_5_2026_02_37_47_PM_xhlbc7.png",
     alt: "Breathtaking Kashmir scenic landscape and valley view",
     keyframe: "heroFadeFirst",
     position: "object-[center_12%]", // Shift slightly up to show more full image while keeping hands visible
@@ -93,7 +93,7 @@ export default function HeroCarousel() {
                 loading={index === 0 ? "eager" : "lazy"}
                 fetchPriority={index === 0 ? "high" : "auto"}
                 sizes="100vw"
-                className={`block md:hidden object-contain max-w-full ${img.position || "object-center"}`}
+                className={`block md:hidden object-cover w-full h-full max-w-full ${img.position || "object-center"}`}
               />
             </>
           ) : (
