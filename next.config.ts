@@ -46,6 +46,28 @@ const nextConfig: NextConfig = {
   async redirects() {
     return [
       {
+        source: '/:path*',
+        has: [
+          {
+            type: 'host',
+            value: 'wanderkashmir.com',
+          },
+        ],
+        destination: 'https://indiahiles.com/:path*',
+        permanent: true,
+      },
+      {
+        source: '/:path*',
+        has: [
+          {
+            type: 'host',
+            value: 'www.wanderkashmir.com',
+          },
+        ],
+        destination: 'https://indiahiles.com/:path*',
+        permanent: true,
+      },
+      {
         source: '/dashboard',
         destination: '/partner/hotel',
         permanent: true,
