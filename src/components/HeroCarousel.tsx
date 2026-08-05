@@ -19,7 +19,7 @@ import Image from "next/image";
 
 const images = [
   {
-    src: "https://res.cloudinary.com/dcmoseix9/image/upload/v1785051891/file_00000000049482079aff0e6317218e06_m3hbcf.png",
+    src: "https://res.cloudinary.com/dcmoseix9/image/upload/v1785878634/ChatGPT_Image_Aug_5_2026_02_53_41_AM_bed8pa.png",
     mobileSrc: "https://res.cloudinary.com/dcmoseix9/image/upload/v1785920903/ChatGPT_Image_Aug_5_2026_02_37_47_PM_xhlbc7.png",
     alt: "Breathtaking Kashmir scenic landscape and valley view",
     keyframe: "heroFadeFirst",
