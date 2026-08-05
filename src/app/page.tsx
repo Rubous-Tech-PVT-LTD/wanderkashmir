@@ -487,7 +487,7 @@ export default async function Home() {
         <HeroCarousel />
 
         {/* Hero Content */}
-        <div className="relative z-10 container-custom mb-32 md:mb-0 pt-16 md:pt-0 md:mt-12 text-center flex flex-col items-center">
+        <div className="relative z-10 container-custom mb-32 md:mb-0 pt-32 md:pt-0 mt-32 md:mt-64 text-center flex flex-col items-center">
           <h1 className="sr-only">Discover the Real INDIA</h1>
           <p className="text-white text-base md:text-lg font-medium drop-shadow-lg max-w-2xl tracking-wide mt-4 mb-6">
             Authentic Village Stays • Local Culture • Hidden Experiences
