@@ -11,8 +11,13 @@ export default function GlobalPopup() {
   const pathname = usePathname();
 
   useEffect(() => {
-    // Do not show global popups on admin or vendor dashboards
-    if (pathname && (pathname.startsWith('/wander-admin') || pathname.startsWith('/vendor'))) {
+    // Do not show global popups on admin, vendor, or auth pages
+    if (pathname && (
+      pathname.startsWith('/wander-admin') || 
+      pathname.startsWith('/vendor') || 
+      pathname.startsWith('/sign-in') || 
+      pathname.startsWith('/sign-up')
+    )) {
       return;
     }
 
@@ -113,6 +118,7 @@ export default function GlobalPopup() {
             {popup.buttonText && (
               <a 
                 href={popup.buttonLink || "#"} 
+                onClick={handleDismiss}
                 className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors ${buttonClass}`}
               >
                 {popup.buttonText}
@@ -152,6 +158,7 @@ export default function GlobalPopup() {
               {popup.buttonText && (
                 <a 
                   href={popup.buttonLink || "#"} 
+                  onClick={handleDismiss}
                   className={`mt-3 inline-flex items-center gap-1 px-4 py-2 rounded-lg text-sm font-bold transition-colors ${buttonClass}`}
                 >
                   {popup.buttonText} <ArrowRight className="w-4 h-4" />
@@ -191,6 +198,7 @@ export default function GlobalPopup() {
           {popup.buttonText && (
             <a 
               href={popup.buttonLink || "#"} 
+              onClick={handleDismiss}
               className={`w-full py-3.5 rounded-xl text-base font-bold transition-colors flex items-center justify-center gap-2 shadow-lg hover:-translate-y-0.5 transform ${buttonClass}`}
             >
               {popup.buttonText} <ArrowRight className="w-5 h-5" />
