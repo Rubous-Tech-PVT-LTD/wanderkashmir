@@ -11,6 +11,11 @@ export default function GlobalPopup() {
   const pathname = usePathname();
 
   useEffect(() => {
+    // Do not show global popups on admin or vendor dashboards
+    if (pathname && (pathname.startsWith('/wander-admin') || pathname.startsWith('/vendor'))) {
+      return;
+    }
+
     // Determine which popup to fetch based on path
     const fetchActivePopup = async () => {
       try {
