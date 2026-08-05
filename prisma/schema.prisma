@@ -507,3 +507,18 @@ enum SubscriptionPlan {
   PRO
   ENTERPRISE
 }
+
+model SitePopup {
+  id           String   @id @default(cuid())
+  type         String   // OFFER, SIGN_IN, UPDATE
+  title        String
+  description  String
+  buttonText   String?
+  buttonLink   String?
+  displayStyle String   // MODAL, TOAST, BANNER
+  triggerRule  String   // IMMEDIATE, DELAY_3S, ON_SCROLL
+  targetPages  String   // ALL, HOMEPAGE, TOURS
+  isActive     Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
