@@ -45,12 +45,12 @@ const images = [
 ];
 
 /**
- * Total cycle = 20s (4 slides × 5s each)
+ * Total cycle = 25s (Slide 1: 10s, Slide 2,3,4: 5s each)
  *
- * heroFadeFirst:  Starts at 1 (immediately visible!) → holds until 25% → covered by slide 2
- * heroFadeSecond: Invisible → fades in at 25–28% → holds 28–47% → fades out 47–50%
- * heroFadeThird:  Invisible → fades in at 50–53% → holds 53–72% → fades out 72–75%
- * heroFadeFourth: Invisible → fades in at 75–78% → holds 78–97% → fades out 97–100%
+ * heroFadeFirst:  Starts at 1 (immediately visible!) → holds until 40% → covered by slide 2
+ * heroFadeSecond: Invisible → fades in at 40–43% → holds 43–57% → fades out 57–60%
+ * heroFadeThird:  Invisible → fades in at 60–63% → holds 63–77% → fades out 77–80%
+ * heroFadeFourth: Invisible → fades in at 80–83% → holds 83–97% → fades out 97–100%
  *
  * By starting the first slide at opacity:1 at 0%, the hero image is visible
  * immediately on page load → browser selects it as the LCP element → no
@@ -66,7 +66,7 @@ export default function HeroCarousel() {
           className="hero-slide absolute inset-0"
           style={{
             opacity: index === 0 ? 1 : 0,
-            animation: index === 0 ? "none" : `${img.keyframe} 20s ease-in-out infinite`,
+            animation: index === 0 ? "none" : `${img.keyframe} 25s ease-in-out infinite`,
             zIndex: index === 0 ? 0 : 1,
           }}
         >
