@@ -36,7 +36,7 @@ export default function ContactPage() {
             <div className="p-6 bg-slate-50 rounded-xl border border-slate-100">
               <MapPin className="w-8 h-8 text-rose-500 mx-auto mb-4" />
               <h3 className="font-bold text-slate-900 mb-2">Address</h3>
-              <p className="text-slate-600">Hati Gam Anantnag, Jammu and Kashmir 192401</p>
+              <p className="text-slate-600">Devlok Block Majra Dehradhun Uttrakhand</p>
             </div>
           </div>
         </div>
