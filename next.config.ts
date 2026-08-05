@@ -46,28 +46,6 @@ const nextConfig: NextConfig = {
   async redirects() {
     return [
       {
-        source: '/:path*',
-        has: [
-          {
-            type: 'host',
-            value: 'wanderkashmir.com',
-          },
-        ],
-        destination: 'https://indiahiles.com/:path*',
-        statusCode: 301,
-      },
-      {
-        source: '/:path*',
-        has: [
-          {
-            type: 'host',
-            value: 'www.wanderkashmir.com',
-          },
-        ],
-        destination: 'https://indiahiles.com/:path*',
-        statusCode: 301,
-      },
-      {
         source: '/dashboard',
         destination: '/partner/hotel',
         permanent: true,
