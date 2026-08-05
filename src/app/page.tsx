@@ -487,12 +487,12 @@ export default async function Home() {
         <HeroCarousel />
 
         {/* Hero Content */}
-        <div className="relative z-10 container-custom mb-32 md:mb-0 pt-16 md:pt-0 md:mt-12 text-left">
+        <div className="relative z-10 container-custom mb-32 md:mb-0 pt-16 md:pt-0 md:mt-12 text-center flex flex-col items-center">
           <h1 className="sr-only">Discover the Real INDIA</h1>
           <p className="text-white text-base md:text-lg font-medium drop-shadow-lg max-w-2xl tracking-wide mt-4 mb-6">
             Authentic Village Stays • Local Culture • Hidden Experiences
           </p>
-          <div className="flex flex-wrap items-center gap-3.5 mt-2">
+          <div className="flex flex-wrap justify-center items-center gap-3.5 mt-2">
             <Link 
               href="/partner" 
               className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-md border border-white/40 text-white px-6 py-3 rounded-full font-bold hover:bg-white hover:text-slate-900 transition-all shadow-lg"
