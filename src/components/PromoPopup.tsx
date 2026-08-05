@@ -71,7 +71,7 @@ export default function PromoPopup({ promos }: { promos: Promo[] }) {
         {/* Close Button */}
         <button 
           onClick={handleDismiss}
-          className="absolute top-3 right-3 text-white/50 hover:text-white transition-colors z-10 bg-white/10 hover:bg-white/20 rounded-full p-1"
+          className="absolute top-3 right-3 text-white/50 hover:text-white transition-colors z-50 bg-white/10 hover:bg-white/20 rounded-full p-1 cursor-pointer"
         >
           <X className="w-4 h-4" />
         </button>
