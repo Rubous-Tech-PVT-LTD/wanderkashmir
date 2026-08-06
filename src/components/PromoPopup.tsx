@@ -96,7 +96,7 @@ export default function PromoPopup({ promos }: { promos: Promo[] }) {
       <div className="bg-gradient-to-br from-indigo-900 to-slate-900 rounded-2xl shadow-2xl p-1 pb-4 relative overflow-hidden group">
         {/* Decorative elements */}
         <div className="absolute top-0 right-0 w-32 h-32 bg-orange-500/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
-        <div className="absolute bottom-0 left-0 w-32 h-32 bg-sky-500/20 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2" />
+        <div className="absolute bottom-0 left-0 w-32 h-32 bg-orange-/20 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2" />
         
         {/* Close Button */}
         <button 

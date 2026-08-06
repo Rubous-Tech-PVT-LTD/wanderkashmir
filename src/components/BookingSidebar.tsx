@@ -332,7 +332,7 @@ export default function BookingSidebar({ propertyId, pricePerNight, rating, isLo
               <button 
                 type="button"
                 onClick={() => setShowGuestSelector(false)}
-                className="w-full bg-sky-600 text-white font-bold py-2 rounded-lg mt-2 hover:bg-sky-700"
+                className="w-full bg-orange- text-white font-bold py-2 rounded-lg mt-2 hover:bg-orange-"
               >
                 Apply
               </button>
@@ -362,7 +362,7 @@ export default function BookingSidebar({ propertyId, pricePerNight, rating, isLo
                   className={`flex items-center justify-between p-3 border rounded-xl cursor-pointer transition-colors ${
                     !isCapacityValid ? 'opacity-50 border-slate-100 bg-slate-50 cursor-not-allowed' :
                     selectedRoomTypeId === rt.id 
-                      ? 'border-sky-500 bg-sky-50' 
+                      ? 'border-orange- bg-orange-' 
                       : 'border-slate-200 hover:border-slate-300'
                   }`}
                 >
@@ -370,7 +370,7 @@ export default function BookingSidebar({ propertyId, pricePerNight, rating, isLo
                     <input 
                       type="radio" 
                       name="roomType"
-                      className="w-4 h-4 text-sky-600"
+                      className="w-4 h-4 text-orange-"
                       disabled={!isCapacityValid}
                       checked={selectedRoomTypeId === rt.id} 
                       onChange={() => {
@@ -389,7 +389,7 @@ export default function BookingSidebar({ propertyId, pricePerNight, rating, isLo
                   </div>
                   <div className="text-right">
                     <span className="block font-bold text-slate-900">₹{rt.pricePerNight.toLocaleString()} <span className="text-xs font-normal text-slate-500">avg/night</span></span>
-                    <span className="block text-xs font-semibold text-sky-600">Total: ₹{(rt.totalPrice * rooms).toLocaleString()}</span>
+                    <span className="block text-xs font-semibold text-orange-">Total: ₹{(rt.totalPrice * rooms).toLocaleString()}</span>
                   </div>
                 </label>
               );
@@ -401,7 +401,7 @@ export default function BookingSidebar({ propertyId, pricePerNight, rating, isLo
       {isAvailable === true ? (
         <button 
           onClick={() => setShowModal(true)}
-          className="w-full bg-sky-600 text-white font-bold py-3.5 rounded-xl hover:bg-sky-700 transition-colors shadow-md"
+          className="w-full bg-orange- text-white font-bold py-3.5 rounded-xl hover:bg-orange- transition-colors shadow-md"
         >
           Continue
         </button>
@@ -457,7 +457,7 @@ export default function BookingSidebar({ propertyId, pricePerNight, rating, isLo
                       value={guestName}
                       onChange={(e) => setGuestName(e.target.value)}
                       placeholder="e.g. John Doe"
-                      className="w-full border border-slate-200 rounded-xl p-3 focus:ring-2 focus:ring-sky-500 outline-none"
+                      className="w-full border border-slate-200 rounded-xl p-3 focus:ring-2 focus:ring-orange- outline-none"
                     />
                   </div>
                   <div>
@@ -467,7 +467,7 @@ export default function BookingSidebar({ propertyId, pricePerNight, rating, isLo
                       value={guestPhone}
                       onChange={(e) => setGuestPhone(e.target.value)}
                       placeholder="e.g. +91 9876543210"
-                      className="w-full border border-slate-200 rounded-xl p-3 focus:ring-2 focus:ring-sky-500 outline-none"
+                      className="w-full border border-slate-200 rounded-xl p-3 focus:ring-2 focus:ring-orange- outline-none"
                     />
                   </div>
                   <div>
@@ -477,7 +477,7 @@ export default function BookingSidebar({ propertyId, pricePerNight, rating, isLo
                       onChange={(e) => setSpecialRequests(e.target.value)}
                       placeholder="e.g. Need an extra bed, arriving late, etc."
                       rows={3}
-                      className="w-full border border-slate-200 rounded-xl p-3 focus:ring-2 focus:ring-sky-500 outline-none"
+                      className="w-full border border-slate-200 rounded-xl p-3 focus:ring-2 focus:ring-orange- outline-none"
                     />
                   </div>
 
@@ -496,7 +496,7 @@ export default function BookingSidebar({ propertyId, pricePerNight, rating, isLo
                                 setOtherGuests(newArr);
                               }}
                               placeholder={`Guest ${idx + 2} Name`}
-                              className="w-full border border-slate-200 rounded-xl p-3 focus:ring-2 focus:ring-sky-500 outline-none text-sm"
+                              className="w-full border border-slate-200 rounded-xl p-3 focus:ring-2 focus:ring-orange- outline-none text-sm"
                             />
                           </div>
                           <div className="w-24">
@@ -509,7 +509,7 @@ export default function BookingSidebar({ propertyId, pricePerNight, rating, isLo
                                 setOtherGuests(newArr);
                               }}
                               placeholder="Age"
-                              className="w-full border border-slate-200 rounded-xl p-3 focus:ring-2 focus:ring-sky-500 outline-none text-sm"
+                              className="w-full border border-slate-200 rounded-xl p-3 focus:ring-2 focus:ring-orange- outline-none text-sm"
                             />
                           </div>
                         </div>
@@ -527,7 +527,7 @@ export default function BookingSidebar({ propertyId, pricePerNight, rating, isLo
                       localStorage.setItem("wk_guest_phone", guestPhone);
                       setModalStep(2);
                     }}
-                    className="w-full mt-4 bg-sky-600 text-white font-bold py-3.5 rounded-xl hover:bg-sky-700 transition-colors shadow-md"
+                    className="w-full mt-4 bg-orange- text-white font-bold py-3.5 rounded-xl hover:bg-orange- transition-colors shadow-md"
                   >
                     Continue to Review
                   </button>
@@ -538,8 +538,8 @@ export default function BookingSidebar({ propertyId, pricePerNight, rating, isLo
                 <div className="space-y-6">
                   {/* ADD-ONS SUMMARY (Read-only) */}
                   {(selectedTaxiId || selectedGuideId) && (
-                    <div className="bg-sky-50 border border-sky-100 p-4 rounded-xl space-y-3">
-                      <h3 className="text-sm font-bold text-sky-900">Selected Add-ons</h3>
+                    <div className="bg-orange- border border-orange- p-4 rounded-xl space-y-3">
+                      <h3 className="text-sm font-bold text-orange-">Selected Add-ons</h3>
                       {selectedTaxiId && (
                         <div className="flex justify-between text-sm text-slate-700">
                           <span>Taxi / Cab Service</span>
@@ -642,7 +642,7 @@ export default function BookingSidebar({ propertyId, pricePerNight, rating, isLo
                             value={promoInput}
                             onChange={(e) => setPromoInput(e.target.value)}
                             placeholder="Enter code"
-                            className="flex-1 border border-slate-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-sky-500 outline-none uppercase"
+                            className="flex-1 border border-slate-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-orange- outline-none uppercase"
                           />
                           <button 
                             onClick={handleApplyPromo}

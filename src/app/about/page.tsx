@@ -11,7 +11,7 @@ export default function AboutPage() {
     <main className="min-h-screen bg-slate-50">
       <Navbar />
       <div className="bg-slate-900 text-white pt-32 pb-20 px-4 relative overflow-hidden">
-        <div className="absolute inset-0 opacity-20 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-sky-400 via-slate-900 to-slate-900"></div>
+        <div className="absolute inset-0 opacity-20 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-orange- via-slate-900 to-slate-900"></div>
         <div className="container-custom max-w-4xl mx-auto text-center relative z-10">
           <h1 className="text-4xl md:text-5xl font-bold mb-6 tracking-tight">About Us</h1>
           <p className="text-slate-300 text-xl max-w-2xl mx-auto font-light leading-relaxed">

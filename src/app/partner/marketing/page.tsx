@@ -51,13 +51,13 @@ export default async function MarketingBadgesPage() {
           <div className="bg-slate-50 p-8 flex items-center justify-center border-b border-slate-100 min-h-[240px]">
             {/* The actual badge design (CSS simulated for now, but usually they'd download a real image) */}
             <div className="bg-white border border-slate-200 shadow-lg rounded-xl overflow-hidden flex flex-row items-center w-[260px] select-none hover:scale-105 transition-transform duration-300">
-              <div className="bg-sky-500 p-4 flex items-center justify-center">
+              <div className="bg-orange- p-4 flex items-center justify-center">
                 <Image src="/icon.jpg" alt="WanderKashmir" width={32} height={32} className="rounded-md" />
               </div>
               <div className="p-3">
                 <p className="text-[10px] uppercase font-bold text-slate-500 tracking-wider mb-0.5">Listed on</p>
                 <p className="text-base font-black text-slate-900 leading-none font-display">
-                  <span className="text-sky-500">India</span>hiles
+                  <span className="text-orange-">India</span>hiles
                 </p>
               </div>
             </div>
@@ -67,7 +67,7 @@ export default async function MarketingBadgesPage() {
             <p className="text-sm text-slate-500 mb-6">Best for light-colored websites and social media posts.</p>
             
             <div className="flex gap-3">
-              <button className="flex-1 bg-sky-500 text-white font-semibold py-2.5 rounded-lg flex items-center justify-center gap-2 hover:bg-sky-600 transition-colors text-sm">
+              <button className="flex-1 bg-orange- text-white font-semibold py-2.5 rounded-lg flex items-center justify-center gap-2 hover:bg-orange- transition-colors text-sm">
                 <Download className="w-4 h-4" /> Download PNG
               </button>
             </div>
@@ -79,13 +79,13 @@ export default async function MarketingBadgesPage() {
           <div className="bg-slate-900 p-8 flex items-center justify-center border-b border-slate-800 min-h-[240px]">
             {/* The actual badge design */}
             <div className="bg-slate-800 border border-slate-700 shadow-xl rounded-xl overflow-hidden flex flex-row items-center w-[260px] select-none hover:scale-105 transition-transform duration-300">
-              <div className="bg-sky-500 p-4 flex items-center justify-center">
+              <div className="bg-orange- p-4 flex items-center justify-center">
                 <Image src="/icon.jpg" alt="WanderKashmir" width={32} height={32} className="rounded-md" />
               </div>
               <div className="p-3">
                 <p className="text-[10px] uppercase font-bold text-slate-400 tracking-wider mb-0.5">Listed on</p>
                 <p className="text-base font-black text-white leading-none font-display">
-                  <span className="text-sky-400">India</span>hiles
+                  <span className="text-orange-">India</span>hiles
                 </p>
               </div>
             </div>
@@ -117,7 +117,7 @@ export default async function MarketingBadgesPage() {
           </pre>
           {/* Note: This is a static copy button for UI demonstration. In a real app we'd use a Client Component for clipboard. */}
           <div className="mt-4 flex items-start gap-2 text-sm text-slate-500">
-            <Info className="w-4 h-4 mt-0.5 flex-shrink-0 text-sky-500" />
+            <Info className="w-4 h-4 mt-0.5 flex-shrink-0 text-orange-" />
             <p>Paste this code right before the closing <code className="bg-slate-200 px-1 py-0.5 rounded text-xs">&lt;/body&gt;</code> tag or in your website's footer widget area.</p>
           </div>
         </div>

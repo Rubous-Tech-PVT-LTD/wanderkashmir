@@ -106,7 +106,7 @@ export function SlideEditor({
                   type="text"
                   value={slide.title || ""}
                   onChange={(e) => updateSlide(i, 'title', e.target.value)}
-                  className="font-bold text-lg w-full p-1 border-b border-transparent hover:border-slate-200 focus:border-[#0284c7] focus:outline-none transition-colors"
+                  className="font-bold text-lg w-full p-1 border-b border-transparent hover:border-slate-200 focus:border-[#f97316] focus:outline-none transition-colors"
                   placeholder="Slide Title"
                 />
                 <div className="flex gap-2">
@@ -125,7 +125,7 @@ export function SlideEditor({
               <textarea 
                 value={slide.body || ""}
                 onChange={(e) => updateSlide(i, 'body', e.target.value)}
-                className="w-full text-sm text-slate-600 p-2 border border-slate-200 rounded-lg focus:border-[#0284c7] focus:outline-none"
+                className="w-full text-sm text-slate-600 p-2 border border-slate-200 rounded-lg focus:border-[#f97316] focus:outline-none"
                 rows={2}
                 placeholder="Slide Body Content..."
               />

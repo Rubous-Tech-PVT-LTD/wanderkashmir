@@ -168,9 +168,9 @@ export default function VendorLoginPage() {
             </div>
 
             {/* Email note */}
-            <div className="flex items-start gap-3 bg-sky-50 border border-sky-100 rounded-xl p-3.5">
-              <Mail className="w-4 h-4 text-sky-500 shrink-0 mt-0.5" />
-              <p className="text-sky-800 text-xs leading-relaxed">
+            <div className="flex items-start gap-3 bg-orange- border border-orange- rounded-xl p-3.5">
+              <Mail className="w-4 h-4 text-orange- shrink-0 mt-0.5" />
+              <p className="text-orange- text-xs leading-relaxed">
                 Confirmation email will be sent to{" "}
                 <strong className="font-bold">{pendingState.vendorEmail}</strong> once approved.
               </p>

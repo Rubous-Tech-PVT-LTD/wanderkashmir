@@ -49,7 +49,7 @@ export default function TripsTab({
           <h2 className="text-lg font-bold text-slate-900">{isStand ? "Dispatch Board & Trips" : "Your Recent Trips"}</h2>
           <p className="text-sm text-slate-500 mt-1">Manage all your upcoming rides and airport transfers.</p>
         </div>
-        <button className="flex items-center gap-2 bg-sky-500 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-sky-600 transition-colors">
+        <button className="flex items-center gap-2 bg-orange- text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-orange- transition-colors">
           <Download className="w-4 h-4" /> Download Report
         </button>
       </div>
@@ -116,7 +116,7 @@ export default function TripsTab({
                         {isStand && (!booking.vehicle || !booking.driver) && booking.status !== "CANCELLED" && (
                           <button 
                             onClick={() => setAssigningBooking(booking.id)}
-                            className="mt-2 text-xs bg-sky-100 text-sky-700 font-bold px-2 py-1 rounded border border-sky-200 hover:bg-sky-200"
+                            className="mt-2 text-xs bg-orange- text-orange- font-bold px-2 py-1 rounded border border-orange- hover:bg-orange-"
                           >
                             Assign Dispatch
                           </button>

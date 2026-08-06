@@ -122,7 +122,7 @@ export default function ImageUpload({
                   <button 
                     type="button" 
                     onClick={() => open()}
-                    className="w-24 h-24 border-2 border-dashed border-slate-300 rounded-lg flex flex-col items-center justify-center text-slate-500 hover:bg-sky-50 hover:border-sky-300 hover:text-sky-600 transition-colors shrink-0"
+                    className="w-24 h-24 border-2 border-dashed border-slate-300 rounded-lg flex flex-col items-center justify-center text-slate-500 hover:bg-orange- hover:border-orange- hover:text-orange- transition-colors shrink-0"
                   >
                     <Plus className="w-6 h-6 mb-1" />
                     <span className="text-[10px] font-bold text-center px-1 uppercase">Add Photo</span>
@@ -158,7 +158,7 @@ export default function ImageUpload({
                   <button 
                     type="button" 
                     onClick={() => open()}
-                    className="w-24 h-24 border-2 border-dashed border-slate-300 rounded-lg flex flex-col items-center justify-center text-slate-500 hover:bg-sky-50 hover:border-sky-300 hover:text-sky-600 transition-colors shrink-0"
+                    className="w-24 h-24 border-2 border-dashed border-slate-300 rounded-lg flex flex-col items-center justify-center text-slate-500 hover:bg-orange- hover:border-orange- hover:text-orange- transition-colors shrink-0"
                   >
                     <Plus className="w-6 h-6 mb-1" />
                     <span className="text-[10px] font-bold text-center px-1 uppercase">Add Video</span>

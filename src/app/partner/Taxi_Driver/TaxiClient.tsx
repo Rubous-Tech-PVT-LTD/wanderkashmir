@@ -343,7 +343,7 @@ export default function TaxiClient({
           onClick={handleAddNewClick}
           disabled={!isApproved}
           className={`flex items-center gap-2 px-4 py-2.5 rounded-lg font-medium transition-colors shadow-sm ${
-            isApproved ? 'bg-sky-500 text-white hover:bg-sky-600' : 'bg-slate-200 text-slate-400 cursor-not-allowed'
+            isApproved ? 'bg-orange- text-white hover:bg-orange-' : 'bg-slate-200 text-slate-400 cursor-not-allowed'
           }`}
         >
           <Plus className="w-5 h-5" /> Add New Vehicle
@@ -355,10 +355,10 @@ export default function TaxiClient({
           <button
             key={tab as string}
             onClick={() => setActiveTab(tab as string)}
-            className={`pb-4 text-sm font-semibold capitalize transition-colors relative ${activeTab === tab ? "text-sky-600" : "text-slate-500 hover:text-slate-800"}`}
+            className={`pb-4 text-sm font-semibold capitalize transition-colors relative ${activeTab === tab ? "text-orange-" : "text-slate-500 hover:text-slate-800"}`}
           >
             {tab as string}
-            {activeTab === tab && <span className="absolute bottom-0 left-0 w-full h-0.5 bg-sky-500 rounded-t-full" />}
+            {activeTab === tab && <span className="absolute bottom-0 left-0 w-full h-0.5 bg-orange- rounded-t-full" />}
           </button>
         ))}
       </div>
@@ -389,7 +389,7 @@ export default function TaxiClient({
           <div className={`relative bg-white rounded-2xl shadow-sm border border-slate-200 p-6 overflow-hidden mt-8 ${!hasAnalytics ? 'min-h-[350px] bg-slate-50 flex flex-col' : ''}`}>
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
               <div className="flex items-center gap-2">
-                <LineChartIcon className="w-6 h-6 text-sky-500" />
+                <LineChartIcon className="w-6 h-6 text-orange-" />
                 <h2 className="text-xl font-bold text-slate-900">Advanced Analytics</h2>
               </div>
               {hasAnalytics && (
@@ -414,18 +414,18 @@ export default function TaxiClient({
                   </div>
                   <h3 className="text-2xl font-bold text-slate-900 mb-2">Analytics Locked</h3>
                   <p className="text-slate-600 max-w-md mb-6">Upgrade to the Growth Pro or Enterprise plan to view detailed conversion rates, customer demographics, and search appearances.</p>
-                  <button onClick={() => setActiveTab("financials")} className="bg-sky-500 text-white px-6 py-2.5 rounded-lg font-bold hover:bg-sky-600 transition-colors shadow-sm">
+                  <button onClick={() => setActiveTab("financials")} className="bg-orange- text-white px-6 py-2.5 rounded-lg font-bold hover:bg-orange- transition-colors shadow-sm">
                     View Upgrade Plans
                   </button>
                 </div>
                 {/* Fake blurred background to give it shape */}
                 <div className="flex-1 opacity-20 pointer-events-none mt-4 flex items-end gap-2 px-8">
-                  <div className="w-1/6 h-24 bg-sky-200 rounded-t-lg"></div>
-                  <div className="w-1/6 h-32 bg-sky-300 rounded-t-lg"></div>
-                  <div className="w-1/6 h-16 bg-sky-200 rounded-t-lg"></div>
-                  <div className="w-1/6 h-40 bg-sky-400 rounded-t-lg"></div>
-                  <div className="w-1/6 h-28 bg-sky-300 rounded-t-lg"></div>
-                  <div className="w-1/6 h-48 bg-sky-500 rounded-t-lg"></div>
+                  <div className="w-1/6 h-24 bg-orange- rounded-t-lg"></div>
+                  <div className="w-1/6 h-32 bg-orange- rounded-t-lg"></div>
+                  <div className="w-1/6 h-16 bg-orange- rounded-t-lg"></div>
+                  <div className="w-1/6 h-40 bg-orange- rounded-t-lg"></div>
+                  <div className="w-1/6 h-28 bg-orange- rounded-t-lg"></div>
+                  <div className="w-1/6 h-48 bg-orange- rounded-t-lg"></div>
                 </div>
               </>
             )}
@@ -433,7 +433,7 @@ export default function TaxiClient({
               return (
                 <>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-                    <button onClick={() => setChartMetric("views")} className={`p-4 rounded-xl border-2 transition-all text-left ${chartMetric === "views" ? 'border-sky-500 bg-sky-50' : 'border-slate-100 bg-white hover:border-slate-200'}`}>
+                    <button onClick={() => setChartMetric("views")} className={`p-4 rounded-xl border-2 transition-all text-left ${chartMetric === "views" ? 'border-orange- bg-orange-' : 'border-slate-100 bg-white hover:border-slate-200'}`}>
                       <div className="text-slate-500 text-sm font-medium mb-1">Profile Views</div>
                       <div className="text-2xl font-black text-slate-900">{totalViews.toLocaleString()}</div>
                       <div className="text-xs text-emerald-600 font-bold mt-2 flex items-center gap-1">+{growthViews}%</div>
@@ -555,7 +555,7 @@ export default function TaxiClient({
                 </a>
                 
                 <button onClick={() => toast.success("Help Center opening soon!")} className="bg-white/10 hover:bg-white/20 transition-colors p-4 rounded-xl flex items-center gap-3 border border-white/5 text-left">
-                  <div className="w-10 h-10 bg-sky-500 rounded-full flex items-center justify-center shrink-0 shadow-sm">
+                  <div className="w-10 h-10 bg-orange- rounded-full flex items-center justify-center shrink-0 shadow-sm">
                     <BookOpen className="w-5 h-5 text-white" />
                   </div>
                   <div>
@@ -631,7 +631,7 @@ export default function TaxiClient({
             <div className="bg-slate-900 rounded-2xl p-6 shadow-sm border border-slate-800 mt-6 text-white">
               <div className="flex items-center gap-3 mb-6">
                 <div className="w-12 h-12 bg-white/10 rounded-xl flex items-center justify-center">
-                  <Lock className="w-6 h-6 text-sky-400" />
+                  <Lock className="w-6 h-6 text-orange-" />
                 </div>
                 <div>
                   <h2 className="text-xl font-bold">Enterprise API & Integrations</h2>
@@ -645,7 +645,7 @@ export default function TaxiClient({
                     <h3 className="font-bold text-sm">REST API Access Keys</h3>
                     <p className="text-xs text-slate-400 mt-0.5">Generate tokens for custom integrations</p>
                   </div>
-                  <button onClick={() => toast.success("API Keys generated and sent to your email!")} className="bg-sky-500 hover:bg-sky-600 text-white px-4 py-2 text-sm font-bold rounded-lg transition-colors">Generate</button>
+                  <button onClick={() => toast.success("API Keys generated and sent to your email!")} className="bg-orange- hover:bg-orange- text-white px-4 py-2 text-sm font-bold rounded-lg transition-colors">Generate</button>
                 </div>
                 
                 <div className="bg-white/5 rounded-xl p-4 border border-white/10 flex justify-between items-center">
@@ -692,7 +692,7 @@ export default function TaxiClient({
                       <p className="text-xs text-slate-400 mt-1 capitalize">{v.type}</p>
                     </div>
                     <div className="mt-4 flex items-center gap-2 pt-4 border-t border-slate-100">
-                      <button onClick={() => handleEditVehicle(v)} className="text-sm font-medium text-sky-600 hover:text-sky-700 flex-1 bg-sky-50 py-1.5 rounded-lg transition-colors">Edit</button>
+                      <button onClick={() => handleEditVehicle(v)} className="text-sm font-medium text-orange- hover:text-orange- flex-1 bg-orange- py-1.5 rounded-lg transition-colors">Edit</button>
                       <button onClick={() => handleDeleteVehicle(v.id)} className="text-sm font-medium text-red-600 hover:text-red-700 px-3 py-1.5 bg-red-50 rounded-lg transition-colors">Delete</button>
                     </div>
                   </div>
@@ -710,7 +710,7 @@ export default function TaxiClient({
               <p className="text-slate-500 mb-6 max-w-md mx-auto">Add your first vehicle to start accepting bookings from travelers.</p>
               <button 
                 onClick={handleAddNewClick}
-                className="bg-sky-500 text-white px-6 py-2.5 rounded-lg font-medium hover:bg-sky-600 transition-colors shadow-sm"
+                className="bg-orange- text-white px-6 py-2.5 rounded-lg font-medium hover:bg-orange- transition-colors shadow-sm"
               >
                 Add Your First Vehicle
               </button>
@@ -788,25 +788,25 @@ export default function TaxiClient({
                   </div>
                 </div>
 
-                <div className="bg-sky-50 border border-sky-100 rounded-xl p-5 flex flex-col sm:flex-row items-center justify-between gap-4 mt-6 mb-2">
+                <div className="bg-orange- border border-orange- rounded-xl p-5 flex flex-col sm:flex-row items-center justify-between gap-4 mt-6 mb-2">
                   <div>
-                    <h3 className="font-bold text-sky-900 text-sm">Want to add specific routes?</h3>
-                    <p className="text-sky-700 text-xs mt-1">You can create custom routes (e.g. Srinagar Airport to Gulmarg) and set specific prices for them.</p>
+                    <h3 className="font-bold text-orange- text-sm">Want to add specific routes?</h3>
+                    <p className="text-orange- text-xs mt-1">You can create custom routes (e.g. Srinagar Airport to Gulmarg) and set specific prices for them.</p>
                   </div>
-                  <button type="button" onClick={() => setActiveTab("rates")} className="whitespace-nowrap px-4 py-2 bg-white text-sky-600 border border-sky-200 rounded-lg text-sm font-bold shadow-sm hover:bg-sky-50 transition-colors">
+                  <button type="button" onClick={() => setActiveTab("rates")} className="whitespace-nowrap px-4 py-2 bg-white text-orange- border border-orange- rounded-lg text-sm font-bold shadow-sm hover:bg-orange- transition-colors">
                     Create Custom Routes
                   </button>
                 </div>
 
                 <div className="flex items-center gap-2">
-                  <input type="checkbox" id="ac" {...register("acAvailable")} className="w-4 h-4 text-sky-500 rounded border-slate-300" />
+                  <input type="checkbox" id="ac" {...register("acAvailable")} className="w-4 h-4 text-orange- rounded border-slate-300" />
                   <label htmlFor="ac" className="text-sm font-medium text-slate-700">AC Available</label>
                 </div>
                 
                 {/* INSTANT BOOKING (FEATURE GATED) */}
-                <div className={`p-6 rounded-xl border mt-6 ${hasInstantBooking ? 'bg-sky-50 border-sky-200' : 'bg-slate-50 border-slate-200 opacity-70'}`}>
+                <div className={`p-6 rounded-xl border mt-6 ${hasInstantBooking ? 'bg-orange- border-orange-' : 'bg-slate-50 border-slate-200 opacity-70'}`}>
                   <div className="flex items-start gap-4">
-                    <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${hasInstantBooking ? 'bg-sky-500 text-white' : 'bg-slate-200 text-slate-400'}`}>
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${hasInstantBooking ? 'bg-orange- text-white' : 'bg-slate-200 text-slate-400'}`}>
                       {hasInstantBooking ? <Zap className="w-5 h-5" /> : <Lock className="w-5 h-5" />}
                     </div>
                     <div>
@@ -821,7 +821,7 @@ export default function TaxiClient({
                           type="checkbox" 
                           {...register("instantBooking")}
                           disabled={!hasInstantBooking}
-                          className="w-5 h-5 rounded text-sky-500 focus:ring-sky-500 disabled:opacity-50" 
+                          className="w-5 h-5 rounded text-orange- focus:ring-orange- disabled:opacity-50" 
                         />
                         <span className={`font-medium ${hasInstantBooking ? 'text-slate-900' : 'text-slate-400'}`}>
                           Yes, I want to enable Instant Booking
@@ -854,7 +854,7 @@ export default function TaxiClient({
                 <h2 className="text-lg font-bold text-slate-900">Your Subscription Plan</h2>
                 <p className="text-sm text-slate-500 mt-1">Upgrade your plan to unlock premium seller tools and increase visibility.</p>
               </div>
-              <div className="bg-sky-100 text-sky-800 px-3 py-1 rounded-full text-sm font-bold border border-sky-200">
+              <div className="bg-orange- text-orange- px-3 py-1 rounded-full text-sm font-bold border border-orange-">
                 Current: {subscriptionPlan}
               </div>
             </div>
@@ -866,7 +866,7 @@ export default function TaxiClient({
                 { name: "Pro", price: "₹999/mo", description: "Max out your bookings", features: ["Instant Booking", "Promotional Offers", "Featured Placement"], isPopular: false },
                 { name: "Enterprise", price: "Custom", description: "For fleet operators", features: ["API Access", "Account Manager", "Custom Pricing"], isPopular: false },
               ].map((plan) => (
-                <div key={plan.name} className={`relative rounded-2xl border-2 p-5 flex flex-col ${subscriptionPlan === plan.name ? 'border-sky-500 bg-sky-50/50' : plan.isPopular ? 'border-indigo-500 bg-indigo-50/10' : 'border-slate-100 bg-white'}`}>
+                <div key={plan.name} className={`relative rounded-2xl border-2 p-5 flex flex-col ${subscriptionPlan === plan.name ? 'border-orange- bg-orange-/50' : plan.isPopular ? 'border-indigo-500 bg-indigo-50/10' : 'border-slate-100 bg-white'}`}>
                   {plan.isPopular && <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-indigo-500 text-white text-[10px] font-bold uppercase tracking-wider py-1 px-3 rounded-full">Most Popular</div>}
                   <h3 className="font-bold text-slate-900 text-lg">{plan.name}</h3>
                   <div className="my-2">
@@ -877,7 +877,7 @@ export default function TaxiClient({
                   <ul className="space-y-2 mb-6 flex-1">
                     {plan.features.map(f => (
                       <li key={f} className="flex items-start gap-2 text-xs text-slate-600 font-medium">
-                        <CheckCircle2 className={`w-3.5 h-3.5 shrink-0 ${subscriptionPlan === plan.name ? 'text-sky-500' : 'text-slate-400'}`} /> {f}
+                        <CheckCircle2 className={`w-3.5 h-3.5 shrink-0 ${subscriptionPlan === plan.name ? 'text-orange-' : 'text-slate-400'}`} /> {f}
                       </li>
                     ))}
                   </ul>
@@ -886,7 +886,7 @@ export default function TaxiClient({
                     onClick={() => handleSimulateUpgrade(plan.name, plan.price)}
                     disabled={subscriptionPlan === plan.name}
                     className={`w-full py-2 rounded-lg text-sm font-bold transition-colors ${
-                      subscriptionPlan === plan.name ? 'bg-sky-100 text-sky-700 cursor-default' : 
+                      subscriptionPlan === plan.name ? 'bg-orange- text-orange- cursor-default' : 
                       plan.isPopular ? 'bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm' : 
                       'bg-slate-900 hover:bg-slate-800 text-white shadow-sm'
                     }`}
@@ -899,23 +899,23 @@ export default function TaxiClient({
           </div>
 
           {/* Dynamic Commission Calculator */}
-          <div className="bg-sky-50 p-8 rounded-2xl border border-sky-100">
-            <h3 className="text-xl font-bold text-sky-900 mb-6 flex items-center gap-2"><Route className="w-6 h-6" /> Dynamic Earnings Calculator</h3>
+          <div className="bg-orange- p-8 rounded-2xl border border-orange-">
+            <h3 className="text-xl font-bold text-orange- mb-6 flex items-center gap-2"><Route className="w-6 h-6" /> Dynamic Earnings Calculator</h3>
             <div className="flex flex-col md:flex-row gap-8">
               <div className="flex-1 space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-sky-800 mb-2">Select Trip Type</label>
-                  <div className="flex bg-white rounded-lg p-1 border border-sky-200">
-                    <button onClick={() => setCalcTripType("airport")} className={`flex-1 py-2 text-sm font-bold rounded-md ${calcTripType === "airport" ? 'bg-sky-500 text-white shadow-sm' : 'text-sky-700 hover:bg-sky-50'}`}>Airport (15%)</button>
-                    <button onClick={() => setCalcTripType("local")} className={`flex-1 py-2 text-sm font-bold rounded-md ${calcTripType === "local" ? 'bg-sky-500 text-white shadow-sm' : 'text-sky-700 hover:bg-sky-50'}`}>Local (12%)</button>
-                    <button onClick={() => setCalcTripType("outstation")} className={`flex-1 py-2 text-sm font-bold rounded-md ${calcTripType === "outstation" ? 'bg-sky-500 text-white shadow-sm' : 'text-sky-700 hover:bg-sky-50'}`}>Outstation (10%)</button>
+                  <label className="block text-sm font-medium text-orange- mb-2">Select Trip Type</label>
+                  <div className="flex bg-white rounded-lg p-1 border border-orange-">
+                    <button onClick={() => setCalcTripType("airport")} className={`flex-1 py-2 text-sm font-bold rounded-md ${calcTripType === "airport" ? 'bg-orange- text-white shadow-sm' : 'text-orange- hover:bg-orange-'}`}>Airport (15%)</button>
+                    <button onClick={() => setCalcTripType("local")} className={`flex-1 py-2 text-sm font-bold rounded-md ${calcTripType === "local" ? 'bg-orange- text-white shadow-sm' : 'text-orange- hover:bg-orange-'}`}>Local (12%)</button>
+                    <button onClick={() => setCalcTripType("outstation")} className={`flex-1 py-2 text-sm font-bold rounded-md ${calcTripType === "outstation" ? 'bg-orange- text-white shadow-sm' : 'text-orange- hover:bg-orange-'}`}>Outstation (10%)</button>
                   </div>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-sky-800 mb-2">Total Trip Fare</label>
+                  <label className="block text-sm font-medium text-orange- mb-2">Total Trip Fare</label>
                   <div className="relative">
                     <IndianRupee className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-                    <input type="number" value={calcFare} onChange={(e) => setCalcFare(Number(e.target.value) || 0)} className="w-full border border-sky-200 rounded-lg pl-10 pr-4 py-3 text-lg font-bold text-slate-900 outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-200" />
+                    <input type="number" value={calcFare} onChange={(e) => setCalcFare(Number(e.target.value) || 0)} className="w-full border border-orange- rounded-lg pl-10 pr-4 py-3 text-lg font-bold text-slate-900 outline-none focus:border-orange- focus:ring-2 focus:ring-orange-" />
                   </div>
                 </div>
               </div>
@@ -923,7 +923,7 @@ export default function TaxiClient({
               <div className="flex-1 bg-white p-6 rounded-xl shadow-sm border border-slate-100">
                 <div className="flex justify-between items-center">
                   <span className="font-bold text-slate-900 text-lg">Your Take-Home</span>
-                  <span className="text-2xl font-black text-sky-600">₹{calcFare.toLocaleString('en-IN')}</span>
+                  <span className="text-2xl font-black text-orange-">₹{calcFare.toLocaleString('en-IN')}</span>
                 </div>
               </div>
             </div>

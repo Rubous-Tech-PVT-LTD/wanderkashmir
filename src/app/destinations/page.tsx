@@ -62,7 +62,7 @@ export default async function DestinationsPage({
                   <Link
                     key={route.id}
                     href={`/${basePath}/${route.slug}`}
-                    className="group flex flex-col overflow-hidden rounded-2xl border border-slate-200 hover:border-[#0284c7]/30 hover:shadow-xl hover:shadow-[#0284c7]/10 bg-white transition-all duration-300 h-full"
+                    className="group flex flex-col overflow-hidden rounded-2xl border border-slate-200 hover:border-[#f97316]/30 hover:shadow-xl hover:shadow-[#f97316]/10 bg-white transition-all duration-300 h-full"
                   >
                     <div className="relative h-48 w-full overflow-hidden bg-slate-100">
                       {route.imageUrl ? (
@@ -79,13 +79,13 @@ export default async function DestinationsPage({
                       )}
                     </div>
                     <div className="p-5 flex flex-col flex-grow">
-                      <div className="text-xs font-semibold tracking-wider text-[#0284c7] mb-2 uppercase">
+                      <div className="text-xs font-semibold tracking-wider text-[#f97316] mb-2 uppercase">
                         {route.type}
                       </div>
-                      <h3 className="font-bold text-slate-900 group-hover:text-[#0284c7] transition-colors line-clamp-2 mb-3">
+                      <h3 className="font-bold text-slate-900 group-hover:text-[#f97316] transition-colors line-clamp-2 mb-3">
                         {route.title}
                       </h3>
-                      <div className="mt-auto flex items-center text-sm font-medium text-[#0284c7]">
+                      <div className="mt-auto flex items-center text-sm font-medium text-[#f97316]">
                         Read more
                         <ArrowRight className="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" />
                       </div>

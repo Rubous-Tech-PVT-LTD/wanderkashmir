@@ -83,31 +83,31 @@ export default function GuidesClient({ initialGuides }: { initialGuides: any[] }
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <label className="text-xs font-bold text-slate-500 uppercase flex items-center gap-1 mb-2"><MapPin className="w-3.5 h-3.5" /> From Location</label>
-                  <input required type="text" value={fromLocation} onChange={e => setFromLocation(e.target.value)} placeholder="e.g. Srinagar" className="w-full border-2 border-slate-200 p-3 rounded-xl focus:border-sky-500 outline-none transition-colors" />
+                  <input required type="text" value={fromLocation} onChange={e => setFromLocation(e.target.value)} placeholder="e.g. Srinagar" className="w-full border-2 border-slate-200 p-3 rounded-xl focus:border-orange- outline-none transition-colors" />
                 </div>
                 <div>
                   <label className="text-xs font-bold text-slate-500 uppercase flex items-center gap-1 mb-2"><MapPin className="w-3.5 h-3.5 text-orange-500" /> To Location</label>
-                  <input required type="text" value={toLocation} onChange={e => setToLocation(e.target.value)} placeholder="e.g. Pahalgam" className="w-full border-2 border-slate-200 p-3 rounded-xl focus:border-sky-500 outline-none transition-colors" />
+                  <input required type="text" value={toLocation} onChange={e => setToLocation(e.target.value)} placeholder="e.g. Pahalgam" className="w-full border-2 border-slate-200 p-3 rounded-xl focus:border-orange- outline-none transition-colors" />
                 </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                 <div className="md:col-span-1">
                   <label className="text-xs font-bold text-slate-500 uppercase flex items-center gap-1 mb-2"><Users className="w-3.5 h-3.5" /> No of Guides</label>
-                  <input type="number" min="1" max="10" value={noOfGuides} onChange={e => setNoOfGuides(Number(e.target.value))} className="w-full border-2 border-slate-200 p-3 rounded-xl focus:border-sky-500 outline-none transition-colors" />
+                  <input type="number" min="1" max="10" value={noOfGuides} onChange={e => setNoOfGuides(Number(e.target.value))} className="w-full border-2 border-slate-200 p-3 rounded-xl focus:border-orange- outline-none transition-colors" />
                 </div>
                 <div className="md:col-span-2">
                   <label className="text-xs font-bold text-slate-500 uppercase flex items-center gap-1 mb-2"><Calendar className="w-3.5 h-3.5" /> Date / Time</label>
                   <div className="flex gap-2">
-                    <div className="flex-1 border-2 border-slate-200 p-3 rounded-xl focus-within:border-sky-500 transition-colors bg-white">
+                    <div className="flex-1 border-2 border-slate-200 p-3 rounded-xl focus-within:border-orange- transition-colors bg-white">
                       <CustomDatePicker selected={date} onChange={setDate} minDate={new Date()} className="w-full focus:outline-none" />
                     </div>
-                    <input type="time" value={time} onChange={e => setTime(e.target.value)} className="w-32 border-2 border-slate-200 p-3 rounded-xl focus:border-sky-500 outline-none transition-colors" />
+                    <input type="time" value={time} onChange={e => setTime(e.target.value)} className="w-32 border-2 border-slate-200 p-3 rounded-xl focus:border-orange- outline-none transition-colors" />
                   </div>
                 </div>
                 <div className="md:col-span-1">
                   <label className="text-xs font-bold text-slate-500 uppercase flex items-center gap-1 mb-2"><CheckCircle2 className="w-3.5 h-3.5" /> Preference</label>
-                  <select value={preference} onChange={e => setPreference(e.target.value)} className="w-full border-2 border-slate-200 p-3 rounded-xl focus:border-sky-500 outline-none transition-colors bg-white">
+                  <select value={preference} onChange={e => setPreference(e.target.value)} className="w-full border-2 border-slate-200 p-3 rounded-xl focus:border-orange- outline-none transition-colors bg-white">
                     <option>Certified Local</option>
                     <option>Female Guide</option>
                     <option>Historian</option>
@@ -126,7 +126,7 @@ export default function GuidesClient({ initialGuides }: { initialGuides: any[] }
           <div className="text-center">
             <button 
               onClick={() => setShowGuides(!showGuides)} 
-              className="inline-flex items-center gap-2 bg-white border-2 border-slate-200 px-6 py-3 rounded-full font-bold text-slate-700 hover:border-sky-500 hover:text-sky-600 transition-colors shadow-sm"
+              className="inline-flex items-center gap-2 bg-white border-2 border-slate-200 px-6 py-3 rounded-full font-bold text-slate-700 hover:border-orange- hover:text-orange- transition-colors shadow-sm"
             >
               {showGuides ? "Hide Guide Team" : "View Our Guide Team"}
             </button>
@@ -171,7 +171,7 @@ export default function GuidesClient({ initialGuides }: { initialGuides: any[] }
                         </div>
                         <p className="text-sm text-slate-600 line-clamp-2">{guide.bio}</p>
                         <div className="pt-4 border-t border-slate-100 mt-auto flex justify-between items-center">
-                          <span className="text-xs font-bold px-3 py-1 bg-sky-50 text-sky-700 rounded-full">{guide.availability || 'Available'}</span>
+                          <span className="text-xs font-bold px-3 py-1 bg-orange- text-orange- rounded-full">{guide.availability || 'Available'}</span>
                           <span className="font-bold text-slate-900">₹{guide.price.toLocaleString("en-IN")}/day</span>
                         </div>
                       </div>

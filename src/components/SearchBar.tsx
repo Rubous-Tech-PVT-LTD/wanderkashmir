@@ -100,7 +100,7 @@ export default function SearchBar() {
               <label htmlFor="destination-input" className="block text-[11px] font-bold text-slate-800 ml-8 mb-1">Where are you going?</label>
               <div className="flex items-center gap-3 px-2">
                 {/* Icon is decorative — screen readers read the label instead */}
-                <Search className="w-4 h-4 text-slate-500 group-focus-within:text-[#0284c7] flex-shrink-0" aria-hidden="true" />
+                <Search className="w-4 h-4 text-slate-500 group-focus-within:text-[#f97316] flex-shrink-0" aria-hidden="true" />
                 <input
                   id="destination-input"
                   type="text"
@@ -143,7 +143,7 @@ export default function SearchBar() {
               <button
                 onClick={handleSearch}
                 aria-label="Search stays"
-                className="bg-[#0284c7] text-white p-3 md:px-6 md:py-3.5 rounded-xl hover:bg-[#0369a1] transition-all shadow-md flex items-center justify-center gap-2 flex-shrink-0 ml-2"
+                className="bg-[#f97316] text-white p-3 md:px-6 md:py-3.5 rounded-xl hover:bg-[#ea580c] transition-all shadow-md flex items-center justify-center gap-2 flex-shrink-0 ml-2"
               >
                 <Search className="w-[18px] h-[18px]" strokeWidth={2.5} aria-hidden="true" />
                 <span className="font-bold text-sm hidden lg:inline tracking-wide">Search</span>
@@ -158,7 +158,7 @@ export default function SearchBar() {
             <div className="flex-[1.5] w-full p-2 hover:bg-slate-50 rounded-xl transition-colors cursor-text group">
               <label htmlFor="pickup-input" className="block text-[11px] font-bold text-slate-800 ml-8 mb-1">Pick-up Location</label>
               <div className="flex items-center gap-3 px-2">
-                <MapPin className="w-4 h-4 text-slate-500 group-focus-within:text-[#0284c7] flex-shrink-0" aria-hidden="true" />
+                <MapPin className="w-4 h-4 text-slate-500 group-focus-within:text-[#f97316] flex-shrink-0" aria-hidden="true" />
                 <input
                   id="pickup-input"
                   type="text"
@@ -172,7 +172,7 @@ export default function SearchBar() {
             <div className="flex-[1.5] w-full p-2 hover:bg-slate-50 rounded-xl transition-colors cursor-text group">
               <label htmlFor="dropoff-input" className="block text-[11px] font-bold text-slate-800 ml-8 mb-1">Drop-off Location</label>
               <div className="flex items-center gap-3 px-2">
-                <MapPin className="w-4 h-4 text-slate-500 group-focus-within:text-[#0284c7] flex-shrink-0" aria-hidden="true" />
+                <MapPin className="w-4 h-4 text-slate-500 group-focus-within:text-[#f97316] flex-shrink-0" aria-hidden="true" />
                 <input
                   id="dropoff-input"
                   type="text"
@@ -192,7 +192,7 @@ export default function SearchBar() {
               <button
                 onClick={handleSearch}
                 aria-label="Search cabs"
-                className="w-full bg-[#0284c7] text-white p-3 md:px-6 md:py-3.5 rounded-xl hover:bg-[#0369a1] transition-all shadow-md flex items-center justify-center gap-2 flex-shrink-0"
+                className="w-full bg-[#f97316] text-white p-3 md:px-6 md:py-3.5 rounded-xl hover:bg-[#ea580c] transition-all shadow-md flex items-center justify-center gap-2 flex-shrink-0"
               >
                 <Search className="w-[18px] h-[18px]" strokeWidth={2.5} aria-hidden="true" />
                 <span className="font-bold text-sm hidden lg:inline tracking-wide">Search Cabs</span>
@@ -207,7 +207,7 @@ export default function SearchBar() {
             <div className="flex-[1.5] w-full p-2 hover:bg-slate-50 rounded-xl transition-colors cursor-text group">
               <label htmlFor="tour-dest-input" className="block text-[11px] font-bold text-slate-800 ml-8 mb-1">Where to?</label>
               <div className="flex items-center gap-3 px-2">
-                <Search className="w-4 h-4 text-slate-500 group-focus-within:text-[#0284c7] flex-shrink-0" aria-hidden="true" />
+                <Search className="w-4 h-4 text-slate-500 group-focus-within:text-[#f97316] flex-shrink-0" aria-hidden="true" />
                 <input
                   id="tour-dest-input"
                   type="text"
@@ -255,7 +255,7 @@ export default function SearchBar() {
               <button
                 onClick={handleSearch}
                 aria-label="Find tour packages"
-                className="bg-[#0284c7] text-white p-3 md:px-6 md:py-3.5 rounded-xl hover:bg-[#0369a1] transition-all shadow-md flex items-center justify-center gap-2 flex-shrink-0 ml-2"
+                className="bg-[#f97316] text-white p-3 md:px-6 md:py-3.5 rounded-xl hover:bg-[#ea580c] transition-all shadow-md flex items-center justify-center gap-2 flex-shrink-0 ml-2"
               >
                 <Search className="w-[18px] h-[18px]" strokeWidth={2.5} aria-hidden="true" />
                 <span className="font-bold text-sm hidden lg:inline tracking-wide">Find Tours</span>
@@ -270,7 +270,7 @@ export default function SearchBar() {
             <div className="flex-[1.5] w-full p-2 hover:bg-slate-50 rounded-xl transition-colors cursor-text group">
               <label htmlFor="guide-dest-input" className="block text-[11px] font-bold text-slate-800 ml-8 mb-1">Where?</label>
               <div className="flex items-center gap-3 px-2">
-                <MapPin className="w-4 h-4 text-slate-500 group-focus-within:text-[#0284c7] flex-shrink-0" aria-hidden="true" />
+                <MapPin className="w-4 h-4 text-slate-500 group-focus-within:text-[#f97316] flex-shrink-0" aria-hidden="true" />
                 <input
                   id="guide-dest-input"
                   type="text"
@@ -292,7 +292,7 @@ export default function SearchBar() {
               <button
                 onClick={handleSearch}
                 aria-label="Find local guides"
-                className="w-full bg-[#0284c7] text-white p-3 md:px-6 md:py-3.5 rounded-xl hover:bg-[#0369a1] transition-all shadow-md flex items-center justify-center gap-2 flex-shrink-0"
+                className="w-full bg-[#f97316] text-white p-3 md:px-6 md:py-3.5 rounded-xl hover:bg-[#ea580c] transition-all shadow-md flex items-center justify-center gap-2 flex-shrink-0"
               >
                 <Search className="w-[18px] h-[18px]" strokeWidth={2.5} aria-hidden="true" />
                 <span className="font-bold text-sm hidden lg:inline tracking-wide">Find Guides</span>

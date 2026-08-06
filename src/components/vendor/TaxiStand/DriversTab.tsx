@@ -83,7 +83,7 @@ export default function DriversTab({ drivers }: { drivers: any[] }) {
         {!isAdding && (
           <button
             onClick={handleAddNewClick}
-            className="px-4 py-2 bg-sky-600 text-white rounded-xl text-sm font-bold flex items-center gap-2 hover:bg-sky-700 transition-colors"
+            className="px-4 py-2 bg-orange- text-white rounded-xl text-sm font-bold flex items-center gap-2 hover:bg-orange- transition-colors"
           >
             <Plus className="w-4 h-4" /> Add Driver
           </button>
@@ -105,7 +105,7 @@ export default function DriversTab({ drivers }: { drivers: any[] }) {
                   required
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className="pl-10 w-full rounded-xl border border-slate-200 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-sky-500"
+                  className="pl-10 w-full rounded-xl border border-slate-200 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-orange-"
                   placeholder="John Doe"
                 />
               </div>
@@ -121,7 +121,7 @@ export default function DriversTab({ drivers }: { drivers: any[] }) {
                   required
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
-                  className="pl-10 w-full rounded-xl border border-slate-200 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-sky-500"
+                  className="pl-10 w-full rounded-xl border border-slate-200 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-orange-"
                   placeholder="9876543210"
                 />
               </div>
@@ -133,7 +133,7 @@ export default function DriversTab({ drivers }: { drivers: any[] }) {
                 required
                 value={drivingLicense}
                 onChange={(e) => setDrivingLicense(e.target.value)}
-                className="w-full rounded-xl border border-slate-200 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-sky-500"
+                className="w-full rounded-xl border border-slate-200 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-orange-"
                 placeholder="DL-XXXX-XXXXXXX"
               />
             </div>
@@ -149,7 +149,7 @@ export default function DriversTab({ drivers }: { drivers: any[] }) {
             <button
               type="submit"
               disabled={loading}
-              className="px-6 py-3 rounded-xl bg-sky-600 text-white font-bold hover:bg-sky-700 transition-colors flex items-center gap-2 disabled:opacity-50"
+              className="px-6 py-3 rounded-xl bg-orange- text-white font-bold hover:bg-orange- transition-colors flex items-center gap-2 disabled:opacity-50"
             >
               <Save className="w-5 h-5" />
               {loading ? "Saving..." : "Save Driver"}
@@ -160,8 +160,8 @@ export default function DriversTab({ drivers }: { drivers: any[] }) {
 
       {drivers.length === 0 && !isAdding ? (
         <div className="bg-white rounded-3xl border border-slate-200 p-12 text-center">
-          <div className="w-20 h-20 bg-sky-50 rounded-full flex items-center justify-center mx-auto mb-6">
-            <User className="w-10 h-10 text-sky-500" />
+          <div className="w-20 h-20 bg-orange- rounded-full flex items-center justify-center mx-auto mb-6">
+            <User className="w-10 h-10 text-orange-" />
           </div>
           <h3 className="text-xl font-bold text-slate-900 mb-2">No Drivers Added</h3>
           <p className="text-slate-500 max-w-md mx-auto mb-8">
@@ -169,7 +169,7 @@ export default function DriversTab({ drivers }: { drivers: any[] }) {
           </p>
           <button
             onClick={() => setIsAdding(true)}
-            className="px-8 py-4 bg-sky-600 text-white rounded-2xl font-bold hover:bg-sky-700 transition-all shadow-lg shadow-sky-600/20"
+            className="px-8 py-4 bg-orange- text-white rounded-2xl font-bold hover:bg-orange- transition-all shadow-lg shadow-orange-/20"
           >
             Add First Driver
           </button>
@@ -179,7 +179,7 @@ export default function DriversTab({ drivers }: { drivers: any[] }) {
           {drivers.map(driver => (
             <div key={driver.id} className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm relative overflow-hidden group">
               <div className="flex items-center gap-4 mb-4">
-                <div className="w-12 h-12 bg-sky-100 rounded-full flex items-center justify-center text-sky-600 font-bold text-lg">
+                <div className="w-12 h-12 bg-orange- rounded-full flex items-center justify-center text-orange- font-bold text-lg">
                   {driver.name.charAt(0)}
                 </div>
                 <div>
@@ -198,7 +198,7 @@ export default function DriversTab({ drivers }: { drivers: any[] }) {
                   {driver.status}
                 </span>
                 <div className="flex items-center gap-2">
-                  <button onClick={() => handleEditClick(driver)} className="text-slate-500 hover:text-sky-600 transition-colors">
+                  <button onClick={() => handleEditClick(driver)} className="text-slate-500 hover:text-orange- transition-colors">
                     <Edit className="w-4 h-4" />
                   </button>
                   <button onClick={() => handleDelete(driver.id)} className="text-slate-500 hover:text-red-600 transition-colors">

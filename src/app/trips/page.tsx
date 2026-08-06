@@ -40,8 +40,8 @@ export default async function TripsPage() {
 
         {bookings.length === 0 ? (
           <div className="bg-white rounded-2xl border border-slate-100 p-12 text-center shadow-sm">
-            <div className="w-20 h-20 bg-sky-50 rounded-full flex items-center justify-center mx-auto mb-6">
-              <Calendar className="w-10 h-10 text-sky-500" />
+            <div className="w-20 h-20 bg-orange- rounded-full flex items-center justify-center mx-auto mb-6">
+              <Calendar className="w-10 h-10 text-orange-" />
             </div>
             <h2 className="text-xl font-bold text-slate-900 mb-2">No trips booked yet</h2>
             <p className="text-slate-500 mb-8 max-w-md mx-auto">
@@ -124,7 +124,7 @@ export default async function TripsPage() {
 
                     <div className="flex gap-3">
                       {booking.propertyId && (
-                        <Link href={`/stays/${booking.propertyId}`} className="text-sky-600 hover:text-sky-700 text-sm font-bold bg-sky-50 px-4 py-2 rounded-lg transition-colors">
+                        <Link href={`/stays/${booking.propertyId}`} className="text-orange- hover:text-orange- text-sm font-bold bg-orange- px-4 py-2 rounded-lg transition-colors">
                           View Property
                         </Link>
                       )}

@@ -239,7 +239,7 @@ export default function StaysClient({ initialProperties, initialQuery = "" }: { 
                 <img src="/images/map-placeholder.png" alt="Map View" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" onError={(e) => { e.currentTarget.src = 'https://images.unsplash.com/photo-1524661135-423995f22d0b?auto=format&fit=crop&q=80&w=800' }} />
                 <div className="absolute inset-0 bg-white/20 group-hover:bg-transparent transition-colors"></div>
                 <div className="absolute inset-0 flex items-center justify-center p-4">
-                  <button className="bg-white text-sky-600 font-bold px-6 py-2 rounded-xl shadow-lg border border-slate-100 w-full hover:bg-sky-50 transition-colors flex items-center justify-center gap-2">
+                  <button className="bg-white text-orange- font-bold px-6 py-2 rounded-xl shadow-lg border border-slate-100 w-full hover:bg-orange- transition-colors flex items-center justify-center gap-2">
                     EXPLORE ON MAP <MapPin className="w-4 h-4" />
                   </button>
                 </div>
@@ -252,42 +252,42 @@ export default function StaysClient({ initialProperties, initialQuery = "" }: { 
                 <div className="space-y-4">
                   <label className="flex items-center justify-between cursor-pointer group">
                     <div className="flex items-center gap-3">
-                      <input type="checkbox" className="w-4 h-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500" />
+                      <input type="checkbox" className="w-4 h-4 rounded border-slate-300 text-orange- focus:ring-orange-" />
                       <span className="text-slate-600 group-hover:text-slate-900 transition-colors">Rush Deal</span>
                     </div>
                   </label>
                   
                   <label className="flex items-center justify-between cursor-pointer group">
                     <div className="flex items-center gap-3">
-                      <input type="checkbox" className="w-4 h-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500" />
+                      <input type="checkbox" className="w-4 h-4 rounded border-slate-300 text-orange- focus:ring-orange-" />
                       <span className="text-slate-600 group-hover:text-slate-900 transition-colors">Last Minute Deals</span>
                     </div>
                   </label>
                   
                   <label className="flex items-center justify-between cursor-pointer group">
                     <div className="flex items-center gap-3">
-                      <input type="checkbox" className="w-4 h-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500" />
+                      <input type="checkbox" className="w-4 h-4 rounded border-slate-300 text-orange- focus:ring-orange-" />
                       <span className="text-slate-600 group-hover:text-slate-900 transition-colors">Free Cancellation</span>
                     </div>
                   </label>
                   
                   <label className="flex items-center justify-between cursor-pointer group">
                     <div className="flex items-center gap-3">
-                      <input type="checkbox" className="w-4 h-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500" />
+                      <input type="checkbox" className="w-4 h-4 rounded border-slate-300 text-orange- focus:ring-orange-" />
                       <span className="text-slate-600 group-hover:text-slate-900 transition-colors">Breakfast Included</span>
                     </div>
                   </label>
                   
                   <label className="flex items-center justify-between cursor-pointer group">
                     <div className="flex items-center gap-3">
-                      <input type="checkbox" className="w-4 h-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500" />
+                      <input type="checkbox" className="w-4 h-4 rounded border-slate-300 text-orange- focus:ring-orange-" />
                       <span className="text-slate-600 group-hover:text-slate-900 transition-colors leading-tight">Breakfast + Lunch/Dinner<br/>Included</span>
                     </div>
                   </label>
                 </div>
                 
                 <div className="mt-5 pt-4 border-t border-slate-100">
-                  <button className="text-sky-600 font-semibold text-sm hover:text-sky-700 transition-colors">
+                  <button className="text-orange- font-semibold text-sm hover:text-orange- transition-colors">
                     Show 6 more
                   </button>
                 </div>
@@ -299,7 +299,7 @@ export default function StaysClient({ initialProperties, initialQuery = "" }: { 
           {/* ─── LISTINGS ────────────────────────── */}
           <div className="flex-1 space-y-6">
             {filtered.map((property) => (
-              <div key={property.id} className="bg-white border border-sky-200 rounded-lg shadow-sm hover:shadow-md transition-shadow flex flex-col md:flex-row md:h-[230px] overflow-hidden">
+              <div key={property.id} className="bg-white border border-orange- rounded-lg shadow-sm hover:shadow-md transition-shadow flex flex-col md:flex-row md:h-[230px] overflow-hidden">
                 
                 {/* Left: Image */}
                 <div className="w-full md:w-[260px] md:min-w-[260px] h-64 md:h-full relative flex-shrink-0 group">
@@ -335,7 +335,7 @@ export default function StaysClient({ initialProperties, initialQuery = "" }: { 
                   <div>
                     <div className="flex items-center gap-2 mb-1">
                       <Link href={`/stays/${property.id}`}>
-                        <h3 className="text-xl font-bold text-slate-900 cursor-pointer hover:text-sky-600 transition-colors">
+                        <h3 className="text-xl font-bold text-slate-900 cursor-pointer hover:text-orange- transition-colors">
                           {property.name}
                         </h3>
                       </Link>
@@ -351,7 +351,7 @@ export default function StaysClient({ initialProperties, initialQuery = "" }: { 
                     
                     <p className="text-sm text-slate-600 mb-3">
                       <Link href={`/stays/${property.id}`}>
-                        <span className="text-sky-600 hover:underline cursor-pointer">{property.location}</span>
+                        <span className="text-orange- hover:underline cursor-pointer">{property.location}</span>
                       </Link> 
                       <span className="text-slate-300 mx-1">|</span> 
                       {property.type === "Houseboat" ? "Scenic lake views" : "Prime location in the valley"}
@@ -400,7 +400,7 @@ export default function StaysClient({ initialProperties, initialQuery = "" }: { 
                   {/* Rating Top Right */}
                   <div className="flex flex-col items-end">
                     <div className="flex items-center gap-2 mb-1">
-                      <span className="text-sm font-bold text-sky-800">Very Good</span>
+                      <span className="text-sm font-bold text-orange-">Very Good</span>
                       <div className="bg-blue-700 text-white text-sm font-bold px-2 py-1 rounded">
                         {property.rating}
                       </div>
@@ -416,7 +416,7 @@ export default function StaysClient({ initialProperties, initialQuery = "" }: { 
                     <p className="text-xs text-slate-500 mt-1">+ ₹ {Math.round(property.price * 0.12).toLocaleString("en-IN")} taxes & fees</p>
                     <p className="text-xs text-slate-500 mb-4">Per Night</p>
                     
-                    <Link href={`/stays/${property.id}`} className="text-sm font-bold text-sky-500 hover:text-sky-600 hover:underline">
+                    <Link href={`/stays/${property.id}`} className="text-sm font-bold text-orange- hover:text-orange- hover:underline">
                       View Details & Book Now &rarr;
                     </Link>
                   </div>

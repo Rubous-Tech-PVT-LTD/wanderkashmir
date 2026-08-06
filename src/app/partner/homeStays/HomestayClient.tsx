@@ -355,7 +355,7 @@ export default function HomestayClient({ vendorProfileId, bookings = [], propert
           <div className="flex items-center gap-3">
             <h1 className="text-3xl font-bold text-slate-900 tracking-tight">{vendorName || "Homestay"} Dashboard</h1>
             {subscriptionPlan !== "Free" && (
-              <span className="bg-gradient-to-r from-sky-200 to-sky-400 text-sky-900 text-xs font-bold px-3 py-1 rounded-full flex items-center gap-1 uppercase tracking-wider shadow-sm">
+              <span className="bg-gradient-to-r from-orange- to-orange- text-orange- text-xs font-bold px-3 py-1 rounded-full flex items-center gap-1 uppercase tracking-wider shadow-sm">
                 <Award className="w-4 h-4" /> {subscriptionPlan} Host
               </span>
             )}
@@ -387,7 +387,7 @@ export default function HomestayClient({ vendorProfileId, bookings = [], propert
               ? 'bg-slate-200 text-slate-400 cursor-not-allowed' 
               : hasReachedLimit 
                 ? 'bg-orange-100 text-orange-700 hover:bg-orange-200' 
-                : 'bg-sky-500 text-white hover:bg-sky-600'
+                : 'bg-orange- text-white hover:bg-orange-'
           }`}
         >
           <Plus className="w-5 h-5" />
@@ -425,20 +425,20 @@ export default function HomestayClient({ vendorProfileId, bookings = [], propert
               }
             }}
             className={`pb-4 text-sm font-semibold capitalize transition-colors relative ${
-              activeTab === tab ? "text-sky-600" : "text-slate-500 hover:text-slate-800"
+              activeTab === tab ? "text-orange-" : "text-slate-500 hover:text-slate-800"
             }`}
           >
             {tab}
-            {activeTab === tab && <span className="absolute bottom-0 left-0 w-full h-0.5 bg-sky-500 rounded-t-full" />}
+            {activeTab === tab && <span className="absolute bottom-0 left-0 w-full h-0.5 bg-orange- rounded-t-full" />}
           </button>
         ))}
       </div>
 
       {activeTab === "financials" && (
         <div className="space-y-8">
-          <div className="bg-sky-50 border border-sky-100 rounded-2xl p-6">
-            <h2 className="text-xl font-bold text-sky-900 mb-2">Welcome Homestay Host!</h2>
-            <p className="text-sky-800">You enjoy our special lowest commission tier of 8% to help grow local tourism. Choose a subscription plan to boost visibility.</p>
+          <div className="bg-orange- border border-orange- rounded-2xl p-6">
+            <h2 className="text-xl font-bold text-orange- mb-2">Welcome Homestay Host!</h2>
+            <p className="text-orange-">You enjoy our special lowest commission tier of 8% to help grow local tourism. Choose a subscription plan to boost visibility.</p>
           </div>
 
           <div>
@@ -448,10 +448,10 @@ export default function HomestayClient({ vendorProfileId, bookings = [], propert
                 const isActive = subscriptionPlan === tier.name;
                 
                 return (
-                  <div key={tier.name} className={`bg-white rounded-2xl border relative ${isActive ? 'border-sky-500 shadow-md ring-4 ring-sky-50' : tier.isPopular ? 'border-sky-500 shadow-md' : 'border-slate-200 shadow-sm'} p-6 flex flex-col transition-all`}>
-                    {tier.isPopular && !isActive && <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-sky-500 text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider">Most Popular</span>}
+                  <div key={tier.name} className={`bg-white rounded-2xl border relative ${isActive ? 'border-orange- shadow-md ring-4 ring-orange-' : tier.isPopular ? 'border-orange- shadow-md' : 'border-slate-200 shadow-sm'} p-6 flex flex-col transition-all`}>
+                    {tier.isPopular && !isActive && <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-orange- text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider">Most Popular</span>}
                     {isActive && (
-                      <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-sky-500 text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider flex items-center gap-1">
+                      <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-orange- text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider flex items-center gap-1">
                         <CheckCircle2 className="w-3 h-3" /> Active Plan
                       </span>
                     )}
@@ -463,7 +463,7 @@ export default function HomestayClient({ vendorProfileId, bookings = [], propert
                     <ul className="space-y-3 mb-8 flex-1">
                       {tier.features.map((feature, i) => (
                         <li key={i} className="flex items-start gap-2 text-sm text-slate-700">
-                          <CheckCircle2 className="w-5 h-5 text-sky-500 shrink-0" />
+                          <CheckCircle2 className="w-5 h-5 text-orange- shrink-0" />
                           <span>{feature}</span>
                         </li>
                       ))}
@@ -472,7 +472,7 @@ export default function HomestayClient({ vendorProfileId, bookings = [], propert
                       onClick={() => handleSimulateUpgrade(tier.name as SubscriptionPlan, tier.price)}
                       disabled={isActive || tier.name === "Free"}
                       className={`w-full py-2.5 rounded-lg font-bold transition-colors ${
-                        isActive ? 'bg-sky-50 text-sky-600 border border-sky-200 cursor-default' : tier.name === 'Free' ? 'bg-slate-100 text-slate-400 cursor-not-allowed' : 'bg-slate-900 text-white hover:bg-slate-800 shadow-sm hover:shadow-md'
+                        isActive ? 'bg-orange- text-orange- border border-orange- cursor-default' : tier.name === 'Free' ? 'bg-slate-100 text-slate-400 cursor-not-allowed' : 'bg-slate-900 text-white hover:bg-slate-800 shadow-sm hover:shadow-md'
                       }`}
                     >
                       {isActive ? "Current Plan" : "Upgrade Now"}
@@ -535,7 +535,7 @@ export default function HomestayClient({ vendorProfileId, bookings = [], propert
                     </div>
                     <div className="text-right">
                       <p className="font-bold text-slate-900 text-lg">₹{prop.pricePerNight} <span className="text-sm font-normal text-slate-500">/ night</span></p>
-                      <p className="text-xs font-semibold text-sky-600 mt-1">Up to {prop.totalRooms * 2} Guests</p>
+                      <p className="text-xs font-semibold text-orange- mt-1">Up to {prop.totalRooms * 2} Guests</p>
                       <div className="flex items-center justify-end gap-2 mt-2">
                         {!prop.isApproved ? (
                           prop.status === "REJECTED" ? (
@@ -554,7 +554,7 @@ export default function HomestayClient({ vendorProfileId, bookings = [], propert
                         ) : (
                           <span className="inline-block bg-emerald-100 text-emerald-700 text-xs font-bold px-2 py-1 rounded-full">Live</span>
                         )}
-                        <button onClick={() => handleEdit(prop)} className="p-1.5 text-slate-400 hover:text-sky-600 hover:bg-sky-50 rounded-lg transition-colors" title="Edit Property">
+                        <button onClick={() => handleEdit(prop)} className="p-1.5 text-slate-400 hover:text-orange- hover:bg-orange- rounded-lg transition-colors" title="Edit Property">
                           <Edit className="w-4 h-4" />
                         </button>
                         <button onClick={() => handleDelete(prop.id)} className="p-1.5 text-slate-400 hover:text-orange-600 hover:bg-orange-50 rounded-lg transition-colors" title="Delete Property">
@@ -572,7 +572,7 @@ export default function HomestayClient({ vendorProfileId, bookings = [], propert
           <div className={`relative bg-white rounded-2xl shadow-sm border border-slate-200 p-6 overflow-hidden mt-8 ${!hasAnalytics ? 'min-h-[350px] bg-slate-50 flex flex-col' : ''}`}>
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
               <div className="flex items-center gap-2">
-                <LineChartIcon className="w-6 h-6 text-sky-500" />
+                <LineChartIcon className="w-6 h-6 text-orange-" />
                 <h2 className="text-xl font-bold text-slate-900">Advanced Analytics</h2>
               </div>
               {hasAnalytics && (
@@ -597,18 +597,18 @@ export default function HomestayClient({ vendorProfileId, bookings = [], propert
                   </div>
                   <h3 className="text-2xl font-bold text-slate-900 mb-2">Analytics Locked</h3>
                   <p className="text-slate-600 max-w-md mb-6">Upgrade to the Growth Pro or Enterprise plan to view detailed conversion rates, customer demographics, and search appearances.</p>
-                  <button onClick={() => setActiveTab("financials")} className="bg-sky-500 text-white px-6 py-2.5 rounded-lg font-bold hover:bg-sky-600 transition-colors shadow-sm">
+                  <button onClick={() => setActiveTab("financials")} className="bg-orange- text-white px-6 py-2.5 rounded-lg font-bold hover:bg-orange- transition-colors shadow-sm">
                     View Upgrade Plans
                   </button>
                 </div>
                 {/* Fake blurred background to give it shape */}
                 <div className="flex-1 opacity-20 pointer-events-none mt-4 flex items-end gap-2 px-8">
-                  <div className="w-1/6 h-24 bg-sky-200 rounded-t-lg"></div>
-                  <div className="w-1/6 h-32 bg-sky-300 rounded-t-lg"></div>
-                  <div className="w-1/6 h-16 bg-sky-200 rounded-t-lg"></div>
-                  <div className="w-1/6 h-40 bg-sky-400 rounded-t-lg"></div>
-                  <div className="w-1/6 h-28 bg-sky-300 rounded-t-lg"></div>
-                  <div className="w-1/6 h-48 bg-sky-500 rounded-t-lg"></div>
+                  <div className="w-1/6 h-24 bg-orange- rounded-t-lg"></div>
+                  <div className="w-1/6 h-32 bg-orange- rounded-t-lg"></div>
+                  <div className="w-1/6 h-16 bg-orange- rounded-t-lg"></div>
+                  <div className="w-1/6 h-40 bg-orange- rounded-t-lg"></div>
+                  <div className="w-1/6 h-28 bg-orange- rounded-t-lg"></div>
+                  <div className="w-1/6 h-48 bg-orange- rounded-t-lg"></div>
                 </div>
               </>
             )}
@@ -618,7 +618,7 @@ export default function HomestayClient({ vendorProfileId, bookings = [], propert
               return (
               <>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8 mt-4">
-                  <button onClick={() => setChartMetric("views")} className={`p-4 rounded-xl border-2 transition-all text-left ${chartMetric === "views" ? 'border-sky-500 bg-sky-50' : 'border-slate-100 bg-white hover:border-slate-200'}`}>
+                  <button onClick={() => setChartMetric("views")} className={`p-4 rounded-xl border-2 transition-all text-left ${chartMetric === "views" ? 'border-orange- bg-orange-' : 'border-slate-100 bg-white hover:border-slate-200'}`}>
                     <div className="text-slate-500 text-sm font-medium mb-1">Profile Views</div>
                     <div className="text-2xl font-black text-slate-900">{totalViews.toLocaleString()}</div>
                     <div className="text-xs text-emerald-600 font-bold mt-2 flex items-center gap-1">+{growthViews}%</div>
@@ -771,7 +771,7 @@ export default function HomestayClient({ vendorProfileId, bookings = [], propert
                 </a>
                 
                 <button onClick={() => toast.success("Help Center opening soon!")} className="bg-white/10 hover:bg-white/20 transition-colors p-4 rounded-xl flex items-center gap-3 border border-white/5 text-left">
-                  <div className="w-10 h-10 bg-sky-500 rounded-full flex items-center justify-center shrink-0 shadow-sm">
+                  <div className="w-10 h-10 bg-orange- rounded-full flex items-center justify-center shrink-0 shadow-sm">
                     <BookOpen className="w-5 h-5 text-white" />
                   </div>
                   <div>
@@ -847,7 +847,7 @@ export default function HomestayClient({ vendorProfileId, bookings = [], propert
             <div className="bg-slate-900 rounded-2xl p-6 shadow-sm border border-slate-800 mt-6 text-white">
               <div className="flex items-center gap-3 mb-6">
                 <div className="w-12 h-12 bg-white/10 rounded-xl flex items-center justify-center">
-                  <Lock className="w-6 h-6 text-sky-400" />
+                  <Lock className="w-6 h-6 text-orange-" />
                 </div>
                 <div>
                   <h2 className="text-xl font-bold">Enterprise API & Integrations</h2>
@@ -861,7 +861,7 @@ export default function HomestayClient({ vendorProfileId, bookings = [], propert
                     <h3 className="font-bold text-sm">REST API Access Keys</h3>
                     <p className="text-xs text-slate-400 mt-0.5">Generate tokens for custom integrations</p>
                   </div>
-                  <button onClick={() => toast.success("API Keys generated and sent to your email!")} className="bg-sky-500 hover:bg-sky-600 text-white px-4 py-2 text-sm font-bold rounded-lg transition-colors">Generate</button>
+                  <button onClick={() => toast.success("API Keys generated and sent to your email!")} className="bg-orange- hover:bg-orange- text-white px-4 py-2 text-sm font-bold rounded-lg transition-colors">Generate</button>
                 </div>
                 
                 <div className="bg-white/5 rounded-xl p-4 border border-white/10 flex justify-between items-center">
@@ -910,7 +910,7 @@ export default function HomestayClient({ vendorProfileId, bookings = [], propert
                   <input 
                     type="text" 
                     {...register("name")}
-                    className={`w-full border rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-sky-500/20 ${errors.name ? 'border-orange-500 focus:border-orange-500' : 'border-slate-200 focus:border-sky-500'}`} 
+                    className={`w-full border rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-orange-/20 ${errors.name ? 'border-orange-500 focus:border-orange-500' : 'border-slate-200 focus:border-orange-'}`} 
                     placeholder="e.g. Ali's Heritage House" 
                   />
                   {errors.name && <p className="text-orange-500 text-xs mt-1 font-medium">{errors.name.message}</p>}
@@ -921,7 +921,7 @@ export default function HomestayClient({ vendorProfileId, bookings = [], propert
                   <textarea 
                     rows={4} 
                     {...register("description")}
-                    className={`w-full border rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-sky-500/20 ${errors.description ? 'border-orange-500 focus:border-orange-500' : 'border-slate-200 focus:border-sky-500'}`} 
+                    className={`w-full border rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-orange-/20 ${errors.description ? 'border-orange-500 focus:border-orange-500' : 'border-slate-200 focus:border-orange-'}`} 
                     placeholder="e.g., Experience authentic Kashmiri hospitality at our homestay in Pahalgam. Enjoy home-cooked Wazwan, mountain views, and cozy rooms. Book your perfect Kashmir stay today..." 
                   />
                   {errors.description && <p className="text-orange-500 text-xs mt-1 font-medium">{errors.description.message}</p>}
@@ -933,7 +933,7 @@ export default function HomestayClient({ vendorProfileId, bookings = [], propert
                   <input 
                     type="text" 
                     {...register("googlePlaceId")}
-                    className={`w-full border rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-sky-500/20 border-slate-200 focus:border-sky-500`} 
+                    className={`w-full border rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-orange-/20 border-slate-200 focus:border-orange-`} 
                     placeholder="e.g. ChIJN1t_tDeuEmsRUsoyG83frY4" 
                   />
                 </div>
@@ -994,7 +994,7 @@ export default function HomestayClient({ vendorProfileId, bookings = [], propert
                             setSelectedAmenities(prev => prev.filter(a => a !== amenity));
                           }
                         }}
-                        className="w-4 h-4 rounded text-sky-500 focus:ring-sky-500 accent-sky-500"
+                        className="w-4 h-4 rounded text-orange- focus:ring-orange- accent-orange-"
                       />
                       <span className="text-sm font-medium text-slate-700">{amenity}</span>
                     </label>
@@ -1013,7 +1013,7 @@ export default function HomestayClient({ vendorProfileId, bookings = [], propert
                       <input 
                         type="number" 
                         {...register("basePrice", { valueAsNumber: true })}
-                        className={`w-full border rounded-lg pl-10 pr-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-sky-500/20 bg-white ${errors.basePrice ? 'border-orange-500 focus:border-orange-500' : 'border-slate-200 focus:border-sky-500'}`} 
+                        className={`w-full border rounded-lg pl-10 pr-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-orange-/20 bg-white ${errors.basePrice ? 'border-orange-500 focus:border-orange-500' : 'border-slate-200 focus:border-orange-'}`} 
                         placeholder="1500" 
                       />
                     </div>
@@ -1025,7 +1025,7 @@ export default function HomestayClient({ vendorProfileId, bookings = [], propert
                       <input 
                         type="checkbox"
                         {...register("breakfastIncluded")}
-                        className="w-5 h-5 rounded border-slate-300 text-sky-600 focus:ring-sky-500"
+                        className="w-5 h-5 rounded border-slate-300 text-orange- focus:ring-orange-"
                       />
                       <span className="font-medium text-slate-700">Breakfast Included</span>
                     </label>
@@ -1033,7 +1033,7 @@ export default function HomestayClient({ vendorProfileId, bookings = [], propert
                       <input 
                         type="checkbox"
                         {...register("dinnerIncluded")}
-                        className="w-5 h-5 rounded border-slate-300 text-sky-600 focus:ring-sky-500"
+                        className="w-5 h-5 rounded border-slate-300 text-orange- focus:ring-orange-"
                       />
                       <span className="font-medium text-slate-700">Dinner Included</span>
                     </label>
@@ -1049,7 +1049,7 @@ export default function HomestayClient({ vendorProfileId, bookings = [], propert
                     <input 
                       type="text" 
                       {...register("location")}
-                      className={`w-full border rounded-lg pl-10 pr-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-sky-500/20 ${errors.location ? 'border-orange-500 focus:border-orange-500' : 'border-slate-200 focus:border-sky-500'}`} 
+                      className={`w-full border rounded-lg pl-10 pr-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-orange-/20 ${errors.location ? 'border-orange-500 focus:border-orange-500' : 'border-slate-200 focus:border-orange-'}`} 
                       placeholder="Boulevard Road, Dal Lake" 
                     />
                   </div>
@@ -1060,7 +1060,7 @@ export default function HomestayClient({ vendorProfileId, bookings = [], propert
                   <input 
                     type="number" 
                     {...register("maxGuests", { valueAsNumber: true })}
-                    className={`w-full border rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-sky-500/20 ${errors.maxGuests ? 'border-orange-500 focus:border-orange-500' : 'border-slate-200 focus:border-sky-500'}`} 
+                    className={`w-full border rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-orange-/20 ${errors.maxGuests ? 'border-orange-500 focus:border-orange-500' : 'border-slate-200 focus:border-orange-'}`} 
                     placeholder="4" 
                   />
                   {errors.maxGuests && <p className="text-orange-500 text-xs mt-1 font-medium">{errors.maxGuests.message}</p>}
@@ -1068,9 +1068,9 @@ export default function HomestayClient({ vendorProfileId, bookings = [], propert
               </div>
 
               {/* ROOM TYPES MANAGEMENT HELPER */}
-              <div className="bg-sky-50 p-6 rounded-xl border border-sky-200">
+              <div className="bg-orange- p-6 rounded-xl border border-orange-">
                 <div className="flex items-start gap-4">
-                  <div className="w-10 h-10 bg-sky-500 rounded-full flex items-center justify-center shrink-0">
+                  <div className="w-10 h-10 bg-orange- rounded-full flex items-center justify-center shrink-0">
                     <Building2 className="w-5 h-5 text-white" />
                   </div>
                   <div className="w-full">
@@ -1081,12 +1081,12 @@ export default function HomestayClient({ vendorProfileId, bookings = [], propert
                     {editingId ? (
                       <Link 
                         href={`/partner/hotel/rooms/${editingId}`} 
-                        className="inline-flex items-center gap-2 bg-sky-600 text-white px-4 py-2 rounded-lg font-bold shadow-sm hover:bg-sky-700 transition-colors"
+                        className="inline-flex items-center gap-2 bg-orange- text-white px-4 py-2 rounded-lg font-bold shadow-sm hover:bg-orange- transition-colors"
                       >
                         <CalendarIcon className="w-4 h-4" /> Go to Room Types & Calendar
                       </Link>
                     ) : (
-                      <span className="inline-block bg-sky-100 text-sky-700 px-4 py-2 rounded-lg text-sm font-bold opacity-70">
+                      <span className="inline-block bg-orange- text-orange- px-4 py-2 rounded-lg text-sm font-bold opacity-70">
                         Please publish/save this property first to unlock Room Management
                       </span>
                     )}
@@ -1095,9 +1095,9 @@ export default function HomestayClient({ vendorProfileId, bookings = [], propert
               </div>
 
               {/* INSTANT BOOKING (FEATURE GATED) */}
-              <div className={`p-6 rounded-xl border ${hasInstantBooking ? 'bg-sky-50 border-sky-200' : 'bg-slate-50 border-slate-200 opacity-70'}`}>
+              <div className={`p-6 rounded-xl border ${hasInstantBooking ? 'bg-orange- border-orange-' : 'bg-slate-50 border-slate-200 opacity-70'}`}>
                 <div className="flex items-start gap-4">
-                  <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${hasInstantBooking ? 'bg-sky-500 text-white' : 'bg-slate-200 text-slate-400'}`}>
+                  <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${hasInstantBooking ? 'bg-orange- text-white' : 'bg-slate-200 text-slate-400'}`}>
                     {hasInstantBooking ? <Zap className="w-5 h-5" /> : <Lock className="w-5 h-5" />}
                   </div>
                   <div>
@@ -1112,7 +1112,7 @@ export default function HomestayClient({ vendorProfileId, bookings = [], propert
                         type="checkbox" 
                         {...register("instantBooking")}
                         disabled={!hasInstantBooking}
-                        className="w-5 h-5 rounded text-sky-500 focus:ring-sky-500 disabled:opacity-50" 
+                        className="w-5 h-5 rounded text-orange- focus:ring-orange- disabled:opacity-50" 
                       />
                       <span className={`font-medium ${hasInstantBooking ? 'text-slate-900' : 'text-slate-400'}`}>
                         Yes, I want to enable Instant Booking

@@ -189,7 +189,7 @@ export default function CheckoutClient({
                     localStorage.setItem("wk_guest_name", e.target.value);
                   }}
                   placeholder="e.g. John Doe"
-                  className="w-full border border-slate-200 rounded-xl p-3 focus:ring-2 focus:ring-sky-500 outline-none"
+                  className="w-full border border-slate-200 rounded-xl p-3 focus:ring-2 focus:ring-orange- outline-none"
                 />
               </div>
               <div>
@@ -202,7 +202,7 @@ export default function CheckoutClient({
                     localStorage.setItem("wk_guest_phone", e.target.value);
                   }}
                   placeholder="e.g. +91 9876543210"
-                  className="w-full border border-slate-200 rounded-xl p-3 focus:ring-2 focus:ring-sky-500 outline-none"
+                  className="w-full border border-slate-200 rounded-xl p-3 focus:ring-2 focus:ring-orange- outline-none"
                 />
               </div>
               <div>
@@ -212,7 +212,7 @@ export default function CheckoutClient({
                   onChange={(e) => setSpecialRequests(e.target.value)}
                   placeholder={placeholderText}
                   rows={3}
-                  className="w-full border border-slate-200 rounded-xl p-3 focus:ring-2 focus:ring-sky-500 outline-none"
+                  className="w-full border border-slate-200 rounded-xl p-3 focus:ring-2 focus:ring-orange- outline-none"
                 />
               </div>
             </div>
@@ -239,7 +239,7 @@ export default function CheckoutClient({
                     }
                   }}
                   minDate={new Date()}
-                  className="w-full border border-slate-200 rounded-xl p-3 focus:ring-2 focus:ring-sky-500 outline-none text-slate-600 bg-transparent cursor-pointer" 
+                  className="w-full border border-slate-200 rounded-xl p-3 focus:ring-2 focus:ring-orange- outline-none text-slate-600 bg-transparent cursor-pointer" 
                 />
               </div>
               {isGuide && (
@@ -249,7 +249,7 @@ export default function CheckoutClient({
                     selected={checkOut}
                     onChange={(date) => setCheckOut(date)}
                     minDate={checkIn ? (isGuide ? checkIn : new Date(checkIn.getTime() + 86400000)) : new Date()}
-                    className="w-full border border-slate-200 rounded-xl p-3 focus:ring-2 focus:ring-sky-500 outline-none text-slate-600 bg-transparent cursor-pointer" 
+                    className="w-full border border-slate-200 rounded-xl p-3 focus:ring-2 focus:ring-orange- outline-none text-slate-600 bg-transparent cursor-pointer" 
                   />
                 </div>
               )}
@@ -258,7 +258,7 @@ export default function CheckoutClient({
                 <select 
                   value={guests}
                   onChange={(e) => setGuests(Number(e.target.value))}
-                  className="w-full border border-slate-200 rounded-xl p-3 focus:ring-2 focus:ring-sky-500 outline-none text-slate-600 bg-white"
+                  className="w-full border border-slate-200 rounded-xl p-3 focus:ring-2 focus:ring-orange- outline-none text-slate-600 bg-white"
                 >
                   {[...Array(20)].map((_, i) => {
                     const num = i + 1;
@@ -279,14 +279,14 @@ export default function CheckoutClient({
               
               <div className="space-y-4">
                 <div className="flex items-center gap-2 mb-2">
-                  <UserCircle2 className="w-5 h-5 text-sky-600" />
+                  <UserCircle2 className="w-5 h-5 text-orange-" />
                   <h3 className="font-bold text-slate-900">Select Local Guide (Optional)</h3>
                 </div>
                 
                 <select 
                   value={selectedGuideId} 
                   onChange={(e) => setSelectedGuideId(e.target.value)}
-                  className="w-full border-2 border-slate-200 rounded-xl p-4 focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-none text-slate-700 font-medium cursor-pointer transition-all hover:border-slate-300"
+                  className="w-full border-2 border-slate-200 rounded-xl p-4 focus:ring-2 focus:ring-orange- focus:border-orange- outline-none text-slate-700 font-medium cursor-pointer transition-all hover:border-slate-300"
                 >
                   <option value="">No Guide Needed</option>
                   {availableGuides.map((g: any) => (
@@ -297,7 +297,7 @@ export default function CheckoutClient({
                 </select>
                 
                 {selectedGuide && (
-                  <div className="mt-3 p-4 bg-sky-50 border border-sky-100 rounded-xl flex items-center justify-between">
+                  <div className="mt-3 p-4 bg-orange- border border-orange- rounded-xl flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       <img 
                         src={selectedGuide.vendorProfile?.logoUrl || "https://placehold.co/100x100"} 
@@ -310,7 +310,7 @@ export default function CheckoutClient({
                       </div>
                     </div>
                     <div className="text-right">
-                      <span className="block font-black text-sky-700">+₹{(guideRate * tourDays).toLocaleString('en-IN')}</span>
+                      <span className="block font-black text-orange-">+₹{(guideRate * tourDays).toLocaleString('en-IN')}</span>
                     </div>
                   </div>
                 )}
@@ -376,7 +376,7 @@ export default function CheckoutClient({
               </div>
               
               {isTour && selectedGuide && (
-                <div className="flex justify-between text-slate-600 text-sm text-sky-700 font-medium mt-2">
+                <div className="flex justify-between text-slate-600 text-sm text-orange- font-medium mt-2">
                   <span>Guide Add-on ({tourDays} days)</span>
                   <span>+₹{(guideRate * tourDays).toLocaleString('en-IN')}</span>
                 </div>
@@ -424,7 +424,7 @@ export default function CheckoutClient({
                       value={promoInput}
                       onChange={(e) => setPromoInput(e.target.value)}
                       placeholder="Enter code"
-                      className="flex-1 border border-slate-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-sky-500 outline-none uppercase"
+                      className="flex-1 border border-slate-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-orange- outline-none uppercase"
                     />
                     <button 
                       onClick={handleApplyPromo}

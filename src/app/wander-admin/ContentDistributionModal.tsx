@@ -191,7 +191,7 @@ export default function ContentDistributionModal({
           <div className="flex items-center gap-4">
             <button
               onClick={generateAll}
-              className="flex items-center gap-2 px-5 py-2.5 bg-[#0284c7] hover:bg-[#0369a1] text-white rounded-xl shadow-sm transition-all font-medium"
+              className="flex items-center gap-2 px-5 py-2.5 bg-[#f97316] hover:bg-[#ea580c] text-white rounded-xl shadow-sm transition-all font-medium"
             >
               <Wand2 className="w-4 h-4" />
               Generate All Platforms
@@ -226,7 +226,7 @@ export default function ContentDistributionModal({
                     
                     {/* Status Indicators */}
                     {genStatus === 'Generating' ? (
-                      <Loader2 className="w-4 h-4 text-[#0284c7] animate-spin" />
+                      <Loader2 className="w-4 h-4 text-[#f97316] animate-spin" />
                     ) : genStatus === 'Queued' ? (
                       <span className="text-xs font-medium text-slate-400">Queued</span>
                     ) : genStatus === 'Failed' ? (
@@ -250,7 +250,7 @@ export default function ContentDistributionModal({
           <div className="flex-1 bg-white overflow-y-auto p-6">
             {loading ? (
               <div className="flex justify-center items-center h-full">
-                <Loader2 className="w-8 h-8 text-[#0284c7] animate-spin" />
+                <Loader2 className="w-8 h-8 text-[#f97316] animate-spin" />
               </div>
             ) : (
               (() => {
@@ -287,7 +287,7 @@ export default function ContentDistributionModal({
 
                     {genStatus === 'Generating' ? (
                       <div className="flex flex-col items-center justify-center py-20 text-slate-400">
-                        <Wand2 className="w-12 h-12 mb-4 animate-pulse text-[#0284c7]" />
+                        <Wand2 className="w-12 h-12 mb-4 animate-pulse text-[#f97316]" />
                         <p>AI is crafting content for {activePlatform}...</p>
                       </div>
                     ) : genStatus === 'Failed' ? (
@@ -342,12 +342,12 @@ export default function ContentDistributionModal({
                               <textarea
                                 value={editingContent}
                                 onChange={(e) => setEditingContent(e.target.value)}
-                                className="w-full h-96 p-4 border border-slate-200 rounded-xl focus:ring-2 focus:ring-[#0284c7] focus:border-transparent font-mono text-sm"
+                                className="w-full h-96 p-4 border border-slate-200 rounded-xl focus:ring-2 focus:ring-[#f97316] focus:border-transparent font-mono text-sm"
                               />
                             )}
                             <div className="flex justify-end gap-3">
                               <button onClick={() => setIsEditing(false)} className="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-lg">Cancel</button>
-                              <button onClick={() => handleSave(activeAsset.id)} disabled={saving} className="px-4 py-2 bg-[#0284c7] hover:bg-[#0369a1] text-white rounded-lg flex items-center gap-2">
+                              <button onClick={() => handleSave(activeAsset.id)} disabled={saving} className="px-4 py-2 bg-[#f97316] hover:bg-[#ea580c] text-white rounded-lg flex items-center gap-2">
                                 {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
                                 Save Changes
                               </button>

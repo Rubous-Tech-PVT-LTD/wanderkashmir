@@ -195,7 +195,7 @@ export default function Navbar() {
             <Link
               href="/partner/register"
               onClick={() => setMobileOpen(false)}
-              className="block mt-4 px-4 py-3.5 rounded-xl text-white font-bold text-lg bg-[var(--primary)] shadow-md shadow-sky-500/20 text-center border-2 border-[var(--primary)]"
+              className="block mt-4 px-4 py-3.5 rounded-xl text-white font-bold text-lg bg-[var(--primary)] shadow-md shadow-orange-/20 text-center border-2 border-[var(--primary)]"
             >
               Become a Partner
             </Link>
@@ -222,7 +222,7 @@ export default function Navbar() {
       {pathname === "/" && (
         <Link
           href="/partner/register"
-          className="fixed bottom-6 right-6 z-50 flex items-center gap-2 bg-gradient-to-r from-sky-500 to-indigo-600 text-white font-bold px-6 py-3.5 rounded-full shadow-xl shadow-sky-500/30 hover:scale-105 hover:shadow-2xl hover:shadow-sky-500/40 transition-all duration-300 group animate-bounce-slow"
+          className="fixed bottom-6 right-6 z-50 flex items-center gap-2 bg-gradient-to-r from-orange- to-indigo-600 text-white font-bold px-6 py-3.5 rounded-full shadow-xl shadow-orange-/30 hover:scale-105 hover:shadow-2xl hover:shadow-orange-/40 transition-all duration-300 group animate-bounce-slow"
         >
           <span>Become a Partner</span>
           <svg

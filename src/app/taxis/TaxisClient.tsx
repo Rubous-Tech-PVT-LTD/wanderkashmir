@@ -283,7 +283,7 @@ export default function TaxisClient({
               {rideType === "SINGLE" && (
                 <div className="relative border border-slate-200 rounded-2xl p-4 space-y-4">
                   <div className="flex items-start gap-3">
-                    <div className="mt-1"><MapPin className="w-5 h-5 text-sky-500" /></div>
+                    <div className="mt-1"><MapPin className="w-5 h-5 text-orange-" /></div>
                     <div className="flex-1 relative">
                       <label className="text-xs font-bold text-slate-500 uppercase">Pick-up Location</label>
                       <div className="flex items-center gap-2 mt-1">
@@ -412,9 +412,9 @@ export default function TaxisClient({
                     <button
                       key={v}
                       onClick={() => setVehicle(v)}
-                      className={`p-3 rounded-xl border-2 text-left transition-all ${vehicle === v ? "border-sky-500 bg-sky-50" : "border-slate-100 bg-white hover:border-slate-200"}`}
+                      className={`p-3 rounded-xl border-2 text-left transition-all ${vehicle === v ? "border-orange- bg-orange-" : "border-slate-100 bg-white hover:border-slate-200"}`}
                     >
-                      <Car className={`w-6 h-6 mb-2 ${vehicle === v ? "text-sky-600" : "text-slate-400"}`} />
+                      <Car className={`w-6 h-6 mb-2 ${vehicle === v ? "text-orange-" : "text-slate-400"}`} />
                       <div className="font-bold text-sm text-slate-900">{v}</div>
                       <div className="text-xs font-semibold text-slate-500">
                         {rideType === "SINGLE" ? `₹${SINGLEDAY_PRICES[v]}/km` : `₹${MULTIDAY_PRICES[v]}/day`}
@@ -429,11 +429,11 @@ export default function TaxisClient({
                 <label className="text-sm font-bold text-slate-900 mb-3 block">Ride For</label>
                 <div className="flex gap-4">
                   <label className="flex items-center gap-2 cursor-pointer">
-                    <input type="radio" checked={bookingFor === "SELF"} onChange={() => setBookingFor("SELF")} className="w-4 h-4 accent-sky-600" />
+                    <input type="radio" checked={bookingFor === "SELF"} onChange={() => setBookingFor("SELF")} className="w-4 h-4 accent-orange-" />
                     <span className="text-sm font-medium text-slate-700">Myself</span>
                   </label>
                   <label className="flex items-center gap-2 cursor-pointer">
-                    <input type="radio" checked={bookingFor === "OTHER"} onChange={() => setBookingFor("OTHER")} className="w-4 h-4 accent-sky-600" />
+                    <input type="radio" checked={bookingFor === "OTHER"} onChange={() => setBookingFor("OTHER")} className="w-4 h-4 accent-orange-" />
                     <span className="text-sm font-medium text-slate-700">Someone else</span>
                   </label>
                 </div>
@@ -506,7 +506,7 @@ export default function TaxisClient({
             {/* Progress Bar */}
             <div className="w-full h-1.5 bg-slate-100 flex-shrink-0">
               <div 
-                className="h-full bg-sky-500 transition-all duration-300" 
+                className="h-full bg-orange- transition-all duration-300" 
                 style={{ width: bookingStep === 1 ? '50%' : '100%' }}
               ></div>
             </div>
@@ -523,7 +523,7 @@ export default function TaxisClient({
                         value={guestName} 
                         onChange={e => setGuestName(e.target.value)} 
                         placeholder="John Doe" 
-                        className="w-full border border-slate-200 rounded-xl p-3 focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-none transition-all text-slate-900" 
+                        className="w-full border border-slate-200 rounded-xl p-3 focus:ring-2 focus:ring-orange- focus:border-orange- outline-none transition-all text-slate-900" 
                       />
                     </div>
                     <div className="md:col-span-2">
@@ -533,7 +533,7 @@ export default function TaxisClient({
                         value={guestPhone} 
                         onChange={e => setGuestPhone(e.target.value)} 
                         placeholder="+91 9876543210" 
-                        className="w-full border border-slate-200 rounded-xl p-3 focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-none transition-all text-slate-900" 
+                        className="w-full border border-slate-200 rounded-xl p-3 focus:ring-2 focus:ring-orange- focus:border-orange- outline-none transition-all text-slate-900" 
                       />
                     </div>
                     
@@ -546,7 +546,7 @@ export default function TaxisClient({
                           <div className="h-px bg-slate-200 flex-1"></div>
                         </div>
                         {otherGuests.length === 0 && (
-                          <button onClick={() => setOtherGuests([{name: "", age: ""}])} className="text-sm font-bold text-sky-600 hover:text-sky-700">
+                          <button onClick={() => setOtherGuests([{name: "", age: ""}])} className="text-sm font-bold text-orange- hover:text-orange-">
                             + Add Passenger Details
                           </button>
                         )}
@@ -562,7 +562,7 @@ export default function TaxisClient({
                                   setOtherGuests(newArr);
                                 }}
                                 placeholder={`Passenger ${index + 1} Name`}
-                                className="w-full border border-slate-200 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-none transition-all text-slate-900"
+                                className="w-full border border-slate-200 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-orange- focus:border-orange- outline-none transition-all text-slate-900"
                               />
                             </div>
                             <div className="w-24">
@@ -575,11 +575,11 @@ export default function TaxisClient({
                                   setOtherGuests(newArr);
                                 }}
                                 placeholder="Age"
-                                className="w-full border border-slate-200 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-none transition-all text-slate-900"
+                                className="w-full border border-slate-200 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-orange- focus:border-orange- outline-none transition-all text-slate-900"
                               />
                             </div>
                             {index === otherGuests.length - 1 && (
-                              <button onClick={() => setOtherGuests([...otherGuests, {name: "", age: ""}])} className="text-sky-600 p-2 hover:bg-sky-50 rounded-lg">
+                              <button onClick={() => setOtherGuests([...otherGuests, {name: "", age: ""}])} className="text-orange- p-2 hover:bg-orange- rounded-lg">
                                 +
                               </button>
                             )}
@@ -594,7 +594,7 @@ export default function TaxisClient({
                         value={specialRequests} 
                         onChange={e => setSpecialRequests(e.target.value)} 
                         placeholder="e.g. Extra luggage space needed..." 
-                        className="w-full border border-slate-200 rounded-xl p-3 focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-none h-24 resize-none transition-all text-slate-900" 
+                        className="w-full border border-slate-200 rounded-xl p-3 focus:ring-2 focus:ring-orange- focus:border-orange- outline-none h-24 resize-none transition-all text-slate-900" 
                       />
                     </div>
                   </div>
@@ -614,7 +614,7 @@ export default function TaxisClient({
                   {/* Summary Card */}
                   <div className="bg-slate-50 p-4 rounded-xl border border-slate-200">
                     <div className="flex gap-4">
-                      <div className="w-16 h-16 bg-sky-100 rounded-lg flex items-center justify-center text-sky-600 flex-shrink-0">
+                      <div className="w-16 h-16 bg-orange- rounded-lg flex items-center justify-center text-orange- flex-shrink-0">
                         <Car className="w-8 h-8" />
                       </div>
                       <div>
@@ -638,16 +638,16 @@ export default function TaxisClient({
                   </div>
 
                   {/* Policy */}
-                  <div className="flex items-start gap-3 bg-sky-50 p-4 rounded-xl border border-sky-100">
+                  <div className="flex items-start gap-3 bg-orange- p-4 rounded-xl border border-orange-">
                     <input 
                       type="checkbox" 
                       id="policy-modal-taxi" 
                       checked={agreedToPolicy} 
                       onChange={(e) => setAgreedToPolicy(e.target.checked)}
-                      className="mt-1 flex-shrink-0 w-4 h-4 text-sky-600 rounded border-sky-300 focus:ring-sky-500" 
+                      className="mt-1 flex-shrink-0 w-4 h-4 text-orange- rounded border-orange- focus:ring-orange-" 
                     />
                     <label htmlFor="policy-modal-taxi" className="text-sm text-slate-700 leading-relaxed cursor-pointer select-none">
-                      I agree to WanderKashmir's <span className="text-sky-600 font-semibold hover:underline">Taxi Booking Policy</span>. 
+                      I agree to WanderKashmir's <span className="text-orange- font-semibold hover:underline">Taxi Booking Policy</span>. 
                       (Free cancellation up to 24 hours before pickup time. Additional kms will be charged directly by the driver.)
                     </label>
                   </div>
@@ -698,8 +698,8 @@ export default function TaxisClient({
         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4 animate-in fade-in duration-200">
           <div className="bg-white rounded-3xl p-8 max-w-sm w-full shadow-2xl flex flex-col items-center text-center animate-in zoom-in-95 duration-200">
             <div className="relative mb-6">
-              <div className="absolute inset-0 bg-sky-100 rounded-full animate-ping opacity-75"></div>
-              <div className="relative bg-sky-100 w-24 h-24 rounded-full flex items-center justify-center text-sky-600 shadow-inner">
+              <div className="absolute inset-0 bg-orange- rounded-full animate-ping opacity-75"></div>
+              <div className="relative bg-orange- w-24 h-24 rounded-full flex items-center justify-center text-orange- shadow-inner">
                 <Navigation2 className="w-10 h-10 animate-bounce" />
               </div>
             </div>

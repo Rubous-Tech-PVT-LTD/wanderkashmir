@@ -97,7 +97,7 @@ export default function FeaturedTaxisClient({ taxis }: { taxis: any[] }) {
               <div className="p-4">
                 <h3 className="font-bold text-slate-900 text-lg mb-1 truncate">{taxi.name}</h3>
                 <p className="text-sm text-slate-500 flex items-center gap-1.5 mb-3 font-medium">
-                  <Car className="w-4 h-4 text-sky-500" /> {taxi.vehicleType}
+                  <Car className="w-4 h-4 text-orange-" /> {taxi.vehicleType}
                 </p>
                 
                 <div className="flex items-center justify-between pt-4 border-t border-slate-100">
@@ -105,7 +105,7 @@ export default function FeaturedTaxisClient({ taxis }: { taxis: any[] }) {
                     <Star className="w-4 h-4 text-orange-400 fill-orange-400" /> 
                     {taxi.rating.toFixed(1)} <span className="text-slate-400 font-normal ml-1">({taxi.trips} Trips)</span>
                   </div>
-                  <span className="bg-sky-50 text-sky-600 text-xs font-bold px-3 py-1.5 rounded-full">Book Now</span>
+                  <span className="bg-orange- text-orange- text-xs font-bold px-3 py-1.5 rounded-full">Book Now</span>
                 </div>
               </div>
             </Link>

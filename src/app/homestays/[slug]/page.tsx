@@ -110,9 +110,9 @@ export default async function HomestaySeoPage({ params }: { params: Promise<{ sl
 
       <main className="flex-1 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12 w-full pt-32">
         <nav className="flex items-center gap-2 text-sm text-slate-500 mb-8">
-          <Link href="/" className="hover:text-[#0284c7]">Home</Link>
+          <Link href="/" className="hover:text-[#f97316]">Home</Link>
           <ChevronRight className="w-4 h-4" />
-          <Link href="/stays" className="hover:text-[#0284c7]">Stays</Link>
+          <Link href="/stays" className="hover:text-[#f97316]">Stays</Link>
           <ChevronRight className="w-4 h-4" />
           <span className="text-slate-800 font-medium">{page.h1Heading}</span>
         </nav>
@@ -184,13 +184,13 @@ export default async function HomestaySeoPage({ params }: { params: Promise<{ sl
                         sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                       />
                       <div className="absolute top-4 left-4 bg-white/90 backdrop-blur-sm px-3 py-1 rounded-full text-xs font-semibold text-slate-700 flex items-center gap-1">
-                        <Home className="w-3 h-3 text-[#0284c7]" />
+                        <Home className="w-3 h-3 text-[#f97316]" />
                         Homestay
                       </div>
                     </div>
                     <div className="p-5 flex-1 flex flex-col">
                       <div className="flex justify-between items-start mb-2">
-                        <h3 className="font-bold text-lg text-slate-900 group-hover:text-[#0284c7] transition-colors line-clamp-1">
+                        <h3 className="font-bold text-lg text-slate-900 group-hover:text-[#f97316] transition-colors line-clamp-1">
                           {property.name}
                         </h3>
                         <div className="flex items-center gap-1 bg-amber-50 px-2 py-0.5 rounded text-sm font-semibold text-amber-700">
@@ -224,7 +224,7 @@ export default async function HomestaySeoPage({ params }: { params: Promise<{ sl
             <div className="mt-10 text-center">
                <Link 
                 href={`/stays?q=${encodeURIComponent(slugWords.join(' '))}`} 
-                className="px-8 py-3 bg-[#0284c7] text-white rounded-full font-medium hover:bg-[#0369a1] transition-colors shadow-sm inline-block"
+                className="px-8 py-3 bg-[#f97316] text-white rounded-full font-medium hover:bg-[#ea580c] transition-colors shadow-sm inline-block"
               >
                 View All {slugWords.length > 0 ? slugWords.map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ') : ''} Stays
               </Link>
@@ -244,7 +244,7 @@ export default async function HomestaySeoPage({ params }: { params: Promise<{ sl
             <p className="text-slate-600">Enjoy traditional Wazwan and authentic homemade Kashmiri food during your stay.</p>
           </div>
           <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex flex-col gap-3">
-            <MapPin className="w-8 h-8 text-sky-500" />
+            <MapPin className="w-8 h-8 text-orange-" />
             <h3 className="font-bold text-lg text-slate-900">Prime Locations</h3>
             <p className="text-slate-600">Stay in beautiful, scenic, and peaceful locations away from crowded tourist hotels.</p>
           </div>

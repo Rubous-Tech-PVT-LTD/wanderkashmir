@@ -260,15 +260,15 @@ export async function approveVendor(vendorId: string) {
               <h2 style="color: #0f172a;">Hi ${contactFirstName},</h2>
               <p>Your vendor application has been approved. We're excited to start working with you. Below are the details of your account so you can begin setting up your profile and listings.</p>
               
-              <h3 style="color: #0284c7; margin-top: 24px;">Your account details</h3>
+              <h3 style="color: #f97316; margin-top: 24px;">Your account details</h3>
               <table style="width: 100%; border-collapse: collapse; margin-bottom: 24px;">
-                <tr><td style="padding: 8px 0; border-bottom: 1px solid #e2e8f0;"><strong>Vendor ID:</strong></td><td style="padding: 8px 0; border-bottom: 1px solid #e2e8f0; font-weight: bold; color: #0284c7;">${generatedVendorId}</td></tr>
+                <tr><td style="padding: 8px 0; border-bottom: 1px solid #e2e8f0;"><strong>Vendor ID:</strong></td><td style="padding: 8px 0; border-bottom: 1px solid #e2e8f0; font-weight: bold; color: #f97316;">${generatedVendorId}</td></tr>
                 <tr><td style="padding: 8px 0; border-bottom: 1px solid #e2e8f0;"><strong>Company:</strong></td><td style="padding: 8px 0; border-bottom: 1px solid #e2e8f0;">${updatedVendor.businessName}</td></tr>
                 <tr><td style="padding: 8px 0; border-bottom: 1px solid #e2e8f0;"><strong>Account email:</strong></td><td style="padding: 8px 0; border-bottom: 1px solid #e2e8f0;">${vendorEmail}</td></tr>
                 <tr><td style="padding: 8px 0; border-bottom: 1px solid #e2e8f0;"><strong>Account manager:</strong></td><td style="padding: 8px 0; border-bottom: 1px solid #e2e8f0;">WanderKashmir</td></tr>
               </table>
 
-              <h3 style="color: #0284c7;">Next steps</h3>
+              <h3 style="color: #f97316;">Next steps</h3>
               <ul style="padding-left: 20px;">
                 <li style="margin-bottom: 8px;">Log in to your vendor dashboard using your <strong>Vendor ID</strong> and complete your business profile.</li>
                 <li style="margin-bottom: 8px;">Upload your tax and banking information for payouts.</li>
@@ -276,7 +276,7 @@ export async function approveVendor(vendorId: string) {
               </ul>
 
               <div style="margin: 32px 0;">
-                <a href="https://wanderkashmir.com/partner" style="background-color: #0284c7; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block;">Go to vendor dashboard</a>
+                <a href="https://wanderkashmir.com/partner" style="background-color: #f97316; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block;">Go to vendor dashboard</a>
               </div>
 
               <p>If you have any questions, reach out to your account manager at <a href="mailto:support@wanderkashmir.com">support@wanderkashmir.com</a> or visit our help center.</p>

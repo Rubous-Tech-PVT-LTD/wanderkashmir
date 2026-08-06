@@ -119,17 +119,17 @@ export default async function TaxiSeoPage({ params }: { params: Promise<{ slug: 
       <main className="flex-1 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12 w-full pt-32">
         {/* Breadcrumb */}
         <nav className="flex items-center gap-2 text-sm text-slate-500 mb-8">
-          <Link href="/" className="hover:text-[#0284c7]">Home</Link>
+          <Link href="/" className="hover:text-[#f97316]">Home</Link>
           <ChevronRight className="w-4 h-4" />
-          <Link href="/taxis" className="hover:text-[#0284c7]">Taxis</Link>
+          <Link href="/taxis" className="hover:text-[#f97316]">Taxis</Link>
           <ChevronRight className="w-4 h-4" />
           <span className="text-slate-800 font-medium">{page.h1Heading}</span>
         </nav>
 
         {/* Hero Section */}
-        <div className="relative rounded-3xl overflow-hidden shadow-2xl mb-12 flex flex-col md:flex-row bg-[#0284c7]/5">
+        <div className="relative rounded-3xl overflow-hidden shadow-2xl mb-12 flex flex-col md:flex-row bg-[#f97316]/5">
           <div className="flex-1 space-y-6 p-8 md:p-12 z-10 relative">
-            <div className="inline-flex items-center gap-2 px-3 py-1 bg-white/80 backdrop-blur-sm text-[#0284c7] rounded-full text-sm font-semibold shadow-sm border border-sky-100">
+            <div className="inline-flex items-center gap-2 px-3 py-1 bg-white/80 backdrop-blur-sm text-[#f97316] rounded-full text-sm font-semibold shadow-sm border border-orange-">
               <MapPin className="w-4 h-4" />
               Verified Taxi Service
             </div>
@@ -142,7 +142,7 @@ export default async function TaxiSeoPage({ params }: { params: Promise<{ slug: 
             <div className="flex flex-wrap gap-4 pt-4">
               <Link 
                 href="/taxis" 
-                className="px-8 py-3.5 bg-[#0284c7] text-white rounded-full font-medium hover:bg-[#0369a1] transition-all transform hover:-translate-y-0.5 shadow-lg shadow-[#0284c7]/30"
+                className="px-8 py-3.5 bg-[#f97316] text-white rounded-full font-medium hover:bg-[#ea580c] transition-all transform hover:-translate-y-0.5 shadow-lg shadow-[#f97316]/30"
               >
                 View Cabs & Prices
               </Link>
@@ -158,7 +158,7 @@ export default async function TaxiSeoPage({ params }: { params: Promise<{ slug: 
           </div>
           {page.imageUrl && (
             <div className="w-full md:w-5/12 min-h-[300px] md:min-h-full relative">
-              <div className="absolute inset-0 bg-gradient-to-r from-[#0284c7]/5 to-transparent z-10 md:hidden" />
+              <div className="absolute inset-0 bg-gradient-to-r from-[#f97316]/5 to-transparent z-10 md:hidden" />
               <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent z-10 md:hidden" />
               <Image 
                 src={getValidImageUrl([page.imageUrl])} 
@@ -176,7 +176,7 @@ export default async function TaxiSeoPage({ params }: { params: Promise<{ slug: 
         {page.content && (
           <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-8 md:p-12 mb-16">
             <div 
-              className="prose prose-slate prose-lg max-w-none prose-headings:text-[#0284c7] prose-a:text-[#0284c7]"
+              className="prose prose-slate prose-lg max-w-none prose-headings:text-[#f97316] prose-a:text-[#f97316]"
               dangerouslySetInnerHTML={{ __html: await marked.parse(page.content) }} 
             />
           </div>
@@ -201,7 +201,7 @@ export default async function TaxiSeoPage({ params }: { params: Promise<{ slug: 
                     {Object.entries(rates).map(([vehicle, price]) => (
                       <tr key={vehicle} className="hover:bg-slate-50/50 transition-colors">
                         <td className="p-4 flex items-center gap-3">
-                          <div className="p-2 bg-sky-50 text-[#0284c7] rounded-lg">
+                          <div className="p-2 bg-orange- text-[#f97316] rounded-lg">
                             <Car className="w-5 h-5" />
                           </div>
                           <span className="font-semibold text-slate-800">{vehicle}</span>
@@ -217,7 +217,7 @@ export default async function TaxiSeoPage({ params }: { params: Promise<{ slug: 
               <div className="mt-6 flex justify-center">
                  <Link 
                   href="/taxis" 
-                  className="px-8 py-3 bg-[#0284c7] text-white rounded-full font-medium hover:bg-[#0369a1] transition-colors shadow-sm inline-block"
+                  className="px-8 py-3 bg-[#f97316] text-white rounded-full font-medium hover:bg-[#ea580c] transition-colors shadow-sm inline-block"
                 >
                   Proceed to Booking
                 </Link>
@@ -229,17 +229,17 @@ export default async function TaxiSeoPage({ params }: { params: Promise<{ slug: 
         {/* Why Choose Us */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-16">
           <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex flex-col gap-3">
-            <CheckCircle className="w-8 h-8 text-[#0284c7]" />
+            <CheckCircle className="w-8 h-8 text-[#f97316]" />
             <h3 className="font-bold text-lg text-slate-900">Local Expert Drivers</h3>
             <p className="text-slate-600">Our drivers know the safest and most scenic routes across Kashmir.</p>
           </div>
           <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex flex-col gap-3">
-            <CheckCircle className="w-8 h-8 text-[#0284c7]" />
+            <CheckCircle className="w-8 h-8 text-[#f97316]" />
             <h3 className="font-bold text-lg text-slate-900">Transparent Pricing</h3>
             <p className="text-slate-600">No hidden fees. Pay exactly what you see for your taxi booking.</p>
           </div>
           <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex flex-col gap-3">
-            <CheckCircle className="w-8 h-8 text-[#0284c7]" />
+            <CheckCircle className="w-8 h-8 text-[#f97316]" />
             <h3 className="font-bold text-lg text-slate-900">Well-Maintained Fleet</h3>
             <p className="text-slate-600">Clean, comfortable, and regularly serviced vehicles for your safety.</p>
           </div>

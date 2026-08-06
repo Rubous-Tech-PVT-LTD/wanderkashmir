@@ -266,10 +266,10 @@ export default function GuideClient({ bookings = [], vendorProfileId, initialGui
           <button
             key={tab}
             onClick={() => { setActiveTab(tab); setIsEditMode(false); }}
-            className={`pb-4 text-sm font-semibold capitalize transition-colors relative ${activeTab === tab ? "text-sky-600" : "text-slate-500 hover:text-slate-800"}`}
+            className={`pb-4 text-sm font-semibold capitalize transition-colors relative ${activeTab === tab ? "text-orange-" : "text-slate-500 hover:text-slate-800"}`}
           >
             {tab}
-            {activeTab === tab && <span className="absolute bottom-0 left-0 w-full h-0.5 bg-sky-500 rounded-t-full" />}
+            {activeTab === tab && <span className="absolute bottom-0 left-0 w-full h-0.5 bg-orange- rounded-t-full" />}
           </button>
         ))}
       </div>
@@ -277,9 +277,9 @@ export default function GuideClient({ bookings = [], vendorProfileId, initialGui
       {/* FINANCIALS MODULE */}
       {activeTab === "financials" && (
         <div className="space-y-8">
-          <div className="bg-sky-50 border border-sky-100 rounded-2xl p-6">
-            <h2 className="text-xl font-bold text-sky-900 mb-2">Welcome to WanderKashmir!</h2>
-            <p className="text-sky-800">Your registration is complete. Choose a subscription plan below to unlock premium features and increase your bookings.</p>
+          <div className="bg-orange- border border-orange- rounded-2xl p-6">
+            <h2 className="text-xl font-bold text-orange- mb-2">Welcome to WanderKashmir!</h2>
+            <p className="text-orange-">Your registration is complete. Choose a subscription plan below to unlock premium features and increase your bookings.</p>
           </div>
 
           <div>
@@ -294,12 +294,12 @@ export default function GuideClient({ bookings = [], vendorProfileId, initialGui
                 const isActive = subscriptionPlan === tier.name;
                 
                 return (
-                  <div key={tier.name} className={`bg-white rounded-2xl border relative ${isActive ? 'border-sky-500 shadow-md ring-4 ring-sky-50' : tier.isPopular ? 'border-sky-500 shadow-md' : 'border-slate-200 shadow-sm'} p-6 flex flex-col transition-all`}>
+                  <div key={tier.name} className={`bg-white rounded-2xl border relative ${isActive ? 'border-orange- shadow-md ring-4 ring-orange-' : tier.isPopular ? 'border-orange- shadow-md' : 'border-slate-200 shadow-sm'} p-6 flex flex-col transition-all`}>
                     {tier.isPopular && !isActive && (
-                      <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-sky-500 text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider">Most Popular</span>
+                      <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-orange- text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider">Most Popular</span>
                     )}
                     {isActive && (
-                      <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-sky-500 text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider flex items-center gap-1">
+                      <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-orange- text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider flex items-center gap-1">
                         <CheckCircle2 className="w-3 h-3" /> Active Plan
                       </span>
                     )}
@@ -312,7 +312,7 @@ export default function GuideClient({ bookings = [], vendorProfileId, initialGui
                     <ul className="space-y-3 mb-8 flex-1">
                       {tier.features.map((feature, i) => (
                         <li key={i} className="flex items-start gap-2 text-sm text-slate-700">
-                          <CheckCircle2 className="w-5 h-5 text-sky-500 shrink-0" />
+                          <CheckCircle2 className="w-5 h-5 text-orange- shrink-0" />
                           <span>{feature}</span>
                         </li>
                       ))}
@@ -322,7 +322,7 @@ export default function GuideClient({ bookings = [], vendorProfileId, initialGui
                       disabled={isActive || tier.name === "Free"}
                       className={`w-full py-2.5 rounded-lg font-bold transition-colors ${
                         isActive 
-                          ? 'bg-sky-50 text-sky-600 border border-sky-200 cursor-default' 
+                          ? 'bg-orange- text-orange- border border-orange- cursor-default' 
                           : tier.name === 'Free' 
                             ? 'bg-slate-100 text-slate-400 cursor-not-allowed' 
                             : 'bg-slate-900 text-white hover:bg-slate-800 shadow-sm hover:shadow-md'
@@ -443,7 +443,7 @@ export default function GuideClient({ bookings = [], vendorProfileId, initialGui
             {/* ALWAYS RENDER CHARTS SO CONTAINER HAS HEIGHT FOR PAYWALL */}
               <>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-                  <button onClick={() => setChartMetric("views")} className={`p-4 rounded-xl border-2 transition-all text-left ${chartMetric === "views" ? 'border-sky-500 bg-sky-50' : 'border-slate-100 bg-white hover:border-slate-200'}`}>
+                  <button onClick={() => setChartMetric("views")} className={`p-4 rounded-xl border-2 transition-all text-left ${chartMetric === "views" ? 'border-orange- bg-orange-' : 'border-slate-100 bg-white hover:border-slate-200'}`}>
                     <div className="text-slate-500 text-sm font-medium mb-1">Profile Views</div>
                     <div className="text-2xl font-black text-slate-900">{totalViews.toLocaleString()}</div>
                     <div className="text-xs text-emerald-600 font-bold mt-2 flex items-center gap-1">+{growthViews}%</div>
@@ -609,7 +609,7 @@ export default function GuideClient({ bookings = [], vendorProfileId, initialGui
                 </a>
                 
                 <button onClick={() => toast.success("Help Center opening soon!")} className="bg-white/10 hover:bg-white/20 transition-colors p-4 rounded-xl flex items-center gap-3 border border-white/5 text-left">
-                  <div className="w-10 h-10 bg-sky-500 rounded-full flex items-center justify-center shrink-0 shadow-sm">
+                  <div className="w-10 h-10 bg-orange- rounded-full flex items-center justify-center shrink-0 shadow-sm">
                     <BookOpen className="w-5 h-5 text-white" />
                   </div>
                   <div>
@@ -685,7 +685,7 @@ export default function GuideClient({ bookings = [], vendorProfileId, initialGui
             <div className="bg-slate-900 rounded-2xl p-6 shadow-sm border border-slate-800 mt-6 text-white">
               <div className="flex items-center gap-3 mb-6">
                 <div className="w-12 h-12 bg-white/10 rounded-xl flex items-center justify-center">
-                  <Lock className="w-6 h-6 text-sky-400" />
+                  <Lock className="w-6 h-6 text-orange-" />
                 </div>
                 <div>
                   <h2 className="text-xl font-bold">Enterprise API & Integrations</h2>
@@ -699,7 +699,7 @@ export default function GuideClient({ bookings = [], vendorProfileId, initialGui
                     <h3 className="font-bold text-sm">REST API Access Keys</h3>
                     <p className="text-xs text-slate-400 mt-0.5">Generate tokens for custom integrations</p>
                   </div>
-                  <button onClick={() => toast.success("API Keys generated and sent to your email!")} className="bg-sky-500 hover:bg-sky-600 text-white px-4 py-2 text-sm font-bold rounded-lg transition-colors">Generate</button>
+                  <button onClick={() => toast.success("API Keys generated and sent to your email!")} className="bg-orange- hover:bg-orange- text-white px-4 py-2 text-sm font-bold rounded-lg transition-colors">Generate</button>
                 </div>
                 
                 <div className="bg-white/5 rounded-xl p-4 border border-white/10 flex justify-between items-center">
@@ -736,12 +736,12 @@ export default function GuideClient({ bookings = [], vendorProfileId, initialGui
             
             <div className="p-6">
               {isProfileLocked && (
-                <div className="bg-sky-50 border border-sky-200 rounded-xl p-5 mb-8 flex items-start gap-3">
-                  <Lock className="w-5 h-5 text-sky-600 mt-0.5 shrink-0" />
+                <div className="bg-orange- border border-orange- rounded-xl p-5 mb-8 flex items-start gap-3">
+                  <Lock className="w-5 h-5 text-orange- mt-0.5 shrink-0" />
                   <div>
-                    <h3 className="font-bold text-sky-900 text-sm">Your limit reached</h3>
-                    <p className="text-sm text-sky-800 mt-1">Your profile is complete and has been saved! On the Free plan, profiles cannot be edited after completion from this tab. Please upgrade to Growth Pro to unlock unlimited profile edits and priority ranking.</p>
-                    <button type="button" onClick={() => { setActiveTab("financials"); setIsEditMode(false); }} className="mt-3 text-xs font-bold text-white bg-sky-600 px-4 py-2 rounded-lg hover:bg-sky-700 transition-colors">View Upgrade Plans</button>
+                    <h3 className="font-bold text-orange- text-sm">Your limit reached</h3>
+                    <p className="text-sm text-orange- mt-1">Your profile is complete and has been saved! On the Free plan, profiles cannot be edited after completion from this tab. Please upgrade to Growth Pro to unlock unlimited profile edits and priority ranking.</p>
+                    <button type="button" onClick={() => { setActiveTab("financials"); setIsEditMode(false); }} className="mt-3 text-xs font-bold text-white bg-orange- px-4 py-2 rounded-lg hover:bg-orange- transition-colors">View Upgrade Plans</button>
                   </div>
                 </div>
               )}
@@ -749,7 +749,7 @@ export default function GuideClient({ bookings = [], vendorProfileId, initialGui
               <form onSubmit={handleSubmit(onSubmit)} className="max-w-2xl space-y-6">
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-2">About Me (Bio)</label>
-                  <textarea disabled={isProfileLocked} rows={5} {...register("bio")} className={`w-full border rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-sky-500/20 ${errors.bio ? 'border-orange-500' : 'border-slate-200'} ${isProfileLocked ? 'bg-slate-50 text-slate-500 cursor-not-allowed' : ''}`} placeholder="Tell travelers about your experience, your connection to Kashmir, and what makes your tours special..." />
+                  <textarea disabled={isProfileLocked} rows={5} {...register("bio")} className={`w-full border rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-orange-/20 ${errors.bio ? 'border-orange-500' : 'border-slate-200'} ${isProfileLocked ? 'bg-slate-50 text-slate-500 cursor-not-allowed' : ''}`} placeholder="Tell travelers about your experience, your connection to Kashmir, and what makes your tours special..." />
                   {errors.bio && <p className="text-orange-500 text-xs mt-1 font-medium">{errors.bio.message}</p>}
                 </div>
                 
@@ -785,13 +785,13 @@ export default function GuideClient({ bookings = [], vendorProfileId, initialGui
                     <label className="block text-sm font-medium text-slate-700 mb-2">Location / Base City</label>
                     <div className="relative">
                       <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-                      <input disabled={isProfileLocked} type="text" {...register("location")} className={`w-full border rounded-lg pl-10 pr-4 py-3 focus:outline-none focus:ring-2 focus:ring-sky-500/20 ${errors.location ? 'border-orange-500' : 'border-slate-200'} ${isProfileLocked ? 'bg-slate-50 text-slate-500 cursor-not-allowed' : ''}`} placeholder="e.g. Srinagar, Gulmarg" />
+                      <input disabled={isProfileLocked} type="text" {...register("location")} className={`w-full border rounded-lg pl-10 pr-4 py-3 focus:outline-none focus:ring-2 focus:ring-orange-/20 ${errors.location ? 'border-orange-500' : 'border-slate-200'} ${isProfileLocked ? 'bg-slate-50 text-slate-500 cursor-not-allowed' : ''}`} placeholder="e.g. Srinagar, Gulmarg" />
                     </div>
                     {errors.location && <p className="text-orange-500 text-xs mt-1 font-medium">{errors.location.message}</p>}
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-slate-700 mb-2 flex items-center gap-1"><Languages className="w-4 h-4" /> Languages Spoken</label>
-                    <input disabled={isProfileLocked} type="text" {...register("languages")} className={`w-full border rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-sky-500/20 ${errors.languages ? 'border-orange-500' : 'border-slate-200'} ${isProfileLocked ? 'bg-slate-50 text-slate-500 cursor-not-allowed' : ''}`} placeholder="e.g. English, Hindi, Kashmiri" />
+                    <input disabled={isProfileLocked} type="text" {...register("languages")} className={`w-full border rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-orange-/20 ${errors.languages ? 'border-orange-500' : 'border-slate-200'} ${isProfileLocked ? 'bg-slate-50 text-slate-500 cursor-not-allowed' : ''}`} placeholder="e.g. English, Hindi, Kashmiri" />
                     {errors.languages && <p className="text-orange-500 text-xs mt-1 font-medium">{errors.languages.message}</p>}
                   </div>
                 </div>
@@ -799,14 +799,14 @@ export default function GuideClient({ bookings = [], vendorProfileId, initialGui
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
                     <label className="block text-sm font-medium text-slate-700 mb-2">Years of Experience</label>
-                    <input disabled={isProfileLocked} type="number" {...register("experienceYears", { valueAsNumber: true })} className={`w-full border rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-sky-500/20 ${errors.experienceYears ? 'border-orange-500' : 'border-slate-200'} ${isProfileLocked ? 'bg-slate-50 text-slate-500 cursor-not-allowed' : ''}`} placeholder="5" />
+                    <input disabled={isProfileLocked} type="number" {...register("experienceYears", { valueAsNumber: true })} className={`w-full border rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-orange-/20 ${errors.experienceYears ? 'border-orange-500' : 'border-slate-200'} ${isProfileLocked ? 'bg-slate-50 text-slate-500 cursor-not-allowed' : ''}`} placeholder="5" />
                     {errors.experienceYears && <p className="text-orange-500 text-xs mt-1 font-medium">{errors.experienceYears.message}</p>}
                   </div>
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-2">Specializations</label>
-                  <input disabled={isProfileLocked} type="text" {...register("specializations")} className={`w-full border rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-sky-500/20 ${errors.specializations ? 'border-orange-500' : 'border-slate-200'} ${isProfileLocked ? 'bg-slate-50 text-slate-500 cursor-not-allowed' : ''}`} placeholder="e.g. History Walks, Trekking, Photography" />
+                  <input disabled={isProfileLocked} type="text" {...register("specializations")} className={`w-full border rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-orange-/20 ${errors.specializations ? 'border-orange-500' : 'border-slate-200'} ${isProfileLocked ? 'bg-slate-50 text-slate-500 cursor-not-allowed' : ''}`} placeholder="e.g. History Walks, Trekking, Photography" />
                   {errors.specializations && <p className="text-orange-500 text-xs mt-1 font-medium">{errors.specializations.message}</p>}
                 </div>
                 
@@ -819,7 +819,7 @@ export default function GuideClient({ bookings = [], vendorProfileId, initialGui
                       <label className="block text-sm font-medium text-slate-700 mb-2">Daily Rate (What the customer pays)</label>
                       <div className="relative">
                         <IndianRupee className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                        <input disabled={isProfileLocked} type="number" {...register("dailyRate", { valueAsNumber: true })} className={`w-full border rounded-lg pl-10 pr-4 py-3 bg-white focus:outline-none focus:ring-2 focus:ring-sky-500/20 ${errors.dailyRate ? 'border-orange-500' : 'border-slate-200'} ${isProfileLocked ? 'bg-slate-50 text-slate-500 cursor-not-allowed' : ''}`} placeholder="1500" />
+                        <input disabled={isProfileLocked} type="number" {...register("dailyRate", { valueAsNumber: true })} className={`w-full border rounded-lg pl-10 pr-4 py-3 bg-white focus:outline-none focus:ring-2 focus:ring-orange-/20 ${errors.dailyRate ? 'border-orange-500' : 'border-slate-200'} ${isProfileLocked ? 'bg-slate-50 text-slate-500 cursor-not-allowed' : ''}`} placeholder="1500" />
                       </div>
                       {errors.dailyRate && <p className="text-orange-500 text-xs mt-1 font-medium">{errors.dailyRate.message}</p>}
                     </div>
@@ -827,9 +827,9 @@ export default function GuideClient({ bookings = [], vendorProfileId, initialGui
                 </div>
                 
                 {/* INSTANT BOOKING (FEATURE GATED) */}
-                <div className={`p-6 rounded-xl border mt-6 ${hasInstantBooking ? 'bg-sky-50 border-sky-200' : 'bg-slate-50 border-slate-200 opacity-70'}`}>
+                <div className={`p-6 rounded-xl border mt-6 ${hasInstantBooking ? 'bg-orange- border-orange-' : 'bg-slate-50 border-slate-200 opacity-70'}`}>
                   <div className="flex items-start gap-4">
-                    <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${hasInstantBooking ? 'bg-sky-500 text-white' : 'bg-slate-200 text-slate-400'}`}>
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${hasInstantBooking ? 'bg-orange- text-white' : 'bg-slate-200 text-slate-400'}`}>
                       {hasInstantBooking ? <Zap className="w-5 h-5" /> : <Lock className="w-5 h-5" />}
                     </div>
                     <div>
@@ -844,7 +844,7 @@ export default function GuideClient({ bookings = [], vendorProfileId, initialGui
                           type="checkbox" 
                           {...register("instantBooking")}
                           disabled={!hasInstantBooking || isProfileLocked}
-                          className="w-5 h-5 rounded text-sky-500 focus:ring-sky-500 disabled:opacity-50" 
+                          className="w-5 h-5 rounded text-orange- focus:ring-orange- disabled:opacity-50" 
                         />
                         <span className={`font-medium ${hasInstantBooking ? 'text-slate-900' : 'text-slate-400'}`}>
                           Yes, I want to enable Instant Booking
@@ -872,7 +872,7 @@ export default function GuideClient({ bookings = [], vendorProfileId, initialGui
               <h2 className="text-lg font-bold text-slate-900">Your Recent Tours</h2>
               <p className="text-sm text-slate-500 mt-1">Manage all your upcoming guided tours and experiences.</p>
             </div>
-            <button className="flex items-center gap-2 bg-sky-500 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-sky-600 transition-colors">
+            <button className="flex items-center gap-2 bg-orange- text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-orange- transition-colors">
               <Download className="w-4 h-4" /> Download Report
             </button>
           </div>

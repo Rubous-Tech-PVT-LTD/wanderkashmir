@@ -176,7 +176,7 @@ export default function AdminSeoTab() {
             <button
               onClick={handleGenerateAutomation}
               disabled={isGenerating}
-              className="flex items-center gap-2 bg-[#0284c7] text-white px-4 py-2.5 rounded-xl hover:bg-[#0369a1] transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-sm font-medium"
+              className="flex items-center gap-2 bg-[#f97316] text-white px-4 py-2.5 rounded-xl hover:bg-[#ea580c] transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-sm font-medium"
             >
               <Wand2 className={`w-4 h-4 ${isGenerating ? 'animate-spin' : ''}`} />
               {isGenerating ? "Generating..." : "Generate SEO Page"}
@@ -191,7 +191,7 @@ export default function AdminSeoTab() {
             </button>
             <button
               onClick={() => setIsEditing(true)}
-              className="px-4 py-2 bg-[#0284c7] text-white rounded-lg flex items-center gap-2 hover:bg-[#0369a1] transition-colors"
+              className="px-4 py-2 bg-[#f97316] text-white rounded-lg flex items-center gap-2 hover:bg-[#ea580c] transition-colors"
             >
               <Plus className="w-4 h-4" />
               Create New Page
@@ -209,7 +209,7 @@ export default function AdminSeoTab() {
                 required
                 value={formData.type}
                 onChange={(e) => setFormData({ ...formData, type: e.target.value })}
-                className="w-full p-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0284c7]"
+                className="w-full p-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#f97316]"
               >
                 <option value="TAXI">Taxi Route</option>
                 <option value="HOMESTAY">Homestay Location</option>
@@ -225,7 +225,7 @@ export default function AdminSeoTab() {
                 placeholder="e.g. srinagar-to-gulmarg"
                 value={formData.slug}
                 onChange={(e) => setFormData({ ...formData, slug: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '-') })}
-                className="w-full p-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0284c7]"
+                className="w-full p-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#f97316]"
               />
             </div>
           </div>
@@ -238,7 +238,7 @@ export default function AdminSeoTab() {
               placeholder="e.g. Book Srinagar to Gulmarg Taxi at Best Price"
               value={formData.title}
               onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-              className="w-full p-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0284c7]"
+              className="w-full p-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#f97316]"
             />
           </div>
 
@@ -249,7 +249,7 @@ export default function AdminSeoTab() {
               placeholder="Write a compelling meta description for Google search results..."
               value={formData.description}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-              className="w-full p-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0284c7]"
+              className="w-full p-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#f97316]"
             />
           </div>
 
@@ -261,7 +261,7 @@ export default function AdminSeoTab() {
               placeholder="e.g. Reliable Srinagar to Gulmarg Taxi Service"
               value={formData.h1Heading}
               onChange={(e) => setFormData({ ...formData, h1Heading: e.target.value })}
-              className="w-full p-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0284c7]"
+              className="w-full p-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#f97316]"
             />
           </div>
 
@@ -272,7 +272,7 @@ export default function AdminSeoTab() {
               placeholder="Write detailed content about this route or location..."
               value={formData.content}
               onChange={(e) => setFormData({ ...formData, content: e.target.value })}
-              className="w-full p-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0284c7]"
+              className="w-full p-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#f97316]"
             />
           </div>
 
@@ -283,7 +283,7 @@ export default function AdminSeoTab() {
               placeholder="https://res.cloudinary.com/..."
               value={formData.imageUrl}
               onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })}
-              className="w-full p-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0284c7]"
+              className="w-full p-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#f97316]"
             />
           </div>
 
@@ -345,7 +345,7 @@ export default function AdminSeoTab() {
             </button>
             <button
               type="submit"
-              className="px-6 py-2 bg-[#0284c7] text-white rounded-lg hover:bg-[#0369a1] transition-colors font-medium shadow-sm"
+              className="px-6 py-2 bg-[#f97316] text-white rounded-lg hover:bg-[#ea580c] transition-colors font-medium shadow-sm"
             >
               {formData.id ? "Update Page" : "Publish Page"}
             </button>
@@ -371,7 +371,7 @@ export default function AdminSeoTab() {
                     placeholder="Search by title or slug..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full pl-9 pr-4 py-2 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#0284c7]"
+                    className="w-full pl-9 pr-4 py-2 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#f97316]"
                   />
                 </div>
               </div>
@@ -413,7 +413,7 @@ export default function AdminSeoTab() {
                         <Link 
                           href={`/${(page.type || "").toLowerCase() === "taxi" ? "taxis" : (page.type || "").toLowerCase() === "homestay" ? "homestays" : (page.type || "").toLowerCase() === "blog" ? "blog" : "tours"}/${page.slug}`}
                           target="_blank"
-                          className="inline-flex p-2 text-slate-400 hover:text-[#0284c7] hover:bg-[#0284c7]/10 rounded-lg transition-colors"
+                          className="inline-flex p-2 text-slate-400 hover:text-[#f97316] hover:bg-[#f97316]/10 rounded-lg transition-colors"
                           title="View Live Page"
                         >
                           <Globe className="w-4 h-4" />

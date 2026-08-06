@@ -115,7 +115,7 @@ export default function TaxiMapView({
       {/* Stats Overlay */}
       {routeDistance > 0 && (
         <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-[400] bg-white px-6 py-3 rounded-full shadow-lg border border-slate-100 flex items-center gap-2 text-sm font-bold text-slate-900">
-          📍 Estimated Distance: <span className="text-sky-600">{routeDistance.toFixed(1)} km</span>
+          📍 Estimated Distance: <span className="text-orange-">{routeDistance.toFixed(1)} km</span>
         </div>
       )}
     </div>

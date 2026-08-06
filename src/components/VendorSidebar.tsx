@@ -37,7 +37,7 @@ export default function VendorSidebar({ isOpen = false, onClose }: VendorSidebar
         }`}>
           <div className="p-6 border-b border-slate-800 flex items-center justify-between">
             <Link href="/partner" className="flex items-center gap-2" onClick={onClose}>
-              <div className="w-8 h-8 bg-sky-500 rounded-lg flex items-center justify-center">
+              <div className="w-8 h-8 bg-orange- rounded-lg flex items-center justify-center">
                 <LayoutDashboard className="w-5 h-5 text-white" />
               </div>
               <span className="text-xl font-bold tracking-tight">Vendor Portal</span>
@@ -103,7 +103,7 @@ export default function VendorSidebar({ isOpen = false, onClose }: VendorSidebar
       }`}>
         <div className="p-6 border-b border-slate-800 flex items-center justify-between">
           <Link href="/partner" className="flex items-center gap-2" onClick={onClose}>
-            <div className="w-8 h-8 bg-sky-500 rounded-lg flex items-center justify-center">
+            <div className="w-8 h-8 bg-orange- rounded-lg flex items-center justify-center">
               <LayoutDashboard className="w-5 h-5 text-white" />
             </div>
             <span className="text-xl font-bold tracking-tight">Vendor Portal</span>
@@ -132,7 +132,7 @@ export default function VendorSidebar({ isOpen = false, onClose }: VendorSidebar
                 onClick={onClose}
                 className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white bg-slate-800 transition-colors group"
               >
-                <Icon className="w-5 h-5 text-sky-400 transition-colors" />
+                <Icon className="w-5 h-5 text-orange- transition-colors" />
                 <span className="font-medium text-sm">{link.name}</span>
               </Link>
             );

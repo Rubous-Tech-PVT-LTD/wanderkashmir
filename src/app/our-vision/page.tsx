@@ -14,9 +14,9 @@ export default function OurVisionPage() {
       
       {/* Header */}
       <div className="bg-slate-900 text-white pt-32 pb-24 px-4 relative overflow-hidden">
-        <div className="absolute inset-0 opacity-20 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-sky-400 via-slate-900 to-slate-900"></div>
+        <div className="absolute inset-0 opacity-20 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-orange- via-slate-900 to-slate-900"></div>
         <div className="container-custom max-w-4xl mx-auto text-center relative z-10">
-          <div className="inline-flex items-center justify-center p-3 bg-sky-500/20 rounded-full mb-6 text-sky-400">
+          <div className="inline-flex items-center justify-center p-3 bg-orange-/20 rounded-full mb-6 text-orange-">
             <Eye className="w-8 h-8" />
           </div>
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 tracking-tight">Our Vision</h1>
@@ -39,8 +39,8 @@ export default function OurVisionPage() {
             </p>
 
             <div className="grid md:grid-cols-2 gap-8 my-12">
-              <div className="bg-sky-50 rounded-2xl p-8 border border-sky-100 hover:shadow-md transition-shadow">
-                <div className="w-14 h-14 bg-sky-100 rounded-xl flex items-center justify-center text-sky-600 mb-6">
+              <div className="bg-orange- rounded-2xl p-8 border border-orange- hover:shadow-md transition-shadow">
+                <div className="w-14 h-14 bg-orange- rounded-xl flex items-center justify-center text-orange- mb-6">
                   <Users className="w-7 h-7" />
                 </div>
                 <h3 className="text-xl font-bold text-slate-900 mb-3 mt-0">Our Mission</h3>

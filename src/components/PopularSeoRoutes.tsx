@@ -25,13 +25,13 @@ export default async function PopularSeoRoutes() {
               <Link
                 key={route.id}
                 href={`/${basePath}/${route.slug}`}
-                className="group p-4 rounded-2xl border border-slate-100 hover:border-[#0284c7]/30 hover:shadow-lg hover:shadow-[#0284c7]/5 bg-slate-50 hover:bg-white transition-all"
+                className="group p-4 rounded-2xl border border-slate-100 hover:border-[#f97316]/30 hover:shadow-lg hover:shadow-[#f97316]/5 bg-slate-50 hover:bg-white transition-all"
               >
                 <div className="flex items-center justify-between">
-                  <h3 className="font-semibold text-slate-800 group-hover:text-[#0284c7] transition-colors text-sm line-clamp-2">
+                  <h3 className="font-semibold text-slate-800 group-hover:text-[#f97316] transition-colors text-sm line-clamp-2">
                     {route.title}
                   </h3>
-                  <ArrowRight className="w-4 h-4 text-slate-400 group-hover:text-[#0284c7] group-hover:translate-x-1 transition-all flex-shrink-0 ml-2" />
+                  <ArrowRight className="w-4 h-4 text-slate-400 group-hover:text-[#f97316] group-hover:translate-x-1 transition-all flex-shrink-0 ml-2" />
                 </div>
               </Link>
             );
@@ -41,7 +41,7 @@ export default async function PopularSeoRoutes() {
         <div className="mt-10 flex justify-center">
           <Link
             href="/destinations"
-            className="inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-full text-white bg-[#0284c7] hover:bg-[#0369a1] shadow-sm hover:shadow-md transition-all"
+            className="inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-full text-white bg-[#f97316] hover:bg-[#ea580c] shadow-sm hover:shadow-md transition-all"
           >
             View All Destinations
             <ArrowRight className="ml-2 -mr-1 w-5 h-5" aria-hidden="true" />
