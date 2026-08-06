@@ -95,7 +95,7 @@ export default function Navbar() {
               />
             </div>
             <div className="flex flex-col">
-              <span className="font-display font-bold text-[1.35rem] tracking-tight text-[var(--primary)] leading-none mt-1">
+              <span className="font-display font-bold text-[1.35rem] tracking-tight text-slate-900 leading-none mt-1">
                 <span className="text-[#f97316]">Wander</span>Kashmir
               </span>
             </div>
