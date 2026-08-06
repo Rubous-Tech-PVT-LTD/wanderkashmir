@@ -96,7 +96,7 @@ export default function Navbar() {
             </div>
             <div className="flex flex-col">
               <span className="font-display font-bold text-[1.35rem] tracking-tight text-[var(--primary)] leading-none mt-1">
-                Wander<span className="text-slate-900">Kashmir</span>
+                <span className="text-[#f97316]">Wander</span>Kashmir
               </span>
             </div>
           </Link>
@@ -168,7 +168,7 @@ export default function Navbar() {
               </div>
               <div className="flex flex-col">
                 <span className="font-display text-xl font-bold text-slate-900 leading-none mt-1">
-                  Wander<span className="text-[var(--primary)]">Kashmir</span>
+                  <span className="text-[#f97316]">Wander</span>Kashmir
                 </span>
               </div>
             </Link>

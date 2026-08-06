@@ -105,7 +105,7 @@ export default function Footer() {
               </div>
               <div className="flex flex-col">
                 <span className="font-display text-2xl font-bold text-white leading-none mt-1">
-                  Wander<span className="text-[var(--primary)]">Kashmir</span>
+                  <span className="text-[#f97316]">Wander</span>Kashmir
                 </span>
               </div>
             </Link>
