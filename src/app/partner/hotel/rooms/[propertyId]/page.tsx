@@ -100,7 +100,7 @@ export default function RoomManagementPage({ params }: { params: Promise<{ prope
           <h2 className="text-xl font-bold">Room Types</h2>
           <button 
             onClick={() => setShowAddForm(!showAddForm)}
-            className="flex items-center gap-2 bg-orange- text-white px-4 py-2 rounded-lg font-bold shadow-sm hover:bg-orange- transition-colors"
+            className="flex items-center gap-2 bg-orange-500 text-white px-4 py-2 rounded-lg font-bold shadow-sm hover:bg-orange-500 transition-colors"
           >
             <Plus className="w-4 h-4" /> Add Room Type
           </button>
@@ -152,7 +152,7 @@ export default function RoomManagementPage({ params }: { params: Promise<{ prope
                       setSelectedRoomId(room.id);
                       setInventoryAvailable(room.totalUnits);
                     }}
-                    className="flex items-center gap-1 bg-orange- text-orange- px-3 py-1.5 rounded-lg text-sm font-bold hover:bg-orange-"
+                    className="flex items-center gap-1 bg-orange-500 text-orange-500 px-3 py-1.5 rounded-lg text-sm font-bold hover:bg-orange-500"
                   >
                     <CalendarIcon className="w-4 h-4" /> Calendar
                   </button>

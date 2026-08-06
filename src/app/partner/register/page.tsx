@@ -145,7 +145,7 @@ export default function VendorEntryPage() {
 
   const FileUploadBox = ({ title, desc }: { title: string, desc: string }) => (
     <div className="border-2 border-dashed border-slate-200 rounded-xl p-6 flex flex-col items-center justify-center text-center hover:bg-slate-50 transition-colors cursor-pointer group">
-      <div className="w-10 h-10 bg-slate-100 text-slate-500 rounded-full flex items-center justify-center mb-3 group-hover:bg-orange- group-hover:text-orange- transition-colors">
+      <div className="w-10 h-10 bg-slate-100 text-slate-500 rounded-full flex items-center justify-center mb-3 group-hover:bg-orange-500 group-hover:text-orange-500 transition-colors">
         <UploadCloud className="w-5 h-5" />
       </div>
       <span className="text-sm font-bold text-slate-900">{title}</span>
@@ -190,10 +190,10 @@ export default function VendorEntryPage() {
           {/* Progress Bar */}
           <div className="flex items-center justify-between relative mb-12 max-w-2xl mx-auto">
             <div className="absolute left-0 top-1/2 -translate-y-1/2 w-full h-1 bg-slate-200 z-0 rounded-full"></div>
-            <div className="absolute left-0 top-1/2 -translate-y-1/2 h-1 bg-orange- z-0 rounded-full transition-all duration-300" style={{ width: `${((step - 1) / 3) * 100}%` }}></div>
+            <div className="absolute left-0 top-1/2 -translate-y-1/2 h-1 bg-orange-500 z-0 rounded-full transition-all duration-300" style={{ width: `${((step - 1) / 3) * 100}%` }}></div>
             {["Service Type", "Business Details", "Legal Documents", "Complete"].map((label, index) => (
               <div key={label} className="relative z-10 flex flex-col items-center gap-2">
-                <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm transition-colors border-4 border-white shadow-sm ${step > index + 1 ? "bg-orange- text-white" : step === index + 1 ? "bg-orange- text-white ring-4 ring-orange-" : "bg-slate-200 text-slate-500"}`}>
+                <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm transition-colors border-4 border-white shadow-sm ${step > index + 1 ? "bg-orange-500 text-white" : step === index + 1 ? "bg-orange-500 text-white ring-4 ring-orange-500" : "bg-slate-200 text-slate-500"}`}>
                   {step > index + 1 ? <CheckCircle2 className="w-5 h-5" /> : index + 1}
                 </div>
                 <span className={`text-xs font-semibold ${step >= index + 1 ? "text-slate-900" : "text-slate-400"}`}>{label}</span>
@@ -220,10 +220,10 @@ export default function VendorEntryPage() {
                           }
                         }}
                         className={`p-6 rounded-xl border-2 cursor-pointer transition-all ${
-                          selectedType === opt.id ? "border-orange- bg-orange-" : "border-slate-200 hover:border-slate-300 hover:bg-slate-50"
+                          selectedType === opt.id ? "border-orange-500 bg-orange-500" : "border-slate-200 hover:border-slate-300 hover:bg-slate-50"
                         }`}
                       >
-                        <Icon className={`w-8 h-8 mb-4 ${selectedType === opt.id ? "text-orange-" : "text-slate-400"}`} />
+                        <Icon className={`w-8 h-8 mb-4 ${selectedType === opt.id ? "text-orange-500" : "text-slate-400"}`} />
                         <h3 className="font-bold text-slate-900">{opt.title}</h3>
                         <p className="text-sm text-slate-500 mt-1">{opt.desc}</p>
                       </div>
@@ -239,7 +239,7 @@ export default function VendorEntryPage() {
                       <div 
                         onClick={() => setValue("taxiRole", "individual", { shouldValidate: true })}
                         className={`p-4 rounded-xl border-2 cursor-pointer transition-all text-center ${
-                          selectedTaxiRole === 'individual' ? "border-orange- bg-orange-" : "border-slate-200 hover:border-slate-300"
+                          selectedTaxiRole === 'individual' ? "border-orange-500 bg-orange-500" : "border-slate-200 hover:border-slate-300"
                         }`}
                       >
                         <div className="font-bold text-slate-900">Individual Driver</div>
@@ -248,7 +248,7 @@ export default function VendorEntryPage() {
                       <div 
                         onClick={() => setValue("taxiRole", "stand", { shouldValidate: true })}
                         className={`p-4 rounded-xl border-2 cursor-pointer transition-all text-center ${
-                          selectedTaxiRole === 'stand' ? "border-orange- bg-orange-" : "border-slate-200 hover:border-slate-300"
+                          selectedTaxiRole === 'stand' ? "border-orange-500 bg-orange-500" : "border-slate-200 hover:border-slate-300"
                         }`}
                       >
                         <div className="font-bold text-slate-900">Taxi Stand / Union</div>
@@ -277,7 +277,7 @@ export default function VendorEntryPage() {
                     <label className="block text-sm font-medium text-slate-700 mb-1">
                       {selectedType === 'taxi' ? (selectedTaxiRole === 'stand' ? 'President Name *' : 'Driver / Owner Name *') : selectedType === 'guide' ? 'Full Name *' : 'Legal Business / Property Name *'}
                     </label>
-                    <input {...register("businessName")} className={`w-full border rounded-lg px-4 py-2.5 outline-none ${errors.businessName ? "border-orange-500" : "border-slate-200 focus:ring-2 focus:ring-orange-/20 focus:border-orange-"}`} placeholder={selectedType === 'taxi' || selectedType === 'guide' ? "e.g. Tariq Ahmad" : "e.g. Grand Royal Hotel"} />
+                    <input {...register("businessName")} className={`w-full border rounded-lg px-4 py-2.5 outline-none ${errors.businessName ? "border-orange-500" : "border-slate-200 focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500"}`} placeholder={selectedType === 'taxi' || selectedType === 'guide' ? "e.g. Tariq Ahmad" : "e.g. Grand Royal Hotel"} />
                     {errors.businessName && <span className="text-orange-500 text-xs font-medium mt-1">{errors.businessName.message}</span>}
                   </div>
                   
@@ -285,16 +285,16 @@ export default function VendorEntryPage() {
                     <>
                       <div className="col-span-2 md:col-span-1">
                         <label className="block text-sm font-medium text-slate-700 mb-1">GST Number (Optional)</label>
-                        <input {...register("gstNumber")} className="w-full border border-slate-200 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-orange-/20 focus:border-orange- outline-none uppercase" placeholder="e.g. 01AAAAA0000A1Z5" />
+                        <input {...register("gstNumber")} className="w-full border border-slate-200 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 outline-none uppercase" placeholder="e.g. 01AAAAA0000A1Z5" />
                       </div>
                       <div className="col-span-2 md:col-span-1">
                         <label className="block text-sm font-medium text-slate-700 mb-1">PAN Number *</label>
-                        <input {...register("panNumber")} className={`w-full border rounded-lg px-4 py-2.5 outline-none uppercase ${errors.panNumber ? "border-orange-500" : "border-slate-200 focus:ring-2 focus:ring-orange-/20 focus:border-orange-"}`} placeholder="e.g. ABCDE1234F" />
+                        <input {...register("panNumber")} className={`w-full border rounded-lg px-4 py-2.5 outline-none uppercase ${errors.panNumber ? "border-orange-500" : "border-slate-200 focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500"}`} placeholder="e.g. ABCDE1234F" />
                         {errors.panNumber && <span className="text-orange-500 text-xs font-medium mt-1">{errors.panNumber.message}</span>}
                       </div>
                       <div className="col-span-2 md:col-span-1">
                         <label className="block text-sm font-medium text-slate-700 mb-1">Trade License / Govt Registration</label>
-                        <input {...register("tradeLicense")} className="w-full border border-slate-200 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-orange-/20 focus:border-orange- outline-none uppercase" placeholder="Registration ID" />
+                        <input {...register("tradeLicense")} className="w-full border border-slate-200 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 outline-none uppercase" placeholder="Registration ID" />
                       </div>
                     </>
                   )}
@@ -303,7 +303,7 @@ export default function VendorEntryPage() {
                     <>
                       <div className="col-span-2 md:col-span-1">
                         <label className="block text-sm font-medium text-slate-700 mb-1">Vehicle Model / Type *</label>
-                        <select {...register("vehicleType")} className={`w-full border rounded-lg px-4 py-2.5 outline-none ${errors.vehicleType ? "border-orange-500" : "border-slate-200 focus:ring-2 focus:ring-orange-/20 focus:border-orange-"}`}>
+                        <select {...register("vehicleType")} className={`w-full border rounded-lg px-4 py-2.5 outline-none ${errors.vehicleType ? "border-orange-500" : "border-slate-200 focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500"}`}>
                           <option value="">Select Vehicle</option>
                           <option value="INNOVA">Toyota Innova</option>
                           <option value="CRYSTA">Innova Crysta</option>
@@ -320,12 +320,12 @@ export default function VendorEntryPage() {
                       </div>
                       <div className="col-span-2 md:col-span-1">
                         <label className="block text-sm font-medium text-slate-700 mb-1">Vehicle Registration (RC) *</label>
-                        <input {...register("vehicleRegistration")} className={`w-full border rounded-lg px-4 py-2.5 outline-none uppercase ${errors.vehicleRegistration ? "border-orange-500" : "border-slate-200 focus:ring-2 focus:ring-orange-/20 focus:border-orange-"}`} placeholder="e.g. JK-01-AB-1234" />
+                        <input {...register("vehicleRegistration")} className={`w-full border rounded-lg px-4 py-2.5 outline-none uppercase ${errors.vehicleRegistration ? "border-orange-500" : "border-slate-200 focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500"}`} placeholder="e.g. JK-01-AB-1234" />
                         {errors.vehicleRegistration && <span className="text-orange-500 text-xs font-medium mt-1">{errors.vehicleRegistration.message}</span>}
                       </div>
                       <div className="col-span-2 md:col-span-1">
                         <label className="block text-sm font-medium text-slate-700 mb-1">Driving License Number *</label>
-                        <input {...register("drivingLicense")} className={`w-full border rounded-lg px-4 py-2.5 outline-none uppercase ${errors.drivingLicense ? "border-orange-500" : "border-slate-200 focus:ring-2 focus:ring-orange-/20 focus:border-orange-"}`} placeholder="e.g. JK-01-2010-XXXX" />
+                        <input {...register("drivingLicense")} className={`w-full border rounded-lg px-4 py-2.5 outline-none uppercase ${errors.drivingLicense ? "border-orange-500" : "border-slate-200 focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500"}`} placeholder="e.g. JK-01-2010-XXXX" />
                         {errors.drivingLicense && <span className="text-orange-500 text-xs font-medium mt-1">{errors.drivingLicense.message}</span>}
                       </div>
                     </>
@@ -335,16 +335,16 @@ export default function VendorEntryPage() {
                     <>
                       <div className="col-span-2 md:col-span-1">
                         <label className="block text-sm font-medium text-slate-700 mb-1">GST Number (Optional)</label>
-                        <input {...register("gstNumber")} className="w-full border border-slate-200 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-orange-/20 focus:border-orange- outline-none uppercase" placeholder="e.g. 01AAAAA0000A1Z5" />
+                        <input {...register("gstNumber")} className="w-full border border-slate-200 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 outline-none uppercase" placeholder="e.g. 01AAAAA0000A1Z5" />
                       </div>
                       <div className="col-span-2 md:col-span-1">
                         <label className="block text-sm font-medium text-slate-700 mb-1">PAN Number *</label>
-                        <input {...register("panNumber")} className={`w-full border rounded-lg px-4 py-2.5 outline-none uppercase ${errors.panNumber ? "border-orange-500" : "border-slate-200 focus:ring-2 focus:ring-orange-/20 focus:border-orange-"}`} placeholder="e.g. ABCDE1234F" />
+                        <input {...register("panNumber")} className={`w-full border rounded-lg px-4 py-2.5 outline-none uppercase ${errors.panNumber ? "border-orange-500" : "border-slate-200 focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500"}`} placeholder="e.g. ABCDE1234F" />
                         {errors.panNumber && <span className="text-orange-500 text-xs font-medium mt-1">{errors.panNumber.message}</span>}
                       </div>
                       <div className="col-span-2 md:col-span-1">
                         <label className="block text-sm font-medium text-slate-700 mb-1">Registration / Trade License *</label>
-                        <input {...register("tradeLicense")} className={`w-full border rounded-lg px-4 py-2.5 outline-none ${errors.tradeLicense ? "border-orange-500" : "border-slate-200 focus:ring-2 focus:ring-orange-/20 focus:border-orange-"}`} placeholder="e.g. Govt. Reg No." />
+                        <input {...register("tradeLicense")} className={`w-full border rounded-lg px-4 py-2.5 outline-none ${errors.tradeLicense ? "border-orange-500" : "border-slate-200 focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500"}`} placeholder="e.g. Govt. Reg No." />
                         {errors.tradeLicense && <span className="text-orange-500 text-xs font-medium mt-1">{errors.tradeLicense.message}</span>}
                       </div>
                     </>
@@ -354,29 +354,29 @@ export default function VendorEntryPage() {
                     <>
                       <div className="col-span-2 md:col-span-1">
                         <label className="block text-sm font-medium text-slate-700 mb-1">Guide License Number (Optional)</label>
-                        <input {...register("guideLicense")} className="w-full border border-slate-200 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-orange-/20 focus:border-orange- outline-none uppercase" placeholder="e.g. TR-GD-1234" />
+                        <input {...register("guideLicense")} className="w-full border border-slate-200 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 outline-none uppercase" placeholder="e.g. TR-GD-1234" />
                       </div>
                       <div className="col-span-2 md:col-span-1">
                         <label className="block text-sm font-medium text-slate-700 mb-1">Languages Spoken *</label>
-                        <input {...register("languages")} className={`w-full border rounded-lg px-4 py-2.5 outline-none ${errors.languages ? "border-orange-500" : "border-slate-200 focus:ring-2 focus:ring-orange-/20 focus:border-orange-"}`} placeholder="e.g. English, Hindi, Kashmiri" />
+                        <input {...register("languages")} className={`w-full border rounded-lg px-4 py-2.5 outline-none ${errors.languages ? "border-orange-500" : "border-slate-200 focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500"}`} placeholder="e.g. English, Hindi, Kashmiri" />
                         {errors.languages && <span className="text-orange-500 text-xs font-medium mt-1">{errors.languages.message}</span>}
                       </div>
                       <div className="col-span-2 md:col-span-1">
                         <label className="block text-sm font-medium text-slate-700 mb-1">Years of Experience</label>
-                        <input type="number" {...register("experienceYears")} className="w-full border border-slate-200 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-orange-/20 focus:border-orange- outline-none" placeholder="e.g. 5" />
+                        <input type="number" {...register("experienceYears")} className="w-full border border-slate-200 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 outline-none" placeholder="e.g. 5" />
                       </div>
                     </>
                   )}
 
                   <div className="col-span-2">
                     <label className="block text-sm font-medium text-slate-700 mb-1">Complete Business Address *</label>
-                    <textarea {...register("address")} rows={2} className={`w-full border rounded-lg px-4 py-2.5 outline-none ${errors.address ? "border-orange-500" : "border-slate-200 focus:ring-2 focus:ring-orange-/20 focus:border-orange-"}`} placeholder="e.g. 123 Boulevard Road, Srinagar, J&K, 190001" />
+                    <textarea {...register("address")} rows={2} className={`w-full border rounded-lg px-4 py-2.5 outline-none ${errors.address ? "border-orange-500" : "border-slate-200 focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500"}`} placeholder="e.g. 123 Boulevard Road, Srinagar, J&K, 190001" />
                     {errors.address && <span className="text-orange-500 text-xs font-medium mt-1">{errors.address.message}</span>}
                   </div>
 
                   <div className="col-span-2 md:col-span-1">
                     <label className="block text-sm font-medium text-slate-700 mb-1">Primary Email Address *</label>
-                    <input {...register("email")} type="email" className={`w-full border rounded-lg px-4 py-2.5 outline-none ${errors.email ? "border-orange-500" : "border-slate-200 focus:ring-2 focus:ring-orange-/20 focus:border-orange-"}`} placeholder="contact@business.com" />
+                    <input {...register("email")} type="email" className={`w-full border rounded-lg px-4 py-2.5 outline-none ${errors.email ? "border-orange-500" : "border-slate-200 focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500"}`} placeholder="contact@business.com" />
                     {errors.email && <span className="text-orange-500 text-xs font-medium mt-1">{errors.email.message}</span>}
                   </div>
 
@@ -386,7 +386,7 @@ export default function VendorEntryPage() {
                       <input 
                         {...register("password")} 
                         type={showPassword ? "text" : "password"} 
-                        className={`w-full border rounded-lg pl-4 pr-10 py-2.5 outline-none ${errors.password ? "border-orange-500" : "border-slate-200 focus:ring-2 focus:ring-orange-/20 focus:border-orange-"}`} 
+                        className={`w-full border rounded-lg pl-4 pr-10 py-2.5 outline-none ${errors.password ? "border-orange-500" : "border-slate-200 focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500"}`} 
                         placeholder="••••••••" 
                       />
                       <button
@@ -406,18 +406,18 @@ export default function VendorEntryPage() {
 
                   <div className="col-span-2 md:col-span-1">
                     <label className="block text-sm font-medium text-slate-700 mb-1">Primary Contact Number *</label>
-                    <input {...register("phone")} type="tel" className={`w-full border rounded-lg px-4 py-2.5 outline-none ${errors.phone ? "border-orange-500" : "border-slate-200 focus:ring-2 focus:ring-orange-/20 focus:border-orange-"}`} placeholder="10-digit number" />
+                    <input {...register("phone")} type="tel" className={`w-full border rounded-lg px-4 py-2.5 outline-none ${errors.phone ? "border-orange-500" : "border-slate-200 focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500"}`} placeholder="10-digit number" />
                     {errors.phone && <span className="text-orange-500 text-xs font-medium mt-1">{errors.phone.message}</span>}
                   </div>
 
                   <div className="col-span-2 md:col-span-1">
                     <label className="block text-sm font-medium text-slate-700 mb-1">Alternate Contact Person</label>
-                    <input {...register("altContactPerson")} className="w-full border border-slate-200 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-orange-/20 focus:border-orange- outline-none" placeholder="Manager Name" />
+                    <input {...register("altContactPerson")} className="w-full border border-slate-200 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 outline-none" placeholder="Manager Name" />
                   </div>
 
                   <div className="col-span-2 md:col-span-1">
                     <label className="block text-sm font-medium text-slate-700 mb-1">Alternate Phone Number</label>
-                    <input {...register("altPhone")} type="tel" className={`w-full border rounded-lg px-4 py-2.5 outline-none ${errors.altPhone ? "border-orange-500" : "border-slate-200 focus:ring-2 focus:ring-orange-/20 focus:border-orange-"}`} placeholder="10-digit number" />
+                    <input {...register("altPhone")} type="tel" className={`w-full border rounded-lg px-4 py-2.5 outline-none ${errors.altPhone ? "border-orange-500" : "border-slate-200 focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500"}`} placeholder="10-digit number" />
                     {errors.altPhone && <span className="text-orange-500 text-xs font-medium mt-1">{errors.altPhone.message}</span>}
                   </div>
                 </div>
@@ -430,11 +430,11 @@ export default function VendorEntryPage() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6 mb-4">
                     <div className="col-span-2 md:col-span-1">
                       <label className="block text-sm font-medium text-slate-700 mb-1">Latitude</label>
-                      <input {...register("latitude", { valueAsNumber: true })} type="number" step="any" className={`w-full border rounded-lg px-4 py-2.5 outline-none border-slate-200 focus:ring-2 focus:ring-orange-/20 focus:border-orange-`} placeholder="e.g. 34.0836" />
+                      <input {...register("latitude", { valueAsNumber: true })} type="number" step="any" className={`w-full border rounded-lg px-4 py-2.5 outline-none border-slate-200 focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500`} placeholder="e.g. 34.0836" />
                     </div>
                     <div className="col-span-2 md:col-span-1">
                       <label className="block text-sm font-medium text-slate-700 mb-1">Longitude</label>
-                      <input {...register("longitude", { valueAsNumber: true })} type="number" step="any" className={`w-full border rounded-lg px-4 py-2.5 outline-none border-slate-200 focus:ring-2 focus:ring-orange-/20 focus:border-orange-`} placeholder="e.g. 74.7973" />
+                      <input {...register("longitude", { valueAsNumber: true })} type="number" step="any" className={`w-full border rounded-lg px-4 py-2.5 outline-none border-slate-200 focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500`} placeholder="e.g. 74.7973" />
                     </div>
                   </div>
                   <button type="button" onClick={() => {
@@ -447,7 +447,7 @@ export default function VendorEntryPage() {
                     } else {
                       toast.error("Geolocation is not supported by your browser.");
                     }
-                  }} className="text-sm bg-orange- text-orange- px-4 py-2 rounded-lg font-bold hover:bg-orange- transition-colors">
+                  }} className="text-sm bg-orange-500 text-orange-500 px-4 py-2 rounded-lg font-bold hover:bg-orange-500 transition-colors">
                     Get My Current Location
                   </button>
                 </div>
@@ -455,29 +455,29 @@ export default function VendorEntryPage() {
                 <div className="mt-8 border-t border-slate-100 pt-8">
                   <div className="flex items-center gap-2 mb-6">
                     <h3 className="text-lg font-bold text-slate-900">Bank Details for Payouts</h3>
-                    <div className="bg-orange- text-orange- text-[10px] font-bold px-2 py-0.5 rounded flex items-center gap-1">
+                    <div className="bg-orange-500 text-orange-500 text-[10px] font-bold px-2 py-0.5 rounded flex items-center gap-1">
                       <Info className="w-3 h-3" /> Secure
                     </div>
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
                     <div className="col-span-2 md:col-span-1">
                       <label className="block text-sm font-medium text-slate-700 mb-1">Account Holder Name *</label>
-                      <input {...register("accountHolderName")} className={`w-full border rounded-lg px-4 py-2.5 outline-none ${errors.accountHolderName ? "border-orange-500" : "border-slate-200 focus:ring-2 focus:ring-orange-/20 focus:border-orange-"}`} placeholder="Must match bank records" />
+                      <input {...register("accountHolderName")} className={`w-full border rounded-lg px-4 py-2.5 outline-none ${errors.accountHolderName ? "border-orange-500" : "border-slate-200 focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500"}`} placeholder="Must match bank records" />
                       {errors.accountHolderName && <span className="text-orange-500 text-xs font-medium mt-1">{errors.accountHolderName.message}</span>}
                     </div>
                     <div className="col-span-2 md:col-span-1">
                       <label className="block text-sm font-medium text-slate-700 mb-1">Bank Name & Branch *</label>
-                      <input {...register("bankName")} className={`w-full border rounded-lg px-4 py-2.5 outline-none ${errors.bankName ? "border-orange-500" : "border-slate-200 focus:ring-2 focus:ring-orange-/20 focus:border-orange-"}`} placeholder="e.g. J&K Bank, Lal Chowk" />
+                      <input {...register("bankName")} className={`w-full border rounded-lg px-4 py-2.5 outline-none ${errors.bankName ? "border-orange-500" : "border-slate-200 focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500"}`} placeholder="e.g. J&K Bank, Lal Chowk" />
                       {errors.bankName && <span className="text-orange-500 text-xs font-medium mt-1">{errors.bankName.message}</span>}
                     </div>
                     <div className="col-span-2 md:col-span-1">
                       <label className="block text-sm font-medium text-slate-700 mb-1">Account Number *</label>
-                      <input {...register("accountNumber")} className={`w-full border rounded-lg px-4 py-2.5 outline-none ${errors.accountNumber ? "border-orange-500" : "border-slate-200 focus:ring-2 focus:ring-orange-/20 focus:border-orange-"}`} placeholder="16-digit account number" />
+                      <input {...register("accountNumber")} className={`w-full border rounded-lg px-4 py-2.5 outline-none ${errors.accountNumber ? "border-orange-500" : "border-slate-200 focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500"}`} placeholder="16-digit account number" />
                       {errors.accountNumber && <span className="text-orange-500 text-xs font-medium mt-1">{errors.accountNumber.message}</span>}
                     </div>
                     <div className="col-span-2 md:col-span-1">
                       <label className="block text-sm font-medium text-slate-700 mb-1">IFSC Code *</label>
-                      <input {...register("ifscCode")} className={`w-full border rounded-lg px-4 py-2.5 outline-none uppercase ${errors.ifscCode ? "border-orange-500" : "border-slate-200 focus:ring-2 focus:ring-orange-/20 focus:border-orange-"}`} placeholder="e.g. JAKA0LALCHW" />
+                      <input {...register("ifscCode")} className={`w-full border rounded-lg px-4 py-2.5 outline-none uppercase ${errors.ifscCode ? "border-orange-500" : "border-slate-200 focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500"}`} placeholder="e.g. JAKA0LALCHW" />
                       {errors.ifscCode && <span className="text-orange-500 text-xs font-medium mt-1">{errors.ifscCode.message}</span>}
                     </div>
                   </div>
@@ -572,10 +572,10 @@ export default function VendorEntryPage() {
                       type="checkbox" 
                       id="agreeToTerms" 
                       {...register("agreeToTerms")} 
-                      className="mt-1 w-4 h-4 rounded border-slate-300 text-orange- focus:ring-orange-"
+                      className="mt-1 w-4 h-4 rounded border-slate-300 text-orange-500 focus:ring-orange-500"
                     />
                     <label htmlFor="agreeToTerms" className="text-sm text-slate-600 leading-relaxed cursor-pointer">
-                      I agree to WanderKashmir's <a href="/terms" target="_blank" className="text-orange- font-medium hover:underline">Terms of Service</a>, <a href="/terms" target="_blank" className="text-orange- font-medium hover:underline">Privacy Policy</a>, and the <a href="/terms" target="_blank" className="text-orange- font-medium hover:underline">Vendor Agreement</a>. I confirm that all uploaded documents are authentic and legally valid.
+                      I agree to WanderKashmir's <a href="/terms" target="_blank" className="text-orange-500 font-medium hover:underline">Terms of Service</a>, <a href="/terms" target="_blank" className="text-orange-500 font-medium hover:underline">Privacy Policy</a>, and the <a href="/terms" target="_blank" className="text-orange-500 font-medium hover:underline">Vendor Agreement</a>. I confirm that all uploaded documents are authentic and legally valid.
                     </label>
                   </div>
                   {errors.agreeToTerms && <p className="text-orange-500 text-xs font-medium mt-2 ml-7">{errors.agreeToTerms.message}</p>}
@@ -644,10 +644,10 @@ export default function VendorEntryPage() {
                   </div>
 
                   {/* Info box */}
-                  <div className="bg-orange- border border-orange- rounded-xl p-4 mb-8">
+                  <div className="bg-orange-500 border border-orange-500 rounded-xl p-4 mb-8">
                     <div className="flex items-start gap-3">
-                      <Mail className="w-5 h-5 text-orange- shrink-0 mt-0.5" />
-                      <p className="text-orange- text-sm leading-relaxed">
+                      <Mail className="w-5 h-5 text-orange-500 shrink-0 mt-0.5" />
+                      <p className="text-orange-500 text-sm leading-relaxed">
                         A confirmation email has been sent to <strong className="font-bold">{watch("email")}</strong>. Please check your inbox (and spam folder) for details.
                       </p>
                     </div>

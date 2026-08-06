@@ -165,7 +165,7 @@ export default function TourDetailClient({ initialTour }: { initialTour: any }) 
                       return (
                         <>
                           {visibleCats.map((cat: string, idx: number) => (
-                            <span key={idx} className="badge bg-orange- text-white shadow-sm">{cat}</span>
+                            <span key={idx} className="badge bg-orange-500 text-white shadow-sm">{cat}</span>
                           ))}
                           {hiddenCount > 0 && (
                             <span className="badge bg-slate-900/60 backdrop-blur-sm text-white shadow-sm" title={categories.slice(2).join(', ')}>
@@ -365,14 +365,14 @@ export default function TourDetailClient({ initialTour }: { initialTour: any }) 
                 </h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
-                    <h3 className="text-sm font-semibold text-orange- mb-3 flex items-center gap-2">
+                    <h3 className="text-sm font-semibold text-orange-500 mb-3 flex items-center gap-2">
                       <CheckCircle2 className="w-4 h-4" />
                       Inclusions
                     </h3>
                     <ul className="space-y-2.5">
                       {tour.inclusions?.map((inc: string, i: number) => (
                         <li key={i} className="flex items-start gap-2.5 text-sm text-slate-700">
-                          <CheckCircle2 className="w-4 h-4 text-orange- flex-shrink-0 mt-0.5" />
+                          <CheckCircle2 className="w-4 h-4 text-orange-500 flex-shrink-0 mt-0.5" />
                           {inc}
                         </li>
                       ))}
@@ -430,7 +430,7 @@ export default function TourDetailClient({ initialTour }: { initialTour: any }) 
                         ))}
                       </div>
                       <textarea 
-                        className="w-full text-sm border border-slate-200 rounded-lg p-3 focus:outline-none focus:border-orange-"
+                        className="w-full text-sm border border-slate-200 rounded-lg p-3 focus:outline-none focus:border-orange-500"
                         placeholder="Share your experience..."
                         rows={3}
                         value={reviewComment}
@@ -439,7 +439,7 @@ export default function TourDetailClient({ initialTour }: { initialTour: any }) 
                       <button 
                         onClick={submitReview}
                         disabled={isSubmittingReview}
-                        className="bg-orange- text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-orange- transition-colors disabled:opacity-70"
+                        className="bg-orange-500 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-orange-500 transition-colors disabled:opacity-70"
                       >
                         {isSubmittingReview ? "Submitting..." : "Submit Review"}
                       </button>
@@ -503,7 +503,7 @@ export default function TourDetailClient({ initialTour }: { initialTour: any }) 
                   </div>
                   <p className="text-xs text-slate-400 mb-1">per person</p>
                   {tour.originalPrice ? (
-                    <p className="text-sm font-semibold text-orange- mb-4">
+                    <p className="text-sm font-semibold text-orange-500 mb-4">
                       💰 You save ₹{savings.toLocaleString("en-IN")} per person
                     </p>
                   ) : (
@@ -605,7 +605,7 @@ export default function TourDetailClient({ initialTour }: { initialTour: any }) 
                   </a>
 
                   <p className="text-xs text-slate-400 text-center mt-3 flex items-center justify-center gap-1">
-                    <Shield className="w-3.5 h-3.5 text-orange-" />
+                    <Shield className="w-3.5 h-3.5 text-orange-500" />
                     Free cancellation up to 7 days before travel
                   </p>
                 </div>
@@ -628,9 +628,9 @@ export default function TourDetailClient({ initialTour }: { initialTour: any }) 
                       href={`https://wa.me/916005888754?text=${encodeURIComponent(`Hello WanderKashmir, I need help planning my trip for ${tour.title}.`)}`} 
                       target="_blank" 
                       rel="noopener noreferrer" 
-                      className="w-full flex items-center gap-2.5 px-4 py-2.5 bg-orange- border border-orange- rounded-xl text-sm text-orange- hover:bg-orange- transition-colors"
+                      className="w-full flex items-center gap-2.5 px-4 py-2.5 bg-orange-500 border border-orange-500 rounded-xl text-sm text-orange-500 hover:bg-orange-500 transition-colors"
                     >
-                      <MessageCircle className="w-4 h-4 text-orange-" />
+                      <MessageCircle className="w-4 h-4 text-orange-500" />
                       Chat on WhatsApp
                     </a>
                   </div>
@@ -660,16 +660,16 @@ export default function TourDetailClient({ initialTour }: { initialTour: any }) 
       {showGuidePopup && (
         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md z-[100] flex items-center justify-center p-4 animate-in fade-in duration-200">
           <div className="bg-white rounded-3xl w-full max-w-md shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
-            <div className="bg-gradient-to-br from-orange- to-orange- p-6 text-center relative overflow-hidden">
+            <div className="bg-gradient-to-br from-orange-500 to-orange-600 p-6 text-center relative overflow-hidden">
               <div className="absolute top-0 right-0 p-4 opacity-20">
                 <MapPin className="w-24 h-24 text-white" />
               </div>
               <div className="relative z-10">
                 <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
-                  <UserCircle2 className="w-8 h-8 text-orange-" />
+                  <UserCircle2 className="w-8 h-8 text-orange-500" />
                 </div>
                 <h3 className="font-black text-2xl text-white mb-2">Wait! Enhance Your Trip</h3>
-                <p className="text-orange- text-sm font-medium">Add a local expert guide to make your Kashmir experience unforgettable.</p>
+                <p className="text-orange-500 text-sm font-medium">Add a local expert guide to make your Kashmir experience unforgettable.</p>
               </div>
             </div>
             
@@ -692,7 +692,7 @@ export default function TourDetailClient({ initialTour }: { initialTour: any }) 
               <div className="grid grid-cols-2 gap-3">
                 <button 
                   onClick={() => router.push(`/checkout?type=tour&tourId=${tour.id}&addonGuide=true&guests=${activePersons}`)}
-                  className="bg-orange- text-white font-bold py-3.5 px-4 rounded-xl hover:bg-orange- transition-colors shadow-lg shadow-orange-/30 text-sm flex items-center justify-center gap-2"
+                  className="bg-orange-500 text-white font-bold py-3.5 px-4 rounded-xl hover:bg-orange-500 transition-colors shadow-lg shadow-orange-500/30 text-sm flex items-center justify-center gap-2"
                 >
                   Yes, Add Guide
                 </button>

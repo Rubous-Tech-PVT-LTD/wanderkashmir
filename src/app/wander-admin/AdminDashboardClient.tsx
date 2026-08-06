@@ -56,7 +56,7 @@ function PropertyImagesAdmin({ property, onSaved }: { property: any, onSaved: (n
           <button 
             onClick={handleSave} 
             disabled={isSaving}
-            className="px-3 py-1.5 bg-orange- text-white text-sm font-bold rounded-lg hover:bg-orange- disabled:opacity-50 transition-colors"
+            className="px-3 py-1.5 bg-orange-500 text-white text-sm font-bold rounded-lg hover:bg-orange-500 disabled:opacity-50 transition-colors"
           >
             {isSaving ? "Saving..." : "Save Changes"}
           </button>
@@ -382,7 +382,7 @@ export default function AdminDashboardClient({
   // (using props now)
   const stats = [
     { label: "Total Platform Revenue", value: `₹${totalRevenue.toLocaleString('en-IN')}`, icon: IndianRupee, color: "text-emerald-500", bg: "bg-emerald-50", tab: "payouts" },
-    { label: "Total Registered Users", value: totalUsers.toString(), icon: Users, color: "text-orange-", bg: "bg-orange-", tab: "users" },
+    { label: "Total Registered Users", value: totalUsers.toString(), icon: Users, color: "text-orange-500", bg: "bg-orange-500", tab: "users" },
     { label: "Total Live Vendors", value: totalLiveVendors.toString(), icon: Building2, color: "text-indigo-500", bg: "bg-indigo-50", tab: "live_vendors" },
     { label: "Total Rejected", value: rejectedVendors.toString(), icon: XCircle, color: "text-red-500", bg: "bg-red-50", tab: "rejected" },
     { label: "Pending Vendor Approvals", value: pendingVendors.toString(), icon: Clock, color: "text-orange-500", bg: "bg-orange-50", tab: "approvals" },
@@ -575,8 +575,8 @@ export default function AdminDashboardClient({
   const getTypeIcon = (type: string) => {
     switch(type) {
       case 'HOTEL': return <Building2 className="w-5 h-5 text-slate-500" />;
-      case 'HOMESTAY': return <Building2 className="w-5 h-5 text-orange-" />;
-      case 'TAXI': return <Car className="w-5 h-5 text-orange-" />;
+      case 'HOMESTAY': return <Building2 className="w-5 h-5 text-orange-500" />;
+      case 'TAXI': return <Car className="w-5 h-5 text-orange-500" />;
       case 'GUIDE': return <Map className="w-5 h-5 text-orange-500" />;
       default: return <FileText className="w-5 h-5 text-slate-500" />;
     }
@@ -760,12 +760,12 @@ export default function AdminDashboardClient({
                   placeholder="Search vendors..." 
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="px-4 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-"
+                  className="px-4 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
                 />
                 <select 
                   value={filterType} 
                   onChange={(e) => setFilterType(e.target.value)}
-                  className="px-4 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange- bg-white"
+                  className="px-4 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 bg-white"
                 >
                   <option value="ALL">All Types</option>
                   <option value="HOTEL">Hotels</option>
@@ -779,7 +779,7 @@ export default function AdminDashboardClient({
             <div className="bg-slate-50 border-b border-slate-100 px-6 py-3 flex gap-3 overflow-x-auto">
               <button 
                 onClick={exportApprovals}
-                className="whitespace-nowrap flex items-center gap-2 text-xs font-bold bg-white border border-slate-200 text-slate-700 px-3 py-1.5 rounded-lg hover:bg-slate-100 hover:text-orange- transition-colors shadow-sm"
+                className="whitespace-nowrap flex items-center gap-2 text-xs font-bold bg-white border border-slate-200 text-slate-700 px-3 py-1.5 rounded-lg hover:bg-slate-100 hover:text-orange-500 transition-colors shadow-sm"
               >
                 <FileText className="w-3.5 h-3.5" /> Export Pending Approvals (CSV)
               </button>
@@ -835,14 +835,14 @@ export default function AdminDashboardClient({
                         <div className="flex items-center justify-end gap-2">
                           <button 
                             onClick={() => setKycVendor(vendor)}
-                            className="p-2 text-slate-400 hover:text-orange- hover:bg-orange- rounded-lg transition-colors" 
+                            className="p-2 text-slate-400 hover:text-orange-500 hover:bg-orange-500 rounded-lg transition-colors" 
                             title="View KYC Documents"
                           >
                             <FileText className="w-5 h-5" />
                           </button>
                           <button 
                             onClick={() => setSelectedVendorDetails(vendor)}
-                            className="p-2 text-slate-400 hover:text-orange- hover:bg-orange- rounded-lg transition-colors" 
+                            className="p-2 text-slate-400 hover:text-orange-500 hover:bg-orange-500 rounded-lg transition-colors" 
                             title="Review Details"
                           >
                             <Eye className="w-5 h-5" />
@@ -895,12 +895,12 @@ export default function AdminDashboardClient({
                   placeholder="Search live vendors..." 
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="px-4 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-"
+                  className="px-4 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
                 />
                 <select 
                   value={filterType} 
                   onChange={(e) => setFilterType(e.target.value)}
-                  className="px-4 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange- bg-white"
+                  className="px-4 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 bg-white"
                 >
                   <option value="ALL">All Types</option>
                   <option value="HOTEL">Hotels</option>
@@ -914,7 +914,7 @@ export default function AdminDashboardClient({
             <div className="bg-slate-50 border-b border-slate-100 px-6 py-3 flex gap-3 overflow-x-auto">
               <button 
                 onClick={exportLiveVendors}
-                className="whitespace-nowrap flex items-center gap-2 text-xs font-bold bg-white border border-slate-200 text-slate-700 px-3 py-1.5 rounded-lg hover:bg-slate-100 hover:text-orange- transition-colors shadow-sm"
+                className="whitespace-nowrap flex items-center gap-2 text-xs font-bold bg-white border border-slate-200 text-slate-700 px-3 py-1.5 rounded-lg hover:bg-slate-100 hover:text-orange-500 transition-colors shadow-sm"
               >
                 <FileText className="w-3.5 h-3.5" /> Export Live Vendors (CSV)
               </button>
@@ -1005,12 +1005,12 @@ export default function AdminDashboardClient({
                   placeholder="Search rejected vendors..." 
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="px-4 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-"
+                  className="px-4 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
                 />
                 <select 
                   value={filterType} 
                   onChange={(e) => setFilterType(e.target.value)}
-                  className="px-4 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange- bg-white"
+                  className="px-4 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 bg-white"
                 >
                   <option value="ALL">All Types</option>
                   <option value="HOTEL">Hotels</option>
@@ -1024,7 +1024,7 @@ export default function AdminDashboardClient({
             <div className="bg-slate-50 border-b border-slate-100 px-6 py-3 flex gap-3 overflow-x-auto">
               <button 
                 onClick={exportRejectedVendors}
-                className="whitespace-nowrap flex items-center gap-2 text-xs font-bold bg-white border border-slate-200 text-slate-700 px-3 py-1.5 rounded-lg hover:bg-slate-100 hover:text-orange- transition-colors shadow-sm"
+                className="whitespace-nowrap flex items-center gap-2 text-xs font-bold bg-white border border-slate-200 text-slate-700 px-3 py-1.5 rounded-lg hover:bg-slate-100 hover:text-orange-500 transition-colors shadow-sm"
               >
                 <FileText className="w-3.5 h-3.5" /> Export Rejected Vendors (CSV)
               </button>
@@ -1101,7 +1101,7 @@ export default function AdminDashboardClient({
                   placeholder="Search listings..." 
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="px-4 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-"
+                  className="px-4 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
                 />
               </div>
             </div>
@@ -1155,7 +1155,7 @@ export default function AdminDashboardClient({
                         <div className="flex items-center justify-end gap-2">
                           <button 
                             onClick={() => setSelectedPropertyDetails(property)}
-                            className="p-2 text-slate-400 hover:text-orange- hover:bg-orange- rounded-lg transition-colors" 
+                            className="p-2 text-slate-400 hover:text-orange-500 hover:bg-orange-500 rounded-lg transition-colors" 
                             title="Review Details"
                           >
                             <Eye className="w-5 h-5" />
@@ -1208,7 +1208,7 @@ export default function AdminDashboardClient({
                   placeholder="Search live listings..." 
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="px-4 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-"
+                  className="px-4 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
                 />
               </div>
             </div>
@@ -1256,7 +1256,7 @@ export default function AdminDashboardClient({
                         <div className="flex items-center justify-end gap-2">
                           <button 
                             onClick={() => setSelectedPropertyDetails(property)}
-                            className="p-2 text-slate-400 hover:text-orange- hover:bg-orange- rounded-lg transition-colors" 
+                            className="p-2 text-slate-400 hover:text-orange-500 hover:bg-orange-500 rounded-lg transition-colors" 
                             title="Review Details"
                           >
                             <Eye className="w-5 h-5" />
@@ -1299,12 +1299,12 @@ export default function AdminDashboardClient({
                   placeholder="Search tourists..." 
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="px-4 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-"
+                  className="px-4 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
                 />
                 <select 
                   value={filterStatus} 
                   onChange={(e) => setFilterStatus(e.target.value)}
-                  className="px-4 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange- bg-white"
+                  className="px-4 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 bg-white"
                 >
                   <option value="ALL">All Status</option>
                   <option value="ACTIVE">Active</option>
@@ -1316,7 +1316,7 @@ export default function AdminDashboardClient({
             <div className="bg-slate-50 border-b border-slate-100 px-6 py-3 flex gap-3 overflow-x-auto">
               <button 
                 onClick={exportUsers}
-                className="whitespace-nowrap flex items-center gap-2 text-xs font-bold bg-white border border-slate-200 text-slate-700 px-3 py-1.5 rounded-lg hover:bg-slate-100 hover:text-orange- transition-colors shadow-sm"
+                className="whitespace-nowrap flex items-center gap-2 text-xs font-bold bg-white border border-slate-200 text-slate-700 px-3 py-1.5 rounded-lg hover:bg-slate-100 hover:text-orange-500 transition-colors shadow-sm"
               >
                 <FileText className="w-3.5 h-3.5" /> Export Users (CSV)
               </button>
@@ -1415,12 +1415,12 @@ export default function AdminDashboardClient({
                     placeholder="Search bookings..." 
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="px-4 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-"
+                    className="px-4 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
                   />
                   <select 
                     value={filterStatus} 
                     onChange={(e) => setFilterStatus(e.target.value)}
-                    className="px-4 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange- bg-white"
+                    className="px-4 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 bg-white"
                   >
                     <option value="ALL">All Status</option>
                     <option value="CONFIRMED">Confirmed</option>
@@ -1432,7 +1432,7 @@ export default function AdminDashboardClient({
               <div className="bg-slate-50 border-b border-slate-100 px-6 py-3 flex gap-3 overflow-x-auto">
                 <button 
                   onClick={exportRevenueTaxReport}
-                  className="whitespace-nowrap flex items-center gap-2 text-xs font-bold bg-white border border-slate-200 text-slate-700 px-3 py-1.5 rounded-lg hover:bg-slate-100 hover:text-orange- transition-colors shadow-sm"
+                  className="whitespace-nowrap flex items-center gap-2 text-xs font-bold bg-white border border-slate-200 text-slate-700 px-3 py-1.5 rounded-lg hover:bg-slate-100 hover:text-orange-500 transition-colors shadow-sm"
                 >
                   <FileText className="w-3.5 h-3.5" /> Export Revenue/Tax Report (CSV)
                 </button>
@@ -1493,7 +1493,7 @@ export default function AdminDashboardClient({
                         <td className="px-6 py-4 text-right">
                           <button 
                             onClick={() => setSelectedBookingDetails(booking)}
-                            className="inline-flex items-center gap-1.5 text-orange- hover:text-orange- bg-orange- hover:bg-orange- px-3 py-1.5 rounded-lg text-sm font-bold transition-colors"
+                            className="inline-flex items-center gap-1.5 text-orange-500 hover:text-orange-500 bg-orange-500 hover:bg-orange-500 px-3 py-1.5 rounded-lg text-sm font-bold transition-colors"
                           >
                             <Eye className="w-4 h-4" /> View
                           </button>
@@ -1526,12 +1526,12 @@ export default function AdminDashboardClient({
                   placeholder="Search payouts..." 
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="px-4 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-"
+                  className="px-4 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
                 />
                   <select 
                   value={filterStatus} 
                   onChange={(e) => setFilterStatus(e.target.value)}
-                  className="px-4 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange- bg-white"
+                  className="px-4 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 bg-white"
                 >
                   <option value="ALL">All Payouts</option>
                   <option value="PENDING">Pending Only</option>
@@ -1542,7 +1542,7 @@ export default function AdminDashboardClient({
             <div className="bg-slate-50 border-b border-slate-100 px-6 py-3 flex gap-3">
               <button 
                 onClick={exportPayouts}
-                className="flex items-center gap-2 text-xs font-bold bg-orange- text-white px-3 py-1.5 rounded-lg hover:bg-orange- transition-colors shadow-sm"
+                className="flex items-center gap-2 text-xs font-bold bg-orange-500 text-white px-3 py-1.5 rounded-lg hover:bg-orange-500 transition-colors shadow-sm"
               >
                 <IndianRupee className="w-3.5 h-3.5" /> Export Pending Payouts to Bank (CSV)
               </button>
@@ -1592,7 +1592,7 @@ export default function AdminDashboardClient({
                               });
                             }}
                             disabled={isProcessing === p.vendorId}
-                            className="bg-orange- hover:bg-orange- text-white px-4 py-2 rounded-lg text-sm font-bold shadow-sm transition-colors disabled:opacity-50 flex items-center gap-2 ml-auto"
+                            className="bg-orange-500 hover:bg-orange-500 text-white px-4 py-2 rounded-lg text-sm font-bold shadow-sm transition-colors disabled:opacity-50 flex items-center gap-2 ml-auto"
                           >
                             <IndianRupee className="w-4 h-4" /> {isProcessing === p.vendorId ? "Updating..." : "Mark as Paid"}
                           </button>
@@ -1630,12 +1630,12 @@ export default function AdminDashboardClient({
                     placeholder="Search by Booking ID or Name..." 
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="px-4 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange- w-full sm:w-64"
+                    className="px-4 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 w-full sm:w-64"
                   />
                   <select 
                     value={filterType} 
                     onChange={(e) => setFilterType(e.target.value)}
-                    className="px-4 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange- bg-white"
+                    className="px-4 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 bg-white"
                   >
                     <option value="ALL">All Services</option>
                     <option value="HOTEL">Hotels Only</option>
@@ -1645,7 +1645,7 @@ export default function AdminDashboardClient({
                   <select 
                     value={filterDate} 
                     onChange={(e) => setFilterDate(e.target.value)}
-                    className="px-4 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange- bg-white font-bold text-orange-"
+                    className="px-4 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 bg-white font-bold text-orange-500"
                   >
                     <option value="ALL">All Time</option>
                     <option value="TODAY">Today's Arrivals</option>
@@ -1657,7 +1657,7 @@ export default function AdminDashboardClient({
               <div className="bg-slate-50 border-b border-slate-100 px-6 py-3 flex gap-3 overflow-x-auto">
                 <button 
                   onClick={exportDailyManifest}
-                  className="whitespace-nowrap flex items-center gap-2 text-xs font-bold bg-orange- text-white px-3 py-1.5 rounded-lg hover:bg-orange- transition-colors shadow-sm"
+                  className="whitespace-nowrap flex items-center gap-2 text-xs font-bold bg-orange-500 text-white px-3 py-1.5 rounded-lg hover:bg-orange-500 transition-colors shadow-sm"
                 >
                   <FileText className="w-3.5 h-3.5" /> Export Manifest (CSV)
                 </button>
@@ -1688,7 +1688,7 @@ export default function AdminDashboardClient({
                           <div className="font-medium text-slate-900">
                             {booking.property?.name || (booking.vehicle ? `${booking.vehicle.make} ${booking.vehicle.model}` : "Unknown Item")}
                           </div>
-                          <div className="text-[10px] font-bold text-orange- bg-orange- px-2 py-0.5 rounded-full inline-block mt-1">
+                          <div className="text-[10px] font-bold text-orange-500 bg-orange-500 px-2 py-0.5 rounded-full inline-block mt-1">
                             {booking.property?.vendorProfile?.type || booking.vehicle?.vendorProfile?.type || "UNKNOWN"}
                           </div>
                         </td>
@@ -1887,7 +1887,7 @@ export default function AdminDashboardClient({
             <div className="p-6">
               <label className="block text-sm font-bold text-slate-700 mb-2">Reason</label>
               <textarea
-                className="w-full border border-slate-200 rounded-xl p-3 text-sm focus:ring-2 focus:ring-orange- focus:border-orange- outline-none"
+                className="w-full border border-slate-200 rounded-xl p-3 text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none"
                 rows={4}
                 placeholder="e.g., Policy violation."
                 value={rejectionRemarks}
@@ -1966,8 +1966,8 @@ export default function AdminDashboardClient({
                 {selectedPropertyDetails.googlePlaceId && !isEditingGooglePlaceId ? (
                   <div className="flex items-center justify-between bg-slate-50 border border-slate-200 rounded-lg p-4">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-orange- rounded-full flex items-center justify-center">
-                        <MapPin className="w-5 h-5 text-orange-" />
+                      <div className="w-10 h-10 bg-orange-500 rounded-full flex items-center justify-center">
+                        <MapPin className="w-5 h-5 text-orange-500" />
                       </div>
                       <div>
                         <p className="text-sm font-bold text-slate-900">Saved Place ID</p>
@@ -1980,7 +1980,7 @@ export default function AdminDashboardClient({
                           setAdminGooglePlaceId(selectedPropertyDetails.googlePlaceId || "");
                           setIsEditingGooglePlaceId(true);
                         }}
-                        className="px-3 py-1.5 text-sm font-bold text-orange- bg-orange- rounded-lg hover:bg-orange- transition"
+                        className="px-3 py-1.5 text-sm font-bold text-orange-500 bg-orange-500 rounded-lg hover:bg-orange-500 transition"
                       >
                         Edit
                       </button>
@@ -2015,7 +2015,7 @@ export default function AdminDashboardClient({
                       value={adminGooglePlaceId}
                       onChange={(e) => setAdminGooglePlaceId(e.target.value)}
                       placeholder="Enter Google Place ID"
-                      className="flex-1 border border-slate-200 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-orange-/20 focus:border-orange-"
+                      className="flex-1 border border-slate-200 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500"
                     />
                     <button 
                       onClick={async () => {
@@ -2033,7 +2033,7 @@ export default function AdminDashboardClient({
                         }
                       }}
                       disabled={isProcessing === selectedPropertyDetails.id + '-gpid' || !adminGooglePlaceId.trim()}
-                      className="px-4 py-2 bg-orange- text-white font-bold rounded-lg hover:bg-orange- disabled:opacity-50"
+                      className="px-4 py-2 bg-orange-500 text-white font-bold rounded-lg hover:bg-orange-500 disabled:opacity-50"
                     >
                       {isProcessing === selectedPropertyDetails.id + '-gpid' ? "Saving..." : "Save"}
                     </button>
@@ -2061,7 +2061,7 @@ export default function AdminDashboardClient({
                         setAdminFaqs(Array.isArray(selectedPropertyDetails.faqs) ? selectedPropertyDetails.faqs : []);
                         setIsEditingSeo(true);
                       }}
-                      className="px-3 py-1.5 text-sm font-bold text-orange- bg-orange- rounded-lg hover:bg-orange- transition"
+                      className="px-3 py-1.5 text-sm font-bold text-orange-500 bg-orange-500 rounded-lg hover:bg-orange-500 transition"
                     >
                       Edit SEO
                     </button>
@@ -2089,7 +2089,7 @@ export default function AdminDashboardClient({
                           }
                         }}
                         disabled={isProcessing === selectedPropertyDetails.id + '-seo'}
-                        className="px-3 py-1.5 text-sm font-bold text-white bg-orange- rounded-lg hover:bg-orange- transition disabled:opacity-50"
+                        className="px-3 py-1.5 text-sm font-bold text-white bg-orange-500 rounded-lg hover:bg-orange-500 transition disabled:opacity-50"
                       >
                         {isProcessing === selectedPropertyDetails.id + '-seo' ? "Saving..." : "Save"}
                       </button>
@@ -2102,7 +2102,7 @@ export default function AdminDashboardClient({
                     <div>
                       <label className="block text-sm font-semibold text-slate-700 mb-1">Property Description (SEO / Detail)</label>
                       <textarea
-                        className="w-full border border-slate-200 rounded-lg p-3 text-sm focus:outline-none focus:ring-2 focus:ring-orange-/20 focus:border-orange-"
+                        className="w-full border border-slate-200 rounded-lg p-3 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500"
                         rows={5}
                         placeholder="Write a descriptive overview for SEO and guests..."
                         value={adminDescription}
@@ -2147,7 +2147,7 @@ export default function AdminDashboardClient({
                                 setAdminFaqs(newFaqs);
                               }}
                               placeholder="Question (e.g. How far is it from city center?)"
-                              className="w-full mb-2 border border-slate-200 rounded-md px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-orange-"
+                              className="w-full mb-2 border border-slate-200 rounded-md px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-orange-500"
                             />
                             <textarea 
                               value={faq.answer}
@@ -2158,7 +2158,7 @@ export default function AdminDashboardClient({
                               }}
                               placeholder="Answer..."
                               rows={2}
-                              className="w-full border border-slate-200 rounded-md px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-orange-"
+                              className="w-full border border-slate-200 rounded-md px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-orange-500"
                             />
                           </div>
                         ))}
@@ -2245,7 +2245,7 @@ export default function AdminDashboardClient({
             <div className="p-6">
               <label className="block text-sm font-bold text-slate-700 mb-2">Reason</label>
               <textarea
-                className="w-full border border-slate-200 rounded-xl p-3 text-sm focus:ring-2 focus:ring-orange- focus:border-orange- outline-none"
+                className="w-full border border-slate-200 rounded-xl p-3 text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none"
                 rows={4}
                 placeholder="e.g., Photos are blurry or price is unrealistic."
                 value={propertyRejectionRemarks}
@@ -2514,11 +2514,11 @@ export default function AdminDashboardClient({
                 {selectedBookingDetails.tour && (
                   <div>
                     <h3 className="text-lg font-bold text-slate-900 mb-4 pb-2 border-b border-slate-100 flex items-center gap-2">
-                      <MapPin className="w-5 h-5 text-orange-" /> Tour Package Details
+                      <MapPin className="w-5 h-5 text-orange-500" /> Tour Package Details
                     </h3>
-                    <div className="bg-orange- rounded-xl p-5 border border-orange- mb-6">
+                    <div className="bg-orange-500 rounded-xl p-5 border border-orange-500 mb-6">
                       <div className="font-black text-xl text-slate-900 mb-1">{selectedBookingDetails.tour.title}</div>
-                      <div className="text-sm text-orange- font-bold mb-4">{selectedBookingDetails.tour.duration || "N/A"}</div>
+                      <div className="text-sm text-orange-500 font-bold mb-4">{selectedBookingDetails.tour.duration || "N/A"}</div>
                       
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         {/* Inclusions */}
@@ -2623,8 +2623,8 @@ export default function AdminDashboardClient({
         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div className="bg-white w-full max-w-md rounded-2xl shadow-xl overflow-hidden animate-in fade-in zoom-in duration-200">
             <div className="p-6 text-center pt-8">
-              <div className="w-16 h-16 bg-orange- rounded-full flex items-center justify-center mx-auto mb-4">
-                <ShieldCheck className="w-8 h-8 text-orange-" />
+              <div className="w-16 h-16 bg-orange-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                <ShieldCheck className="w-8 h-8 text-orange-500" />
               </div>
               <h3 className="text-2xl font-black text-slate-900 mb-2">Confirm Payout</h3>
               <p className="text-slate-600">
@@ -2649,7 +2649,7 @@ export default function AdminDashboardClient({
                   setPayoutConfirmModal(null);
                 }}
                 disabled={isProcessing === payoutConfirmModal.vendorId}
-                className="flex-1 px-4 py-3 bg-orange- text-white rounded-xl font-bold hover:bg-orange- transition-colors shadow-md disabled:opacity-50"
+                className="flex-1 px-4 py-3 bg-orange-500 text-white rounded-xl font-bold hover:bg-orange-500 transition-colors shadow-md disabled:opacity-50"
               >
                 {isProcessing === payoutConfirmModal.vendorId ? "Updating..." : "Yes, Mark as Paid"}
               </button>

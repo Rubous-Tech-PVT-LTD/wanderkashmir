@@ -33,7 +33,7 @@ function ReviewCard({ review }: { review: any }) {
         {isLong && (
           <button 
             onClick={() => setExpanded(!expanded)}
-            className="text-orange- font-medium text-xs mt-2 hover:underline"
+            className="text-orange-500 font-medium text-xs mt-2 hover:underline"
           >
             {expanded ? "Show less" : "Read more"}
           </button>

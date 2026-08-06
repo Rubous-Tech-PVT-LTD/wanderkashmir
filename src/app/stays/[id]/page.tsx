@@ -201,9 +201,9 @@ export default async function PropertyDetailPage({
       {/* ─── BREADCRUMBS & TITLE ─── */}
       <div className="container-custom py-6">
         <div className="text-sm text-slate-500 mb-4 flex items-center gap-2">
-          <Link href="/" className="hover:text-orange- transition-colors">Home</Link>
+          <Link href="/" className="hover:text-orange-500 transition-colors">Home</Link>
           <span>/</span>
-          <Link href="/stays" className="hover:text-orange- transition-colors">Stays</Link>
+          <Link href="/stays" className="hover:text-orange-500 transition-colors">Stays</Link>
           <span>/</span>
           <span className="text-slate-900 font-medium">{property.name}</span>
         </div>
@@ -219,7 +219,7 @@ export default async function PropertyDetailPage({
               href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(property.location)}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="underline decoration-slate-300 underline-offset-4 hover:text-orange- transition-colors"
+              className="underline decoration-slate-300 underline-offset-4 hover:text-orange-500 transition-colors"
             >
               {property.location}
             </a>
@@ -252,7 +252,7 @@ export default async function PropertyDetailPage({
                   )}
                 </p>
               </div>
-              <div className="w-14 h-14 bg-orange- rounded-full flex items-center justify-center border-2 border-white shadow-sm overflow-hidden">
+              <div className="w-14 h-14 bg-orange-500 rounded-full flex items-center justify-center border-2 border-white shadow-sm overflow-hidden">
                 <img src={`https://api.dicebear.com/7.x/initials/svg?seed=${property.vendorProfile.businessName}`} alt="Host" className="w-full h-full" />
               </div>
             </div>
@@ -268,7 +268,7 @@ export default async function PropertyDetailPage({
               <div className="grid grid-cols-2 gap-4">
                 {["Mountain view", "Free WiFi", "Dedicated workspace", "Free parking on premises", "Room service", "Heating"].map(amenity => (
                   <div key={amenity} className="flex items-center gap-3 text-slate-600">
-                    <CheckCircle2 className="w-5 h-5 text-orange-" />
+                    <CheckCircle2 className="w-5 h-5 text-orange-500" />
                     <span>{amenity}</span>
                   </div>
                 ))}
@@ -312,7 +312,7 @@ export default async function PropertyDetailPage({
             {Array.isArray(property.faqs) && property.faqs.length > 0 && (
               <div className="pt-10 border-t border-slate-100 mt-10">
                 <h3 className="text-xl font-bold text-slate-900 mb-6 flex items-center gap-2">
-                  <svg className="w-5 h-5 text-orange-" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <svg className="w-5 h-5 text-orange-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                   Questions & Answers - When Booking {property.name}
@@ -325,7 +325,7 @@ export default async function PropertyDetailPage({
                         <h4 className="font-bold text-slate-900">{faq.question}</h4>
                       </div>
                       <div className="flex gap-3">
-                        <span className="font-bold text-orange- shrink-0">A:</span>
+                        <span className="font-bold text-orange-500 shrink-0">A:</span>
                         <p className="text-slate-600 leading-relaxed whitespace-pre-wrap">{faq.answer}</p>
                       </div>
                     </div>
@@ -381,7 +381,7 @@ export default async function PropertyDetailPage({
             </Suspense>
 
             <div className="mt-6 flex items-center justify-center gap-2 text-slate-500 text-sm">
-              <ShieldCheck className="w-4 h-4 text-orange-" />
+              <ShieldCheck className="w-4 h-4 text-orange-500" />
               <span>100% Secure Checkout via Razorpay</span>
             </div>
           </div>

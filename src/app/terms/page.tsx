@@ -32,7 +32,7 @@ export default function TermsOfServicePage() {
           {/* Section 1 */}
           <div className="mb-10">
             <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 bg-orange- rounded-lg flex items-center justify-center text-orange-">
+              <div className="w-10 h-10 bg-orange-500 rounded-lg flex items-center justify-center text-orange-500">
                 <BookOpen className="w-5 h-5" />
               </div>
               <h2 className="text-2xl font-bold text-slate-900 m-0">1. Role of WanderKashmir</h2>

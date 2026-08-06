@@ -12,7 +12,7 @@ export async function generateInvoicePDF(booking: any): Promise<Buffer> {
   const boldFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
 
   // Colors
-  const primaryColor = rgb(0.011, 0.517, 0.776); // text-orange- approx
+  const primaryColor = rgb(0.011, 0.517, 0.776); // text-orange-500 approx
   const grayColor = rgb(0.3, 0.3, 0.3);
 
   // Header

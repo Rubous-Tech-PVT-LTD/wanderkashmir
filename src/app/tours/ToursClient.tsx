@@ -64,16 +64,16 @@ export default function ToursClient({ initialTours }: { initialTours: any[] }) {
       <div className="pt-20 min-h-screen">
         {/* Header */}
         <div
-          className="relative py-16 overflow-hidden bg-gradient-to-br from-orange- to-orange-"
+          className="relative py-16 overflow-hidden bg-gradient-to-br from-orange-500 to-orange-600"
         >
           <div className="container-custom text-center text-white relative z-10">
-            <p className="text-sm font-semibold uppercase tracking-wider text-orange- mb-3">
+            <p className="text-sm font-semibold uppercase tracking-wider text-orange-100 mb-3">
               Curated Experiences
             </p>
-            <h1 className="font-display text-4xl md:text-5xl font-bold mb-3">
+            <h1 className="font-display text-4xl md:text-5xl font-bold mb-3 text-white">
               Tour Packages in Kashmir
             </h1>
-            <p className="text-orange- text-base max-w-xl mx-auto mb-6">
+            <p className="text-orange-50 text-base max-w-xl mx-auto mb-6">
               Hand-crafted itineraries by local experts. Everything included — stays, meals, transfers & guides.
             </p>
             <div className="flex justify-center">
@@ -92,8 +92,8 @@ export default function ToursClient({ initialTours }: { initialTours: any[] }) {
                   onClick={() => handleCatChange(cat)}
                   className={`px-4 py-2 rounded-full text-sm font-semibold border transition-all ${
                     selectedCat === cat
-                      ? "bg-orange- text-white border-orange-"
-                      : "border-slate-200 text-slate-600 hover:border-orange- hover:text-orange-"
+                      ? "bg-orange-500 text-white border-orange-500"
+                      : "border-slate-200 text-slate-600 hover:border-orange-500 hover:text-orange-500"
                   }`}
                 >
                   {cat}
@@ -105,7 +105,7 @@ export default function ToursClient({ initialTours }: { initialTours: any[] }) {
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value)}
-                className="text-sm border border-slate-200 rounded-xl px-3 py-2 focus:outline-none focus:border-orange- bg-white"
+                className="text-sm border border-slate-200 rounded-xl px-3 py-2 focus:outline-none focus:border-orange-500 bg-white"
               >
                 {["Recommended", "Price: Low to High", "Price: High to Low", "Highest Rated"].map((o) => (
                   <option key={o}>{o}</option>
@@ -151,7 +151,7 @@ export default function ToursClient({ initialTours }: { initialTours: any[] }) {
                         return (
                           <>
                             {visibleCats.map((cat: string, idx: number) => (
-                              <span key={idx} className="badge bg-orange- text-white text-xs px-2 py-1 rounded-lg font-semibold shadow-sm">
+                              <span key={idx} className="badge bg-orange-500 text-white text-xs px-2 py-1 rounded-lg font-semibold shadow-sm">
                                 {cat}
                               </span>
                             ))}
@@ -205,7 +205,7 @@ export default function ToursClient({ initialTours }: { initialTours: any[] }) {
                     <div className="flex gap-1.5 flex-wrap mb-3">
                       {tour.inclusions.slice(0, 4).map((inc: string) => (
                         <span key={inc} className="flex items-center gap-1 text-xs bg-slate-50 border border-slate-100 px-2 py-1 rounded-lg text-slate-600">
-                          <CheckCircle2 className="w-3 h-3 text-orange- flex-shrink-0" />
+                          <CheckCircle2 className="w-3 h-3 text-orange-500 flex-shrink-0" />
                           <span className="truncate max-w-[150px]">{inc}</span>
                         </span>
                       ))}
@@ -231,7 +231,7 @@ export default function ToursClient({ initialTours }: { initialTours: any[] }) {
                         </p>
                       </div>
                       {tour.isLive ? (
-                        <span className="text-xs font-semibold px-3 py-1.5 rounded-lg text-white bg-gradient-to-r from-orange- to-orange- shadow-sm">
+                        <span className="text-xs font-semibold px-3 py-1.5 rounded-lg text-white bg-gradient-to-r from-orange-500 to-orange-600 shadow-sm">
                           View Details
                         </span>
                       ) : (
@@ -268,8 +268,8 @@ export default function ToursClient({ initialTours }: { initialTours: any[] }) {
                     onClick={() => handlePageChange(idx + 1)}
                     className={`w-10 h-10 rounded-lg font-semibold transition-colors ${
                       currentPage === idx + 1
-                        ? "bg-orange- text-white shadow-md"
-                        : "border border-slate-200 text-slate-600 hover:bg-orange- hover:text-orange-"
+                        ? "bg-orange-500 text-white shadow-md"
+                        : "border border-slate-200 text-slate-600 hover:bg-orange-500 hover:text-orange-500"
                     }`}
                   >
                     {idx + 1}

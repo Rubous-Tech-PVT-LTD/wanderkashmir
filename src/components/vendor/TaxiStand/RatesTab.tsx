@@ -49,7 +49,7 @@ export default function RatesTab({
               setCustomPrice("");
               setIsAdding(true);
             }}
-            className="px-4 py-2 bg-orange- text-white rounded-xl text-sm font-bold flex items-center gap-2 hover:bg-orange- transition-colors"
+            className="px-4 py-2 bg-orange-500 text-white rounded-xl text-sm font-bold flex items-center gap-2 hover:bg-orange-500 transition-colors"
           >
             <Plus className="w-4 h-4" /> Add Custom Route
           </button>
@@ -71,7 +71,7 @@ export default function RatesTab({
                   required
                   value={routePlace}
                   onChange={(e) => setRoutePlace(e.target.value)}
-                  className="pl-10 w-full rounded-xl border border-slate-200 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-orange-"
+                  className="pl-10 w-full rounded-xl border border-slate-200 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-orange-500"
                   placeholder="e.g., Srinagar Airport to Gulmarg"
                 />
               </div>
@@ -88,7 +88,7 @@ export default function RatesTab({
                   min="0"
                   value={customPrice}
                   onChange={(e) => setCustomPrice(e.target.value)}
-                  className="pl-10 w-full rounded-xl border border-slate-200 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-orange-"
+                  className="pl-10 w-full rounded-xl border border-slate-200 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-orange-500"
                   placeholder="2500"
                 />
               </div>
@@ -105,7 +105,7 @@ export default function RatesTab({
             <button
               type="submit"
               disabled={loading}
-              className="px-6 py-3 rounded-xl bg-orange- text-white font-bold hover:bg-orange- transition-colors flex items-center gap-2 disabled:opacity-50"
+              className="px-6 py-3 rounded-xl bg-orange-500 text-white font-bold hover:bg-orange-500 transition-colors flex items-center gap-2 disabled:opacity-50"
             >
               <Save className="w-5 h-5" />
               {loading ? "Saving..." : "Save Rate"}
@@ -160,7 +160,7 @@ export default function RatesTab({
                         setIsAdding(true);
                         window.scrollTo({ top: 0, behavior: 'smooth' });
                       }}
-                      className="text-orange- hover:text-orange- text-sm font-bold"
+                      className="text-orange-500 hover:text-orange-500 text-sm font-bold"
                     >
                       {override ? "Edit" : "Override"}
                     </button>
@@ -193,7 +193,7 @@ export default function RatesTab({
                       setIsAdding(true);
                       window.scrollTo({ top: 0, behavior: 'smooth' });
                     }}
-                    className="text-orange- hover:text-orange- text-sm font-bold"
+                    className="text-orange-500 hover:text-orange-500 text-sm font-bold"
                   >
                     Edit
                   </button>

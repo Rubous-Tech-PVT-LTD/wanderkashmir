@@ -25,7 +25,7 @@ export default function PropertyDescription({ description }: PropertyDescription
       {description.length > 150 && (
         <button 
           onClick={() => setIsOpen(true)}
-          className="mt-2 text-orange- font-bold hover:underline flex items-center gap-1"
+          className="mt-2 text-orange-500 font-bold hover:underline flex items-center gap-1"
         >
           Read more <span className="text-xl leading-none">›</span>
         </button>

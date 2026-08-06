@@ -245,7 +245,7 @@ export default function AdminToursTab() {
                   <label key={cat} className="flex items-center gap-2 bg-slate-50 border border-slate-200 px-3 py-2 rounded-lg cursor-pointer hover:bg-slate-100 transition-colors">
                     <input 
                       type="checkbox" 
-                      className="rounded border-slate-300 text-orange- focus:ring-orange- w-4 h-4 cursor-pointer"
+                      className="rounded border-slate-300 text-orange-500 focus:ring-orange-500 w-4 h-4 cursor-pointer"
                       checked={isSelected}
                       onChange={(e) => {
                         const currentCats = formData.category.split(',').map(c => c.trim()).filter(Boolean);
@@ -272,7 +272,7 @@ export default function AdminToursTab() {
                               setFormData({ ...formData, category: currentCats.map(c => c === cat ? trimmed : c).join(', ') });
                             }
                           }}
-                          className="text-slate-400 hover:text-orange-"
+                          className="text-slate-400 hover:text-orange-500"
                           title="Edit Category"
                         >
                           <Edit2 className="w-3 h-3" />
@@ -302,7 +302,7 @@ export default function AdminToursTab() {
                 type="text" 
                 id="customCategoryInput"
                 placeholder="Add custom category..." 
-                className="border border-slate-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:border-orange-"
+                className="border border-slate-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:border-orange-500"
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') {
                     e.preventDefault();
@@ -320,7 +320,7 @@ export default function AdminToursTab() {
               />
               <button 
                 type="button"
-                className="bg-orange- text-orange- px-3 py-1.5 rounded-lg text-sm font-semibold hover:bg-orange- transition-colors border border-orange-"
+                className="bg-orange-500 text-orange-500 px-3 py-1.5 rounded-lg text-sm font-semibold hover:bg-orange-500 transition-colors border border-orange-500"
                 onClick={(e) => {
                   const input = document.getElementById('customCategoryInput') as HTMLInputElement;
                   const val = input.value.trim();
@@ -382,7 +382,7 @@ export default function AdminToursTab() {
           <div className="md:col-span-2 border-t border-slate-200 pt-6 mt-4">
             <div className="flex justify-between items-center mb-4">
               <h4 className="text-lg font-bold text-slate-800">Day-by-Day Itinerary</h4>
-              <button type="button" onClick={addItineraryDay} className="flex items-center gap-1 bg-orange- text-orange- px-3 py-1.5 rounded-lg text-sm font-semibold hover:bg-orange- transition-colors">
+              <button type="button" onClick={addItineraryDay} className="flex items-center gap-1 bg-orange-500 text-orange-500 px-3 py-1.5 rounded-lg text-sm font-semibold hover:bg-orange-500 transition-colors">
                 <Plus className="w-4 h-4" /> Add Day
               </button>
             </div>
@@ -476,7 +476,7 @@ export default function AdminToursTab() {
                 <td className="px-6 py-4 text-sm font-bold text-emerald-600">₹{tour.price.toLocaleString('en-IN')}</td>
                 <td className="px-6 py-4">
                   <div className="flex items-center gap-2">
-                    <button onClick={() => handleEdit(tour)} className="p-2 bg-orange- text-orange- rounded-lg hover:bg-orange-">
+                    <button onClick={() => handleEdit(tour)} className="p-2 bg-orange-500 text-orange-500 rounded-lg hover:bg-orange-500">
                       <Edit2 className="w-4 h-4" />
                     </button>
                     <button onClick={() => handleDelete(tour.id)} className="p-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100">

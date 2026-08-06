@@ -129,7 +129,7 @@ export default async function TaxiSeoPage({ params }: { params: Promise<{ slug: 
         {/* Hero Section */}
         <div className="relative rounded-3xl overflow-hidden shadow-2xl mb-12 flex flex-col md:flex-row bg-[#f97316]/5">
           <div className="flex-1 space-y-6 p-8 md:p-12 z-10 relative">
-            <div className="inline-flex items-center gap-2 px-3 py-1 bg-white/80 backdrop-blur-sm text-[#f97316] rounded-full text-sm font-semibold shadow-sm border border-orange-">
+            <div className="inline-flex items-center gap-2 px-3 py-1 bg-white/80 backdrop-blur-sm text-[#f97316] rounded-full text-sm font-semibold shadow-sm border border-orange-500">
               <MapPin className="w-4 h-4" />
               Verified Taxi Service
             </div>
@@ -201,7 +201,7 @@ export default async function TaxiSeoPage({ params }: { params: Promise<{ slug: 
                     {Object.entries(rates).map(([vehicle, price]) => (
                       <tr key={vehicle} className="hover:bg-slate-50/50 transition-colors">
                         <td className="p-4 flex items-center gap-3">
-                          <div className="p-2 bg-orange- text-[#f97316] rounded-lg">
+                          <div className="p-2 bg-orange-500 text-[#f97316] rounded-lg">
                             <Car className="w-5 h-5" />
                           </div>
                           <span className="font-semibold text-slate-800">{vehicle}</span>

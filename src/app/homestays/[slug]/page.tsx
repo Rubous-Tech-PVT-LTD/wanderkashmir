@@ -244,7 +244,7 @@ export default async function HomestaySeoPage({ params }: { params: Promise<{ sl
             <p className="text-slate-600">Enjoy traditional Wazwan and authentic homemade Kashmiri food during your stay.</p>
           </div>
           <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex flex-col gap-3">
-            <MapPin className="w-8 h-8 text-orange-" />
+            <MapPin className="w-8 h-8 text-orange-500" />
             <h3 className="font-bold text-lg text-slate-900">Prime Locations</h3>
             <p className="text-slate-600">Stay in beautiful, scenic, and peaceful locations away from crowded tourist hotels.</p>
           </div>
