@@ -2,8 +2,8 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 
 export const metadata = {
-  title: "About Us | Indiahiles",
-  description: "Learn more about Indiahiles and our mission.",
+  title: "About Us | WanderKashmir",
+  description: "Learn more about WanderKashmir and our mission.",
 };
 
 export default function AboutPage() {
@@ -15,7 +15,7 @@ export default function AboutPage() {
         <div className="container-custom max-w-4xl mx-auto text-center relative z-10">
           <h1 className="text-4xl md:text-5xl font-bold mb-6 tracking-tight">About Us</h1>
           <p className="text-slate-300 text-xl max-w-2xl mx-auto font-light leading-relaxed">
-            Discover the story behind Indiahiles.
+            Discover the story behind WanderKashmir.
           </p>
         </div>
       </div>

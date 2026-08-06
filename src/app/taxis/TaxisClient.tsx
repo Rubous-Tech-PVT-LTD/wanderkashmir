@@ -647,7 +647,7 @@ export default function TaxisClient({
                       className="mt-1 flex-shrink-0 w-4 h-4 text-sky-600 rounded border-sky-300 focus:ring-sky-500" 
                     />
                     <label htmlFor="policy-modal-taxi" className="text-sm text-slate-700 leading-relaxed cursor-pointer select-none">
-                      I agree to Indiahiles's <span className="text-sky-600 font-semibold hover:underline">Taxi Booking Policy</span>. 
+                      I agree to WanderKashmir's <span className="text-sky-600 font-semibold hover:underline">Taxi Booking Policy</span>. 
                       (Free cancellation up to 24 hours before pickup time. Additional kms will be charged directly by the driver.)
                     </label>
                   </div>

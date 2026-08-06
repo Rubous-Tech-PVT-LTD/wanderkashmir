@@ -647,7 +647,7 @@ export default function AdminDashboardClient({
       <div className="w-64 bg-slate-900 text-white min-h-screen p-6 flex flex-col">
         <div className="flex items-center gap-2 mb-12">
           <div className="w-8 h-8 rounded-xl flex items-center justify-center bg-white overflow-hidden shadow-sm">
-            <img src="/icon.png" alt="Indiahiles logo" className="w-full h-full object-cover" />
+            <img src="/icon.jpg" alt="WanderKashmir logo" className="w-full h-full object-cover" />
           </div>
           <h1 className="text-xl font-bold tracking-tight"><span className="text-orange-400">India</span>hiles</h1>
         </div>
@@ -2372,7 +2372,7 @@ export default function AdminDashboardClient({
                           </head>
                           <body>
                             <div class="header">
-                              <div class="title">Indiahiles Booking Receipt</div>
+                              <div class="title">WanderKashmir Booking Receipt</div>
                               <div class="subtitle">Booking ID: ${selectedBookingDetails.id.toUpperCase()} | Date: ${new Date(selectedBookingDetails.createdAt).toLocaleDateString()}</div>
                               <div class="subtitle">Status: ${selectedBookingDetails.status}</div>
                             </div>
@@ -2408,7 +2408,7 @@ export default function AdminDashboardClient({
                             </div>
                             
                             <div style="text-align:center; margin-top:50px; color:#888; font-size:12px;">
-                              Thank you for choosing Indiahiles. This is an automatically generated receipt.
+                              Thank you for choosing WanderKashmir. This is an automatically generated receipt.
                             </div>
                           </body>
                         </html>

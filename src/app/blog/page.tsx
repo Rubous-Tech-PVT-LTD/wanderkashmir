@@ -50,7 +50,7 @@ export default async function BlogPage() {
                   <div className="flex items-center gap-4 text-xs font-medium text-slate-500 mb-4">
                     <span className="flex items-center gap-1.5 bg-indigo-50 text-indigo-700 px-2.5 py-1 rounded-full">
                       <User className="w-3.5 h-3.5" />
-                      Indiahiles
+                      WanderKashmir
                     </span>
                     <span className="flex items-center gap-1.5">
                       <Calendar className="w-3.5 h-3.5" />

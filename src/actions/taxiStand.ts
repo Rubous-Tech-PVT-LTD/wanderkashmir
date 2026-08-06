@@ -159,7 +159,7 @@ export async function assignDriverAndVehicle(bookingId: string, driverId: string
     if (customerEmail) {
         try {
           await resend.emails.send({
-            from: 'Indiahiles <support@indiahiles.com>',
+            from: 'WanderKashmir <support@wanderkashmir.com>',
             to: customerEmail,
             subject: `Taxi Dispatched: Your ride details for booking ${booking.id.slice(-6)}`,
             html: `
@@ -176,7 +176,7 @@ export async function assignDriverAndVehicle(bookingId: string, driverId: string
                   <p><strong>Stand:</strong> ${booking.vehicle?.vendorProfile?.businessName || 'N/A'}</p>
                 </div>
                 <p>Have a safe and wonderful journey!</p>
-                <p>Best Regards,<br/><strong>The Indiahiles Team</strong></p>
+                <p>Best Regards,<br/><strong>The WanderKashmir Team</strong></p>
               </div>
             `
           });

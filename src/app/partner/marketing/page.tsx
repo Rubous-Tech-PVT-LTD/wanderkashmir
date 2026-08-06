@@ -25,11 +25,11 @@ export default async function MarketingBadgesPage() {
   }
 
   const businessName = vendorProfile.businessName || "Your Business";
-  const vendorUrl = `https://www.indiahiles.com/stays`; // In a real app, this would link to their specific profile
+  const vendorUrl = `https://www.wanderkashmir.com/stays`; // In a real app, this would link to their specific profile
 
   const embedCode = `
 <a href="${vendorUrl}" target="_blank" rel="noopener noreferrer">
-  <img src="https://www.indiahiles.com/images/badges/listed-on-indiahiles-light.png" alt="Listed on Indiahiles" width="200" height="60" />
+  <img src="https://www.wanderkashmir.com/images/badges/listed-on-wanderkashmir-light.png" alt="Listed on WanderKashmir" width="200" height="60" />
 </a>
   `.trim();
 
@@ -41,7 +41,7 @@ export default async function MarketingBadgesPage() {
           Digital Marketing Badges
         </h1>
         <p className="text-slate-500 mt-2">
-          Promote your partnership with Indiahiles. Display these official badges on your website and social media to build trust with travelers.
+          Promote your partnership with WanderKashmir. Display these official badges on your website and social media to build trust with travelers.
         </p>
       </div>
 
@@ -52,7 +52,7 @@ export default async function MarketingBadgesPage() {
             {/* The actual badge design (CSS simulated for now, but usually they'd download a real image) */}
             <div className="bg-white border border-slate-200 shadow-lg rounded-xl overflow-hidden flex flex-row items-center w-[260px] select-none hover:scale-105 transition-transform duration-300">
               <div className="bg-sky-500 p-4 flex items-center justify-center">
-                <Image src="/icon.png" alt="Indiahiles" width={32} height={32} className="rounded-md" />
+                <Image src="/icon.jpg" alt="WanderKashmir" width={32} height={32} className="rounded-md" />
               </div>
               <div className="p-3">
                 <p className="text-[10px] uppercase font-bold text-slate-500 tracking-wider mb-0.5">Listed on</p>
@@ -80,7 +80,7 @@ export default async function MarketingBadgesPage() {
             {/* The actual badge design */}
             <div className="bg-slate-800 border border-slate-700 shadow-xl rounded-xl overflow-hidden flex flex-row items-center w-[260px] select-none hover:scale-105 transition-transform duration-300">
               <div className="bg-sky-500 p-4 flex items-center justify-center">
-                <Image src="/icon.png" alt="Indiahiles" width={32} height={32} className="rounded-md" />
+                <Image src="/icon.jpg" alt="WanderKashmir" width={32} height={32} className="rounded-md" />
               </div>
               <div className="p-3">
                 <p className="text-[10px] uppercase font-bold text-slate-400 tracking-wider mb-0.5">Listed on</p>

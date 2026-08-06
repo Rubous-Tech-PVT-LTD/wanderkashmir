@@ -92,7 +92,7 @@ export default function CheckoutButton({
         key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID, 
         amount: orderData.amount,
         currency: orderData.currency,
-        name: "Indiahiles",
+        name: "WanderKashmir",
         description: "Booking Reservation",
         image: "/images/razorpay.svg",
         order_id: orderData.id,

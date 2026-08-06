@@ -50,7 +50,7 @@ export async function GET(req: Request) {
     const secret = searchParams.get("secret");
 
     // Replace 'mysecretseeder' with a stronger key or use env variables in production.
-    if (secret !== "indiahiles2026") {
+    if (secret !== "wanderkashmir2026") {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 

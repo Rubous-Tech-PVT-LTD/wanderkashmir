@@ -382,7 +382,7 @@ const testimonials = [
   {
     name: "Rahul Sharma",
     location: "Delhi",
-    text: "The Dal Lake houseboat experience was absolutely magical. Indiahiles made the entire booking seamless. Will definitely use again!",
+    text: "The Dal Lake houseboat experience was absolutely magical. WanderKashmir made the entire booking seamless. Will definitely use again!",
     rating: 5,
     avatar: "https://randomuser.me/api/portraits/men/32.jpg",
     stay: "Grand Dal View Houseboat",
@@ -430,13 +430,13 @@ const whyUs = [
 /* ─── End Mock Data ──────────────────────────────────────── */
 
 export default async function Home() {
-  const indiahilesPlaceId = "ChIJUZCKLqkR4jgRN3yVZt9_LYE";
+  const wanderkashmirPlaceId = "ChIJUZCKLqkR4jgRN3yVZt9_LYE";
   const [featuredProperties, locationCounts, featuredGuides, featuredTaxis, wkReviews, activePromosRes] = await Promise.all([
     getFeaturedProperties(),
     getDestinationCounts(),
     getFeaturedGuides(),
     getFeaturedTaxis(),
-    getGooglePlaceReviews(indiahilesPlaceId),
+    getGooglePlaceReviews(wanderkashmirPlaceId),
     getHomepagePromos()
   ]);
 
@@ -463,10 +463,10 @@ export default async function Home() {
           __html: JSON.stringify({
             "@context": "https://schema.org",
             "@type": "TravelAgency",
-            "name": "Indiahiles",
-            "image": "https://www.indiahiles.com/icon.png",
-            "@id": "https://www.indiahiles.com",
-            "url": "https://www.indiahiles.com",
+            "name": "WanderKashmir",
+            "image": "https://www.wanderkashmir.com/icon.jpg",
+            "@id": "https://www.wanderkashmir.com",
+            "url": "https://www.wanderkashmir.com",
             "telephone": "+91-9999999999",
             "priceRange": "$$",
             "address": {
@@ -701,7 +701,7 @@ export default async function Home() {
         </div>
       </section>
 
-      {/* Indiahiles Google Reviews Section */}
+      {/* WanderKashmir Google Reviews Section */}
       {wkReviews && wkReviews.reviews && wkReviews.reviews.length > 0 && (
         <section className="py-20 bg-slate-50 border-t border-slate-100 relative overflow-hidden">
           <div className="absolute top-0 right-0 -translate-y-12 translate-x-1/3 w-96 h-96 bg-sky-200/20 rounded-full blur-3xl -z-10 pointer-events-none" />
@@ -714,7 +714,7 @@ export default async function Home() {
                 Loved by Travelers
               </h2>
               <p className="text-slate-600 text-lg">
-                See why thousands of travelers choose Indiahiles for their authentic Kashmiri experiences.
+                See why thousands of travelers choose WanderKashmir for their authentic Kashmiri experiences.
               </p>
             </div>
             

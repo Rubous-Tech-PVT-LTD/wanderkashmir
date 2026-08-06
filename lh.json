@@ -667,7 +667,7 @@
             "entity": "wanderkashmir.com"
           },
           {
-            "url": "https://www.wanderkashmir.com/icon.png",
+            "url": "https://www.wanderkashmir.com/icon.jpg",
             "sessionTargetType": "page",
             "protocol": "h2",
             "cache": "none",
@@ -1280,7 +1280,7 @@
             "entity": "wanderkashmir.com"
           },
           {
-            "url": "https://www.wanderkashmir.com/icon.png?icon.1tp950iut74zo.png",
+            "url": "https://www.wanderkashmir.com/icon.jpg?icon.1tp950iut74zo.png",
             "sessionTargetType": "page",
             "protocol": "h2",
             "cache": "none",

@@ -143,7 +143,7 @@ export default function HotelClient({ vendorProfileId, properties = [], bookings
         key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
         amount: orderData.amount,
         currency: orderData.currency,
-        name: "Indiahiles",
+        name: "WanderKashmir",
         description: `${planName} Subscription`,
         image: "/images/razorpay.svg",
         order_id: orderData.id,
@@ -438,7 +438,7 @@ export default function HotelClient({ vendorProfileId, properties = [], bookings
       {activeTab === "financials" && (
         <div className="space-y-8">
           <div className="bg-sky-50 border border-sky-100 rounded-2xl p-6">
-            <h2 className="text-xl font-bold text-sky-900 mb-2">Welcome to Indiahiles!</h2>
+            <h2 className="text-xl font-bold text-sky-900 mb-2">Welcome to WanderKashmir!</h2>
             <p className="text-sky-800">Your registration is complete. Choose a subscription plan below to unlock premium features and increase your bookings.</p>
           </div>
 
@@ -786,7 +786,7 @@ export default function HotelClient({ vendorProfileId, properties = [], bookings
               </div>
               
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <a href="https://wa.me/916005888754?text=Hi%20Indiahiles%20Support,%20I%20am%20a%20Growth%20Pro%20Vendor" target="_blank" rel="noopener noreferrer" className="bg-white/10 hover:bg-white/20 transition-colors p-4 rounded-xl flex items-center gap-3 border border-white/5">
+                <a href="https://wa.me/916005888754?text=Hi%20WanderKashmir%20Support,%20I%20am%20a%20Growth%20Pro%20Vendor" target="_blank" rel="noopener noreferrer" className="bg-white/10 hover:bg-white/20 transition-colors p-4 rounded-xl flex items-center gap-3 border border-white/5">
                   <div className="w-10 h-10 bg-emerald-500 rounded-full flex items-center justify-center shrink-0 shadow-sm">
                     <MessageCircle className="w-5 h-5 text-white" />
                   </div>
@@ -911,7 +911,7 @@ export default function HotelClient({ vendorProfileId, properties = [], bookings
             <div className="flex items-center justify-between">
               <div>
                 <h2 className="text-lg font-bold text-slate-900">Your First Hotel Listing</h2>
-                <p className="text-sm text-slate-500 mt-1">Fill out the details below to make your property live on Indiahiles.</p>
+                <p className="text-sm text-slate-500 mt-1">Fill out the details below to make your property live on WanderKashmir.</p>
               </div>
             </div>
             
@@ -955,7 +955,7 @@ export default function HotelClient({ vendorProfileId, properties = [], bookings
 
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-2">Google Place ID (Optional)</label>
-                  <p className="text-xs text-slate-500 mb-2">Add your Google Place ID to display your 5-star Google Reviews on Indiahiles!</p>
+                  <p className="text-xs text-slate-500 mb-2">Add your Google Place ID to display your 5-star Google Reviews on WanderKashmir!</p>
                   <input 
                     type="text" 
                     {...register("googlePlaceId")}

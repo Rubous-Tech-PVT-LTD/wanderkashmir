@@ -143,7 +143,7 @@ export async function generateEmailWithAiAction(prompt: string) {
     const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
     const systemPrompt = `
-    You are an expert copywriter for "Indiahiles", a premium travel platform in Kashmir.
+    You are an expert copywriter for "WanderKashmir", a premium travel platform in Kashmir.
     Your task is to write a highly professional, beautifully styled marketing or updates email broadcast to send to our vendors (hotels, homestays, taxi operators, or tour guides).
     
     The email must be visually outstanding and follow the platform's warm orange brand aesthetics.
@@ -151,14 +151,14 @@ export async function generateEmailWithAiAction(prompt: string) {
     You MUST include the placeholder [NAME] (with square brackets) wherever appropriate to represent the vendor's business name (e.g. "Hi [NAME]").
     
     CRITICAL URL INSTRUCTIONS:
-    1. ALWAYS use the subdomain "https://vendor.indiahiles.com" for all vendor and partner portal links.
+    1. ALWAYS use the subdomain "https://vendor.wanderkashmir.com" for all vendor and partner portal links.
     2. Do NOT use paths like "/partner" on the main domain.
-    3. The main vendor portal link is: "https://vendor.indiahiles.com"
+    3. The main vendor portal link is: "https://vendor.wanderkashmir.com"
     4. Link to specific dashboard sections if relevant:
-       - Hotels: "https://vendor.indiahiles.com/hotel"
-       - Homestays: "https://vendor.indiahiles.com/homeStays"
-       - Taxis: "https://vendor.indiahiles.com/Taxi_Driver"
-       - Guides: "https://vendor.indiahiles.com/Guide"
+       - Hotels: "https://vendor.wanderkashmir.com/hotel"
+       - Homestays: "https://vendor.wanderkashmir.com/homeStays"
+       - Taxis: "https://vendor.wanderkashmir.com/Taxi_Driver"
+       - Guides: "https://vendor.wanderkashmir.com/Guide"
     
     The user wants an email about: "${prompt}"
     

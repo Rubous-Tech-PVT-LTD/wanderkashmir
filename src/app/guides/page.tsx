@@ -3,7 +3,7 @@ import GuidesClient from "./GuidesClient";
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Hire Local Kashmir Guides | Indiahiles",
+  title: "Hire Local Kashmir Guides | WanderKashmir",
   description: "Connect with certified, background-verified local guides across Kashmir.",
 };
 

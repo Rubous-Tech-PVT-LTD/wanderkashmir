@@ -161,7 +161,7 @@ export default function VendorSidebar({ isOpen = false, onClose }: VendorSidebar
                 {vendorName || `${vendorType} Owner`}
               </p>
               <p className="text-xs text-slate-400 truncate">
-                {vendorEmail || "vendor@indiahiles.com"}
+                {vendorEmail || "vendor@wanderkashmir.com"}
               </p>
             </div>
           </div>

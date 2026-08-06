@@ -31,14 +31,14 @@ const dancingScript = Dancing_Script({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://www.indiahiles.com"),
-  title: "Indiahiles – Hotels, Homestays, Taxis & Tours in Kashmir",
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://www.wanderkashmir.com"),
+  title: "WanderKashmir – Hotels, Homestays, Taxis & Tours in Kashmir",
   description:
     "Book verified hotels, homestays, houseboats, taxi services and tour packages across Jammu & Kashmir. Your all-in-one Kashmir travel platform.",
   keywords:
     "Kashmir hotels, Kashmir homestay, Dal Lake houseboat, Kashmir tour packages, Srinagar taxi, Gulmarg, Pahalgam, Kashmir tourism",
   openGraph: {
-    title: "Indiahiles – Kashmir's Premier Travel Marketplace",
+    title: "WanderKashmir – Kashmir's Premier Travel Marketplace",
     description:
       "Book verified stays, taxis & tour packages across Jammu & Kashmir",
     type: "website",
@@ -73,7 +73,7 @@ export default async function RootLayout({
         const clerkUser = await currentUser();
         if (clerkUser) {
           const email = clerkUser.emailAddresses[0]?.emailAddress;
-          const name = `${clerkUser.firstName || ''} ${clerkUser.lastName || ''}`.trim() || 'Indiahiles User';
+          const name = `${clerkUser.firstName || ''} ${clerkUser.lastName || ''}`.trim() || 'WanderKashmir User';
           
           user = await prisma.user.create({
             data: {
@@ -134,10 +134,10 @@ export default async function RootLayout({
               "@graph": [
                 {
                   "@type": "Organization",
-                  "@id": "https://www.indiahiles.com/#organization",
-                  "name": "Indiahiles",
-                  "url": "https://www.indiahiles.com",
-                  "logo": "https://www.indiahiles.com/icon.png",
+                  "@id": "https://www.wanderkashmir.com/#organization",
+                  "name": "WanderKashmir",
+                  "url": "https://www.wanderkashmir.com",
+                  "logo": "https://www.wanderkashmir.com/icon.jpg",
                   "description": "Book verified hotels, homestays, houseboats, taxi services and tour packages across Jammu & Kashmir.",
                   "contactPoint": {
                     "@type": "ContactPoint",
@@ -147,22 +147,22 @@ export default async function RootLayout({
                     "availableLanguage": ["en", "hi", "ur"]
                   },
                   "sameAs": [
-                    "https://www.facebook.com/indiahiles",
-                    "https://www.instagram.com/indiahiles",
-                    "https://twitter.com/indiahiles"
+                    "https://www.facebook.com/wanderkashmir",
+                    "https://www.instagram.com/wanderkashmir",
+                    "https://twitter.com/wanderkashmir"
                   ]
                 },
                 {
                   "@type": "WebSite",
-                  "@id": "https://www.indiahiles.com/#website",
-                  "url": "https://www.indiahiles.com",
-                  "name": "Indiahiles",
+                  "@id": "https://www.wanderkashmir.com/#website",
+                  "url": "https://www.wanderkashmir.com",
+                  "name": "WanderKashmir",
                   "publisher": {
-                    "@id": "https://www.indiahiles.com/#organization"
+                    "@id": "https://www.wanderkashmir.com/#organization"
                   },
                   "potentialAction": {
                     "@type": "SearchAction",
-                    "target": "https://www.indiahiles.com/stays?q={search_term_string}",
+                    "target": "https://www.wanderkashmir.com/stays?q={search_term_string}",
                     "query-input": "required name=search_term_string"
                   }
                 }

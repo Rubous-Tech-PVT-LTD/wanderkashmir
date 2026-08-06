@@ -8,7 +8,7 @@ import { Metadata } from "next";
 import { getValidImageUrl } from "@/lib/imageUtils";
 
 export const metadata: Metadata = {
-  title: "Kashmir Hotels & Stays | Indiahiles",
+  title: "Kashmir Hotels & Stays | WanderKashmir",
   description: "Find and book the best hotels, homestays, and houseboats in Srinagar, Gulmarg, Pahalgam, and more.",
 };
 
@@ -89,7 +89,7 @@ export default async function StaysPage({ searchParams }: { searchParams: Promis
       "position": index + 1,
       "item": {
         "@type": prop.type === "Hotel" ? "Hotel" : "LodgingBusiness",
-        "url": `https://www.indiahiles.com/stays/${prop.id}`,
+        "url": `https://www.wanderkashmir.com/stays/${prop.id}`,
         "name": prop.name,
         "image": prop.image
       }

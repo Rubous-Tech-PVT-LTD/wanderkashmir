@@ -6,7 +6,7 @@ import prisma from "@/lib/prisma";
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Kashmir Taxis & Transport | Indiahiles",
+  title: "Kashmir Taxis & Transport | WanderKashmir",
   description: "Book verified cabs and taxis for sightseeing in Srinagar, Gulmarg, Pahalgam, and Sonamarg.",
 };
 

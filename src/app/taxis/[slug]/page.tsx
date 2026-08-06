@@ -67,7 +67,7 @@ export default async function TaxiSeoPage({ params }: { params: Promise<{ slug: 
 
   const rates = matchedRateCard ? (matchedRateCard.rates as Record<string, number>) : null;
 
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.indiahiles.com';
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.wanderkashmir.com';
   const url = `${baseUrl}/taxis/${page.slug}`;
 
   const schemas: any[] = [
@@ -79,7 +79,7 @@ export default async function TaxiSeoPage({ params }: { params: Promise<{ slug: 
       "url": url,
       "provider": {
         "@type": "LocalBusiness",
-        "name": "Indiahiles",
+        "name": "WanderKashmir",
         "address": {
           "@type": "PostalAddress",
           "addressRegion": "Jammu and Kashmir",

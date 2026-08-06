@@ -2,8 +2,8 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 
 export const metadata = {
-  title: "Help Center | Indiahiles",
-  description: "Help center and FAQs for Indiahiles.",
+  title: "Help Center | WanderKashmir",
+  description: "Help center and FAQs for WanderKashmir.",
 };
 
 export default function HelpCenterPage() {
@@ -23,7 +23,7 @@ export default function HelpCenterPage() {
         <div className="bg-white rounded-2xl shadow-xl shadow-slate-200/50 border border-slate-100 p-8 md:p-12 mb-16">
           <div className="prose prose-slate prose-lg max-w-none">
             <p className="text-slate-700 text-lg leading-relaxed">
-              Our Help Center is currently being updated with comprehensive guides and FAQs. If you need immediate assistance, please reach out to our support team via the Contact Us page or email us at support@indiahiles.com.
+              Our Help Center is currently being updated with comprehensive guides and FAQs. If you need immediate assistance, please reach out to our support team via the Contact Us page or email us at support@wanderkashmir.com.
             </p>
           </div>
         </div>

@@ -114,9 +114,9 @@ export async function registerVendor(data: VendorRegistrationData) {
       const typeLabel = type === "HOTEL" ? "Hotel" : type === "HOMESTAY" ? "Homestay" : type === "TAXI" ? "Taxi" : "Guide";
 
       await resend.emails.send({
-        from: 'Indiahiles <support@indiahiles.com>',
+        from: 'WanderKashmir <support@wanderkashmir.com>',
         to: validData.email,
-        subject: `Application Received – Indiahiles Partner Program`,
+        subject: `Application Received – WanderKashmir Partner Program`,
         html: `
           <div style="font-family: 'Segoe UI', sans-serif; background: #f8fafc; padding: 40px 20px; min-height: 100vh;">
             <div style="max-width: 580px; margin: 0 auto; background: white; border-radius: 20px; overflow: hidden; box-shadow: 0 4px 24px rgba(0,0,0,0.08);">
@@ -137,7 +137,7 @@ export async function registerVendor(data: VendorRegistrationData) {
               <div style="padding: 40px;">
                 <p style="color: #334155; font-size: 16px; margin: 0 0 24px;">Hi <strong>${firstName}</strong>,</p>
                 <p style="color: #475569; font-size: 15px; line-height: 1.7; margin: 0 0 24px;">
-                  Thank you for registering as a <strong>${typeLabel}</strong> partner on Indiahiles. We have received your details and documents.
+                  Thank you for registering as a <strong>${typeLabel}</strong> partner on WanderKashmir. We have received your details and documents.
                 </p>
                 
                 <!-- Status Card -->
@@ -183,13 +183,13 @@ export async function registerVendor(data: VendorRegistrationData) {
 
                 <p style="color: #64748b; font-size: 13px; line-height: 1.7; margin: 0;">
                   If you have any questions, feel free to reply to this email or contact us at 
-                  <a href="mailto:support@indiahiles.com" style="color: #f97316; font-weight: 600;">support@indiahiles.com</a>.
+                  <a href="mailto:support@wanderkashmir.com" style="color: #f97316; font-weight: 600;">support@wanderkashmir.com</a>.
                 </p>
               </div>
 
               <!-- Footer -->
               <div style="padding: 24px 40px; background: #f8fafc; border-top: 1px solid #e2e8f0; text-align: center;">
-                <p style="color: #94a3b8; font-size: 12px; margin: 0;">© 2024 Indiahiles. All rights reserved.</p>
+                <p style="color: #94a3b8; font-size: 12px; margin: 0;">© 2024 WanderKashmir. All rights reserved.</p>
               </div>
             </div>
           </div>
@@ -252,7 +252,7 @@ export async function approveVendor(vendorId: string) {
     if (vendorEmail) {
       try {
         await resend.emails.send({
-          from: 'Indiahiles <support@indiahiles.com>',
+          from: 'WanderKashmir <support@wanderkashmir.com>',
           to: vendorEmail,
           subject: `Welcome aboard, ${vendorName}!`,
           html: `
@@ -265,7 +265,7 @@ export async function approveVendor(vendorId: string) {
                 <tr><td style="padding: 8px 0; border-bottom: 1px solid #e2e8f0;"><strong>Vendor ID:</strong></td><td style="padding: 8px 0; border-bottom: 1px solid #e2e8f0; font-weight: bold; color: #0284c7;">${generatedVendorId}</td></tr>
                 <tr><td style="padding: 8px 0; border-bottom: 1px solid #e2e8f0;"><strong>Company:</strong></td><td style="padding: 8px 0; border-bottom: 1px solid #e2e8f0;">${updatedVendor.businessName}</td></tr>
                 <tr><td style="padding: 8px 0; border-bottom: 1px solid #e2e8f0;"><strong>Account email:</strong></td><td style="padding: 8px 0; border-bottom: 1px solid #e2e8f0;">${vendorEmail}</td></tr>
-                <tr><td style="padding: 8px 0; border-bottom: 1px solid #e2e8f0;"><strong>Account manager:</strong></td><td style="padding: 8px 0; border-bottom: 1px solid #e2e8f0;">Indiahiles</td></tr>
+                <tr><td style="padding: 8px 0; border-bottom: 1px solid #e2e8f0;"><strong>Account manager:</strong></td><td style="padding: 8px 0; border-bottom: 1px solid #e2e8f0;">WanderKashmir</td></tr>
               </table>
 
               <h3 style="color: #0284c7;">Next steps</h3>
@@ -276,13 +276,13 @@ export async function approveVendor(vendorId: string) {
               </ul>
 
               <div style="margin: 32px 0;">
-                <a href="https://indiahiles.com/partner" style="background-color: #0284c7; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block;">Go to vendor dashboard</a>
+                <a href="https://wanderkashmir.com/partner" style="background-color: #0284c7; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block;">Go to vendor dashboard</a>
               </div>
 
-              <p>If you have any questions, reach out to your account manager at <a href="mailto:support@indiahiles.com">support@indiahiles.com</a> or visit our help center.</p>
+              <p>If you have any questions, reach out to your account manager at <a href="mailto:support@wanderkashmir.com">support@wanderkashmir.com</a> or visit our help center.</p>
               
               <br/>
-              <p>Welcome to the team,<br/><strong>The Indiahiles Vendor Team</strong></p>
+              <p>Welcome to the team,<br/><strong>The WanderKashmir Vendor Team</strong></p>
             </div>
           `
         });

@@ -117,7 +117,7 @@ export default function GuideClient({ bookings = [], vendorProfileId, initialGui
         key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
         amount: orderData.amount,
         currency: orderData.currency,
-        name: "Indiahiles",
+        name: "WanderKashmir",
         description: `${planName} Subscription`,
         image: "/images/razorpay.svg",
         order_id: orderData.id,
@@ -278,7 +278,7 @@ export default function GuideClient({ bookings = [], vendorProfileId, initialGui
       {activeTab === "financials" && (
         <div className="space-y-8">
           <div className="bg-sky-50 border border-sky-100 rounded-2xl p-6">
-            <h2 className="text-xl font-bold text-sky-900 mb-2">Welcome to Indiahiles!</h2>
+            <h2 className="text-xl font-bold text-sky-900 mb-2">Welcome to WanderKashmir!</h2>
             <p className="text-sky-800">Your registration is complete. Choose a subscription plan below to unlock premium features and increase your bookings.</p>
           </div>
 
@@ -411,7 +411,7 @@ export default function GuideClient({ bookings = [], vendorProfileId, initialGui
             <div className="bg-orange-50 border border-orange-200 rounded-2xl p-6 mt-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div>
                 <h2 className="text-lg font-bold text-orange-900">Complete Your Profile</h2>
-                <p className="text-orange-800 text-sm mt-1">Your guide profile is empty. You must complete your profile to be listed on Indiahiles and receive bookings.</p>
+                <p className="text-orange-800 text-sm mt-1">Your guide profile is empty. You must complete your profile to be listed on WanderKashmir and receive bookings.</p>
               </div>
               <button onClick={() => setActiveTab("profile")} className="bg-orange-500 hover:bg-orange-600 text-white px-5 py-2.5 rounded-xl font-bold transition-colors whitespace-nowrap">
                 Complete Profile
@@ -598,7 +598,7 @@ export default function GuideClient({ bookings = [], vendorProfileId, initialGui
               </div>
               
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <a href="https://wa.me/916005888754?text=Hi%20Indiahiles%20Support,%20I%20am%20a%20Growth%20Pro%20Guide" target="_blank" rel="noopener noreferrer" className="bg-white/10 hover:bg-white/20 transition-colors p-4 rounded-xl flex items-center gap-3 border border-white/5">
+                <a href="https://wa.me/916005888754?text=Hi%20WanderKashmir%20Support,%20I%20am%20a%20Growth%20Pro%20Guide" target="_blank" rel="noopener noreferrer" className="bg-white/10 hover:bg-white/20 transition-colors p-4 rounded-xl flex items-center gap-3 border border-white/5">
                   <div className="w-10 h-10 bg-emerald-500 rounded-full flex items-center justify-center shrink-0 shadow-sm">
                     <MessageCircle className="w-5 h-5 text-white" />
                   </div>
@@ -812,7 +812,7 @@ export default function GuideClient({ bookings = [], vendorProfileId, initialGui
                 
                 <div className="bg-slate-50 p-6 rounded-xl border border-slate-200">
                   <h3 className="font-bold text-slate-900 mb-4">Pricing & Commission</h3>
-                  <p className="text-sm text-slate-500 mb-6">Indiahiles deducts a flat 15% fee on guide bookings to cover marketing and payment processing.</p>
+                  <p className="text-sm text-slate-500 mb-6">WanderKashmir deducts a flat 15% fee on guide bookings to cover marketing and payment processing.</p>
                   
                   <div className="space-y-4">
                     <div>

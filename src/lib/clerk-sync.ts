@@ -16,7 +16,7 @@ export async function ensureDbUser(userId: string) {
       data: {
         id: userId,
         email: user.emailAddresses[0]?.emailAddress || `user_${userId}@example.com`,
-        name: user.firstName ? `${user.firstName} ${user.lastName || ""}`.trim() : "Indiahiles User",
+        name: user.firstName ? `${user.firstName} ${user.lastName || ""}`.trim() : "WanderKashmir User",
         role: "CUSTOMER"
       }
     });
