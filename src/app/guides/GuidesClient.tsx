@@ -171,7 +171,7 @@ export default function GuidesClient({ initialGuides }: { initialGuides: any[] }
                         </div>
                         <p className="text-sm text-slate-600 line-clamp-2">{guide.bio}</p>
                         <div className="pt-4 border-t border-slate-100 mt-auto flex justify-between items-center">
-                          <span className="text-xs font-bold px-3 py-1 bg-orange-500 text-orange-500 rounded-full">{guide.availability || 'Available'}</span>
+                          <span className="text-xs font-bold px-3 py-1 bg-orange-500 text-white rounded-full">{guide.availability || 'Available'}</span>
                           <span className="font-bold text-slate-900">₹{guide.price.toLocaleString("en-IN")}/day</span>
                         </div>
                       </div>

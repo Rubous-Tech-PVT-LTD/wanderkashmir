@@ -322,7 +322,7 @@ export default function GuideClient({ bookings = [], vendorProfileId, initialGui
                       disabled={isActive || tier.name === "Free"}
                       className={`w-full py-2.5 rounded-lg font-bold transition-colors ${
                         isActive 
-                          ? 'bg-orange-500 text-orange-500 border border-orange-500 cursor-default' 
+                          ? 'bg-orange-500 text-white border border-orange-500 cursor-default' 
                           : tier.name === 'Free' 
                             ? 'bg-slate-100 text-slate-400 cursor-not-allowed' 
                             : 'bg-slate-900 text-white hover:bg-slate-800 shadow-sm hover:shadow-md'

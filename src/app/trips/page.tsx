@@ -124,7 +124,7 @@ export default async function TripsPage() {
 
                     <div className="flex gap-3">
                       {booking.propertyId && (
-                        <Link href={`/stays/${booking.propertyId}`} className="text-orange-500 hover:text-orange-500 text-sm font-bold bg-orange-500 px-4 py-2 rounded-lg transition-colors">
+                        <Link href={`/stays/${booking.propertyId}`} className="text-white hover:text-white text-sm font-bold bg-orange-500 px-4 py-2 rounded-lg transition-colors">
                           View Property
                         </Link>
                       )}

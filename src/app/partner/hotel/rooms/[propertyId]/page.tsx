@@ -152,7 +152,7 @@ export default function RoomManagementPage({ params }: { params: Promise<{ prope
                       setSelectedRoomId(room.id);
                       setInventoryAvailable(room.totalUnits);
                     }}
-                    className="flex items-center gap-1 bg-orange-500 text-orange-500 px-3 py-1.5 rounded-lg text-sm font-bold hover:bg-orange-500"
+                    className="flex items-center gap-1 bg-orange-500 text-white px-3 py-1.5 rounded-lg text-sm font-bold hover:bg-orange-500"
                   >
                     <CalendarIcon className="w-4 h-4" /> Calendar
                   </button>

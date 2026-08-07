@@ -239,7 +239,7 @@ export default function StaysClient({ initialProperties, initialQuery = "" }: { 
                 <img src="/images/map-placeholder.png" alt="Map View" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" onError={(e) => { e.currentTarget.src = 'https://images.unsplash.com/photo-1524661135-423995f22d0b?auto=format&fit=crop&q=80&w=800' }} />
                 <div className="absolute inset-0 bg-white/20 group-hover:bg-transparent transition-colors"></div>
                 <div className="absolute inset-0 flex items-center justify-center p-4">
-                  <button className="bg-white text-orange-500 font-bold px-6 py-2 rounded-xl shadow-lg border border-slate-100 w-full hover:bg-orange-500 transition-colors flex items-center justify-center gap-2">
+                  <button className="bg-white text-orange-500 font-bold px-6 py-2 rounded-xl shadow-lg border border-slate-100 w-full hover:bg-orange-500 hover:text-white transition-colors flex items-center justify-center gap-2">
                     EXPLORE ON MAP <MapPin className="w-4 h-4" />
                   </button>
                 </div>

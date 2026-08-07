@@ -52,7 +52,7 @@ export default function AdminSidebar() {
 
       <div className="p-4 border-t border-slate-800 bg-slate-900/50">
         <div className="flex items-center gap-3 px-3 py-2">
-          <div className="w-10 h-10 rounded-full bg-orange-500/20 flex items-center justify-center text-orange-500 font-bold border border-orange-500/30">
+          <div className="w-10 h-10 rounded-full bg-orange-50 flex items-center justify-center text-orange-500 font-bold border border-orange-500/30">
             A
           </div>
           <div className="flex-1 min-w-0">

@@ -105,7 +105,7 @@ export default function FeaturedTaxisClient({ taxis }: { taxis: any[] }) {
                     <Star className="w-4 h-4 text-orange-400 fill-orange-400" /> 
                     {taxi.rating.toFixed(1)} <span className="text-slate-400 font-normal ml-1">({taxi.trips} Trips)</span>
                   </div>
-                  <span className="bg-orange-500 text-orange-500 text-xs font-bold px-3 py-1.5 rounded-full">Book Now</span>
+                  <span className="bg-orange-500 text-white text-xs font-bold px-3 py-1.5 rounded-full">Book Now</span>
                 </div>
               </div>
             </Link>

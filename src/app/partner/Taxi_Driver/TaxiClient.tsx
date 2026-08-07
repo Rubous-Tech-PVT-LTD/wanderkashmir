@@ -692,7 +692,7 @@ export default function TaxiClient({
                       <p className="text-xs text-slate-400 mt-1 capitalize">{v.type}</p>
                     </div>
                     <div className="mt-4 flex items-center gap-2 pt-4 border-t border-slate-100">
-                      <button onClick={() => handleEditVehicle(v)} className="text-sm font-medium text-orange-500 hover:text-orange-500 flex-1 bg-orange-500 py-1.5 rounded-lg transition-colors">Edit</button>
+                      <button onClick={() => handleEditVehicle(v)} className="text-sm font-medium text-orange-500 hover:text-white flex-1 bg-orange-500 text-white py-1.5 rounded-lg transition-colors">Edit</button>
                       <button onClick={() => handleDeleteVehicle(v.id)} className="text-sm font-medium text-red-600 hover:text-red-700 px-3 py-1.5 bg-red-50 rounded-lg transition-colors">Delete</button>
                     </div>
                   </div>
@@ -793,7 +793,7 @@ export default function TaxiClient({
                     <h3 className="font-bold text-orange-500 text-sm">Want to add specific routes?</h3>
                     <p className="text-orange-500 text-xs mt-1">You can create custom routes (e.g. Srinagar Airport to Gulmarg) and set specific prices for them.</p>
                   </div>
-                  <button type="button" onClick={() => setActiveTab("rates")} className="whitespace-nowrap px-4 py-2 bg-white text-orange-500 border border-orange-500 rounded-lg text-sm font-bold shadow-sm hover:bg-orange-500 transition-colors">
+                  <button type="button" onClick={() => setActiveTab("rates")} className="whitespace-nowrap px-4 py-2 bg-white text-orange-500 border border-orange-500 rounded-lg text-sm font-bold shadow-sm hover:bg-orange-500 hover:text-white transition-colors">
                     Create Custom Routes
                   </button>
                 </div>
@@ -854,7 +854,7 @@ export default function TaxiClient({
                 <h2 className="text-lg font-bold text-slate-900">Your Subscription Plan</h2>
                 <p className="text-sm text-slate-500 mt-1">Upgrade your plan to unlock premium seller tools and increase visibility.</p>
               </div>
-              <div className="bg-orange-500 text-orange-500 px-3 py-1 rounded-full text-sm font-bold border border-orange-500">
+              <div className="bg-orange-500 text-white px-3 py-1 rounded-full text-sm font-bold border border-orange-500">
                 Current: {subscriptionPlan}
               </div>
             </div>
@@ -886,7 +886,7 @@ export default function TaxiClient({
                     onClick={() => handleSimulateUpgrade(plan.name, plan.price)}
                     disabled={subscriptionPlan === plan.name}
                     className={`w-full py-2 rounded-lg text-sm font-bold transition-colors ${
-                      subscriptionPlan === plan.name ? 'bg-orange-500 text-orange-500 cursor-default' : 
+                      subscriptionPlan === plan.name ? 'bg-orange-500 text-white cursor-default' : 
                       plan.isPopular ? 'bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm' : 
                       'bg-slate-900 hover:bg-slate-800 text-white shadow-sm'
                     }`}
@@ -906,9 +906,9 @@ export default function TaxiClient({
                 <div>
                   <label className="block text-sm font-medium text-orange-500 mb-2">Select Trip Type</label>
                   <div className="flex bg-white rounded-lg p-1 border border-orange-500">
-                    <button onClick={() => setCalcTripType("airport")} className={`flex-1 py-2 text-sm font-bold rounded-md ${calcTripType === "airport" ? 'bg-orange-500 text-white shadow-sm' : 'text-orange-500 hover:bg-orange-500'}`}>Airport (15%)</button>
-                    <button onClick={() => setCalcTripType("local")} className={`flex-1 py-2 text-sm font-bold rounded-md ${calcTripType === "local" ? 'bg-orange-500 text-white shadow-sm' : 'text-orange-500 hover:bg-orange-500'}`}>Local (12%)</button>
-                    <button onClick={() => setCalcTripType("outstation")} className={`flex-1 py-2 text-sm font-bold rounded-md ${calcTripType === "outstation" ? 'bg-orange-500 text-white shadow-sm' : 'text-orange-500 hover:bg-orange-500'}`}>Outstation (10%)</button>
+                    <button onClick={() => setCalcTripType("airport")} className={`flex-1 py-2 text-sm font-bold rounded-md ${calcTripType === "airport" ? 'bg-orange-500 text-white shadow-sm' : 'text-orange-500 hover:bg-orange-500 hover:text-white'}`}>Airport (15%)</button>
+                    <button onClick={() => setCalcTripType("local")} className={`flex-1 py-2 text-sm font-bold rounded-md ${calcTripType === "local" ? 'bg-orange-500 text-white shadow-sm' : 'text-orange-500 hover:bg-orange-500 hover:text-white'}`}>Local (12%)</button>
+                    <button onClick={() => setCalcTripType("outstation")} className={`flex-1 py-2 text-sm font-bold rounded-md ${calcTripType === "outstation" ? 'bg-orange-500 text-white shadow-sm' : 'text-orange-500 hover:bg-orange-500 hover:text-white'}`}>Outstation (10%)</button>
                   </div>
                 </div>
                 <div>

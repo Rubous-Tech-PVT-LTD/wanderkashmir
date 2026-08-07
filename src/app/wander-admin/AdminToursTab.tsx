@@ -320,7 +320,7 @@ export default function AdminToursTab() {
               />
               <button 
                 type="button"
-                className="bg-orange-500 text-orange-500 px-3 py-1.5 rounded-lg text-sm font-semibold hover:bg-orange-500 transition-colors border border-orange-500"
+                className="bg-orange-500 text-white px-3 py-1.5 rounded-lg text-sm font-semibold hover:bg-orange-500 transition-colors border border-orange-500"
                 onClick={(e) => {
                   const input = document.getElementById('customCategoryInput') as HTMLInputElement;
                   const val = input.value.trim();
@@ -382,7 +382,7 @@ export default function AdminToursTab() {
           <div className="md:col-span-2 border-t border-slate-200 pt-6 mt-4">
             <div className="flex justify-between items-center mb-4">
               <h4 className="text-lg font-bold text-slate-800">Day-by-Day Itinerary</h4>
-              <button type="button" onClick={addItineraryDay} className="flex items-center gap-1 bg-orange-500 text-orange-500 px-3 py-1.5 rounded-lg text-sm font-semibold hover:bg-orange-500 transition-colors">
+              <button type="button" onClick={addItineraryDay} className="flex items-center gap-1 bg-orange-500 text-white px-3 py-1.5 rounded-lg text-sm font-semibold hover:bg-orange-500 transition-colors">
                 <Plus className="w-4 h-4" /> Add Day
               </button>
             </div>
@@ -476,7 +476,7 @@ export default function AdminToursTab() {
                 <td className="px-6 py-4 text-sm font-bold text-emerald-600">₹{tour.price.toLocaleString('en-IN')}</td>
                 <td className="px-6 py-4">
                   <div className="flex items-center gap-2">
-                    <button onClick={() => handleEdit(tour)} className="p-2 bg-orange-500 text-orange-500 rounded-lg hover:bg-orange-500">
+                    <button onClick={() => handleEdit(tour)} className="p-2 bg-orange-500 text-white rounded-lg hover:bg-orange-500">
                       <Edit2 className="w-4 h-4" />
                     </button>
                     <button onClick={() => handleDelete(tour.id)} className="p-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100">

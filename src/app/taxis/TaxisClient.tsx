@@ -579,7 +579,7 @@ export default function TaxisClient({
                               />
                             </div>
                             {index === otherGuests.length - 1 && (
-                              <button onClick={() => setOtherGuests([...otherGuests, {name: "", age: ""}])} className="text-orange-500 p-2 hover:bg-orange-500 rounded-lg">
+                              <button onClick={() => setOtherGuests([...otherGuests, {name: "", age: ""}])} className="text-orange-500 p-2 hover:bg-orange-500 hover:text-white rounded-lg">
                                 +
                               </button>
                             )}
@@ -614,7 +614,7 @@ export default function TaxisClient({
                   {/* Summary Card */}
                   <div className="bg-slate-50 p-4 rounded-xl border border-slate-200">
                     <div className="flex gap-4">
-                      <div className="w-16 h-16 bg-orange-500 rounded-lg flex items-center justify-center text-orange-500 flex-shrink-0">
+                      <div className="w-16 h-16 bg-orange-50 rounded-lg flex items-center justify-center text-orange-500 flex-shrink-0">
                         <Car className="w-8 h-8" />
                       </div>
                       <div>
@@ -699,7 +699,7 @@ export default function TaxisClient({
           <div className="bg-white rounded-3xl p-8 max-w-sm w-full shadow-2xl flex flex-col items-center text-center animate-in zoom-in-95 duration-200">
             <div className="relative mb-6">
               <div className="absolute inset-0 bg-orange-500 rounded-full animate-ping opacity-75"></div>
-              <div className="relative bg-orange-500 w-24 h-24 rounded-full flex items-center justify-center text-orange-500 shadow-inner">
+              <div className="relative bg-orange-50 w-24 h-24 rounded-full flex items-center justify-center text-orange-500 shadow-inner">
                 <Navigation2 className="w-10 h-10 animate-bounce" />
               </div>
             </div>

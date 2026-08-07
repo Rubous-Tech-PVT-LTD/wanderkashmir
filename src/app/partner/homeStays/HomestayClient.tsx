@@ -472,7 +472,7 @@ export default function HomestayClient({ vendorProfileId, bookings = [], propert
                       onClick={() => handleSimulateUpgrade(tier.name as SubscriptionPlan, tier.price)}
                       disabled={isActive || tier.name === "Free"}
                       className={`w-full py-2.5 rounded-lg font-bold transition-colors ${
-                        isActive ? 'bg-orange-500 text-orange-500 border border-orange-500 cursor-default' : tier.name === 'Free' ? 'bg-slate-100 text-slate-400 cursor-not-allowed' : 'bg-slate-900 text-white hover:bg-slate-800 shadow-sm hover:shadow-md'
+                        isActive ? 'bg-orange-500 text-white border border-orange-500 cursor-default' : tier.name === 'Free' ? 'bg-slate-100 text-slate-400 cursor-not-allowed' : 'bg-slate-900 text-white hover:bg-slate-800 shadow-sm hover:shadow-md'
                       }`}
                     >
                       {isActive ? "Current Plan" : "Upgrade Now"}
@@ -554,7 +554,7 @@ export default function HomestayClient({ vendorProfileId, bookings = [], propert
                         ) : (
                           <span className="inline-block bg-emerald-100 text-emerald-700 text-xs font-bold px-2 py-1 rounded-full">Live</span>
                         )}
-                        <button onClick={() => handleEdit(prop)} className="p-1.5 text-slate-400 hover:text-orange-500 hover:bg-orange-500 rounded-lg transition-colors" title="Edit Property">
+                        <button onClick={() => handleEdit(prop)} className="p-1.5 text-slate-400 hover:text-orange-600 hover:bg-orange-50 rounded-lg transition-colors" title="Edit Property">
                           <Edit className="w-4 h-4" />
                         </button>
                         <button onClick={() => handleDelete(prop.id)} className="p-1.5 text-slate-400 hover:text-orange-600 hover:bg-orange-50 rounded-lg transition-colors" title="Delete Property">
@@ -1086,7 +1086,7 @@ export default function HomestayClient({ vendorProfileId, bookings = [], propert
                         <CalendarIcon className="w-4 h-4" /> Go to Room Types & Calendar
                       </Link>
                     ) : (
-                      <span className="inline-block bg-orange-500 text-orange-500 px-4 py-2 rounded-lg text-sm font-bold opacity-70">
+                      <span className="inline-block bg-orange-500 text-white px-4 py-2 rounded-lg text-sm font-bold opacity-70">
                         Please publish/save this property first to unlock Room Management
                       </span>
                     )}

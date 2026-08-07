@@ -116,7 +116,7 @@ export default function TripsTab({
                         {isStand && (!booking.vehicle || !booking.driver) && booking.status !== "CANCELLED" && (
                           <button 
                             onClick={() => setAssigningBooking(booking.id)}
-                            className="mt-2 text-xs bg-orange-500 text-orange-500 font-bold px-2 py-1 rounded border border-orange-500 hover:bg-orange-500"
+                            className="mt-2 text-xs bg-orange-500 text-white font-bold px-2 py-1 rounded border border-orange-500 hover:bg-orange-500"
                           >
                             Assign Dispatch
                           </button>

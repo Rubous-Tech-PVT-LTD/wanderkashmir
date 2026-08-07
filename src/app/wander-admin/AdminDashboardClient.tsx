@@ -382,7 +382,7 @@ export default function AdminDashboardClient({
   // (using props now)
   const stats = [
     { label: "Total Platform Revenue", value: `₹${totalRevenue.toLocaleString('en-IN')}`, icon: IndianRupee, color: "text-emerald-500", bg: "bg-emerald-50", tab: "payouts" },
-    { label: "Total Registered Users", value: totalUsers.toString(), icon: Users, color: "text-orange-500", bg: "bg-orange-500", tab: "users" },
+    { label: "Total Registered Users", value: totalUsers.toString(), icon: Users, color: "text-orange-500", bg: "bg-orange-50", tab: "users" },
     { label: "Total Live Vendors", value: totalLiveVendors.toString(), icon: Building2, color: "text-indigo-500", bg: "bg-indigo-50", tab: "live_vendors" },
     { label: "Total Rejected", value: rejectedVendors.toString(), icon: XCircle, color: "text-red-500", bg: "bg-red-50", tab: "rejected" },
     { label: "Pending Vendor Approvals", value: pendingVendors.toString(), icon: Clock, color: "text-orange-500", bg: "bg-orange-50", tab: "approvals" },
@@ -835,14 +835,14 @@ export default function AdminDashboardClient({
                         <div className="flex items-center justify-end gap-2">
                           <button 
                             onClick={() => setKycVendor(vendor)}
-                            className="p-2 text-slate-400 hover:text-orange-500 hover:bg-orange-500 rounded-lg transition-colors" 
+                            className="p-2 text-slate-400 hover:text-orange-600 hover:bg-orange-50 rounded-lg transition-colors" 
                             title="View KYC Documents"
                           >
                             <FileText className="w-5 h-5" />
                           </button>
                           <button 
                             onClick={() => setSelectedVendorDetails(vendor)}
-                            className="p-2 text-slate-400 hover:text-orange-500 hover:bg-orange-500 rounded-lg transition-colors" 
+                            className="p-2 text-slate-400 hover:text-orange-600 hover:bg-orange-50 rounded-lg transition-colors" 
                             title="Review Details"
                           >
                             <Eye className="w-5 h-5" />
@@ -1155,7 +1155,7 @@ export default function AdminDashboardClient({
                         <div className="flex items-center justify-end gap-2">
                           <button 
                             onClick={() => setSelectedPropertyDetails(property)}
-                            className="p-2 text-slate-400 hover:text-orange-500 hover:bg-orange-500 rounded-lg transition-colors" 
+                            className="p-2 text-slate-400 hover:text-orange-600 hover:bg-orange-50 rounded-lg transition-colors" 
                             title="Review Details"
                           >
                             <Eye className="w-5 h-5" />
@@ -1256,7 +1256,7 @@ export default function AdminDashboardClient({
                         <div className="flex items-center justify-end gap-2">
                           <button 
                             onClick={() => setSelectedPropertyDetails(property)}
-                            className="p-2 text-slate-400 hover:text-orange-500 hover:bg-orange-500 rounded-lg transition-colors" 
+                            className="p-2 text-slate-400 hover:text-orange-600 hover:bg-orange-50 rounded-lg transition-colors" 
                             title="Review Details"
                           >
                             <Eye className="w-5 h-5" />
@@ -1493,7 +1493,7 @@ export default function AdminDashboardClient({
                         <td className="px-6 py-4 text-right">
                           <button 
                             onClick={() => setSelectedBookingDetails(booking)}
-                            className="inline-flex items-center gap-1.5 text-orange-500 hover:text-orange-500 bg-orange-500 hover:bg-orange-500 px-3 py-1.5 rounded-lg text-sm font-bold transition-colors"
+                            className="inline-flex items-center gap-1.5 text-white bg-orange-500 hover:bg-orange-600 px-3 py-1.5 rounded-lg text-sm font-bold transition-colors"
                           >
                             <Eye className="w-4 h-4" /> View
                           </button>
@@ -1688,7 +1688,7 @@ export default function AdminDashboardClient({
                           <div className="font-medium text-slate-900">
                             {booking.property?.name || (booking.vehicle ? `${booking.vehicle.make} ${booking.vehicle.model}` : "Unknown Item")}
                           </div>
-                          <div className="text-[10px] font-bold text-orange-500 bg-orange-500 px-2 py-0.5 rounded-full inline-block mt-1">
+                          <div className="text-[10px] font-bold text-white bg-orange-500 px-2 py-0.5 rounded-full inline-block mt-1">
                             {booking.property?.vendorProfile?.type || booking.vehicle?.vendorProfile?.type || "UNKNOWN"}
                           </div>
                         </td>
@@ -1980,7 +1980,7 @@ export default function AdminDashboardClient({
                           setAdminGooglePlaceId(selectedPropertyDetails.googlePlaceId || "");
                           setIsEditingGooglePlaceId(true);
                         }}
-                        className="px-3 py-1.5 text-sm font-bold text-orange-500 bg-orange-500 rounded-lg hover:bg-orange-500 transition"
+                        className="px-3 py-1.5 text-sm font-bold text-white bg-orange-500 rounded-lg hover:bg-orange-500 transition"
                       >
                         Edit
                       </button>
@@ -2061,7 +2061,7 @@ export default function AdminDashboardClient({
                         setAdminFaqs(Array.isArray(selectedPropertyDetails.faqs) ? selectedPropertyDetails.faqs : []);
                         setIsEditingSeo(true);
                       }}
-                      className="px-3 py-1.5 text-sm font-bold text-orange-500 bg-orange-500 rounded-lg hover:bg-orange-500 transition"
+                      className="px-3 py-1.5 text-sm font-bold text-white bg-orange-500 rounded-lg hover:bg-orange-500 transition"
                     >
                       Edit SEO
                     </button>

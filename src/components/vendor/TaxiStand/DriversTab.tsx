@@ -179,7 +179,7 @@ export default function DriversTab({ drivers }: { drivers: any[] }) {
           {drivers.map(driver => (
             <div key={driver.id} className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm relative overflow-hidden group">
               <div className="flex items-center gap-4 mb-4">
-                <div className="w-12 h-12 bg-orange-500 rounded-full flex items-center justify-center text-orange-500 font-bold text-lg">
+                <div className="w-12 h-12 bg-orange-50 rounded-full flex items-center justify-center text-orange-500 font-bold text-lg">
                   {driver.name.charAt(0)}
                 </div>
                 <div>
