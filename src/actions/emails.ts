@@ -160,14 +160,8 @@ export async function generateEmailWithAiAction(prompt: string) {
     You MUST include the placeholder [NAME] (with square brackets) wherever appropriate to represent the vendor's business name (e.g. "Hi [NAME]").
     
     CRITICAL URL INSTRUCTIONS:
-    1. ALWAYS use the subdomain "https://vendor.wanderkashmir.com" for all vendor and partner portal links.
-    2. Do NOT use paths like "/partner" on the main domain.
-    3. The main vendor portal link is: "https://vendor.wanderkashmir.com"
-    4. Link to specific dashboard sections if relevant:
-       - Hotels: "https://vendor.wanderkashmir.com/hotel"
-       - Homestays: "https://vendor.wanderkashmir.com/homeStays"
-       - Taxis: "https://vendor.wanderkashmir.com/Taxi_Driver"
-       - Guides: "https://vendor.wanderkashmir.com/Guide"
+    1. ALWAYS use the placeholder "[BUTTON_URL]" for the main Call-To-Action link href. Do NOT hardcode any URLs.
+    2. ALWAYS use the placeholder "[BUTTON_TEXT]" for the text inside the Call-To-Action button.
     
     The user wants an email about: "${prompt}"
     

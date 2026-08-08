@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { Mail, Send, CheckCircle2, AlertCircle, Eye, RefreshCw, Sparkles, Upload } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Mail, Send, CheckCircle2, AlertCircle, Eye, RefreshCw, Sparkles, Upload, Link as LinkIcon, Type } from "lucide-react";
 import { sendBulkEmailsAction, generateEmailWithAiAction } from "@/actions/emails";
 import toast from "react-hot-toast";
 
@@ -24,7 +24,7 @@ export default function AdminEmailsTab() {
     <p>Please log in to your dashboard to inspect your listings or complete your details.</p>
     
     <div style="text-align: center; margin: 32px 0;">
-      <a href="https://wanderkashmir.com/partner" style="background: #f97316; color: white; padding: 14px 28px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block; box-shadow: 0 4px 6px rgba(249,115,22,0.2);">Go to Partner Dashboard</a>
+      <a href="[BUTTON_URL]" style="background: #f97316; color: white; padding: 14px 28px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block; box-shadow: 0 4px 6px rgba(249,115,22,0.2);">[BUTTON_TEXT]</a>
     </div>
 
     <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 24px 0;" />
@@ -44,8 +44,21 @@ export default function AdminEmailsTab() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [aiPrompt, setAiPrompt] = useState("");
   
+  const [buttonText, setButtonText] = useState("Go to Partner Dashboard");
+  const [buttonUrl, setButtonUrl] = useState("https://vendor.wanderkashmir.com");
+  
   const [customRecipients, setCustomRecipients] = useState<{ email: string; businessName: string }[]>([]);
   const [csvFileName, setCsvFileName] = useState("");
+
+  useEffect(() => {
+    if (vendorType === "TOURISTS") {
+      setButtonText("Visit Website");
+      setButtonUrl("https://wanderkashmir.com");
+    } else {
+      setButtonText("Go to Partner Dashboard");
+      setButtonUrl("https://vendor.wanderkashmir.com");
+    }
+  }, [vendorType]);
 
   const handleCsvUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -193,9 +206,13 @@ export default function AdminEmailsTab() {
     setIsTesting(true);
     const toastId = toast.loading("Sending test email...");
     try {
+      const processedBodyHtml = bodyHtml
+        .replace(/\[BUTTON_URL\]/g, buttonUrl)
+        .replace(/\[BUTTON_TEXT\]/g, buttonText);
+
       const res = await sendBulkEmailsAction({
         subject,
-        bodyHtml,
+        bodyHtml: processedBodyHtml,
         vendorType,
         subscriptionPlan,
         testEmail,
@@ -247,9 +264,13 @@ export default function AdminEmailsTab() {
     setIsSending(true);
     const toastId = toast.loading("Fetching matching vendors and sending...");
     try {
+      const processedBodyHtml = bodyHtml
+        .replace(/\[BUTTON_URL\]/g, buttonUrl)
+        .replace(/\[BUTTON_TEXT\]/g, buttonText);
+
       const res = await sendBulkEmailsAction({
         subject,
-        bodyHtml,
+        bodyHtml: processedBodyHtml,
         vendorType,
         subscriptionPlan,
         customRecipients: vendorType === "CSV" ? customRecipients : undefined,
@@ -268,7 +289,10 @@ export default function AdminEmailsTab() {
   };
 
   const getPreviewHtml = () => {
-    return bodyHtml.replace(/\[NAME\]/g, "Sample Partner Co.");
+    return bodyHtml
+      .replace(/\[NAME\]/g, "Sample Partner Co.")
+      .replace(/\[BUTTON_URL\]/g, buttonUrl)
+      .replace(/\[BUTTON_TEXT\]/g, buttonText);
   };
 
   return (
@@ -393,10 +417,40 @@ export default function AdminEmailsTab() {
               />
             </div>
 
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                  <Type className="w-3.5 h-3.5" /> Action Button Text
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g. View Package"
+                  value={buttonText}
+                  onChange={(e) => setButtonText(e.target.value)}
+                  className="w-full text-sm border border-slate-200 rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-orange-500/20"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                  <LinkIcon className="w-3.5 h-3.5" /> Action Button URL
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g. https://wanderkashmir.com/packages/gurez"
+                  value={buttonUrl}
+                  onChange={(e) => setButtonUrl(e.target.value)}
+                  className="w-full text-sm border border-slate-200 rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-orange-500/20"
+                />
+              </div>
+            </div>
+
             <div>
               <div className="flex items-center justify-between mb-2">
                 <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider">Email Body (HTML format)</label>
-                <span className="text-[10px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded font-mono">Use [NAME] for recipient name</span>
+                <div className="flex flex-col sm:flex-row items-end sm:items-center gap-2">
+                  <span className="text-[10px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded font-mono">Use [NAME] for recipient</span>
+                  <span className="text-[10px] bg-orange-50 text-orange-600 px-2 py-0.5 rounded font-mono">Use [BUTTON_URL] & [BUTTON_TEXT]</span>
+                </div>
               </div>
               <textarea
                 rows={14}
