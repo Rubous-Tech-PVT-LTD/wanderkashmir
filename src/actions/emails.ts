@@ -60,6 +60,15 @@ export async function sendBulkEmailsAction(input: SendBulkEmailInput) {
         return { success: false, error: "Custom CSV recipients list is empty." };
       }
       validRecipients = customRecipients;
+    } else if (vendorType === "TOURISTS") {
+      const users = await prisma.user.findMany({
+        where: { isBanned: false },
+        select: { email: true, name: true }
+      });
+      if (users.length === 0) {
+        return { success: false, error: "No matching tourists found." };
+      }
+      validRecipients = users.map(u => ({ email: u.email, businessName: u.name || "Tourist" }));
     } else {
       // 3. Prepare filters for DB Query
       const whereClause: any = {

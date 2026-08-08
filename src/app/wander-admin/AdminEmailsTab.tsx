@@ -228,15 +228,20 @@ export default function AdminEmailsTab() {
       return;
     }
 
-    const confirmSend = confirm(
-      vendorType === "CSV"
-        ? `Are you sure you want to send this bulk email to the ${customRecipients.length} uploaded CSV recipients?`
-        : `Are you sure you want to send this bulk email to all matching ${
-            vendorType === "ALL" ? "" : vendorType.toLowerCase()
-          } vendors on the ${
+    let confirmationMessage = "";
+    if (vendorType === "CSV") {
+      confirmationMessage = `Are you sure you want to send this bulk email to the ${customRecipients.length} uploaded CSV recipients?`;
+    } else if (vendorType === "TOURISTS") {
+      confirmationMessage = `Are you sure you want to send this bulk email to ALL registered tourists and marketing users?`;
+    } else {
+      confirmationMessage = `Are you sure you want to send this bulk email to all matching ${
+            vendorType === "ALL" ? "vendors" : vendorType.toLowerCase() + "s"
+          } on the ${
             subscriptionPlan === "ALL" ? "any" : subscriptionPlan.toLowerCase()
-          } plan?`
-    );
+          } plan?`;
+    }
+
+    const confirmSend = confirm(confirmationMessage);
     if (!confirmSend) return;
 
     setIsSending(true);
@@ -326,6 +331,7 @@ export default function AdminEmailsTab() {
                   <option value="HOMESTAY">Homestays Only</option>
                   <option value="TAXI">Taxis Only</option>
                   <option value="GUIDE">Guides Only</option>
+                  <option value="TOURISTS">Tourists / Registered Users</option>
                   <option value="CSV">Upload Custom List (CSV)</option>
                 </select>
               </div>
@@ -334,7 +340,7 @@ export default function AdminEmailsTab() {
                 <select
                   value={subscriptionPlan}
                   onChange={(e) => setSubscriptionPlan(e.target.value)}
-                  disabled={vendorType === "CSV"}
+                  disabled={vendorType === "CSV" || vendorType === "TOURISTS"}
                   className="w-full text-sm border border-slate-200 rounded-xl px-4 py-2.5 bg-white focus:outline-none focus:ring-2 focus:ring-orange-500/20 disabled:opacity-50 disabled:bg-slate-50"
                 >
                   <option value="ALL">All Plans</option>
