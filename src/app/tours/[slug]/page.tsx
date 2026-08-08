@@ -120,7 +120,22 @@ export default async function TourPage({ params }: { params: Promise<{ slug: str
             "@type": "AggregateRating",
             "ratingValue": averageRating,
             "reviewCount": reviewCount
-          }
+          },
+          "review": tour.reviews.map((r: any) => ({
+            "@type": "Review",
+            "author": {
+              "@type": "Person",
+              "name": r.user?.name || "Anonymous"
+            },
+            "datePublished": r.createdAt.toISOString().split('T')[0],
+            "reviewRating": {
+              "@type": "Rating",
+              "ratingValue": r.rating,
+              "bestRating": "5",
+              "worstRating": "1"
+            },
+            "reviewBody": r.comment || ""
+          }))
         })
       }
     ]
