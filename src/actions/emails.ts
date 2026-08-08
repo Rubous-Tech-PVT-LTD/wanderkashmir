@@ -62,7 +62,7 @@ export async function sendBulkEmailsAction(input: SendBulkEmailInput) {
       validRecipients = customRecipients;
     } else if (vendorType === "TOURISTS") {
       const users = await prisma.user.findMany({
-        where: { isBanned: false },
+        where: { isBanned: false, role: "CUSTOMER" },
         select: { email: true, name: true }
       });
       if (users.length === 0) {
