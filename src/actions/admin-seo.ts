@@ -121,3 +121,30 @@ export async function deleteSeoComment(commentId: string) {
     return { success: false, error: error.message };
   }
 }
+
+export async function saveCommenterToUser(email: string, name: string) {
+  try {
+    const session = await getAdminSession();
+    if (!session || session.role !== "ADMIN") throw new Error("Unauthorized");
+
+    const existingUser = await prisma.user.findUnique({
+      where: { email }
+    });
+
+    if (existingUser) {
+      return { success: false, message: "User already exists in the database." };
+    }
+
+    await prisma.user.create({
+      data: {
+        email,
+        name: name || "Website Visitor",
+        role: "CUSTOMER",
+      }
+    });
+
+    return { success: true, message: "User successfully added to Marketing list." };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+}

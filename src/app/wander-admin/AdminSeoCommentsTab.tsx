@@ -1,9 +1,9 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { getSeoComments, replyToSeoComment, deleteSeoComment } from "@/actions/admin-seo";
+import { getSeoComments, replyToSeoComment, deleteSeoComment, saveCommenterToUser } from "@/actions/admin-seo";
 import toast from "react-hot-toast";
-import { Trash2, MessageSquare, ExternalLink } from "lucide-react";
+import { Trash2, MessageSquare, ExternalLink, Mail, UserPlus } from "lucide-react";
 import Link from "next/link";
 import Pagination from "@/components/Pagination";
 
@@ -60,6 +60,18 @@ export default function AdminSeoCommentsTab() {
     }
   };
 
+  const handleSaveToUsers = async (email: string, name: string) => {
+    if (!email) return toast.error("No email provided by this user");
+    
+    const toastId = toast.loading("Saving to Users List...");
+    const res = await saveCommenterToUser(email, name);
+    if (res.success) {
+      toast.success(res.message, { id: toastId });
+    } else {
+      toast.error(res.message || res.error || "Failed to save user", { id: toastId });
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 flex justify-between items-center">
@@ -86,6 +98,19 @@ export default function AdminSeoCommentsTab() {
                   <div className="flex-1">
                     <div className="flex items-center gap-3 mb-2">
                       <h4 className="font-bold text-slate-900">{comment.name}</h4>
+                      {comment.email && (
+                        <div className="flex items-center gap-1 bg-slate-100 px-2 py-0.5 rounded-full text-xs text-slate-600">
+                          <Mail className="w-3 h-3" />
+                          <span>{comment.email}</span>
+                          <button 
+                            onClick={() => handleSaveToUsers(comment.email, comment.name)}
+                            className="ml-2 text-indigo-600 hover:text-indigo-800 flex items-center gap-1 font-medium transition-colors"
+                            title="Save to User List for Marketing"
+                          >
+                            <UserPlus className="w-3 h-3" /> Save
+                          </button>
+                        </div>
+                      )}
                       <span className="text-xs text-slate-400">{new Date(comment.createdAt).toLocaleString()}</span>
                       {comment.rating && (
                          <span className="text-xs bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded-full font-medium flex items-center gap-1">
