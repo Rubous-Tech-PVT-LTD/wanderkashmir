@@ -10,6 +10,7 @@ import { marked } from "marked";
 import { getValidImageUrl } from "@/lib/imageUtils";
 import { JsonLd } from "@/components/JsonLd";
 import SeoCommentForm from "@/components/SeoCommentForm";
+import ShareButtons from "@/components/ShareButtons";
 
 export const revalidate = 3600; // ISR: Revalidate every hour for instant load times
 
@@ -195,13 +196,15 @@ export default async function TaxiSeoPage({ params }: { params: Promise<{ slug: 
 
         {/* Dynamic Content */}
         {page.content && (
-          <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-8 md:p-12 mb-16">
+          <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-8 md:p-12 mb-8">
             <div 
               className="prose prose-slate prose-lg max-w-none prose-headings:text-[#f97316] prose-a:text-[#f97316]"
               dangerouslySetInnerHTML={{ __html: await marked.parse(page.content) }} 
             />
           </div>
         )}
+
+        <ShareButtons title={page.title} />
 
         {/* Dynamic Taxi Rates Table */}
         {matchedRateCard && rates && Object.keys(rates).length > 0 && (

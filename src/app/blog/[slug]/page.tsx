@@ -10,6 +10,7 @@ import { marked } from "marked";
 import { getValidImageUrl } from "@/lib/imageUtils";
 import { JsonLd } from "@/components/JsonLd";
 import SeoCommentForm from "@/components/SeoCommentForm";
+import ShareButtons from "@/components/ShareButtons";
 
 export const revalidate = 3600; // ISR
 
@@ -185,7 +186,7 @@ export default async function BlogArticlePage({ params }: { params: Promise<{ sl
 
         {/* Article Content */}
         {page.content && (
-          <article className="bg-white rounded-3xl shadow-sm border border-slate-100 p-8 md:p-12 mb-16">
+          <article className="bg-white rounded-3xl shadow-sm border border-slate-100 p-8 md:p-12 mb-8">
             <div 
               className="prose prose-slate prose-lg md:prose-xl max-w-none 
                          prose-headings:text-slate-900 prose-headings:font-bold 
@@ -197,6 +198,8 @@ export default async function BlogArticlePage({ params }: { params: Promise<{ sl
             />
           </article>
         )}
+
+        <ShareButtons title={page.title} />
 
         {/* FAQs */}
         {page.faqs && Array.isArray(page.faqs) && page.faqs.length > 0 && (
