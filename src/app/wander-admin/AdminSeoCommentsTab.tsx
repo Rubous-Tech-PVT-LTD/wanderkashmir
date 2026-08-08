@@ -16,6 +16,7 @@ export default function AdminSeoCommentsTab() {
   // Pagination
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
 
   useEffect(() => {
     fetchComments();
@@ -25,8 +26,9 @@ export default function AdminSeoCommentsTab() {
     setIsLoading(true);
     const res = await getSeoComments(currentPage, 20);
     if (res.success) {
-      setComments(res.comments);
+      setComments(res.comments || []);
       setTotalPages(res.totalPages || 1);
+      setTotalItems(res.total || 0);
     } else {
       toast.error("Failed to load comments");
     }
@@ -66,7 +68,7 @@ export default function AdminSeoCommentsTab() {
     const toastId = toast.loading("Saving to Users List...");
     const res = await saveCommenterToUser(email, name);
     if (res.success) {
-      toast.success(res.message, { id: toastId });
+      toast.success(res.message || "Success", { id: toastId });
     } else {
       toast.error(res.message || res.error || "Failed to save user", { id: toastId });
     }
@@ -199,7 +201,13 @@ export default function AdminSeoCommentsTab() {
 
       {totalPages > 1 && (
         <div className="mt-6 flex justify-center">
-          <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={setCurrentPage} />
+          <Pagination 
+            currentPage={currentPage} 
+            totalPages={totalPages} 
+            onPageChange={setCurrentPage} 
+            totalItems={totalItems} 
+            itemsPerPage={20} 
+          />
         </div>
       )}
     </div>
