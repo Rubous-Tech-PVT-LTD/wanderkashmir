@@ -24,8 +24,14 @@ export async function GET(request: Request) {
   const genAI = new GoogleGenerativeAI(apiKey);
   const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
+  const { searchParams } = new URL(request.url);
+  const requestedTopic = searchParams.get('topic');
+
   try {
-    // 3. Fetch existing slugs from the database to avoid duplicates
+    // 3. Fetch existing slugs and ContentSettings from the database
+    const settings = await prisma.contentSettings.findFirst();
+    const systemRules = settings?.defaultPromptRules || "";
+
     const existingPages = await prisma.seoLandingPage.findMany({
       select: { slug: true }
     });
@@ -35,10 +41,13 @@ export async function GET(request: Request) {
     You are a world-class SEO copywriter and local travel expert for "WanderKashmir", a premium travel platform in Kashmir.
     Your task is to generate exactly 1 unique, highly-searched, high-converting SEO landing page for a Kashmir tourist route, homestay location, or specific travel package.
     
+    CRITICAL BRAND GUIDELINES FROM ADMIN:
+    ${systemRules}
+
     IMPORTANT RULES:
     1. Do NOT use any of these existing routes: ${existingSlugs.join(", ")}
     2. BE CREATIVE AND NICHE. Target high-intent, low-competition keywords (e.g. "Srinagar to Gurez Valley taxi fare", "best homestays near Dal Lake for families").
-    3. The response MUST be a valid JSON object without any markdown wrapping.
+    ${requestedTopic ? `3. THE USER EXPLICITLY REQUESTED THIS TOPIC/KEYWORD: "${requestedTopic}". You MUST strictly write the page targeting this keyword.` : ''}
     
     JSON STRUCTURE:
     {
@@ -59,7 +68,10 @@ export async function GET(request: Request) {
     `;
 
     // 5. Generate content with Gemini
-    const result = await model.generateContent(prompt);
+    const result = await model.generateContent({
+      contents: [{ role: "user", parts: [{ text: prompt }] }],
+      generationConfig: { responseMimeType: "application/json" }
+    });
     const responseText = result.response.text();
     
     // Clean JSON string (remove markdown if Gemini ignores instructions)

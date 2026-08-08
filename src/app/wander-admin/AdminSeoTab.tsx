@@ -12,6 +12,7 @@ export default function AdminSeoTab() {
   const [isLoading, setIsLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [topicInput, setTopicInput] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
   const [activeDistributionPage, setActiveDistributionPage] = useState<any | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
@@ -116,10 +117,11 @@ export default function AdminSeoTab() {
   };
 
   const handleGenerateAutomation = async () => {
-    if (!confirm("This will trigger the AI to generate a new SEO Route page right now. Proceed?")) return;
+    const topic = topicInput.trim();
+    if (!confirm(`This will trigger the AI to generate a new SEO Route page right now${topic ? ` for "${topic}"` : ''}. Proceed?`)) return;
     setIsGenerating(true);
     try {
-      const res = await triggerSeoGeneration();
+      const res = await triggerSeoGeneration(topic);
       if (res.success) {
         alert("Magic AI Generation successful! A new SEO Route page has been created.");
         fetchPages();
@@ -134,10 +136,11 @@ export default function AdminSeoTab() {
   };
 
   const handleGenerateBlog = async () => {
-    if (!confirm("This will trigger the AI to write a new Travel Blog Article right now. Proceed?")) return;
+    const topic = topicInput.trim();
+    if (!confirm(`This will trigger the AI to write a new Travel Blog Article right now${topic ? ` for "${topic}"` : ''}. Proceed?`)) return;
     setIsGenerating(true);
     try {
-      const res = await triggerBlogGeneration();
+      const res = await triggerBlogGeneration(topic);
       if (res.success) {
         alert("Magic AI Blog Generation successful! A new Blog has been published.");
         fetchPages();
@@ -172,7 +175,14 @@ export default function AdminSeoTab() {
           <p className="text-sm text-slate-500">Manage dynamic SEO routes. Pages load instantly with Next.js ISR.</p>
         </div>
         {!isEditing && (
-          <div className="flex gap-3">
+          <div className="flex gap-3 items-center">
+            <input
+              type="text"
+              placeholder="Topic/Keyword (Optional)"
+              value={topicInput}
+              onChange={(e) => setTopicInput(e.target.value)}
+              className="border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#f97316] w-64"
+            />
             <button
               onClick={handleGenerateAutomation}
               disabled={isGenerating}

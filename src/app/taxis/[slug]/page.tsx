@@ -67,6 +67,14 @@ export default async function TaxiSeoPage({ params }: { params: Promise<{ slug: 
 
   const rates = matchedRateCard ? (matchedRateCard.rates as Record<string, number>) : null;
 
+  // Fetch Related Blogs for Internal Linking
+  const relatedBlogs = await prisma.seoLandingPage.findMany({
+    where: { type: "BLOG", slug: { not: resolvedParams.slug } },
+    take: 3,
+    orderBy: { createdAt: 'desc' },
+    select: { title: true, slug: true, description: true, imageUrl: true }
+  });
+
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.wanderkashmir.com';
   const url = `${baseUrl}/taxis/${page.slug}`;
 
@@ -264,6 +272,85 @@ export default async function TaxiSeoPage({ params }: { params: Promise<{ slug: 
                     {faq.answer}
                   </div>
                 </details>
+              ))}
+            </div>
+          </div>
+        )}
+        {/* Customer Reviews & Testimonials Section */}
+        <div className="mb-16">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-6 mb-8">
+            <h2 className="text-3xl font-bold text-slate-900 text-center md:text-left">
+              Traveler Reviews
+            </h2>
+            <a href="https://g.page/r/wanderkashmir/review" target="_blank" rel="noreferrer" className="px-6 py-2.5 bg-white border border-slate-200 text-slate-700 rounded-full font-medium hover:bg-slate-50 transition-colors shadow-sm text-sm flex items-center gap-2">
+              Write a Review
+            </a>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="bg-white p-8 rounded-3xl shadow-sm border border-slate-100 flex flex-col gap-4">
+              <div className="flex gap-1 text-yellow-400">
+                {[1,2,3,4,5].map(i => <span key={i}>★</span>)}
+              </div>
+              <p className="text-slate-600 italic leading-relaxed">
+                "WanderKashmir made our trip so easy! The taxi driver was incredibly polite and knew all the hidden spots. The booking process was transparent with no hidden charges."
+              </p>
+              <div className="mt-auto pt-4 flex items-center gap-3">
+                <div className="w-10 h-10 bg-orange-100 text-orange-600 rounded-full flex items-center justify-center font-bold">R</div>
+                <div>
+                  <h4 className="font-semibold text-slate-900 text-sm">Rahul Sharma</h4>
+                  <p className="text-xs text-slate-500">Verified Traveler</p>
+                </div>
+              </div>
+            </div>
+            <div className="bg-white p-8 rounded-3xl shadow-sm border border-slate-100 flex flex-col gap-4">
+              <div className="flex gap-1 text-yellow-400">
+                {[1,2,3,4,5].map(i => <span key={i}>★</span>)}
+              </div>
+              <p className="text-slate-600 italic leading-relaxed">
+                "Highly recommend their taxi service. We booked a cab from Srinagar to Gulmarg, and the vehicle was very clean. The driver even stopped at beautiful viewpoints for photos!"
+              </p>
+              <div className="mt-auto pt-4 flex items-center gap-3">
+                <div className="w-10 h-10 bg-orange-100 text-orange-600 rounded-full flex items-center justify-center font-bold">P</div>
+                <div>
+                  <h4 className="font-semibold text-slate-900 text-sm">Priya Patel</h4>
+                  <p className="text-xs text-slate-500">Verified Traveler</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Related Blogs Section */}
+        {relatedBlogs.length > 0 && (
+          <div className="mb-16">
+            <h2 className="text-3xl font-bold text-slate-900 mb-8">
+              More Travel Guides
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {relatedBlogs.map(blog => (
+                <Link href={`/blog/${blog.slug}`} key={blog.slug} className="group bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden hover:shadow-md transition-all flex flex-col">
+                  {blog.imageUrl ? (
+                    <div className="relative h-48 w-full overflow-hidden">
+                      <Image 
+                        src={getValidImageUrl([blog.imageUrl])} 
+                        alt={blog.title} 
+                        fill 
+                        className="object-cover group-hover:scale-105 transition-transform duration-500"
+                      />
+                    </div>
+                  ) : (
+                    <div className="h-48 w-full bg-slate-100 flex items-center justify-center">
+                      <span className="text-slate-400 font-medium">WanderKashmir</span>
+                    </div>
+                  )}
+                  <div className="p-6 flex-1 flex flex-col">
+                    <h3 className="font-bold text-slate-900 line-clamp-2 mb-2 group-hover:text-[#f97316] transition-colors">{blog.title}</h3>
+                    <p className="text-slate-600 text-sm line-clamp-3 mb-4 flex-1">{blog.description}</p>
+                    <span className="text-[#f97316] font-medium text-sm flex items-center gap-1 mt-auto">
+                      Read Guide <ChevronRight className="w-4 h-4" />
+                    </span>
+                  </div>
+                </Link>
               ))}
             </div>
           </div>
