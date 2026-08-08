@@ -27,6 +27,7 @@ const AdminEmailsTab = dynamic(() => import("./AdminEmailsTab"), { ssr: false })
 const AdminPromoCodesTab = dynamic(() => import("./AdminPromoCodesTab"), { ssr: false });
 const AdminPopupsTab = dynamic(() => import("./AdminPopupsTab"), { ssr: false });
 const AdminCustomToursTab = dynamic(() => import("./AdminCustomToursTab"), { ssr: false });
+const AdminSeoCommentsTab = dynamic(() => import("./AdminSeoCommentsTab"), { ssr: false });
 const ImageUpload = dynamic(() => import("@/components/ImageUpload"), { ssr: false });
 
 function PropertyImagesAdmin({ property, onSaved }: { property: any, onSaved: (newImages: string[]) => void }) {
@@ -668,6 +669,7 @@ export default function AdminDashboardClient({
             { id: "rejected", label: "Rejected Vendors", icon: XCircle },
             { id: "users", label: "Tourists", icon: Users },
             { id: "seo_pages", label: "SEO Pages", icon: Globe },
+            { id: "seo_comments", label: "Page Comments", icon: Sparkles },
             { id: "bulk_emails", label: "Bulk Emails", icon: Mail },
             { id: "promo_codes", label: "Promo Codes", icon: CheckCircle2 },
             { id: "site_popups", label: "Site Popups", icon: Sparkles },
@@ -742,8 +744,9 @@ export default function AdminDashboardClient({
         {activeTab === "tours" && <AdminToursTab />}
         {activeTab === "custom_tours" && <AdminCustomToursTab />}
         {activeTab === "taxis" && <AdminTaxisTab />}
-        {activeTab === "seo_pages" && <AdminSeoTab />}
-        {activeTab === "bulk_emails" && <AdminEmailsTab />}
+        { activeTab === "seo_pages" && <AdminSeoTab /> }
+        { activeTab === "seo_comments" && <AdminSeoCommentsTab /> }
+        { activeTab === "bulk_emails" && <AdminEmailsTab /> }
         {activeTab === "promo_codes" && <AdminPromoCodesTab />}
         {activeTab === "site_popups" && <AdminPopupsTab />}
 

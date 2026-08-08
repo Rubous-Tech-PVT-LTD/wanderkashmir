@@ -17,6 +17,12 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const resolvedParams = await params;
   const page = await prisma.seoLandingPage.findUnique({
     where: { slug: resolvedParams.slug },
+    include: {
+      comments: {
+        where: { isApproved: true },
+        orderBy: { createdAt: 'desc' }
+      }
+    }
   });
 
   if (!page || page.type !== "TAXI") {
@@ -33,6 +39,12 @@ export default async function TaxiSeoPage({ params }: { params: Promise<{ slug: 
   const resolvedParams = await params;
   const page = await prisma.seoLandingPage.findUnique({
     where: { slug: resolvedParams.slug },
+    include: {
+      comments: {
+        where: { isApproved: true },
+        orderBy: { createdAt: 'desc' }
+      }
+    }
   });
 
   if (!page || page.type !== "TAXI") {
@@ -287,37 +299,48 @@ export default async function TaxiSeoPage({ params }: { params: Promise<{ slug: 
           <div className="mb-10">
             <SeoCommentForm seoPageId={page.id} />
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="bg-white p-8 rounded-3xl shadow-sm border border-slate-100 flex flex-col gap-4">
-              <div className="flex gap-1 text-yellow-400">
-                {[1,2,3,4,5].map(i => <span key={i}>★</span>)}
-              </div>
-              <p className="text-slate-600 italic leading-relaxed">
-                "WanderKashmir made our trip so easy! The taxi driver was incredibly polite and knew all the hidden spots. The booking process was transparent with no hidden charges."
-              </p>
-              <div className="mt-auto pt-4 flex items-center gap-3">
-                <div className="w-10 h-10 bg-orange-100 text-orange-600 rounded-full flex items-center justify-center font-bold">R</div>
-                <div>
-                  <h4 className="font-semibold text-slate-900 text-sm">Rahul Sharma</h4>
-                  <p className="text-xs text-slate-500">Verified Traveler</p>
+          <div className="grid grid-cols-1 gap-6">
+            {page.comments && page.comments.length > 0 ? (
+              page.comments.map((comment: any) => (
+                <div key={comment.id} className="bg-white p-8 rounded-3xl shadow-sm border border-slate-100 flex flex-col gap-4">
+                  <div className="flex gap-1 text-yellow-400">
+                    {Array.from({ length: 5 }).map((_, i) => (
+                      <span key={i} className={i < (comment.rating || 5) ? "text-yellow-400" : "text-slate-200"}>★</span>
+                    ))}
+                  </div>
+                  <p className="text-slate-600 italic leading-relaxed whitespace-pre-wrap">
+                    "{comment.comment}"
+                  </p>
+                  <div className="mt-auto pt-4 flex items-center gap-3">
+                    <div className="w-10 h-10 bg-orange-100 text-orange-600 rounded-full flex items-center justify-center font-bold">
+                      {comment.name.charAt(0).toUpperCase()}
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-slate-900 text-sm">{comment.name}</h4>
+                      <p className="text-xs text-slate-500">
+                        {new Date(comment.createdAt).toLocaleDateString()}
+                      </p>
+                    </div>
+                  </div>
+                  
+                  {comment.adminReply && (
+                    <div className="mt-4 bg-slate-50 p-4 rounded-xl border border-slate-100 flex gap-3">
+                      <div className="w-8 h-8 bg-[#f97316] text-white rounded-full flex items-center justify-center font-bold text-xs flex-shrink-0">
+                        W
+                      </div>
+                      <div>
+                        <h4 className="font-semibold text-slate-900 text-sm mb-1">Response from WanderKashmir</h4>
+                        <p className="text-sm text-slate-600 leading-relaxed">{comment.adminReply}</p>
+                      </div>
+                    </div>
+                  )}
                 </div>
-              </div>
-            </div>
-            <div className="bg-white p-8 rounded-3xl shadow-sm border border-slate-100 flex flex-col gap-4">
-              <div className="flex gap-1 text-yellow-400">
-                {[1,2,3,4,5].map(i => <span key={i}>★</span>)}
-              </div>
-              <p className="text-slate-600 italic leading-relaxed">
-                "Highly recommend their taxi service. We booked a cab from Srinagar to Gulmarg, and the vehicle was very clean. The driver even stopped at beautiful viewpoints for photos!"
+              ))
+            ) : (
+              <p className="text-slate-500 text-center p-8 bg-white rounded-3xl border border-slate-100">
+                No comments yet. Be the first to share your thoughts!
               </p>
-              <div className="mt-auto pt-4 flex items-center gap-3">
-                <div className="w-10 h-10 bg-orange-100 text-orange-600 rounded-full flex items-center justify-center font-bold">P</div>
-                <div>
-                  <h4 className="font-semibold text-slate-900 text-sm">Priya Patel</h4>
-                  <p className="text-xs text-slate-500">Verified Traveler</p>
-                </div>
-              </div>
-            </div>
+            )}
           </div>
         </div>
 

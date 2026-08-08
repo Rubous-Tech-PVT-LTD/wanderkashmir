@@ -16,7 +16,13 @@ export const revalidate = 3600; // ISR
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const resolvedParams = await params;
   const page = await prisma.seoLandingPage.findUnique({
-    where: { slug: resolvedParams.slug }
+    where: { slug: resolvedParams.slug },
+    include: {
+      comments: {
+        where: { isApproved: true },
+        orderBy: { createdAt: 'desc' }
+      }
+    }
   });
 
   if (!page || page.type !== "BLOG") return { title: "Blog Not Found" };
@@ -44,7 +50,13 @@ export default async function BlogArticlePage({ params }: { params: Promise<{ sl
   try {
     const resolvedParams = await params;
     const page = await prisma.seoLandingPage.findUnique({
-      where: { slug: resolvedParams.slug }
+      where: { slug: resolvedParams.slug },
+      include: {
+        comments: {
+          where: { isApproved: true },
+          orderBy: { createdAt: 'desc' }
+        }
+      }
     });
 
     if (!page || page.type !== "BLOG") {
@@ -255,37 +267,48 @@ export default async function BlogArticlePage({ params }: { params: Promise<{ sl
           <div className="mb-10">
             <SeoCommentForm seoPageId={page.id} />
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="bg-white p-8 rounded-3xl shadow-sm border border-slate-100 flex flex-col gap-4">
-              <div className="flex gap-1 text-yellow-400">
-                {[1,2,3,4,5].map(i => <span key={i}>★</span>)}
-              </div>
-              <p className="text-slate-600 italic leading-relaxed">
-                "WanderKashmir's travel guides were so helpful in planning our trip. We eventually booked a complete tour package with them and it was the best decision ever!"
-              </p>
-              <div className="mt-auto pt-4 flex items-center gap-3">
-                <div className="w-10 h-10 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center font-bold">A</div>
-                <div>
-                  <h4 className="font-semibold text-slate-900 text-sm">Amit Singh</h4>
-                  <p className="text-xs text-slate-500">Verified Traveler</p>
+          <div className="grid grid-cols-1 gap-6">
+            {page.comments && page.comments.length > 0 ? (
+              page.comments.map((comment: any) => (
+                <div key={comment.id} className="bg-white p-8 rounded-3xl shadow-sm border border-slate-100 flex flex-col gap-4">
+                  <div className="flex gap-1 text-yellow-400">
+                    {Array.from({ length: 5 }).map((_, i) => (
+                      <span key={i} className={i < (comment.rating || 5) ? "text-yellow-400" : "text-slate-200"}>★</span>
+                    ))}
+                  </div>
+                  <p className="text-slate-600 italic leading-relaxed whitespace-pre-wrap">
+                    "{comment.comment}"
+                  </p>
+                  <div className="mt-auto pt-4 flex items-center gap-3">
+                    <div className="w-10 h-10 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center font-bold">
+                      {comment.name.charAt(0).toUpperCase()}
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-slate-900 text-sm">{comment.name}</h4>
+                      <p className="text-xs text-slate-500">
+                        {new Date(comment.createdAt).toLocaleDateString()}
+                      </p>
+                    </div>
+                  </div>
+                  
+                  {comment.adminReply && (
+                    <div className="mt-4 bg-slate-50 p-4 rounded-xl border border-slate-100 flex gap-3">
+                      <div className="w-8 h-8 bg-indigo-600 text-white rounded-full flex items-center justify-center font-bold text-xs flex-shrink-0">
+                        W
+                      </div>
+                      <div>
+                        <h4 className="font-semibold text-slate-900 text-sm mb-1">Response from WanderKashmir</h4>
+                        <p className="text-sm text-slate-600 leading-relaxed">{comment.adminReply}</p>
+                      </div>
+                    </div>
+                  )}
                 </div>
-              </div>
-            </div>
-            <div className="bg-white p-8 rounded-3xl shadow-sm border border-slate-100 flex flex-col gap-4">
-              <div className="flex gap-1 text-yellow-400">
-                {[1,2,3,4,5].map(i => <span key={i}>★</span>)}
-              </div>
-              <p className="text-slate-600 italic leading-relaxed">
-                "The most authentic homestays in Kashmir! Reading their blog gave us the confidence to book an offbeat stay in Gurez, and it was breathtaking."
+              ))
+            ) : (
+              <p className="text-slate-500 text-center p-8 bg-white rounded-3xl border border-slate-100">
+                No comments yet. Be the first to share your thoughts!
               </p>
-              <div className="mt-auto pt-4 flex items-center gap-3">
-                <div className="w-10 h-10 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center font-bold">N</div>
-                <div>
-                  <h4 className="font-semibold text-slate-900 text-sm">Neha Verma</h4>
-                  <p className="text-xs text-slate-500">Verified Traveler</p>
-                </div>
-              </div>
-            </div>
+            )}
           </div>
         </div>
 
