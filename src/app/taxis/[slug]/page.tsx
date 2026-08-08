@@ -9,6 +9,7 @@ import Navbar from "@/components/Navbar";
 import { marked } from "marked";
 import { getValidImageUrl } from "@/lib/imageUtils";
 import { JsonLd } from "@/components/JsonLd";
+import SeoCommentForm from "@/components/SeoCommentForm";
 
 export const revalidate = 3600; // ISR: Revalidate every hour for instant load times
 
@@ -280,11 +281,11 @@ export default async function TaxiSeoPage({ params }: { params: Promise<{ slug: 
         <div className="mb-16">
           <div className="flex flex-col md:flex-row items-center justify-between gap-6 mb-8">
             <h2 className="text-3xl font-bold text-slate-900 text-center md:text-left">
-              Traveler Reviews
+              Traveler Reviews & Comments
             </h2>
-            <a href="https://g.page/r/wanderkashmir/review" target="_blank" rel="noreferrer" className="px-6 py-2.5 bg-white border border-slate-200 text-slate-700 rounded-full font-medium hover:bg-slate-50 transition-colors shadow-sm text-sm flex items-center gap-2">
-              Write a Review
-            </a>
+          </div>
+          <div className="mb-10">
+            <SeoCommentForm seoPageId={page.id} />
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="bg-white p-8 rounded-3xl shadow-sm border border-slate-100 flex flex-col gap-4">

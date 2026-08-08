@@ -368,6 +368,7 @@ model SeoLandingPage {
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
   contentAssets ContentAsset[]
+  comments      SeoPageComment[]
 
   @@index([type])
 }
@@ -521,4 +522,21 @@ model SitePopup {
   isActive     Boolean  @default(false)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
+}
+
+model SeoPageComment {
+  id         String   @id @default(cuid())
+  seoPageId  String
+  name       String
+  email      String?
+  rating     Int?     @default(5)
+  comment    String
+  isApproved Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  seoPage    SeoLandingPage @relation(fields: [seoPageId], references: [id], onDelete: Cascade)
+
+  @@index([seoPageId])
+  @@index([isApproved])
 }
