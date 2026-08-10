@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { getPaginatedTours } from "@/actions/admin-data";
 import Pagination from "@/components/Pagination";
 
-export default function AdminToursTab({ initialEditTour, onClearEdit }: { initialEditTour?: any, onClearEdit?: () => void }) {
+export default function AdminToursTab({ initialEditTour, initialCategory, onClearEdit }: { initialEditTour?: any, initialCategory?: string | null, onClearEdit?: () => void }) {
   const TOUR_CATEGORIES = [
     "Honeymoon", "Family", "Adventure", "Pilgrimage", "Nature",
     "Culture", "Skiing", "Trekking", "Wildlife", "Luxury", "Budget", "Group"
@@ -39,8 +39,11 @@ export default function AdminToursTab({ initialEditTour, onClearEdit }: { initia
     if (initialEditTour) {
       handleEdit(initialEditTour);
       if (onClearEdit) onClearEdit();
+    } else if (initialCategory) {
+      handleAddNew(initialCategory);
+      if (onClearEdit) onClearEdit();
     }
-  }, [initialEditTour]);
+  }, [initialEditTour, initialCategory]);
 
   const generateSlug = (text: string) => {
     return text.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
@@ -86,7 +89,7 @@ export default function AdminToursTab({ initialEditTour, onClearEdit }: { initia
     setIsAdding(true);
   };
 
-  const handleAddNew = () => {
+  const handleAddNew = (defaultCategory: string = "") => {
     setIsEditing(null);
     setFormData({
       title: "",
@@ -95,7 +98,7 @@ export default function AdminToursTab({ initialEditTour, onClearEdit }: { initia
       destinations: "",
       price: "",
       originalPrice: "",
-      category: "",
+      category: defaultCategory,
       maxPersons: "2",
       images: "",
       overview: "",

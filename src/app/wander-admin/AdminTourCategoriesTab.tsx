@@ -12,7 +12,7 @@ import {
 } from "@/actions/admin-tour-categories";
 import toast from "react-hot-toast";
 
-export default function AdminTourCategoriesTab({ onEditTour }: { onEditTour?: (tour: any) => void }) {
+export default function AdminTourCategoriesTab({ onEditTour, onAddTour }: { onEditTour?: (tour: any) => void, onAddTour?: (categoryName: string) => void }) {
   const [categories, setCategories] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -241,9 +241,22 @@ export default function AdminTourCategoriesTab({ onEditTour }: { onEditTour?: (t
                 <h3 className="text-xl font-bold text-slate-900">Packages in "{viewingCategory.name}"</h3>
                 <p className="text-sm text-slate-500">{viewingCategory._count.tours} tours total</p>
               </div>
-              <button onClick={() => setViewingCategory(null)} className="text-slate-400 hover:text-slate-600">
-                <X className="w-5 h-5" />
-              </button>
+              <div className="flex gap-3">
+                {onAddTour && (
+                  <button 
+                    onClick={() => {
+                      onAddTour(viewingCategory.name);
+                      setViewingCategory(null);
+                    }} 
+                    className="bg-slate-900 text-white px-4 py-2 rounded-lg font-semibold flex items-center gap-2 hover:bg-slate-800 text-sm"
+                  >
+                    <Plus className="w-4 h-4" /> Add Package
+                  </button>
+                )}
+                <button onClick={() => setViewingCategory(null)} className="text-slate-400 hover:text-slate-600 bg-white border border-slate-200 rounded-lg p-2">
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
             </div>
             
             <div className="p-6 overflow-y-auto flex-1">

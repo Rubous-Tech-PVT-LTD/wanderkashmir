@@ -192,6 +192,7 @@ export default function AdminDashboardClient({
   const [isEditingSeo, setIsEditingSeo] = useState(false);
   const [selectedBookingDetails, setSelectedBookingDetails] = useState<any | null>(null);
   const [tourToEdit, setTourToEdit] = useState<any>(null);
+  const [tourCategoryToAdd, setTourCategoryToAdd] = useState<string | null>(null);
   const router = useRouter();
 
   // Filtering & Search States
@@ -744,13 +745,26 @@ export default function AdminDashboardClient({
         )}
 
         {/* Dynamic Content Area */}
-        {activeTab === "tours" && <AdminToursTab initialEditTour={tourToEdit} onClearEdit={() => setTourToEdit(null)} />}
+        {activeTab === "tours" && (
+          <AdminToursTab 
+            initialEditTour={tourToEdit} 
+            initialCategory={tourCategoryToAdd}
+            onClearEdit={() => {
+              setTourToEdit(null);
+              setTourCategoryToAdd(null);
+            }} 
+          />
+        )}
         {activeTab === "tour_categories" && (
           <AdminTourCategoriesTab 
             onEditTour={(tour) => {
               setTourToEdit(tour);
               setActiveTab("tours");
             }} 
+            onAddTour={(categoryName) => {
+              setTourCategoryToAdd(categoryName);
+              setActiveTab("tours");
+            }}
           />
         )}
         {activeTab === "custom_tours" && <AdminCustomToursTab />}

@@ -118,7 +118,6 @@ export async function getToursByCategory(categoryId: string) {
   try {
     return await prisma.tour.findMany({
       where: { categoryId },
-      select: { id: true, title: true, price: true, duration: true, isLive: true },
       orderBy: { createdAt: "desc" }
     });
   } catch (error: any) {
