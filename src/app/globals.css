@@ -150,6 +150,38 @@
     color: #111827;
     border: 1px solid rgba(255, 255, 255, 0.2);
   }
+
+  /* Prose overrides for AI generated content */
+  .prose table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+    margin-top: 2rem !important;
+    margin-bottom: 2rem !important;
+    border-radius: 0.5rem !important;
+    overflow: hidden !important;
+  }
+  .prose thead th {
+    background-color: #f8fafc !important;
+    border: 1px solid #e2e8f0 !important;
+    padding: 1rem !important;
+    text-align: left !important;
+    font-weight: 700 !important;
+    color: #0f172a !important;
+  }
+  .prose tbody td {
+    border: 1px solid #e2e8f0 !important;
+    padding: 1rem !important;
+    color: #334155 !important;
+  }
+  .prose tbody tr:nth-child(even) {
+    background-color: #f8fafc !important;
+  }
+  /* Fix spacing for single linebreaks in AI text */
+  .prose br {
+    display: block !important;
+    content: "" !important;
+    margin-bottom: 1rem !important;
+  }
 }
 
 /* Hide scrollbar for clean tabs */
