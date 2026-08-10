@@ -111,11 +111,11 @@ export default function CheckoutButton({
           const verifyData = await verifyRes.json();
           if (verifyData.success) {
             if (propertyId) {
-              router.push(`/stays/${propertyId}?success=true`);
+              router.replace(`/stays/${propertyId}?success=true`);
             } else {
               const currentParams = new URLSearchParams(window.location.search);
               currentParams.set("success", "true");
-              router.push(`${window.location.pathname}?${currentParams.toString()}`);
+              router.replace(`${window.location.pathname}?${currentParams.toString()}`);
             }
           } else {
             toast.error("Payment Verification Failed!");
