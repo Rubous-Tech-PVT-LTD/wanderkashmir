@@ -46,6 +46,42 @@ const config: Config = {
         "fade-in-up": "fadeInUp 0.6s ease forwards",
         float: "float 4s ease-in-out infinite",
       },
+      typography: (theme: any) => ({
+        DEFAULT: {
+          css: {
+            table: {
+              width: "100%",
+              borderCollapse: "collapse",
+              marginTop: "2em",
+              marginBottom: "2em",
+              borderRadius: "0.5rem",
+              overflow: "hidden",
+            },
+            "thead th": {
+              backgroundColor: theme("colors.slate.50"),
+              borderWidth: "1px",
+              borderColor: theme("colors.slate.200"),
+              padding: "0.75rem 1rem",
+              textAlign: "left",
+              fontWeight: "600",
+              color: theme("colors.slate.900"),
+            },
+            "tbody td": {
+              borderWidth: "1px",
+              borderColor: theme("colors.slate.200"),
+              padding: "0.75rem 1rem",
+              color: theme("colors.slate.700"),
+            },
+            "tbody tr": {
+              borderBottomWidth: "1px",
+              borderColor: theme("colors.slate.200"),
+            },
+            "tbody tr:nth-child(even)": {
+              backgroundColor: theme("colors.slate.50") + "80", // 50% opacity
+            },
+          },
+        },
+      }),
     },
   },
   plugins: [
