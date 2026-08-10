@@ -34,6 +34,10 @@ export const metadata: Metadata = {
 export const revalidate = 60;
 
 export default async function ToursPage() {
+  const dbCategories = await prisma.tourCategory.findMany({
+    orderBy: { name: 'asc' }
+  });
+
   const tours = await prisma.tour.findMany({
     orderBy: {
       createdAt: 'desc'
@@ -47,6 +51,7 @@ export default async function ToursPage() {
       images: true,
       badge: true,
       category: true,
+      categoryId: true,
       duration: true,
       destinations: true,
       inclusions: true,
@@ -78,7 +83,7 @@ export default async function ToursPage() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      <ToursClient initialTours={tours} />
+      <ToursClient initialTours={tours} dbCategories={dbCategories} />
     </>
   );
 }

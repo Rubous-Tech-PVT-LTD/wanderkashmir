@@ -27,6 +27,7 @@ const AdminEmailsTab = dynamic(() => import("./AdminEmailsTab"), { ssr: false })
 const AdminPromoCodesTab = dynamic(() => import("./AdminPromoCodesTab"), { ssr: false });
 const AdminPopupsTab = dynamic(() => import("./AdminPopupsTab"), { ssr: false });
 const AdminCustomToursTab = dynamic(() => import("./AdminCustomToursTab"), { ssr: false });
+const AdminTourCategoriesTab = dynamic(() => import("./AdminTourCategoriesTab"), { ssr: false });
 const AdminSeoCommentsTab = dynamic(() => import("./AdminSeoCommentsTab"), { ssr: false });
 const ImageUpload = dynamic(() => import("@/components/ImageUpload"), { ssr: false });
 
@@ -663,6 +664,7 @@ export default function AdminDashboardClient({
             { id: "listings", label: "Listing Approvals", icon: Building2 },
             { id: "live_listings", label: "Live Listings", icon: MapPin },
             { id: "tours", label: "Tours", icon: Map },
+            { id: "tour_categories", label: "Tour Categories", icon: Map },
             { id: "custom_tours", label: "Custom Inquiries", icon: Sparkles },
             { id: "taxis", label: "Taxis", icon: Car },
             { id: "payouts", label: "Payouts", icon: IndianRupee },
@@ -742,6 +744,7 @@ export default function AdminDashboardClient({
 
         {/* Dynamic Content Area */}
         {activeTab === "tours" && <AdminToursTab />}
+        {activeTab === "tour_categories" && <AdminTourCategoriesTab />}
         {activeTab === "custom_tours" && <AdminCustomToursTab />}
         {activeTab === "taxis" && <AdminTaxisTab />}
         { activeTab === "seo_pages" && <AdminSeoTab /> }

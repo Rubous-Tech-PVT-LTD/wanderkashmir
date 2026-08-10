@@ -350,9 +350,21 @@ model Tour {
   createdAt     DateTime    @default(now())
   updatedAt     DateTime    @updatedAt
   isLive        Boolean     @default(true)
+  categoryId    String?
   bookings      Booking[]
   promoCodes    PromoCode[]
   reviews       Review[]
+  tourCategory  TourCategory? @relation(fields: [categoryId], references: [id])
+}
+
+model TourCategory {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  slug        String   @unique
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  tours       Tour[]
 }
 
 model SeoLandingPage {

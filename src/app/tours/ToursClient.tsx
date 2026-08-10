@@ -11,7 +11,7 @@ import CustomizeTourModal from "@/components/CustomizeTourModal";
 
 // Removed hardcoded tours array
 
-export default function ToursClient({ initialTours }: { initialTours: any[] }) {
+export default function ToursClient({ initialTours, dbCategories = [] }: { initialTours: any[], dbCategories?: any[] }) {
   const [selectedCat, setSelectedCat] = useState("All");
 
   // Extract all unique categories from the tours to handle any custom categories added by admin
@@ -25,13 +25,12 @@ export default function ToursClient({ initialTours }: { initialTours: any[] }) {
     }
   });
 
-  const baseCategories = [
-    "Honeymoon", "Family", "Adventure", "Pilgrimage", "Nature",
-    "Culture", "Skiing", "Trekking", "Wildlife", "Luxury", "Budget", "Group"
-  ];
+  const baseCategories = dbCategories.length > 0 
+    ? dbCategories.map(c => c.name)
+    : ["Honeymoon", "Family", "Adventure", "Pilgrimage", "Culture"];
   
-  // Combine "All" + base categories + any extra custom categories used by tours
-  const categories = ["All", ...Array.from(new Set([...baseCategories, ...Array.from(usedCategories)]))];
+  // Combine "All Packages" + base categories + any extra custom categories used by tours
+  const categories = ["All Packages", ...Array.from(new Set([...baseCategories, ...Array.from(usedCategories)]))];
   const [sortBy, setSortBy] = useState("Recommended");
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 6;
@@ -39,7 +38,7 @@ export default function ToursClient({ initialTours }: { initialTours: any[] }) {
   const tours = initialTours;
 
   const filtered = tours.filter(
-    (t) => selectedCat === "All" || (t.category && t.category.toLowerCase().includes(selectedCat.toLowerCase()))
+    (t) => selectedCat === "All Packages" || selectedCat === "All" || (t.category && t.category.toLowerCase().includes(selectedCat.toLowerCase()))
   );
 
   // Pagination logic
@@ -85,20 +84,22 @@ export default function ToursClient({ initialTours }: { initialTours: any[] }) {
         <div className="container-custom py-8">
           {/* Filter bar */}
           <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-8">
-            <div className="flex gap-2 flex-wrap">
-              {categories.map((cat) => (
-                <button
-                  key={cat}
-                  onClick={() => handleCatChange(cat)}
-                  className={`px-4 py-2 rounded-full text-sm font-semibold border transition-all ${
-                    selectedCat === cat
-                      ? "bg-orange-500 text-white border-orange-500"
-                      : "border-slate-200 text-slate-600 hover:border-orange-500 hover:text-orange-500"
-                  }`}
-                >
-                  {cat}
-                </button>
-              ))}
+            <div className="flex gap-2 flex-wrap items-center">
+              <label htmlFor="category-select" className="text-sm font-semibold text-slate-600 hidden md:block">
+                Category:
+              </label>
+              <select
+                id="category-select"
+                value={selectedCat}
+                onChange={(e) => handleCatChange(e.target.value)}
+                className="text-sm font-semibold border border-slate-200 rounded-xl px-4 py-2.5 bg-white text-slate-700 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 cursor-pointer shadow-sm hover:border-orange-300 transition-colors"
+              >
+                {categories.map((cat) => (
+                  <option key={cat} value={cat}>
+                    {cat}
+                  </option>
+                ))}
+              </select>
             </div>
             <div className="flex items-center gap-2">
               <Filter className="w-4 h-4 text-slate-400" />
