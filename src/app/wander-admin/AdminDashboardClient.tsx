@@ -193,6 +193,7 @@ export default function AdminDashboardClient({
   const [selectedBookingDetails, setSelectedBookingDetails] = useState<any | null>(null);
   const [tourToEdit, setTourToEdit] = useState<any>(null);
   const [tourCategoryToAdd, setTourCategoryToAdd] = useState<string | null>(null);
+  const [previousTab, setPreviousTab] = useState<string | null>(null);
   const router = useRouter();
 
   // Filtering & Search States
@@ -267,6 +268,7 @@ export default function AdminDashboardClient({
   });
 
   const handleTabChange = (tab: string) => {
+    setPreviousTab(activeTab);
     setActiveTab(tab);
     setCurrentPage(1);
     setSearchQuery("");
@@ -752,16 +754,22 @@ export default function AdminDashboardClient({
             onClearEdit={() => {
               setTourToEdit(null);
               setTourCategoryToAdd(null);
+              if (previousTab) {
+                setActiveTab(previousTab);
+                setPreviousTab(null);
+              }
             }} 
           />
         )}
         {activeTab === "tour_categories" && (
           <AdminTourCategoriesTab 
             onEditTour={(tour) => {
+              setPreviousTab(activeTab);
               setTourToEdit(tour);
               setActiveTab("tours");
             }} 
             onAddTour={(categoryName) => {
+              setPreviousTab(activeTab);
               setTourCategoryToAdd(categoryName);
               setActiveTab("tours");
             }}

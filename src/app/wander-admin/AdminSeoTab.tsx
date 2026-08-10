@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Plus, Edit2, Trash2, Globe, Search, Link as LinkIcon, Wand2, RefreshCw, PenTool } from "lucide-react";
+import { Plus, Edit2, Trash2, Globe, Search, Link as LinkIcon, Wand2, RefreshCw, PenTool, ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { triggerSeoGeneration, triggerBlogGeneration } from "@/actions/admin-seo";
 import ContentDistributionModal from "./ContentDistributionModal";
@@ -211,8 +211,22 @@ export default function AdminSeoTab() {
       </div>
 
       {isEditing ? (
-        <form onSubmit={handleSubmit} className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 space-y-4">
+          <div className="flex items-center gap-3 mb-2 pb-4 border-b border-slate-100">
+            <button 
+              type="button" 
+              onClick={() => {
+                setIsEditing(false);
+                setFormData({ id: "", slug: "", type: "TAXI", title: "", description: "", h1Heading: "", content: "", imageUrl: "", faqs: [] });
+              }}
+              className="p-2 text-slate-400 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors flex items-center gap-2 font-medium text-sm"
+            >
+              <ArrowLeft className="w-4 h-4" /> Back
+            </button>
+            <h3 className="text-xl font-bold">{formData.id ? "Edit SEO Page" : "Create New SEO Page"}</h3>
+          </div>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">Page Type</label>
               <select
@@ -353,14 +367,13 @@ export default function AdminSeoTab() {
             >
               Cancel
             </button>
-            <button
-              type="submit"
-              className="px-6 py-2 bg-[#f97316] text-white rounded-lg hover:bg-[#ea580c] transition-colors font-medium shadow-sm"
-            >
-              {formData.id ? "Update Page" : "Publish Page"}
+            <button type="submit" disabled={isLoading} className="px-6 py-2 bg-[#f97316] text-white rounded-lg hover:bg-[#ea580c] disabled:opacity-50 font-medium shadow-sm flex items-center gap-2">
+                {isLoading && <RefreshCw className="w-4 h-4 animate-spin" />}
+                {formData.id ? "Update Page" : "Publish Page"}
             </button>
           </div>
         </form>
+      </div>
       ) : (
         <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
           {isLoading ? (

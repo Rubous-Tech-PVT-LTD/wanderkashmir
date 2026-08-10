@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Edit2, Trash2, Plus } from "lucide-react";
+import { Edit2, Trash2, Plus, ArrowLeft } from "lucide-react";
 import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
 import { getPaginatedTours } from "@/actions/admin-data";
@@ -198,7 +198,19 @@ export default function AdminToursTab({ initialEditTour, initialCategory, onClea
   if (isAdding) {
     return (
       <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
-        <h3 className="text-xl font-bold mb-6">{isEditing ? "Edit Tour" : "Add New Tour"}</h3>
+        <div className="flex items-center gap-3 mb-6 pb-4 border-b border-slate-100">
+          <button 
+            type="button" 
+            onClick={() => {
+              setIsAdding(false);
+              if (onClearEdit) onClearEdit();
+            }}
+            className="p-2 text-slate-400 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors flex items-center gap-2 font-medium text-sm"
+          >
+            <ArrowLeft className="w-4 h-4" /> Back
+          </button>
+          <h3 className="text-xl font-bold">{isEditing ? "Edit Tour" : "Add New Tour"}</h3>
+        </div>
         <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-semibold mb-1">Title</label>
