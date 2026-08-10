@@ -148,8 +148,9 @@ export default async function RootLayout({
                   },
                   "sameAs": [
                     "https://www.facebook.com/wanderkashmir",
-                    "https://www.instagram.com/wanderkashmir",
-                    "https://twitter.com/wanderkashmir"
+                    "https://www.instagram.com/wander____kashmir/",
+                    "https://x.com/Wanderkashmir",
+                    "https://www.linkedin.com/company/india-hiles/?viewAsMember=true"
                   ]
                 },
                 {
