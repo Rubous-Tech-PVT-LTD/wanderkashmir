@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { getPaginatedTours } from "@/actions/admin-data";
 import Pagination from "@/components/Pagination";
 
-export default function AdminToursTab() {
+export default function AdminToursTab({ initialEditTour, onClearEdit }: { initialEditTour?: any, onClearEdit?: () => void }) {
   const TOUR_CATEGORIES = [
     "Honeymoon", "Family", "Adventure", "Pilgrimage", "Nature",
     "Culture", "Skiing", "Trekking", "Wildlife", "Luxury", "Budget", "Group"
@@ -34,6 +34,13 @@ export default function AdminToursTab() {
     };
     fetchTours();
   }, [currentPage]);
+
+  useEffect(() => {
+    if (initialEditTour) {
+      handleEdit(initialEditTour);
+      if (onClearEdit) onClearEdit();
+    }
+  }, [initialEditTour]);
 
   const generateSlug = (text: string) => {
     return text.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');

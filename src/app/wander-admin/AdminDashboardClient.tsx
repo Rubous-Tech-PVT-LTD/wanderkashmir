@@ -191,6 +191,7 @@ export default function AdminDashboardClient({
   const [adminFaqs, setAdminFaqs] = useState<{question: string, answer: string}[]>([]);
   const [isEditingSeo, setIsEditingSeo] = useState(false);
   const [selectedBookingDetails, setSelectedBookingDetails] = useState<any | null>(null);
+  const [tourToEdit, setTourToEdit] = useState<any>(null);
   const router = useRouter();
 
   // Filtering & Search States
@@ -743,8 +744,15 @@ export default function AdminDashboardClient({
         )}
 
         {/* Dynamic Content Area */}
-        {activeTab === "tours" && <AdminToursTab />}
-        {activeTab === "tour_categories" && <AdminTourCategoriesTab />}
+        {activeTab === "tours" && <AdminToursTab initialEditTour={tourToEdit} onClearEdit={() => setTourToEdit(null)} />}
+        {activeTab === "tour_categories" && (
+          <AdminTourCategoriesTab 
+            onEditTour={(tour) => {
+              setTourToEdit(tour);
+              setActiveTab("tours");
+            }} 
+          />
+        )}
         {activeTab === "custom_tours" && <AdminCustomToursTab />}
         {activeTab === "taxis" && <AdminTaxisTab />}
         { activeTab === "seo_pages" && <AdminSeoTab /> }

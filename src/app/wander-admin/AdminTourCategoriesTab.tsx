@@ -12,7 +12,7 @@ import {
 } from "@/actions/admin-tour-categories";
 import toast from "react-hot-toast";
 
-export default function AdminTourCategoriesTab() {
+export default function AdminTourCategoriesTab({ onEditTour }: { onEditTour?: (tour: any) => void }) {
   const [categories, setCategories] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -88,7 +88,7 @@ export default function AdminTourCategoriesTab() {
     const tId = toast.loading("Migrating packages...");
     const res = await migrateExistingToursToCategory(catId, catName);
     if (res.success) {
-      toast.success(res.message, { id: tId });
+      toast.success(res.message || "Migration successful", { id: tId });
       fetchCategories();
     } else {
       toast.error(res.error || "Migration failed", { id: tId });
@@ -101,6 +101,22 @@ export default function AdminTourCategoriesTab() {
     const tours = await getToursByCategory(cat.id);
     setCategoryTours(tours);
     setIsLoadingTours(false);
+  };
+
+  const handleDeleteTour = async (id: string) => {
+    if (!confirm("Are you sure you want to delete this tour?")) return;
+    try {
+      const res = await fetch(`/api/admin/tours/${id}`, { method: "DELETE" });
+      if (res.ok) {
+        toast.success("Tour deleted");
+        setCategoryTours(categoryTours.filter(t => t.id !== id));
+        fetchCategories(); // Refresh category counts
+      } else {
+        toast.error("Failed to delete tour");
+      }
+    } catch (e) {
+      toast.error("Error deleting tour");
+    }
   };
 
   if (loading) {
@@ -251,6 +267,16 @@ export default function AdminTourCategoriesTab() {
                           <span>•</span>
                           <span className="font-semibold text-emerald-600">₹{tour.price.toLocaleString('en-IN')}</span>
                         </div>
+                      </div>
+                      <div className="flex gap-2">
+                        {onEditTour && (
+                          <button onClick={() => onEditTour(tour)} className="p-2 text-blue-500 hover:bg-blue-50 rounded-lg transition-colors" title="Edit Tour">
+                            <Edit2 className="w-4 h-4" />
+                          </button>
+                        )}
+                        <button onClick={() => handleDeleteTour(tour.id)} className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors" title="Delete Tour">
+                          <Trash2 className="w-4 h-4" />
+                        </button>
                       </div>
                     </li>
                   ))}
