@@ -450,7 +450,7 @@ export default function AdminToursTab({ initialEditTour, initialCategory, onClea
           <h3 className="text-xl font-bold text-slate-900">Tour Packages</h3>
           <p className="text-sm text-slate-500">Manage curated tour packages available to users.</p>
         </div>
-        <button onClick={handleAddNew} className="bg-slate-900 text-white px-4 py-2 rounded-lg font-semibold flex items-center gap-2 hover:bg-slate-800">
+        <button onClick={() => handleAddNew()} className="bg-slate-900 text-white px-4 py-2 rounded-lg font-semibold flex items-center gap-2 hover:bg-slate-800">
           <Plus className="w-4 h-4" /> Add Tour
         </button>
       </div>
