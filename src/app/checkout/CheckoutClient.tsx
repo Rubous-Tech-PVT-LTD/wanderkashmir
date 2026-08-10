@@ -87,8 +87,8 @@ export default function CheckoutClient({
           <p className="text-slate-500 mb-8">
             Thank you for booking with WanderKashmir. Your booking details have been sent to your email.
           </p>
-          <a href="/dashboard" className="btn-primary w-full inline-block text-center py-3">
-            Go to My Dashboard
+          <a href="/trips" className="btn-primary w-full inline-block text-center py-3">
+            Go to My Bookings
           </a>
         </div>
       </div>

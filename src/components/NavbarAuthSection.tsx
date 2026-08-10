@@ -56,7 +56,7 @@ export default function NavbarAuthSection({
           href="/trips"
           className="text-sm font-bold text-slate-700 hover:text-[var(--primary)] transition-colors"
         >
-          My Trips
+          My Bookings
         </Link>
         <UserButton />
       </div>
@@ -74,7 +74,14 @@ export default function NavbarAuthSection({
       </button>
     </SignInButton>
   ) : (
-    <div className="flex justify-center py-2">
+    <div className="flex flex-col items-center gap-3 py-2">
+      <Link
+        href="/trips"
+        onClick={onNavigate}
+        className="block w-full text-center py-3 border border-slate-200 text-slate-700 rounded-xl font-semibold hover:bg-slate-50 transition-all"
+      >
+        My Bookings
+      </Link>
       <UserButton />
     </div>
   );

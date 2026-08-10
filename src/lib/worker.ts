@@ -4,6 +4,9 @@ import { PDFDocument, rgb, StandardFonts } from "pdf-lib";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
+import fs from 'fs';
+import path from 'path';
+
 export async function generateInvoicePDF(booking: any): Promise<Buffer> {
   const pdfDoc = await PDFDocument.create();
   const page = pdfDoc.addPage([600, 800]);
@@ -12,29 +15,55 @@ export async function generateInvoicePDF(booking: any): Promise<Buffer> {
   const boldFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
 
   // Colors
-  const primaryColor = rgb(0.011, 0.517, 0.776); // text-orange-500 approx
-  const grayColor = rgb(0.3, 0.3, 0.3);
+  const primaryColor = rgb(0.976, 0.451, 0.086); // text-orange-500 approx
+  const grayColor = rgb(0.4, 0.4, 0.4);
 
-  // Header
-  page.drawText("WanderKashmir", { x: 50, y: height - 60, size: 24, font: boldFont, color: primaryColor });
-  page.drawText("INVOICE & BOOKING CONFIRMATION", { x: 50, y: height - 90, size: 12, font, color: grayColor });
+  // Header and Logo
+  let textStartY = height - 70;
+  try {
+    const logoPath = path.join(process.cwd(), 'public', 'brand-icon.jpg');
+    if (fs.existsSync(logoPath)) {
+      const logoImageBytes = fs.readFileSync(logoPath);
+      const logoImage = await pdfDoc.embedJpg(logoImageBytes);
+      const logoDims = logoImage.scale(0.15); // Adjust scale as needed
+      page.drawImage(logoImage, {
+        x: 50,
+        y: height - 80, // Top left corner
+        width: logoDims.width,
+        height: logoDims.height,
+      });
+      // Move text to the right of the logo
+      page.drawText("WanderKashmir", { x: 50 + logoDims.width + 15, y: height - 50, size: 24, font: boldFont, color: primaryColor });
+      page.drawText("INVOICE & BOOKING CONFIRMATION", { x: 50 + logoDims.width + 15, y: height - 70, size: 10, font, color: grayColor });
+      textStartY = height - 120;
+    } else {
+      page.drawText("WanderKashmir", { x: 50, y: height - 60, size: 24, font: boldFont, color: primaryColor });
+      page.drawText("INVOICE & BOOKING CONFIRMATION", { x: 50, y: height - 90, size: 12, font, color: grayColor });
+      textStartY = height - 130;
+    }
+  } catch (e) {
+    console.error("Could not embed logo:", e);
+    page.drawText("WanderKashmir", { x: 50, y: height - 60, size: 24, font: boldFont, color: primaryColor });
+    textStartY = height - 120;
+  }
 
   // Booking Details
-  page.drawText(`Booking ID: ${booking.id.slice(-8).toUpperCase()}`, { x: 50, y: height - 140, size: 12, font: boldFont });
-  page.drawText(`Date: ${new Date(booking.createdAt).toLocaleDateString()}`, { x: 50, y: height - 160, size: 10, font });
-  page.drawText(`Status: ${booking.status}`, { x: 50, y: height - 180, size: 10, font });
+  page.drawText(`Booking ID: ${booking.id.slice(-8).toUpperCase()}`, { x: 50, y: textStartY, size: 12, font: boldFont });
+  page.drawText(`Date: ${new Date(booking.createdAt).toLocaleDateString()}`, { x: 50, y: textStartY - 20, size: 10, font });
+  page.drawText(`Status: ${booking.status}`, { x: 50, y: textStartY - 40, size: 10, font });
 
   // Customer Details
-  page.drawText("Customer Details", { x: 350, y: height - 140, size: 12, font: boldFont });
-  page.drawText(`Name: ${booking.user?.name || 'N/A'}`, { x: 350, y: height - 160, size: 10, font });
-  page.drawText(`Email: ${booking.user?.email || 'N/A'}`, { x: 350, y: height - 180, size: 10, font });
+  page.drawText("Customer Details", { x: 350, y: textStartY, size: 12, font: boldFont });
+  page.drawText(`Name: ${booking.user?.name || booking.guestName || 'N/A'}`, { x: 350, y: textStartY - 20, size: 10, font });
+  page.drawText(`Email: ${booking.user?.email || 'N/A'}`, { x: 350, y: textStartY - 40, size: 10, font });
+  page.drawText(`Phone: ${booking.guestPhone || 'N/A'}`, { x: 350, y: textStartY - 60, size: 10, font });
 
   // Divider
   page.drawLine({
-    start: { x: 50, y: height - 210 },
-    end: { x: 550, y: height - 210 },
+    start: { x: 50, y: textStartY - 80 },
+    end: { x: 550, y: textStartY - 80 },
     thickness: 1,
-    color: rgb(0.8, 0.8, 0.8),
+    color: rgb(0.9, 0.9, 0.9),
   });
 
   // Service Details
@@ -48,6 +77,11 @@ export async function generateInvoicePDF(booking: any): Promise<Buffer> {
     vendorName = booking.property.vendorProfile?.businessName || "Unknown Vendor";
     vendorPhone = booking.property.vendorProfile?.phone || vendorPhone;
     vendorAddress = booking.property.location || vendorAddress;
+  } else if (booking.tour) {
+    serviceName = booking.tour.title;
+    vendorName = "WanderKashmir";
+    vendorPhone = "+91 60058 88754";
+    vendorAddress = "Srinagar, Kashmir";
   } else if (booking.vehicle) {
     serviceName = `${booking.vehicle.make} ${booking.vehicle.model}`;
     vendorName = booking.vehicle.vendorProfile?.businessName || "Unknown Vendor";
@@ -58,23 +92,31 @@ export async function generateInvoicePDF(booking: any): Promise<Buffer> {
     vendorPhone = booking.guideProfile.vendorProfile?.phone || vendorPhone;
   }
 
-  page.drawText("Service Details", { x: 50, y: height - 240, size: 14, font: boldFont });
-  page.drawText(`Service: ${serviceName}`, { x: 50, y: height - 270, size: 12, font });
-  page.drawText(`Provider: ${vendorName}`, { x: 50, y: height - 290, size: 12, font });
-  page.drawText(`Contact: ${vendorPhone}`, { x: 50, y: height - 310, size: 12, font });
-  page.drawText(`Address: ${vendorAddress}`, { x: 50, y: height - 330, size: 12, font });
-  page.drawText(`Map Location: This functionality will be implemented soon`, { x: 50, y: height - 350, size: 11, font, color: rgb(0.5, 0.5, 0.5) });
+  page.drawText("Service Details", { x: 50, y: textStartY - 120, size: 14, font: boldFont });
+  page.drawText(`Service: ${serviceName}`, { x: 50, y: textStartY - 150, size: 12, font });
+  page.drawText(`Provider: ${vendorName}`, { x: 50, y: textStartY - 170, size: 12, font });
+  page.drawText(`Contact: ${vendorPhone}`, { x: 50, y: textStartY - 190, size: 12, font, color: rgb(0.1, 0.5, 0.1) });
+  page.drawText(`Location: ${vendorAddress}`, { x: 50, y: textStartY - 210, size: 12, font });
 
   if (booking.checkIn && booking.checkOut) {
-    page.drawText(`Check-in: ${new Date(booking.checkIn).toLocaleDateString()}`, { x: 350, y: height - 270, size: 12, font });
-    page.drawText(`Check-out: ${new Date(booking.checkOut).toLocaleDateString()}`, { x: 350, y: height - 290, size: 12, font });
+    page.drawText(`Check-in: ${new Date(booking.checkIn).toLocaleDateString()}`, { x: 350, y: textStartY - 150, size: 12, font });
+    page.drawText(`Check-out: ${new Date(booking.checkOut).toLocaleDateString()}`, { x: 350, y: textStartY - 170, size: 12, font });
+    page.drawText(`Guests: ${booking.guests || 1}`, { x: 350, y: textStartY - 190, size: 12, font });
   }
 
+  // Divider
+  page.drawLine({
+    start: { x: 50, y: textStartY - 240 },
+    end: { x: 550, y: textStartY - 240 },
+    thickness: 1,
+    color: rgb(0.9, 0.9, 0.9),
+  });
+
   // Pricing
-  page.drawText("Payment Summary", { x: 50, y: height - 380, size: 14, font: boldFont });
+  page.drawText("Payment Summary", { x: 50, y: textStartY - 270, size: 14, font: boldFont });
   
-  page.drawText("Total Amount Paid:", { x: 50, y: height - 410, size: 12, font });
-  page.drawText(`Rs. ${booking.amount.toLocaleString('en-IN')}`, { x: 450, y: height - 410, size: 14, font: boldFont, color: primaryColor });
+  page.drawText("Total Amount Paid:", { x: 50, y: textStartY - 300, size: 12, font });
+  page.drawText(`Rs. ${booking.amount.toLocaleString('en-IN')}`, { x: 450, y: textStartY - 300, size: 14, font: boldFont, color: primaryColor });
 
   // Footer
   page.drawLine({
