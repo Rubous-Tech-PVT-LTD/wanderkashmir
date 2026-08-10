@@ -113,3 +113,16 @@ export async function migrateExistingToursToCategory(categoryId: string, categor
     return { success: false, error: error.message };
   }
 }
+
+export async function getToursByCategory(categoryId: string) {
+  try {
+    return await prisma.tour.findMany({
+      where: { categoryId },
+      select: { id: true, title: true, price: true, duration: true, isLive: true },
+      orderBy: { createdAt: "desc" }
+    });
+  } catch (error: any) {
+    console.error("Failed to fetch tours for category:", error);
+    return [];
+  }
+}

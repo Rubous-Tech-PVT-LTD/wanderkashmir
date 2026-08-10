@@ -1,13 +1,14 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Plus, Edit2, Trash2, FolderSync } from "lucide-react";
+import { Plus, Edit2, Trash2, FolderSync, Eye, X } from "lucide-react";
 import { 
   getTourCategories, 
   createTourCategory, 
   updateTourCategory, 
   deleteTourCategory,
-  migrateExistingToursToCategory
+  migrateExistingToursToCategory,
+  getToursByCategory
 } from "@/actions/admin-tour-categories";
 import toast from "react-hot-toast";
 
@@ -16,6 +17,10 @@ export default function AdminTourCategoriesTab() {
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingCat, setEditingCat] = useState<any>(null);
+  
+  const [viewingCategory, setViewingCategory] = useState<any>(null);
+  const [categoryTours, setCategoryTours] = useState<any[]>([]);
+  const [isLoadingTours, setIsLoadingTours] = useState(false);
   
   const [formData, setFormData] = useState({
     name: "",
@@ -90,6 +95,14 @@ export default function AdminTourCategoriesTab() {
     }
   };
 
+  const handleViewTours = async (cat: any) => {
+    setViewingCategory(cat);
+    setIsLoadingTours(true);
+    const tours = await getToursByCategory(cat.id);
+    setCategoryTours(tours);
+    setIsLoadingTours(false);
+  };
+
   if (loading) {
     return <div className="p-8 text-center text-slate-500">Loading categories...</div>;
   }
@@ -129,6 +142,9 @@ export default function AdminTourCategoriesTab() {
                   {cat._count.tours}
                 </td>
                 <td className="px-6 py-4 flex gap-3">
+                  <button onClick={() => handleViewTours(cat)} className="text-indigo-500 hover:text-indigo-700" title="View Packages">
+                    <Eye className="w-4 h-4" />
+                  </button>
                   <button onClick={() => handleOpenModal(cat)} className="text-blue-500 hover:text-blue-700" title="Edit">
                     <Edit2 className="w-4 h-4" />
                   </button>
@@ -197,6 +213,50 @@ export default function AdminTourCategoriesTab() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {viewingCategory && (
+        <div className="fixed inset-0 bg-slate-900/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl max-h-[80vh] flex flex-col">
+            <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50 rounded-t-xl">
+              <div>
+                <h3 className="text-xl font-bold text-slate-900">Packages in "{viewingCategory.name}"</h3>
+                <p className="text-sm text-slate-500">{viewingCategory._count.tours} tours total</p>
+              </div>
+              <button onClick={() => setViewingCategory(null)} className="text-slate-400 hover:text-slate-600">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            
+            <div className="p-6 overflow-y-auto flex-1">
+              {isLoadingTours ? (
+                <div className="text-center text-slate-500 py-8">Loading packages...</div>
+              ) : categoryTours.length === 0 ? (
+                <div className="text-center text-slate-500 py-8">No packages found in this category.</div>
+              ) : (
+                <ul className="divide-y divide-slate-100 border border-slate-100 rounded-lg">
+                  {categoryTours.map(tour => (
+                    <li key={tour.id} className="p-4 hover:bg-slate-50 flex justify-between items-center">
+                      <div>
+                        <div className="font-bold text-slate-800 flex items-center gap-2">
+                          {tour.title}
+                          <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${tour.isLive ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}`}>
+                            {tour.isLive ? "LIVE" : "DRAFT"}
+                          </span>
+                        </div>
+                        <div className="text-sm text-slate-500 mt-1 flex gap-3">
+                          <span>{tour.duration}</span>
+                          <span>•</span>
+                          <span className="font-semibold text-emerald-600">₹{tour.price.toLocaleString('en-IN')}</span>
+                        </div>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
           </div>
         </div>
       )}

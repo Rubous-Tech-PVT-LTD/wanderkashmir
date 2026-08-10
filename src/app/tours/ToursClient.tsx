@@ -3,7 +3,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import Link from "next/link";
 import Image from "next/image";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Star, Clock, Users, MapPin, CheckCircle2, Heart, Filter } from "lucide-react";
 import CustomizeTourModal from "@/components/CustomizeTourModal";
 
@@ -12,7 +12,17 @@ import CustomizeTourModal from "@/components/CustomizeTourModal";
 // Removed hardcoded tours array
 
 export default function ToursClient({ initialTours, dbCategories = [] }: { initialTours: any[], dbCategories?: any[] }) {
-  const [selectedCat, setSelectedCat] = useState("All");
+  const [selectedCat, setSelectedCat] = useState("All Packages");
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const cat = params.get("category");
+      if (cat) {
+        setSelectedCat(cat);
+      }
+    }
+  }, []);
 
   // Extract all unique categories from the tours to handle any custom categories added by admin
   const usedCategories = new Set<string>();

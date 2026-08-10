@@ -56,7 +56,7 @@ const NavbarAuthSectionMobile = dynamic(
 // ─────────────────────────────────────────────────────────────────────────────
 
 const navLinks = [
-  { label: "Cultural Tour Packages", href: "/tours" },
+  { label: "Tour Packages", href: "/tours" },
   { label: "Traditional Homestays", href: "/stays?type=Homestay" },
   { label: "Hotels", href: "/stays?type=Hotel" },
   { label: "Taxis", href: "/taxis" },
@@ -67,6 +67,20 @@ export default function Navbar() {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [categories, setCategories] = useState<string[]>([]);
+
+  useEffect(() => {
+    const fetchCats = async () => {
+      try {
+        const { getTourCategories } = await import("@/actions/admin-tour-categories");
+        const cats = await getTourCategories();
+        setCategories(cats.map(c => c.name));
+      } catch (e) {
+        console.error("Failed to load categories for navbar");
+      }
+    };
+    fetchCats();
+  }, []);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 10);
@@ -104,13 +118,40 @@ export default function Navbar() {
           {/* Desktop Nav Links */}
           <div className="hidden lg:flex items-center gap-8 font-medium">
             {navLinks.map((link) => (
-              <Link
-                key={link.label}
-                href={link.href}
-                className="text-sm text-slate-700 hover:text-[var(--primary)] transition-colors font-semibold tracking-wide"
-              >
-                {link.label}
-              </Link>
+              <div key={link.label} className="relative group">
+                <Link
+                  href={link.href}
+                  className="flex items-center gap-1 text-sm text-slate-700 hover:text-[var(--primary)] transition-colors font-semibold tracking-wide py-2"
+                >
+                  {link.label}
+                  {link.label === "Tour Packages" && (
+                    <ChevronDown className="w-4 h-4 transition-transform group-hover:rotate-180" />
+                  )}
+                </Link>
+                
+                {/* Dropdown Menu for Tour Packages */}
+                {link.label === "Tour Packages" && categories.length > 0 && (
+                  <div className="absolute top-full left-0 mt-0 w-56 bg-white border border-slate-100 shadow-xl rounded-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 overflow-hidden transform origin-top-left scale-95 group-hover:scale-100">
+                    <div className="py-2">
+                      <Link
+                        href="/tours"
+                        className="block px-5 py-2.5 text-sm font-semibold text-slate-700 hover:bg-orange-50 hover:text-orange-500 transition-colors"
+                      >
+                        All Packages
+                      </Link>
+                      {categories.map((cat) => (
+                        <Link
+                          key={cat}
+                          href={`/tours?category=${encodeURIComponent(cat)}`}
+                          className="block px-5 py-2.5 text-sm font-semibold text-slate-700 hover:bg-orange-50 hover:text-orange-500 transition-colors border-t border-slate-50"
+                        >
+                          {cat}
+                        </Link>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
             ))}
           </div>
 
