@@ -199,7 +199,7 @@ export default async function TaxiSeoPage({ params }: { params: Promise<{ slug: 
           <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-8 md:p-12 mb-8">
             <div 
               className="prose prose-slate prose-lg max-w-none prose-headings:text-[#f97316] prose-a:text-[#f97316]"
-              dangerouslySetInnerHTML={{ __html: await marked.parse(page.content) }} 
+              dangerouslySetInnerHTML={{ __html: await marked.parse(page.content, { breaks: true, gfm: true }) }} 
             />
           </div>
         )}

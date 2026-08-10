@@ -160,7 +160,7 @@ export default async function HomestaySeoPage({ params }: { params: Promise<{ sl
           <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-8 md:p-12 mb-16">
             <div 
               className="prose prose-slate prose-lg md:prose-xl max-w-none prose-headings:text-[#166534] prose-a:text-[#166534] prose-img:rounded-2xl"
-              dangerouslySetInnerHTML={{ __html: await marked.parse(page.content) }} 
+              dangerouslySetInnerHTML={{ __html: await marked.parse(page.content, { breaks: true, gfm: true }) }} 
             />
           </div>
         )}

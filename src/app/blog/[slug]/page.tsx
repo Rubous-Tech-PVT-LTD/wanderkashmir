@@ -70,7 +70,7 @@ export default async function BlogArticlePage({ params }: { params: Promise<{ sl
       year: "numeric" 
     });
 
-    const parsedContent = page.content ? await marked.parse(page.content) : "";
+    const parsedContent = page.content ? await marked.parse(page.content, { breaks: true, gfm: true }) : "";
     const safeContent = parsedContent;
 
     const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.wanderkashmir.com';
