@@ -70,7 +70,8 @@ export default function ToursClient({ initialTours, dbCategories = [] }: { initi
     
     let matchDest = true;
     if (selectedDest !== "All Destinations" && selectedDest !== "All") {
-      matchDest = t.destinations && t.destinations.some((d: string) => d.toLowerCase() === selectedDest.toLowerCase());
+      const targetSlug = selectedDest.toLowerCase().replace(/\s+/g, '-');
+      matchDest = t.destinations && t.destinations.some((d: string) => d.toLowerCase().replace(/\s+/g, '-') === targetSlug);
     }
     
     return matchCat && matchDest;
@@ -320,14 +321,14 @@ export default function ToursClient({ initialTours, dbCategories = [] }: { initi
               ))}
             </div>
           ) : (
-            <div className="py-20 text-center bg-white rounded-3xl border border-slate-100 shadow-sm">
-              <h3 className="text-2xl font-bold text-slate-800 mb-2">Packages Coming Soon!</h3>
+            <div className="py-20 text-center bg-white rounded-3xl border border-slate-100 shadow-sm col-span-full">
+              <h3 className="text-2xl font-bold text-slate-800 mb-2">No Packages Found</h3>
               <p className="text-slate-500 max-w-md mx-auto mb-6">
-                We are currently crafting amazing experiences for this category. Contact us to build a custom itinerary right now!
+                No tour packages are currently available for this destination or category combination.
               </p>
-              <Link href="/contact" className="inline-block px-8 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white font-semibold rounded-xl hover:shadow-lg transition-all transform hover:-translate-y-0.5">
-                Plan a Custom Trip
-              </Link>
+              <button onClick={() => { setSelectedCat("All Packages"); setSelectedDest("All Destinations"); setCurrentPage(1); window.history.pushState(null, '', window.location.pathname); }} className="inline-block px-8 py-3 bg-gradient-to-r from-slate-800 to-slate-900 text-white font-semibold rounded-xl hover:shadow-lg transition-all transform hover:-translate-y-0.5">
+                View All Tours
+              </button>
             </div>
           )}
           {/* Pagination Controls */}

@@ -351,13 +351,21 @@ export default async function KashmirTourPackagesPage() {
               <p className="text-slate-600 max-w-2xl mx-auto">Discover the iconic locations included in our itineraries by filtering tours for specific regions.</p>
             </div>
             <div className="flex flex-wrap justify-center gap-4">
-              {['Srinagar', 'Gulmarg', 'Pahalgam', 'Sonamarg', 'Doodhpathri', 'Gurez', 'Bangus'].map((dest) => (
+              {[
+                { name: 'Srinagar', slug: 'srinagar' },
+                { name: 'Gulmarg', slug: 'gulmarg' },
+                { name: 'Pahalgam', slug: 'pahalgam' },
+                { name: 'Sonamarg', slug: 'sonamarg' },
+                { name: 'Doodhpathri', slug: 'doodhpathri' },
+                { name: 'Gurez Valley', slug: 'gurez-valley' },
+                { name: 'Bangus Valley', slug: 'bangus-valley' }
+              ].map((dest) => (
                 <Link 
-                  key={dest} 
-                  href={`/tours?destination=${dest}`} 
+                  key={dest.slug} 
+                  href={`/tours?destination=${dest.slug}`} 
                   className="bg-slate-50 px-6 py-3 rounded-full border border-slate-200 shadow-sm text-slate-700 font-medium hover:bg-orange-50 hover:text-orange-600 hover:border-orange-200 transition-colors"
                 >
-                  {dest} Tour Packages
+                  {dest.name} Tour Packages
                 </Link>
               ))}
             </div>
