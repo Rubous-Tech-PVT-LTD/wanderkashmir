@@ -4,7 +4,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import Link from "next/link";
 import Image from "next/image";
-import { Star, Clock, MapPin, CheckCircle2, Heart, ShieldCheck, ChevronDown } from "lucide-react";
+import { Star, Clock, MapPin, CheckCircle2, Heart, ShieldCheck, ChevronDown, ChevronRight, BookOpen } from "lucide-react";
 import { JsonLd } from "@/components/JsonLd";
 
 export const metadata: Metadata = {
@@ -30,56 +30,73 @@ export const metadata: Metadata = {
 export const revalidate = 3600;
 
 export default async function KashmirTourPackagesPage() {
-  const tours = await prisma.tour.findMany({
-    where: { isLive: true },
-    orderBy: { createdAt: "desc" },
-    take: 6,
-    select: {
-      id: true,
-      slug: true,
-      isLive: true,
-      title: true,
-      images: true,
-      badge: true,
-      category: true,
-      duration: true,
-      destinations: true,
-      inclusions: true,
-      originalPrice: true,
-      price: true,
-    }
-  });
+  const [tours, blogs] = await Promise.all([
+    prisma.tour.findMany({
+      where: { isLive: true },
+      orderBy: { createdAt: "desc" },
+      take: 6,
+      select: {
+        id: true,
+        slug: true,
+        isLive: true,
+        title: true,
+        images: true,
+        badge: true,
+        category: true,
+        duration: true,
+        destinations: true,
+        inclusions: true,
+        originalPrice: true,
+        price: true,
+      }
+    }),
+    prisma.seoLandingPage.findMany({
+      where: { type: "BLOG" },
+      orderBy: { createdAt: "desc" },
+      take: 3,
+      select: {
+        title: true,
+        slug: true,
+        imageUrl: true,
+        description: true
+      }
+    }).catch(() => []) // Gracefully fallback if DB connection times out
+  ]);
 
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.wanderkashmir.com';
 
   const faqs = [
     {
-      question: "Which Kashmir tour package is best for a first-time visitor?",
-      answer: "For first-time visitors, a 5-6 days classic Kashmir tour package covering Srinagar, Gulmarg, Pahalgam, and Sonamarg is highly recommended. It offers a balanced mix of sightseeing, shikara rides, and nature."
+      question: "What are the best Kashmir tour packages?",
+      answer: "The best packages typically cover the 'Golden Triangle' of Kashmir: Srinagar, Gulmarg, and Pahalgam. Our most popular options include 5 to 6-day itineraries that balance sightseeing, relaxing houseboat stays, and mountain excursions."
     },
     {
       question: "How many days are enough for a Kashmir trip?",
-      answer: "A standard trip of 5 to 7 days is usually enough to explore the major destinations like Srinagar, Gulmarg, Pahalgam, and Sonamarg comfortably."
+      answer: "A trip of 5 to 7 days is ideal to comfortably explore major destinations like Srinagar, Gulmarg, Pahalgam, and Sonamarg without rushing."
     },
     {
       question: "What is included in Kashmir tour packages?",
-      answer: "Our standard Kashmir tour packages include hotel or houseboat accommodation, daily breakfast and dinner, private cab transfers, airport pickup/drop, and local sightseeing. We can also customize inclusions based on your preferences."
+      answer: "WanderKashmir packages generally include accommodation (hotels/houseboats), breakfast and dinner, private taxi transfers, and local sightseeing. Specific inclusions are clearly listed on each package page."
     },
     {
-      question: "Are Kashmir tour packages customizable?",
-      answer: "Yes, all our Kashmir tour packages are 100% customizable. You can change the hotels, transport type, and itinerary to suit your family's needs and budget."
-    },
-    {
-      question: "Which is the best time to visit Kashmir?",
-      answer: "Kashmir is a year-round destination. March to October is best for lush valleys and pleasant weather, while December to February is perfect for experiencing snow and winter sports like skiing in Gulmarg."
+      question: "Which Kashmir package is best for families?",
+      answer: "Family packages are paced slower and focus on comfortable stays and accessible attractions like Shikara rides, Gondola rides in Gulmarg, and Betaab Valley in Pahalgam."
     },
     {
       question: "Are Kashmir honeymoon packages available?",
-      answer: "Absolutely. We offer specialized Kashmir honeymoon packages featuring romantic houseboat stays on Dal Lake, private flower-decorated shikara rides, and premium couple-friendly hotels."
+      answer: "Yes. Our honeymoon packages include romantic stays on Dal Lake houseboats, private transfers, and premium accommodations with options for special arrangements."
     },
     {
-      question: "Can I book hotels and taxis with my Kashmir package?",
-      answer: "Yes, our Kashmir tour packages are all-inclusive, covering stays, taxis, and sightseeing."
+      question: "Can I customize a Kashmir tour package?",
+      answer: "Yes, all WanderKashmir itineraries are 100% customizable. You can adjust your hotel category, transport type, duration, and destinations to fit your budget and preferences."
+    },
+    {
+      question: "Which places are covered in Kashmir tour packages?",
+      answer: "Our standard packages cover Srinagar, Gulmarg, Pahalgam, and Sonamarg. Offbeat packages can also include Doodhpathri, Gurez Valley, and Bangus Valley."
+    },
+    {
+      question: "What is the best time to visit Kashmir?",
+      answer: "March to October is ideal for lush valleys, blooming gardens, and pleasant weather. December to February is best if you want to experience snow and winter sports like skiing in Gulmarg."
     }
   ];
 
@@ -135,6 +152,16 @@ export default async function KashmirTourPackagesPage() {
       <Navbar />
 
       <main className="flex-1 w-full pt-20">
+        
+        {/* Breadcrumb */}
+        <div className="bg-white border-b border-slate-100">
+          <div className="container-custom py-3 flex items-center text-sm text-slate-500">
+            <Link href="/" className="hover:text-orange-500 transition-colors">Home</Link>
+            <ChevronRight className="w-4 h-4 mx-2" />
+            <span className="text-slate-900 font-medium">Kashmir Tour Packages</span>
+          </div>
+        </div>
+
         {/* Hero Section */}
         <div className="relative py-20 overflow-hidden bg-gradient-to-br from-orange-500 to-orange-600">
           <div className="absolute inset-0 bg-black/10 z-0" />
@@ -143,20 +170,14 @@ export default async function KashmirTourPackagesPage() {
               Kashmir Tour Packages
             </h1>
             <p className="text-orange-50 text-lg md:text-xl mb-10 max-w-2xl mx-auto leading-relaxed">
-              Curated experiences for families, couples, and adventure seekers. Discover the paradise on earth with WanderKashmir's premium customizable itineraries.
+              Book expertly crafted Kashmir holiday packages with WanderKashmir. Complete your trip with verified hotels, reliable cabs, and local guides in one seamless itinerary.
             </p>
             <div className="flex flex-col sm:flex-row justify-center items-center gap-4">
               <Link 
                 href="/tours" 
                 className="w-full sm:w-auto px-8 py-4 bg-white text-orange-600 rounded-full font-bold hover:bg-slate-50 transition-all shadow-lg transform hover:-translate-y-0.5 text-lg"
               >
-                Explore Tour Packages
-              </Link>
-              <Link 
-                href="/contact" 
-                className="w-full sm:w-auto px-8 py-4 bg-transparent border-2 border-white text-white rounded-full font-bold hover:bg-white/10 transition-all text-lg"
-              >
-                Plan a Custom Trip
+                Browse All Packages
               </Link>
             </div>
           </div>
@@ -165,9 +186,9 @@ export default async function KashmirTourPackagesPage() {
         {/* Introduction Section */}
         <section className="py-16 bg-white border-b border-slate-100">
           <div className="max-w-4xl mx-auto px-4 text-center">
-            <h2 className="text-3xl font-bold text-slate-900 mb-6">Discover the Magic of Kashmir</h2>
+            <h2 className="text-3xl font-bold text-slate-900 mb-6">Discover the Best Kashmir Holiday Packages</h2>
             <p className="text-lg text-slate-600 leading-relaxed">
-              WanderKashmir offers carefully curated <strong>Kashmir tour packages</strong> that bring you the best of this heavenly destination. Whether you need reliable <strong>accommodation</strong>, safe <strong>taxi/travel</strong> arrangements, mesmerizing <strong>sightseeing</strong>, or authentic <strong>local experiences</strong> guided by experts, we provide it all under one roof. Every trip is 100% <strong>customizable</strong> to suit your unique preferences and schedule.
+              Planning a trip to the "Paradise on Earth"? WanderKashmir offers a wide range of verified <strong>Kashmir tour packages</strong> designed for every type of traveler. Whether you are looking for romantic <strong>Kashmir honeymoon packages</strong>, action-packed <strong>sightseeing itineraries</strong>, or relaxing <strong>Kashmir family tour packages</strong>, we provide complete transparency. All packages include reliable accommodations, local taxi transfers, and expert guidance covering top destinations like Srinagar, Gulmarg, and Pahalgam. Plus, every trip is fully customizable to your schedule.
             </p>
           </div>
         </section>
@@ -177,19 +198,14 @@ export default async function KashmirTourPackagesPage() {
           <div className="container-custom">
             <div className="text-center mb-12">
               <h2 className="text-3xl font-bold text-slate-900 mb-4">Popular Kashmir Tour Packages</h2>
-              <p className="text-slate-600 max-w-2xl mx-auto">Explore our most booked packages, featuring the best routes and stays.</p>
+              <p className="text-slate-600 max-w-2xl mx-auto">Explore our highest-rated itineraries, carefully designed for unforgettable travel experiences.</p>
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {tours.map((tour, index) => (
-                <Link
-                  key={tour.id}
-                  href={tour.isLive ? `/tours/${tour.slug}` : `https://wa.me/916005888754?text=I'm%20interested%20in%20the%20${encodeURIComponent(tour.title)}`}
-                  target={tour.isLive ? undefined : "_blank"}
-                  className="group block"
-                >
-                  <div className="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 border border-slate-100 flex flex-col h-full transform hover:-translate-y-1">
-                    <div className="relative h-52 overflow-hidden flex-shrink-0">
+                <div key={tour.id} className="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 border border-slate-100 flex flex-col h-full transform hover:-translate-y-1">
+                  <div className="relative h-52 overflow-hidden flex-shrink-0">
+                    <Link href={`/tours/${tour.slug}`}>
                       <Image 
                         src={tour.images[0] || "https://i.ibb.co/DfbJP98Q/OIP.webp"} 
                         alt={tour.title} 
@@ -200,81 +216,114 @@ export default async function KashmirTourPackagesPage() {
                         sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                      <div className="absolute top-3 left-3 flex gap-2 flex-wrap pr-12">
-                        {tour.badge && (
-                          <span className="badge bg-orange-500 text-white text-xs px-2 py-1 rounded-lg font-semibold shadow-sm">
-                            {tour.badge}
-                          </span>
-                        )}
-                      </div>
-                      <button className="absolute top-3 right-3 w-8 h-8 bg-white/90 rounded-full flex items-center justify-center shadow">
-                        <Heart className="w-4 h-4 text-slate-400" />
-                      </button>
-                      <div className="absolute bottom-3 left-3 text-white">
-                        <div className="flex items-center gap-1.5 mb-1">
-                          <Clock className="w-3.5 h-3.5 text-white/70" />
-                          <span className="text-xs text-white/80">{tour.duration}</span>
-                        </div>
-                        <div className="flex gap-1 flex-wrap mt-1">
-                          {tour.destinations.slice(0, 3).map((d: string) => (
-                            <span key={d} className="text-xs bg-white/20 backdrop-blur-sm px-2 py-0.5 rounded-full flex items-center gap-1">
-                              <MapPin className="w-2.5 h-2.5 flex-shrink-0" /> 
-                              <span className="truncate max-w-[120px]">{d}</span>
-                            </span>
-                          ))}
-                        </div>
-                      </div>
+                    </Link>
+                    <div className="absolute top-3 left-3 flex gap-2 flex-wrap pr-12 pointer-events-none">
+                      {tour.badge && (
+                        <span className="badge bg-orange-500 text-white text-xs px-2 py-1 rounded-lg font-semibold shadow-sm">
+                          {tour.badge}
+                        </span>
+                      )}
                     </div>
-
-                    <div className="p-4 flex flex-col flex-1">
-                      <h3 className="font-semibold text-slate-900 mb-2 leading-tight">{tour.title}</h3>
-                      <div className="flex items-center gap-1.5 mb-3">
-                        <div className="flex items-center gap-1 px-2 py-0.5 rounded-md" style={{ background: "rgba(232,99,26,0.12)" }}>
-                          <Star className="w-3.5 h-3.5 fill-orange-500 text-orange-500" />
-                          <span className="text-xs font-bold text-orange-700">4.8</span>
-                        </div>
+                    <button className="absolute top-3 right-3 w-8 h-8 bg-white/90 rounded-full flex items-center justify-center shadow">
+                      <Heart className="w-4 h-4 text-slate-400" />
+                    </button>
+                    <div className="absolute bottom-3 left-3 text-white pointer-events-none">
+                      <div className="flex items-center gap-1.5 mb-1">
+                        <Clock className="w-3.5 h-3.5 text-white/70" />
+                        <span className="text-xs text-white/80">{tour.duration}</span>
                       </div>
-                      <div className="flex gap-1.5 flex-wrap mb-3">
-                        {tour.inclusions.slice(0, 4).map((inc: string) => (
-                          <span key={inc} className="flex items-center gap-1 text-xs bg-slate-50 border border-slate-100 px-2 py-1 rounded-lg text-slate-600">
-                            <CheckCircle2 className="w-3 h-3 text-orange-500 flex-shrink-0" />
-                            <span className="truncate max-w-[150px]">{inc}</span>
+                      <div className="flex gap-1 flex-wrap mt-1">
+                        {tour.destinations.slice(0, 3).map((d: string) => (
+                          <span key={d} className="text-xs bg-white/20 backdrop-blur-sm px-2 py-0.5 rounded-full flex items-center gap-1">
+                            <MapPin className="w-2.5 h-2.5 flex-shrink-0" /> 
+                            <span className="truncate max-w-[120px]">{d}</span>
                           </span>
                         ))}
                       </div>
-                      <div className="flex items-end justify-between mt-auto pt-3 border-t border-slate-100">
-                        <div>
-                          {tour.originalPrice && (
-                            <p className="text-xs text-slate-400 line-through">₹{tour.originalPrice.toLocaleString("en-IN")}</p>
-                          )}
-                          <p className="text-lg font-bold text-slate-900">
-                            ₹{tour.price.toLocaleString("en-IN")}
-                            <span className="text-xs font-normal text-slate-400">/person</span>
-                          </p>
-                        </div>
-                        <span className="text-xs font-semibold px-3 py-1.5 rounded-lg text-white bg-gradient-to-r from-orange-500 to-orange-600 shadow-sm">
-                          View Package
-                        </span>
-                      </div>
                     </div>
                   </div>
-                </Link>
+
+                  <div className="p-4 flex flex-col flex-1">
+                    <Link href={`/tours/${tour.slug}`}>
+                      <h3 className="font-semibold text-slate-900 mb-2 leading-tight hover:text-orange-600 transition-colors">{tour.title}</h3>
+                    </Link>
+                    <div className="flex items-center gap-1.5 mb-3">
+                      <div className="flex items-center gap-1 px-2 py-0.5 rounded-md" style={{ background: "rgba(232,99,26,0.12)" }}>
+                        <Star className="w-3.5 h-3.5 fill-orange-500 text-orange-500" />
+                        <span className="text-xs font-bold text-orange-700">4.8</span>
+                      </div>
+                    </div>
+                    <div className="flex gap-1.5 flex-wrap mb-3">
+                      {tour.inclusions.slice(0, 4).map((inc: string) => (
+                        <span key={inc} className="flex items-center gap-1 text-xs bg-slate-50 border border-slate-100 px-2 py-1 rounded-lg text-slate-600">
+                          <CheckCircle2 className="w-3 h-3 text-orange-500 flex-shrink-0" />
+                          <span className="truncate max-w-[150px]">{inc}</span>
+                        </span>
+                      ))}
+                    </div>
+                    <div className="flex items-end justify-between mt-auto pt-3 border-t border-slate-100">
+                      <div>
+                        {tour.originalPrice && (
+                          <p className="text-xs text-slate-400 line-through">₹{tour.originalPrice.toLocaleString("en-IN")}</p>
+                        )}
+                        <p className="text-lg font-bold text-slate-900">
+                          ₹{tour.price.toLocaleString("en-IN")}
+                          <span className="text-xs font-normal text-slate-400">/person</span>
+                        </p>
+                      </div>
+                      <Link 
+                        href={`/tours/${tour.slug}`}
+                        className="text-xs font-semibold px-3 py-1.5 rounded-lg text-white bg-gradient-to-r from-orange-500 to-orange-600 shadow-sm hover:shadow-md transition-shadow"
+                      >
+                        View {tour.title}
+                      </Link>
+                    </div>
+                  </div>
+                </div>
               ))}
             </div>
             
             <div className="text-center mt-12">
               <Link href="/tours" className="px-8 py-3 bg-white border border-slate-200 text-slate-700 rounded-full font-medium hover:bg-slate-50 transition-colors inline-block shadow-sm">
-                View All Packages
+                View All Kashmir Packages
               </Link>
             </div>
           </div>
         </section>
 
-        {/* Categories Section */}
+        {/* Plan Your Trip Section */}
         <section className="py-16 bg-white border-y border-slate-100">
           <div className="container-custom">
             <div className="text-center mb-12">
-              <h2 className="text-3xl font-bold text-slate-900 mb-4">Find Your Perfect Trip</h2>
+              <h2 className="text-3xl font-bold text-slate-900 mb-4">Plan Your Kashmir Trip</h2>
+              <p className="text-slate-600 max-w-2xl mx-auto">Choose a trip style that matches your travel preferences.</p>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {[
+                { title: "Short Kashmir Trip", desc: "Perfect for quick weekend getaways (3-4 days).", link: "/tours", q: "All Packages" },
+                { title: "Classic Kashmir Itinerary", desc: "The standard complete tour (5-6 days).", link: "/tours", q: "All Packages" },
+                { title: "Family-Friendly Packages", desc: "Relaxed pacing with comfortable sightseeing.", link: "/tours?category=Family", q: "Family" },
+                { title: "Kashmir Honeymoon", desc: "Romantic stays and private shikara rides.", link: "/tours?category=Honeymoon", q: "Honeymoon" },
+                { title: "Adventure & Winter Trips", desc: "Skiing in Gulmarg and snow activities.", link: "/tours?category=Adventure", q: "Adventure" },
+                { title: "Custom Itineraries", desc: "Build a trip exactly how you want it.", link: "/contact", q: "Custom" }
+              ].map((style, idx) => (
+                <div key={idx} className="bg-slate-50 border border-slate-100 rounded-2xl p-6 hover:border-orange-200 transition-colors">
+                  <h3 className="font-bold text-slate-800 text-lg mb-2">{style.title}</h3>
+                  <p className="text-slate-600 text-sm mb-4">{style.desc}</p>
+                  <Link href={style.link} className="text-orange-600 font-semibold text-sm flex items-center gap-1 hover:gap-2 transition-all">
+                    Explore {style.q} <ChevronRight className="w-4 h-4" />
+                  </Link>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* Categories Section */}
+        <section className="py-16 bg-slate-50">
+          <div className="container-custom">
+            <div className="text-center mb-12">
+              <h2 className="text-3xl font-bold text-slate-900 mb-4">Kashmir Tour Packages by Travel Style</h2>
             </div>
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
               {[
@@ -283,9 +332,9 @@ export default async function KashmirTourPackagesPage() {
                 { name: "Budget", q: "Budget" },
                 { name: "Adventure", q: "Adventure" },
                 { name: "Winter", q: "Winter" },
-                { name: "Custom", q: "Custom" }
+                { name: "Culture", q: "Culture" }
               ].map((cat) => (
-                <Link key={cat.name} href={`/tours?category=${cat.q}`} className="bg-slate-50 hover:bg-orange-50 border border-slate-100 hover:border-orange-200 rounded-2xl p-6 text-center transition-colors group">
+                <Link key={cat.name} href={`/tours?category=${cat.q}`} className="bg-white hover:bg-orange-50 border border-slate-100 hover:border-orange-200 rounded-2xl p-6 text-center transition-colors group shadow-sm">
                   <h3 className="font-bold text-slate-800 group-hover:text-orange-600 transition-colors">{cat.name}</h3>
                   <p className="text-xs text-slate-500 mt-2">Packages</p>
                 </Link>
@@ -295,38 +344,42 @@ export default async function KashmirTourPackagesPage() {
         </section>
 
         {/* Destinations Covered */}
-        <section className="py-16 bg-slate-50">
+        <section className="py-16 bg-white border-y border-slate-100">
           <div className="container-custom">
             <div className="text-center mb-12">
               <h2 className="text-3xl font-bold text-slate-900 mb-4">Destinations Covered</h2>
-              <p className="text-slate-600 max-w-2xl mx-auto">Discover the iconic locations included in our itineraries.</p>
+              <p className="text-slate-600 max-w-2xl mx-auto">Discover the iconic locations included in our itineraries by filtering tours for specific regions.</p>
             </div>
             <div className="flex flex-wrap justify-center gap-4">
-              {['Srinagar', 'Gulmarg', 'Pahalgam', 'Sonamarg', 'Doodhpathri', 'Gurez Valley', 'Bangus Valley'].map((dest) => (
-                <div key={dest} className="bg-white px-6 py-3 rounded-full border border-slate-200 shadow-sm text-slate-700 font-medium">
-                  {dest}
-                </div>
+              {['Srinagar', 'Gulmarg', 'Pahalgam', 'Sonamarg', 'Doodhpathri', 'Gurez', 'Bangus'].map((dest) => (
+                <Link 
+                  key={dest} 
+                  href={`/tours?destination=${dest}`} 
+                  className="bg-slate-50 px-6 py-3 rounded-full border border-slate-200 shadow-sm text-slate-700 font-medium hover:bg-orange-50 hover:text-orange-600 hover:border-orange-200 transition-colors"
+                >
+                  {dest} Tour Packages
+                </Link>
               ))}
             </div>
           </div>
         </section>
 
         {/* Why Choose Us */}
-        <section className="py-16 bg-white border-y border-slate-100">
+        <section className="py-16 bg-slate-50">
           <div className="container-custom">
             <div className="text-center mb-12">
               <h2 className="text-3xl font-bold text-slate-900 mb-4">Why Choose WanderKashmir</h2>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {[
-                { title: "Local Kashmir Expertise", desc: "Our local team knows the hidden gems and best routes." },
-                { title: "Verified Providers", desc: "All our hotels, homestays, and taxis are carefully vetted." },
-                { title: "Customizable Itineraries", desc: "Modify your trip down to the smallest detail." },
-                { title: "Local Transport Options", desc: "Reliable, clean, and comfortable private cabs." },
-                { title: "Personalized Assistance", desc: "24/7 on-ground support during your entire stay." },
-                { title: "One Platform", desc: "Book your stay, taxi, and tours all in one seamless place." }
+                { title: "Local Kashmir Expertise", desc: "Our on-ground team ensures you experience reliable routes and local guidance." },
+                { title: "Verified Providers", desc: "We actively vet our hotel, homestay, and taxi partners for quality." },
+                { title: "Customizable Itineraries", desc: "Flexible packages that can be adjusted to fit your exact travel dates and preferences." },
+                { title: "Transparent Pricing", desc: "Clear inclusions and exclusions with no hidden surprise charges upon arrival." },
+                { title: "Personalized Assistance", desc: "Accessible support during your stay in Kashmir for a smooth trip." },
+                { title: "Integrated Booking", desc: "Secure your verified accommodation and transport through one unified platform." }
               ].map((benefit, i) => (
-                <div key={i} className="flex gap-4 p-6 rounded-2xl bg-slate-50">
+                <div key={i} className="flex gap-4 p-6 rounded-2xl bg-white border border-slate-100 shadow-sm">
                   <ShieldCheck className="w-8 h-8 text-orange-500 flex-shrink-0" />
                   <div>
                     <h3 className="font-bold text-slate-900 mb-2">{benefit.title}</h3>
@@ -361,6 +414,45 @@ export default async function KashmirTourPackagesPage() {
             </div>
           </div>
         </section>
+
+        {/* Travel Guides (Blog Integration) */}
+        {blogs.length > 0 && (
+          <section className="py-16 bg-white border-y border-slate-100">
+            <div className="container-custom">
+              <div className="text-center mb-12">
+                <h2 className="text-3xl font-bold text-slate-900 mb-4">Kashmir Travel Guides</h2>
+                <p className="text-slate-600 max-w-2xl mx-auto">Read our latest resources and itineraries to help plan your Kashmir tour.</p>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {blogs.map((blog) => (
+                  <Link key={blog.slug} href={`/blog/${blog.slug}`} className="group block bg-slate-50 rounded-2xl overflow-hidden border border-slate-100 hover:shadow-lg transition-all">
+                    {blog.imageUrl && (
+                      <div className="relative h-48 overflow-hidden">
+                        <Image 
+                          src={blog.imageUrl} 
+                          alt={blog.title} 
+                          fill 
+                          className="object-cover group-hover:scale-105 transition-transform duration-500"
+                        />
+                      </div>
+                    )}
+                    <div className="p-5">
+                      <div className="flex items-center gap-2 text-xs font-semibold text-orange-600 uppercase tracking-wider mb-2">
+                        <BookOpen className="w-4 h-4" /> Travel Guide
+                      </div>
+                      <h3 className="text-lg font-bold text-slate-900 mb-2 group-hover:text-orange-600 transition-colors line-clamp-2">
+                        {blog.title}
+                      </h3>
+                      {blog.description && (
+                        <p className="text-slate-600 text-sm line-clamp-2">{blog.description}</p>
+                      )}
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          </section>
+        )}
 
         {/* FAQs */}
         <section className="py-16 bg-slate-50">

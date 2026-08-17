@@ -41,12 +41,12 @@ const footerLinks = {
     { label: "Taxi Booking", href: "/taxis" },
   ],
   Destinations: [
-    { label: "Srinagar", href: "/destinations" },
-    { label: "Gulmarg", href: "/destinations" },
-    { label: "Pahalgam", href: "/destinations" },
-    { label: "Sonamarg", href: "/destinations" },
-    { label: "Ladakh", href: "/destinations" },
-    { label: "Jammu", href: "/destinations" },
+    { label: "Srinagar", href: "/tours?destination=Srinagar" },
+    { label: "Gulmarg", href: "/tours?destination=Gulmarg" },
+    { label: "Pahalgam", href: "/tours?destination=Pahalgam" },
+    { label: "Sonamarg", href: "/tours?destination=Sonamarg" },
+    { label: "Ladakh", href: "/tours?destination=Ladakh" },
+    { label: "Jammu", href: "/tours?destination=Jammu" },
   ],
   Company: [
     { label: "About Us", href: "/about" },

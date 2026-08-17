@@ -13,6 +13,7 @@ import CustomizeTourModal from "@/components/CustomizeTourModal";
 
 export default function ToursClient({ initialTours, dbCategories = [] }: { initialTours: any[], dbCategories?: any[] }) {
   const [selectedCat, setSelectedCat] = useState("All Packages");
+  const [selectedDest, setSelectedDest] = useState("All Destinations");
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -20,6 +21,10 @@ export default function ToursClient({ initialTours, dbCategories = [] }: { initi
       const cat = params.get("category");
       if (cat) {
         setSelectedCat(cat);
+      }
+      const dest = params.get("destination");
+      if (dest) {
+        setSelectedDest(dest);
       }
     }
   }, []);
@@ -41,15 +46,35 @@ export default function ToursClient({ initialTours, dbCategories = [] }: { initi
   
   // Combine "All Packages" + base categories + any extra custom categories used by tours
   const categories = ["All Packages", ...Array.from(new Set([...baseCategories, ...Array.from(usedCategories)]))];
+  
+  // Extract all unique destinations
+  const usedDestinations = new Set<string>();
+  initialTours.forEach(tour => {
+    if (tour.destinations && Array.isArray(tour.destinations)) {
+      tour.destinations.forEach((d: string) => {
+        const trimmed = d.trim();
+        if (trimmed) usedDestinations.add(trimmed);
+      });
+    }
+  });
+  const destinations = ["All Destinations", ...Array.from(usedDestinations).sort()];
+
   const [sortBy, setSortBy] = useState("Recommended");
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 6;
 
   const tours = initialTours;
 
-  const filtered = tours.filter(
-    (t) => selectedCat === "All Packages" || selectedCat === "All" || (t.category && t.category.toLowerCase().includes(selectedCat.toLowerCase()))
-  );
+  const filtered = tours.filter((t) => {
+    const matchCat = selectedCat === "All Packages" || selectedCat === "All" || (t.category && t.category.toLowerCase().includes(selectedCat.toLowerCase()));
+    
+    let matchDest = true;
+    if (selectedDest !== "All Destinations" && selectedDest !== "All") {
+      matchDest = t.destinations && t.destinations.some((d: string) => d.toLowerCase() === selectedDest.toLowerCase());
+    }
+    
+    return matchCat && matchDest;
+  });
 
   // Pagination logic
   const totalPages = Math.ceil(filtered.length / itemsPerPage);
@@ -61,10 +86,26 @@ export default function ToursClient({ initialTours, dbCategories = [] }: { initi
     window.scrollTo({ top: 300, behavior: 'smooth' });
   };
 
-  // Reset to first page when filters change
   const handleCatChange = (cat: string) => {
     setSelectedCat(cat);
     setCurrentPage(1);
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      if (cat === "All Packages") params.delete("category");
+      else params.set("category", cat);
+      window.history.pushState(null, '', `?${params.toString()}`);
+    }
+  };
+
+  const handleDestChange = (dest: string) => {
+    setSelectedDest(dest);
+    setCurrentPage(1);
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      if (dest === "All Destinations") params.delete("destination");
+      else params.set("destination", dest);
+      window.history.pushState(null, '', `?${params.toString()}`);
+    }
   };
 
   return (
@@ -107,6 +148,22 @@ export default function ToursClient({ initialTours, dbCategories = [] }: { initi
                 {categories.map((cat) => (
                   <option key={cat} value={cat}>
                     {cat}
+                  </option>
+                ))}
+              </select>
+
+              <label htmlFor="destination-select" className="text-sm font-semibold text-slate-600 hidden md:block ml-2">
+                Destination:
+              </label>
+              <select
+                id="destination-select"
+                value={selectedDest}
+                onChange={(e) => handleDestChange(e.target.value)}
+                className="text-sm font-semibold border border-slate-200 rounded-xl px-4 py-2.5 bg-white text-slate-700 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 cursor-pointer shadow-sm hover:border-orange-300 transition-colors"
+              >
+                {destinations.map((dest) => (
+                  <option key={dest} value={dest}>
+                    {dest}
                   </option>
                 ))}
               </select>
