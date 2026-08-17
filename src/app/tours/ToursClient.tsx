@@ -126,8 +126,9 @@ export default function ToursClient({ initialTours, dbCategories = [] }: { initi
           </div>
 
           {/* Tour cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {paginatedTours.map((tour, index) => (
+          {paginatedTours.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {paginatedTours.map((tour, index) => (
               <Link
                 key={tour.id}
                 href={tour.isLive ? `/tours/${tour.slug}` : `https://wa.me/916005888754?text=I'm%20interested%20in%20the%20${encodeURIComponent(tour.title)}`}
@@ -259,8 +260,19 @@ export default function ToursClient({ initialTours, dbCategories = [] }: { initi
                   </div>
                 </div>
               </Link>
-            ))}
-          </div>
+              ))}
+            </div>
+          ) : (
+            <div className="py-20 text-center bg-white rounded-3xl border border-slate-100 shadow-sm">
+              <h3 className="text-2xl font-bold text-slate-800 mb-2">Packages Coming Soon!</h3>
+              <p className="text-slate-500 max-w-md mx-auto mb-6">
+                We are currently crafting amazing experiences for this category. Contact us to build a custom itinerary right now!
+              </p>
+              <Link href="/contact" className="inline-block px-8 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white font-semibold rounded-xl hover:shadow-lg transition-all transform hover:-translate-y-0.5">
+                Plan a Custom Trip
+              </Link>
+            </div>
+          )}
           {/* Pagination Controls */}
           {totalPages > 1 && (
             <div className="flex justify-center items-center mt-10 gap-2">
