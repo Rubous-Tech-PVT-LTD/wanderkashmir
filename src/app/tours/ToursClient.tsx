@@ -136,38 +136,42 @@ export default function ToursClient({ initialTours, dbCategories = [] }: { initi
         <div className="container-custom py-8">
           {/* Filter bar */}
           <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-8">
-            <div className="flex gap-2 flex-wrap items-center">
-              <label htmlFor="category-select" className="text-sm font-semibold text-slate-600 hidden md:block">
-                Category:
-              </label>
-              <select
-                id="category-select"
-                value={selectedCat}
-                onChange={(e) => handleCatChange(e.target.value)}
-                className="text-sm font-semibold border border-slate-200 rounded-xl px-4 py-2.5 bg-white text-slate-700 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 cursor-pointer shadow-sm hover:border-orange-300 transition-colors"
-              >
-                {categories.map((cat) => (
-                  <option key={cat} value={cat}>
-                    {cat}
-                  </option>
-                ))}
-              </select>
+            <div className="flex flex-col md:flex-row gap-3 w-full md:w-auto">
+              <div className="flex flex-col md:flex-row md:items-center gap-1.5 md:gap-2 w-full md:w-auto">
+                <label htmlFor="category-select" className="text-xs md:text-sm font-semibold text-slate-500 md:text-slate-600 pl-1 md:pl-0">
+                  Category
+                </label>
+                <select
+                  id="category-select"
+                  value={selectedCat}
+                  onChange={(e) => handleCatChange(e.target.value)}
+                  className="w-full md:w-auto text-sm font-semibold border border-slate-200 rounded-xl px-4 py-3 md:py-2.5 bg-white text-slate-700 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 cursor-pointer shadow-sm hover:border-orange-300 transition-colors"
+                >
+                  {categories.map((cat) => (
+                    <option key={cat} value={cat}>
+                      {cat}
+                    </option>
+                  ))}
+                </select>
+              </div>
 
-              <label htmlFor="destination-select" className="text-sm font-semibold text-slate-600 hidden md:block ml-2">
-                Destination:
-              </label>
-              <select
-                id="destination-select"
-                value={selectedDest}
-                onChange={(e) => handleDestChange(e.target.value)}
-                className="text-sm font-semibold border border-slate-200 rounded-xl px-4 py-2.5 bg-white text-slate-700 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 cursor-pointer shadow-sm hover:border-orange-300 transition-colors"
-              >
-                {destinations.map((dest) => (
-                  <option key={dest} value={dest}>
-                    {dest}
-                  </option>
-                ))}
-              </select>
+              <div className="flex flex-col md:flex-row md:items-center gap-1.5 md:gap-2 w-full md:w-auto">
+                <label htmlFor="destination-select" className="text-xs md:text-sm font-semibold text-slate-500 md:text-slate-600 pl-1 md:pl-0 md:ml-2">
+                  Destination
+                </label>
+                <select
+                  id="destination-select"
+                  value={selectedDest}
+                  onChange={(e) => handleDestChange(e.target.value)}
+                  className="w-full md:w-auto text-sm font-semibold border border-slate-200 rounded-xl px-4 py-3 md:py-2.5 bg-white text-slate-700 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 cursor-pointer shadow-sm hover:border-orange-300 transition-colors"
+                >
+                  {destinations.map((dest) => (
+                    <option key={dest} value={dest}>
+                      {dest}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
             <div className="flex items-center gap-2">
               <Filter className="w-4 h-4 text-slate-400" />

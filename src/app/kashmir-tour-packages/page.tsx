@@ -163,10 +163,10 @@ export default async function KashmirTourPackagesPage() {
         </div>
 
         {/* Hero Section */}
-        <div className="relative py-20 overflow-hidden bg-gradient-to-br from-orange-500 to-orange-600">
+        <div className="relative py-12 md:py-20 overflow-hidden bg-gradient-to-br from-orange-500 to-orange-600">
           <div className="absolute inset-0 bg-black/10 z-0" />
           <div className="container-custom text-center text-white relative z-10 max-w-4xl mx-auto px-4">
-            <h1 className="font-display text-4xl md:text-5xl lg:text-6xl font-bold mb-6 text-white leading-tight">
+            <h1 className="font-display text-4xl md:text-5xl lg:text-6xl font-bold mb-4 md:mb-6 text-white leading-tight">
               Kashmir Tour Packages
             </h1>
             <p className="text-orange-50 text-lg md:text-xl mb-10 max-w-2xl mx-auto leading-relaxed">
@@ -273,7 +273,7 @@ export default async function KashmirTourPackagesPage() {
                       </div>
                       <Link 
                         href={`/tours/${tour.slug}`}
-                        className="text-xs font-semibold px-3 py-1.5 rounded-lg text-white bg-gradient-to-r from-orange-500 to-orange-600 shadow-sm hover:shadow-md transition-shadow"
+                        className="text-xs md:text-sm font-semibold px-4 py-2 rounded-lg text-white bg-gradient-to-r from-orange-500 to-orange-600 shadow-sm hover:shadow-md transition-shadow text-center"
                       >
                         View {tour.title}
                       </Link>
@@ -363,7 +363,7 @@ export default async function KashmirTourPackagesPage() {
                 <Link 
                   key={dest.slug} 
                   href={`/tours?destination=${dest.slug}`} 
-                  className="bg-slate-50 px-6 py-3 rounded-full border border-slate-200 shadow-sm text-slate-700 font-medium hover:bg-orange-50 hover:text-orange-600 hover:border-orange-200 transition-colors"
+                  className="bg-slate-50 px-4 py-2 md:px-6 md:py-3 rounded-full border border-slate-200 shadow-sm text-slate-700 text-sm md:text-base font-medium hover:bg-orange-50 hover:text-orange-600 hover:border-orange-200 transition-colors"
                 >
                   {dest.name} Tour Packages
                 </Link>
@@ -405,7 +405,7 @@ export default async function KashmirTourPackagesPage() {
             <div className="text-center mb-12">
               <h2 className="text-3xl font-bold mb-4">How It Works</h2>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 text-center relative">
+            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8 text-center relative">
               {[
                 { step: 1, title: "Choose a package" },
                 { step: 2, title: "Customize your trip" },
@@ -413,10 +413,10 @@ export default async function KashmirTourPackagesPage() {
                 { step: 4, title: "Travel to Kashmir" }
               ].map((item) => (
                 <div key={item.step} className="flex flex-col items-center">
-                  <div className="w-16 h-16 bg-orange-500 rounded-full flex items-center justify-center text-2xl font-bold mb-4 shadow-lg shadow-orange-500/20 z-10 relative">
+                  <div className="w-12 h-12 md:w-16 md:h-16 bg-orange-500 rounded-full flex items-center justify-center text-xl md:text-2xl font-bold mb-3 md:mb-4 shadow-lg shadow-orange-500/20 z-10 relative">
                     {item.step}
                   </div>
-                  <h3 className="font-bold text-lg">{item.title}</h3>
+                  <h3 className="font-bold text-sm md:text-lg">{item.title}</h3>
                 </div>
               ))}
             </div>
