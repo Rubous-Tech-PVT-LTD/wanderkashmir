@@ -4,6 +4,7 @@ import Footer from "@/components/Footer";
 import Link from "next/link";
 import Image from "next/image";
 import { useState, useEffect } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
 import { Star, Clock, Users, MapPin, CheckCircle2, Heart, Filter } from "lucide-react";
 import CustomizeTourModal from "@/components/CustomizeTourModal";
 
@@ -12,22 +13,19 @@ import CustomizeTourModal from "@/components/CustomizeTourModal";
 // Removed hardcoded tours array
 
 export default function ToursClient({ initialTours, dbCategories = [] }: { initialTours: any[], dbCategories?: any[] }) {
-  const [selectedCat, setSelectedCat] = useState("All Packages");
-  const [selectedDest, setSelectedDest] = useState("All Destinations");
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  
+  const categoryParam = searchParams.get("category");
+  const destinationParam = searchParams.get("destination");
+
+  const [selectedCat, setSelectedCat] = useState(categoryParam || "All Packages");
+  const [selectedDest, setSelectedDest] = useState(destinationParam || "All Destinations");
 
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      const params = new URLSearchParams(window.location.search);
-      const cat = params.get("category");
-      if (cat) {
-        setSelectedCat(cat);
-      }
-      const dest = params.get("destination");
-      if (dest) {
-        setSelectedDest(dest);
-      }
-    }
-  }, []);
+    if (categoryParam) setSelectedCat(categoryParam);
+    if (destinationParam) setSelectedDest(destinationParam);
+  }, [categoryParam, destinationParam]);
 
   // Extract all unique categories from the tours to handle any custom categories added by admin
   const usedCategories = new Set<string>();
@@ -90,23 +88,19 @@ export default function ToursClient({ initialTours, dbCategories = [] }: { initi
   const handleCatChange = (cat: string) => {
     setSelectedCat(cat);
     setCurrentPage(1);
-    if (typeof window !== "undefined") {
-      const params = new URLSearchParams(window.location.search);
-      if (cat === "All Packages") params.delete("category");
-      else params.set("category", cat);
-      window.history.pushState(null, '', `?${params.toString()}`);
-    }
+    const params = new URLSearchParams(searchParams.toString());
+    if (cat === "All Packages") params.delete("category");
+    else params.set("category", cat);
+    router.push(`?${params.toString()}`, { scroll: false });
   };
 
   const handleDestChange = (dest: string) => {
     setSelectedDest(dest);
     setCurrentPage(1);
-    if (typeof window !== "undefined") {
-      const params = new URLSearchParams(window.location.search);
-      if (dest === "All Destinations") params.delete("destination");
-      else params.set("destination", dest);
-      window.history.pushState(null, '', `?${params.toString()}`);
-    }
+    const params = new URLSearchParams(searchParams.toString());
+    if (dest === "All Destinations") params.delete("destination");
+    else params.set("destination", dest);
+    router.push(`?${params.toString()}`, { scroll: false });
   };
 
   return (
@@ -330,7 +324,12 @@ export default function ToursClient({ initialTours, dbCategories = [] }: { initi
               <p className="text-slate-500 max-w-md mx-auto mb-6">
                 No tour packages are currently available for this destination or category combination.
               </p>
-              <button onClick={() => { setSelectedCat("All Packages"); setSelectedDest("All Destinations"); setCurrentPage(1); window.history.pushState(null, '', window.location.pathname); }} className="inline-block px-8 py-3 bg-gradient-to-r from-slate-800 to-slate-900 text-white font-semibold rounded-xl hover:shadow-lg transition-all transform hover:-translate-y-0.5">
+              <button onClick={() => { 
+                setSelectedCat("All Packages"); 
+                setSelectedDest("All Destinations"); 
+                setCurrentPage(1); 
+                router.push(window.location.pathname, { scroll: false }); 
+              }} className="inline-block px-8 py-3 bg-gradient-to-r from-slate-800 to-slate-900 text-white font-semibold rounded-xl hover:shadow-lg transition-all transform hover:-translate-y-0.5">
                 View All Tours
               </button>
             </div>

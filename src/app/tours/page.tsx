@@ -1,6 +1,7 @@
 import prisma from "@/lib/prisma";
 import ToursClient from "./ToursClient";
 import { Metadata } from "next";
+import { Suspense } from "react";
 
 export const metadata: Metadata = {
   title: "Best Kashmir Tour Packages (2026/2027) | Family, Honeymoon & Adventure Itineraries",
@@ -83,7 +84,9 @@ export default async function ToursPage() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      <ToursClient initialTours={tours} dbCategories={dbCategories} />
+      <Suspense fallback={<div className="min-h-screen pt-20 flex items-center justify-center"><div className="w-8 h-8 border-4 border-orange-500 border-t-transparent rounded-full animate-spin"></div></div>}>
+        <ToursClient initialTours={tours} dbCategories={dbCategories} />
+      </Suspense>
     </>
   );
 }
