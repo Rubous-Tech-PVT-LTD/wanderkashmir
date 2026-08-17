@@ -32,7 +32,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 
   return {
     title: page.title,
-    description: page.description,
+    description: page.description?.replace(/^Meta\s*Description:\s*/i, ""),
   };
 }
 
@@ -97,7 +97,7 @@ export default async function TaxiSeoPage({ params }: { params: Promise<{ slug: 
       "@context": "https://schema.org",
       "@type": "Service",
       "name": page.title,
-      "description": page.description,
+      "description": page.description?.replace(/^Meta\s*Description:\s*/i, ""),
       "url": url,
       "provider": {
         "@type": "LocalBusiness",
@@ -159,7 +159,7 @@ export default async function TaxiSeoPage({ params }: { params: Promise<{ slug: 
               {page.h1Heading}
             </h1>
             <p className="text-lg text-slate-700 leading-relaxed max-w-2xl">
-              {page.description}
+              {page.description?.replace(/^Meta\s*Description:\s*/i, "")}
             </p>
             <div className="flex flex-wrap gap-4 pt-4">
               <Link 

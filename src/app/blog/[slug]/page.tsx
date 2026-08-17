@@ -30,10 +30,10 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 
   return {
     title: page.title,
-    description: page.description,
+    description: page.description?.replace(/^Meta\s*Description:\s*/i, ""),
     openGraph: {
       title: page.title,
-      description: page.description || "",
+      description: page.description?.replace(/^Meta\s*Description:\s*/i, "") || "",
       images: page.imageUrl ? [page.imageUrl] : [],
     }
   };
@@ -89,7 +89,7 @@ export default async function BlogArticlePage({ params }: { params: Promise<{ sl
         "@context": "https://schema.org",
         "@type": "Article",
         "headline": page.h1Heading,
-        "description": page.description,
+        "description": page.description?.replace(/^Meta\s*Description:\s*/i, ""),
         "image": page.imageUrl ? [page.imageUrl] : [],
         "datePublished": page.createdAt.toISOString(),
         "dateModified": page.updatedAt.toISOString(),
@@ -167,7 +167,7 @@ export default async function BlogArticlePage({ params }: { params: Promise<{ sl
           </h1>
           
           <p className="text-xl text-slate-600 leading-relaxed max-w-3xl">
-            {page.description}
+            {page.description?.replace(/^Meta\s*Description:\s*/i, "")}
           </p>
         </header>
 

@@ -24,7 +24,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 
   return {
     title: page.title,
-    description: page.description,
+    description: page.description?.replace(/^Meta\s*Description:\s*/i, ""),
   };
 }
 
@@ -75,7 +75,7 @@ export default async function HomestaySeoPage({ params }: { params: Promise<{ sl
       "@context": "https://schema.org",
       "@type": "LodgingBusiness",
       "name": page.title,
-      "description": page.description,
+      "description": page.description?.replace(/^Meta\s*Description:\s*/i, ""),
       "url": url,
       "address": {
         "@type": "PostalAddress",
@@ -128,7 +128,7 @@ export default async function HomestaySeoPage({ params }: { params: Promise<{ sl
               {page.h1Heading}
             </h1>
             <p className="text-lg text-slate-700 leading-relaxed max-w-2xl">
-              {page.description}
+              {page.description?.replace(/^Meta\s*Description:\s*/i, "")}
             </p>
             <div className="flex flex-wrap gap-4 pt-4">
               <Link 
