@@ -189,13 +189,6 @@ export default function BookingSidebar({ propertyId, pricePerNight, rating, isLo
       return;
     }
     setAdults(newAdults);
-    if (propertyType !== "HOMESTAY") {
-      if (totalGuests > rooms * 2) {
-        setRooms(Math.ceil(totalGuests / 2));
-      } else if (totalGuests <= (rooms - 1) * 2 && rooms > 1) {
-        setRooms(Math.max(1, Math.ceil(totalGuests / 2)));
-      }
-    }
   };
 
   const handleChildrenChange = (newChildren: number) => {
@@ -204,13 +197,6 @@ export default function BookingSidebar({ propertyId, pricePerNight, rating, isLo
       return;
     }
     setChildrenCount(newChildren);
-    if (propertyType !== "HOMESTAY") {
-      if (totalGuests > rooms * 2) {
-        setRooms(Math.ceil(totalGuests / 2));
-      } else if (totalGuests <= (rooms - 1) * 2 && rooms > 1) {
-        setRooms(Math.max(1, Math.ceil(totalGuests / 2)));
-      }
-    }
   };
 
   return (
@@ -352,7 +338,7 @@ export default function BookingSidebar({ propertyId, pricePerNight, rating, isLo
           <label className="block text-[10px] font-bold uppercase text-slate-900 mb-2">Select Room Type</label>
           <div className="space-y-2">
             {availableRoomTypes.map(rt => {
-              const roomCapacity = 2; // Forcing 2 guests per room as per global business rules
+              const roomCapacity = rt.capacity || 2;
               const maxCapacity = roomCapacity * rooms;
               const isCapacityValid = (adults + childrenCount) <= maxCapacity;
               
