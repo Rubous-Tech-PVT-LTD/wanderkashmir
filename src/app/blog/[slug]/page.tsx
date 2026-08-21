@@ -40,11 +40,16 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 }
 
 export async function generateStaticParams() {
-  const pages = await prisma.seoLandingPage.findMany({
-    where: { type: "BLOG" },
-    select: { slug: true }
-  });
-  return pages.map(page => ({ slug: page.slug }));
+  try {
+    const pages = await prisma.seoLandingPage.findMany({
+      where: { type: "BLOG" },
+      select: { slug: true }
+    });
+    return pages.map(page => ({ slug: page.slug }));
+  } catch (error) {
+    console.warn("Database unavailable during build. Falling back to dynamic rendering for blog pages.");
+    return [];
+  }
 }
 
 export default async function BlogArticlePage({ params }: { params: Promise<{ slug: string }> }) {
@@ -172,13 +177,15 @@ export default async function BlogArticlePage({ params }: { params: Promise<{ sl
         </header>
 
         {page.imageUrl && (
-          <div className="relative w-full aspect-[21/9] max-h-[500px] rounded-3xl overflow-hidden shadow-xl mb-16">
+          <div className="w-full rounded-3xl overflow-hidden shadow-xl mb-16 flex justify-center bg-slate-100">
             <ImageWithFallback 
               src={getValidImageUrl([page.imageUrl])} 
               alt={page.h1Heading} 
-              fill 
-              className="object-cover"
-              sizes="(max-width: 1024px) 100vw, 1024px"
+              width={0}
+              height={0}
+              sizes="100vw"
+              style={{ width: '100%', height: 'auto' }}
+              className="object-contain"
               priority
             />
           </div>

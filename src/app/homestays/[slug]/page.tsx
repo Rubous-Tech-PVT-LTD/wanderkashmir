@@ -140,15 +140,17 @@ export default async function HomestaySeoPage({ params }: { params: Promise<{ sl
             </div>
           </div>
           {page.imageUrl && (
-            <div className="w-full md:w-5/12 min-h-[300px] md:min-h-full relative">
+            <div className="w-full md:w-5/12 relative flex items-center justify-center bg-slate-50">
               <div className="absolute inset-0 bg-gradient-to-r from-[#166534]/5 to-transparent z-10 md:hidden" />
               <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent z-10 md:hidden" />
               <Image 
                 src={getValidImageUrl([page.imageUrl])} 
                 alt={page.h1Heading} 
-                fill 
-                className="object-cover"
+                width={0}
+                height={0}
                 sizes="(max-width: 768px) 100vw, 40vw"
+                style={{ width: '100%', height: 'auto' }}
+                className="object-contain"
                 priority
               />
             </div>
