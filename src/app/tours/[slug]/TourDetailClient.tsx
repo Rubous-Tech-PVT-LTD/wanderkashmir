@@ -581,7 +581,7 @@ export default function TourDetailClient({ initialTour }: { initialTour: any }) 
                   <button 
                     onClick={() => {
                       if (!isSignedIn) {
-                        setBookingError("Please sign in to book a tour.");
+                        router.push(`/sign-in?redirect_url=${encodeURIComponent(window.location.pathname)}`);
                       } else if (!travelDate) {
                         setBookingError("Please select a travel date first.");
                         setShakeDate(true);
