@@ -751,14 +751,16 @@ export default function AdminDashboardClient({
           <AdminToursTab 
             initialEditTour={tourToEdit} 
             initialCategory={tourCategoryToAdd}
-            onClearEdit={() => {
+            onInitialPropsConsumed={() => {
               setTourToEdit(null);
               setTourCategoryToAdd(null);
+            }}
+            onExitEdit={() => {
               if (previousTab) {
                 setActiveTab(previousTab);
                 setPreviousTab(null);
               }
-            }} 
+            }}
           />
         )}
         {activeTab === "tour_categories" && (

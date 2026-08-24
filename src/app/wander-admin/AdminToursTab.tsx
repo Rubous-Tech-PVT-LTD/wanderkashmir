@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { getPaginatedTours } from "@/actions/admin-data";
 import Pagination from "@/components/Pagination";
 
-export default function AdminToursTab({ initialEditTour, initialCategory, onClearEdit }: { initialEditTour?: any, initialCategory?: string | null, onClearEdit?: () => void }) {
+export default function AdminToursTab({ initialEditTour, initialCategory, onInitialPropsConsumed, onExitEdit }: { initialEditTour?: any, initialCategory?: string | null, onInitialPropsConsumed?: () => void, onExitEdit?: () => void }) {
   const TOUR_CATEGORIES = [
     "Upcoming", "Honeymoon", "Family", "Adventure", "Pilgrimage", "Nature",
     "Culture", "Skiing", "Trekking", "Wildlife", "Luxury", "Budget", "Group"
@@ -38,10 +38,10 @@ export default function AdminToursTab({ initialEditTour, initialCategory, onClea
   useEffect(() => {
     if (initialEditTour) {
       handleEdit(initialEditTour);
-      if (onClearEdit) onClearEdit();
+      if (onInitialPropsConsumed) onInitialPropsConsumed();
     } else if (initialCategory) {
       handleAddNew(initialCategory);
-      if (onClearEdit) onClearEdit();
+      if (onInitialPropsConsumed) onInitialPropsConsumed();
     }
   }, [initialEditTour, initialCategory]);
 
@@ -166,6 +166,7 @@ export default function AdminToursTab({ initialEditTour, initialCategory, onClea
           setTours([savedTour, ...tours]);
         }
         setIsAdding(false);
+        if (onExitEdit) onExitEdit();
         router.refresh();
       } else {
         toast.error("Failed to save tour");
@@ -203,7 +204,7 @@ export default function AdminToursTab({ initialEditTour, initialCategory, onClea
             type="button" 
             onClick={() => {
               setIsAdding(false);
-              if (onClearEdit) onClearEdit();
+              if (onExitEdit) onExitEdit();
             }}
             className="p-2 text-slate-400 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors flex items-center gap-2 font-medium text-sm"
           >
@@ -445,7 +446,7 @@ export default function AdminToursTab({ initialEditTour, initialCategory, onClea
           </div>
           
           <div className="md:col-span-2 flex justify-end gap-3 mt-4">
-            <button type="button" onClick={() => setIsAdding(false)} className="px-6 py-2 border rounded-lg text-slate-600 hover:bg-slate-50">Cancel</button>
+            <button type="button" onClick={() => { setIsAdding(false); if (onExitEdit) onExitEdit(); }} className="px-6 py-2 border rounded-lg text-slate-600 hover:bg-slate-50">Cancel</button>
             <button type="submit" disabled={loading} className="px-6 py-2 bg-slate-900 text-white rounded-lg hover:bg-slate-800 disabled:opacity-50">
               {loading ? "Saving..." : "Save Tour"}
             </button>
