@@ -5,6 +5,8 @@ import { X, Gift, LogIn, AlertTriangle, ArrowRight } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { getActivePopup } from "@/actions/site-popups";
 
+import { SignInButton } from "@clerk/nextjs";
+
 export default function GlobalPopup() {
   const [popup, setPopup] = useState<any>(null);
   const [isVisible, setIsVisible] = useState(false);
@@ -95,6 +97,33 @@ export default function GlobalPopup() {
     buttonClass = "bg-white text-rose-700 hover:bg-rose-50";
   }
 
+  const renderButton = (className: string, includeIcon: boolean = true) => {
+    if (!popup.buttonText) return null;
+
+    if (popup.type === "SIGN_IN") {
+      return (
+        <SignInButton mode="modal">
+          <button 
+            onClick={handleDismiss}
+            className={className}
+          >
+            {popup.buttonText} {includeIcon && <ArrowRight className="w-5 h-5" />}
+          </button>
+        </SignInButton>
+      );
+    }
+
+    return (
+      <a 
+        href={popup.buttonLink || "#"} 
+        onClick={handleDismiss}
+        className={className}
+      >
+        {popup.buttonText} {includeIcon && <ArrowRight className="w-5 h-5" />}
+      </a>
+    );
+  };
+
   // Determine layout based on displayStyle
   if (popup.displayStyle === "BANNER") {
     return (
@@ -115,15 +144,7 @@ export default function GlobalPopup() {
           </div>
           
           <div className="flex items-center gap-3 shrink-0">
-            {popup.buttonText && (
-              <a 
-                href={popup.buttonLink || "#"} 
-                onClick={handleDismiss}
-                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors ${buttonClass}`}
-              >
-                {popup.buttonText}
-              </a>
-            )}
+            {renderButton(`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors ${buttonClass}`, false)}
             <button 
               onClick={handleDismiss}
               className={`p-1.5 rounded-full hover:bg-white/20 transition-colors ${textClass} opacity-80 hover:opacity-100`}
@@ -155,15 +176,7 @@ export default function GlobalPopup() {
               <h3 className={`font-bold text-lg leading-tight ${textClass}`}>{popup.title}</h3>
               <p className={`text-sm mt-1 opacity-90 ${textClass}`}>{popup.description}</p>
               
-              {popup.buttonText && (
-                <a 
-                  href={popup.buttonLink || "#"} 
-                  onClick={handleDismiss}
-                  className={`mt-3 inline-flex items-center gap-1 px-4 py-2 rounded-lg text-sm font-bold transition-colors ${buttonClass}`}
-                >
-                  {popup.buttonText} <ArrowRight className="w-4 h-4" />
-                </a>
-              )}
+              {renderButton(`mt-3 inline-flex items-center gap-1 px-4 py-2 rounded-lg text-sm font-bold transition-colors ${buttonClass}`)}
             </div>
           </div>
         </div>
@@ -195,15 +208,7 @@ export default function GlobalPopup() {
           <h2 className={`text-2xl font-black mb-3 ${textClass}`}>{popup.title}</h2>
           <p className={`text-base mb-8 opacity-90 ${textClass}`}>{popup.description}</p>
           
-          {popup.buttonText && (
-            <a 
-              href={popup.buttonLink || "#"} 
-              onClick={handleDismiss}
-              className={`w-full py-3.5 rounded-xl text-base font-bold transition-colors flex items-center justify-center gap-2 shadow-lg hover:-translate-y-0.5 transform ${buttonClass}`}
-            >
-              {popup.buttonText} <ArrowRight className="w-5 h-5" />
-            </a>
-          )}
+          {renderButton(`w-full py-3.5 rounded-xl text-base font-bold transition-colors flex items-center justify-center gap-2 shadow-lg hover:-translate-y-0.5 transform ${buttonClass}`)}
           
           <button 
             onClick={handleDismiss}
