@@ -2554,19 +2554,19 @@ export default function AdminDashboardClient({
                     <h3 className="text-lg font-bold text-slate-900 mb-4 pb-2 border-b border-slate-100 flex items-center gap-2">
                       <MapPin className="w-5 h-5 text-orange-500" /> Tour Package Details
                     </h3>
-                    <div className="bg-orange-500 rounded-xl p-5 border border-orange-500 mb-6">
-                      <div className="font-black text-xl text-slate-900 mb-1">{selectedBookingDetails.tour.title}</div>
-                      <div className="text-sm text-orange-500 font-bold mb-4">{selectedBookingDetails.tour.duration || "N/A"}</div>
+                    <div className="bg-orange-500 rounded-xl p-5 border border-orange-500 mb-6 shadow-md">
+                      <div className="font-black text-xl text-white mb-1">{selectedBookingDetails.tour.title}</div>
+                      <div className="text-sm text-orange-100 font-bold mb-4">{selectedBookingDetails.tour.duration || "N/A"}</div>
                       
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         {/* Inclusions */}
                         {selectedBookingDetails.tour.inclusions && Array.isArray(selectedBookingDetails.tour.inclusions) && selectedBookingDetails.tour.inclusions.length > 0 && (
                           <div>
-                            <span className="block text-xs font-bold text-emerald-600 uppercase mb-2">Included</span>
+                            <span className="block text-xs font-bold text-emerald-100 uppercase mb-2">Included</span>
                             <ul className="space-y-1.5">
                               {selectedBookingDetails.tour.inclusions.map((inc: string, i: number) => (
-                                <li key={i} className="flex items-start gap-2 text-sm text-slate-700">
-                                  <CheckCircle2 className="w-4 h-4 text-emerald-500 flex-shrink-0 mt-0.5" /> {inc}
+                                <li key={i} className="flex items-start gap-2 text-sm text-white/90">
+                                  <CheckCircle2 className="w-4 h-4 text-emerald-200 flex-shrink-0 mt-0.5" /> {inc}
                                 </li>
                               ))}
                             </ul>
@@ -2576,11 +2576,11 @@ export default function AdminDashboardClient({
                         {/* Exclusions */}
                         {selectedBookingDetails.tour.exclusions && Array.isArray(selectedBookingDetails.tour.exclusions) && selectedBookingDetails.tour.exclusions.length > 0 && (
                           <div>
-                            <span className="block text-xs font-bold text-red-600 uppercase mb-2">Not Included</span>
+                            <span className="block text-xs font-bold text-red-100 uppercase mb-2">Not Included</span>
                             <ul className="space-y-1.5">
                               {selectedBookingDetails.tour.exclusions.map((exc: string, i: number) => (
-                                <li key={i} className="flex items-start gap-2 text-sm text-slate-700">
-                                  <XCircle className="w-4 h-4 text-red-400 flex-shrink-0 mt-0.5" /> {exc}
+                                <li key={i} className="flex items-start gap-2 text-sm text-white/90">
+                                  <XCircle className="w-4 h-4 text-red-200 flex-shrink-0 mt-0.5" /> {exc}
                                 </li>
                               ))}
                             </ul>
