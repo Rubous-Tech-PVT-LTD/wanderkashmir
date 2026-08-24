@@ -5,7 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { useState, useEffect } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import { Star, Clock, Users, MapPin, CheckCircle2, Heart, Filter } from "lucide-react";
+import { Star, Clock, Users, MapPin, CheckCircle2, Heart, Filter, Instagram } from "lucide-react";
 import CustomizeTourModal from "@/components/CustomizeTourModal";
 
 const MONTHS = [
@@ -258,6 +258,11 @@ export default function ToursClient({ initialTours, dbCategories = [] }: { initi
                         <span className="badge bg-orange-500 text-white text-xs px-2 py-1 rounded-lg font-semibold shadow-sm">
                           {tour.badge}
                         </span>
+                      )}
+                      {tour.category?.includes('Instagram') && (
+                        <div className="flex items-center gap-1 bg-gradient-to-r from-purple-600 via-pink-500 to-orange-400 text-white text-xs font-bold px-2 py-1 rounded-lg shadow-sm">
+                          <Instagram className="w-3 h-3" /> Insta
+                        </div>
                       )}
                       {(() => {
                         const categories = tour.category ? tour.category.split(',').map((c: string) => c.trim()).filter(Boolean) : [];

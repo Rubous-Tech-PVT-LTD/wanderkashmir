@@ -29,6 +29,7 @@ import {
   Package,
   ChevronRight,
   Play,
+  Instagram,
 } from "lucide-react";
 import dynamic from "next/dynamic";
 
@@ -456,6 +457,16 @@ export default async function Home() {
     take: 4
   });
 
+  // Fetch Instagram packages
+  const instagramTours = await prisma.tour.findMany({
+    where: { 
+      isLive: true,
+      category: { contains: 'Instagram', mode: 'insensitive' }
+    },
+    orderBy: { createdAt: 'desc' },
+    take: 4
+  });
+
   // Merge dynamic counts into destinations
   const dynamicDestinations = destinations.map(dest => {
     const dbCount = locationCounts[dest.name.toLowerCase()] || 0;
@@ -526,6 +537,69 @@ export default async function Home() {
       {/* Spacing for floating search bar */}
       <div className="h-32"></div>
 
+      {/* ─── TRENDING ON INSTAGRAM ────────────────────────────── */}
+      {instagramTours.length > 0 && (
+        <section className="section-padding pb-4 bg-gradient-to-br from-pink-50/50 via-purple-50/30 to-orange-50/50 relative">
+          <div className="absolute inset-0 bg-grid-slate-100/[0.04] bg-[size:20px_20px]" />
+          <div className="container-custom relative">
+            <div className="flex items-end justify-between mb-8">
+              <div>
+                <div className="flex items-center gap-2 mb-1">
+                  <div className="bg-gradient-to-tr from-yellow-400 via-pink-500 to-purple-600 p-1.5 rounded-full">
+                    <Instagram className="w-4 h-4 text-white" />
+                  </div>
+                  <h2 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-600 to-pink-500">Trending on Instagram</h2>
+                </div>
+                <p className="text-sm text-slate-500 mt-1">Book the exact packages you saw on our reels and stories</p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+              {instagramTours.map((tour) => (
+                <Link key={tour.id} href={`/tours/${tour.slug}`} className="group block bg-white rounded-2xl border border-pink-100 overflow-hidden hover:shadow-xl hover:shadow-pink-500/10 transition-all hover:-translate-y-1 relative">
+                  <div className="absolute inset-0 border-2 border-transparent group-hover:border-pink-500/20 rounded-2xl z-10 pointer-events-none transition-colors" />
+                  <div className="relative aspect-[4/3] w-full overflow-hidden bg-slate-100">
+                    <Image 
+                      src={tour.images[0] || "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=500&q=80"} 
+                      alt={tour.title} 
+                      fill 
+                      sizes="(max-width: 768px) 100vw, 25vw" 
+                      className="object-cover transition-transform duration-500 group-hover:scale-105" 
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
+                    
+                    <div className="absolute top-3 left-3 flex items-center gap-1.5 bg-gradient-to-r from-purple-600 via-pink-500 to-orange-400 text-white text-xs font-bold px-2.5 py-1 rounded-md shadow-md">
+                      <Instagram className="w-3 h-3" /> As seen on Insta
+                    </div>
+
+                    <div className="absolute bottom-3 left-3">
+                      <span className="bg-slate-900/80 backdrop-blur-sm text-white text-xs font-semibold px-2.5 py-1 rounded-md">
+                        {tour.duration}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="p-4">
+                    <h3 className="font-bold text-slate-900 text-base leading-tight mb-1 line-clamp-1">{tour.title}</h3>
+                    <p className="text-sm text-slate-500 mb-2 truncate">{tour.destinations.join(" • ")}</p>
+                    <div className="flex items-center justify-between mt-4">
+                      <div>
+                        {tour.originalPrice && tour.originalPrice > tour.price && (
+                          <span className="text-xs text-slate-400 line-through mr-2">₹{tour.originalPrice.toLocaleString('en-IN')}</span>
+                        )}
+                        <span className="font-bold text-emerald-600">₹{tour.price.toLocaleString('en-IN')}</span>
+                      </div>
+                      <div className="bg-pink-50 p-1.5 rounded-full text-pink-600 group-hover:bg-gradient-to-r group-hover:from-purple-500 group-hover:to-pink-500 group-hover:text-white transition-all shadow-sm">
+                        <ArrowRight className="w-4 h-4" />
+                      </div>
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
       {/* ─── UPCOMING PACKAGES ────────────────────────────────── */}
       {upcomingTours.length > 0 && (
         <section className="section-padding pb-4">
@@ -555,8 +629,15 @@ export default async function Home() {
                       className="object-cover transition-transform duration-500 group-hover:scale-105" 
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
-                    <div className="absolute top-3 left-3 bg-orange-500 text-white text-xs font-bold px-2 py-1 rounded-md shadow-sm">
-                      Upcoming
+                    <div className="absolute top-3 left-3 flex flex-col gap-2">
+                      {tour.category?.includes('Instagram') && (
+                        <div className="flex items-center gap-1.5 bg-gradient-to-r from-purple-600 via-pink-500 to-orange-400 text-white text-xs font-bold px-2.5 py-1 rounded-md shadow-md w-fit">
+                          <Instagram className="w-3 h-3" /> As seen on Insta
+                        </div>
+                      )}
+                      <div className="bg-orange-500 text-white text-xs font-bold px-2 py-1 rounded-md shadow-sm w-fit">
+                        Upcoming
+                      </div>
                     </div>
                     <div className="absolute bottom-3 left-3">
                       <span className="bg-slate-900/80 backdrop-blur-sm text-white text-xs font-semibold px-2.5 py-1 rounded-md">
@@ -718,8 +799,13 @@ export default async function Home() {
                       sizes="(max-width: 768px) 100vw, 33vw"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-                    <div className="absolute top-3 left-3">
-                      <span className="bg-slate-900/80 backdrop-blur-sm text-white text-xs font-semibold px-2.5 py-1 rounded-md">
+                    <div className="absolute top-3 left-3 flex flex-col gap-2">
+                      {tour.category?.includes('Instagram') && (
+                        <div className="flex items-center gap-1.5 bg-gradient-to-r from-purple-600 via-pink-500 to-orange-400 text-white text-xs font-bold px-2.5 py-1 rounded-md shadow-md w-fit">
+                          <Instagram className="w-3 h-3" /> As seen on Insta
+                        </div>
+                      )}
+                      <span className="bg-slate-900/80 backdrop-blur-sm text-white text-xs font-semibold px-2.5 py-1 rounded-md w-fit">
                         {tour.duration}
                       </span>
                     </div>
