@@ -532,14 +532,6 @@ export default async function Home() {
             Authentic Village Stays • Local Culture • Hidden Experiences
           </p>
           <div className="flex flex-wrap justify-center items-center gap-3.5 mt-2">
-            <Link 
-              href="/partner" 
-              className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-md border border-white/40 text-white px-6 py-3 rounded-full font-bold hover:bg-white hover:text-slate-900 transition-all shadow-lg"
-            >
-              Register your property
-              <span>&rarr;</span>
-            </Link>
-
             <CustomizeTourModal />
           </div>
         </div>
