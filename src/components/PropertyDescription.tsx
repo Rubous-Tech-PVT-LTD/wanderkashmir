@@ -5,19 +5,22 @@ import { X } from "lucide-react";
 
 interface PropertyDescriptionProps {
   description: string;
+  title?: string;
 }
 
-export default function PropertyDescription({ description }: PropertyDescriptionProps) {
+export default function PropertyDescription({ description, title }: PropertyDescriptionProps) {
   const [isOpen, setIsOpen] = useState(false);
 
   // Truncate description for preview
   const previewText = description.length > 150 
     ? description.substring(0, 150) + "..." 
     : description;
+    
+  const headingTitle = title || "About Property";
 
   return (
     <div>
-      <h3 className="text-xl font-bold text-slate-900 mb-4">About Property</h3>
+      <h2 className="text-xl font-bold text-slate-900 mb-4">{headingTitle}</h2>
       <div className="text-slate-600 leading-relaxed whitespace-pre-wrap">
         {previewText}
       </div>
@@ -40,7 +43,7 @@ export default function PropertyDescription({ description }: PropertyDescription
           >
             {/* Modal Header */}
             <div className="flex items-center justify-between p-6 border-b border-slate-100">
-              <h2 className="text-2xl font-bold text-slate-900">About Property</h2>
+              <h2 className="text-2xl font-bold text-slate-900">{headingTitle}</h2>
               <button 
                 onClick={() => setIsOpen(false)}
                 className="p-2 hover:bg-slate-100 rounded-full transition-colors text-slate-500 hover:text-slate-900"

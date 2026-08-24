@@ -7,9 +7,10 @@ import { ChevronLeft, ChevronRight, X, Grid, Play } from "lucide-react";
 interface PhotoGalleryClientProps {
   images: string[];
   propertyName: string;
+  altTexts?: string[];
 }
 
-export default function PhotoGalleryClient({ images, propertyName }: PhotoGalleryClientProps) {
+export default function PhotoGalleryClient({ images, propertyName, altTexts }: PhotoGalleryClientProps) {
   const isVideo = (url: string) => url?.includes("/video/upload/") || /\.(mp4|webm|mov|ogg|avi|mkv)$/i.test(url || "");
 
   const [isOpen, setIsOpen] = useState(false);
@@ -67,7 +68,7 @@ export default function PhotoGalleryClient({ images, propertyName }: PhotoGaller
           ) : (
             <ImageWithFallback 
               src={mainImage} 
-              alt={propertyName} 
+              alt={altTexts && altTexts.length > 0 ? altTexts[0] : propertyName} 
               fill 
               sizes="(max-width: 768px) 100vw, 66vw"
               className="object-cover transition-transform duration-700 hover:scale-105"
@@ -121,7 +122,7 @@ export default function PhotoGalleryClient({ images, propertyName }: PhotoGaller
               ) : (
                 <ImageWithFallback 
                   src={img} 
-                  alt={`${propertyName} photo ${idx + 2}`} 
+                  alt={altTexts && altTexts.length > actualIndex ? altTexts[actualIndex] : `${propertyName} photo ${actualIndex + 1}`} 
                   fill 
                   sizes="(max-width: 768px) 50vw, 33vw"
                   className="object-cover transition-transform duration-700 group-hover:scale-110"
@@ -187,7 +188,7 @@ export default function PhotoGalleryClient({ images, propertyName }: PhotoGaller
                 <ImageWithFallback 
                   key={`img-${currentIndex}`}
                   src={displayImages[currentIndex]} 
-                  alt={`${propertyName} photo ${currentIndex + 1}`} 
+                  alt={altTexts && altTexts.length > currentIndex ? altTexts[currentIndex] : `${propertyName} photo ${currentIndex + 1}`} 
                   fill 
                   className="object-contain"
                   priority

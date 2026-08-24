@@ -32,6 +32,8 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   
   if (!property) return { title: "Property Not Found | WanderKashmir" };
   
+  const isVergan = property.name === "The Vergan Resort";
+  
   const typeLabel = property.vendorProfile?.type 
       ? property.vendorProfile.type.charAt(0).toUpperCase() + property.vendorProfile.type.slice(1).toLowerCase()
       : "Stay";
@@ -41,13 +43,20 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
     : ["https://images.unsplash.com/photo-1542718610-a1d656d1884c?auto=format&fit=crop&q=80&w=1200"];
 
   return {
-    title: `Book ${property.name}, ${property.location} | Best ${typeLabel}`,
-    description: property.description 
+    title: isVergan 
+      ? `The Vergan Resort Pahalgam | Rooms, Photos & Stay`
+      : `Book ${property.name}, ${property.location} | Best ${typeLabel}`,
+    description: isVergan
+      ? `Book The Vergan Resort in Pahalgam. Experience a serene stay near Movera Rafting Point with stunning mountain views, king-size beds, free WiFi, and secure parking.`
+      : property.description 
       ? property.description.substring(0, 160).trim() + (property.description.length > 160 ? "..." : "")
       : `Book ${property.name}, a beautiful ${typeLabel} located in ${property.location}. Enjoy top-rated amenities, verified reviews, and secure booking with WanderKashmir.`,
     openGraph: {
       images: images.map((url: string) => ({ url })),
       type: "website",
+    },
+    alternates: {
+      canonical: `https://www.wanderkashmir.com/stays/${id}`,
     },
   };
 }
@@ -169,14 +178,16 @@ export default async function PropertyDetailPage({
                 "addressRegion": "Jammu and Kashmir",
                 "addressCountry": "IN"
               },
-              "priceRange": `₹${property.pricePerNight}`,
-              "offers": {
-                "@type": "Offer",
-                "priceCurrency": "INR",
-                "price": property.pricePerNight,
-                "availability": "https://schema.org/InStock",
-                "url": `https://www.wanderkashmir.com/stays/${property.id}`
-              },
+              ...(property.pricePerNight ? {
+                "priceRange": `₹${property.pricePerNight}`,
+                "offers": {
+                  "@type": "Offer",
+                  "priceCurrency": "INR",
+                  "price": property.pricePerNight,
+                  "availability": "https://schema.org/InStock",
+                  "url": `https://www.wanderkashmir.com/stays/${property.id}`
+                }
+              } : {}),
               ...(schemaReviewCount > 0 && {
                 "aggregateRating": {
                   "@type": "AggregateRating",
@@ -207,7 +218,11 @@ export default async function PropertyDetailPage({
           <span>/</span>
           <span className="text-slate-900 font-medium">{property.name}</span>
         </div>
-        <h1 className="text-3xl md:text-4xl font-bold text-slate-900 mb-2">{property.name} - {property.vendorProfile?.type === 'HOTEL' ? 'Hotel' : 'Homestay'} in {property.location}</h1>
+        <h1 className="text-3xl md:text-4xl font-bold text-slate-900 mb-2">
+          {property.name === "The Vergan Resort" 
+            ? "The Vergan Resort Pahalgam" 
+            : `${property.name} - ${property.vendorProfile?.type === 'HOTEL' ? 'Hotel' : 'Homestay'} in ${property.location}`}
+        </h1>
         <div className="flex items-center gap-4 text-sm text-slate-600">
           <div className="flex items-center gap-1 font-medium text-slate-900">
             <Star className="w-4 h-4 fill-orange-400 text-orange-400" />
@@ -229,7 +244,23 @@ export default async function PropertyDetailPage({
 
       {/* ─── IMAGE GALLERY ─── */}
       <div className="container-custom mb-12">
-        <PhotoGalleryClient images={images} propertyName={property.name} />
+        <PhotoGalleryClient 
+          images={images} 
+          propertyName={property.name}
+          altTexts={
+            property.name === "The Vergan Resort" 
+              ? [
+                  "Exterior view of The Vergan Resort in Pahalgam",
+                  "Comfortable bedroom with king size bed",
+                  "View of the surrounding mountains from the room",
+                  "The Vergan Resort dining area",
+                  "Property surroundings and garden",
+                  "Guest common area at The Vergan Resort",
+                  "Cozy evening view of the homestay",
+                ] 
+              : undefined
+          }
+        />
       </div>
 
       {/* ─── CONTENT GRID ─── */}
@@ -259,12 +290,15 @@ export default async function PropertyDetailPage({
 
             {/* Description */}
             <PropertyDescription 
+              title={property.name === "The Vergan Resort" ? "About The Vergan Resort" : undefined}
               description={property.description || "Experience the unparalleled beauty of Kashmir in this cozy property. Perfectly situated to give you the best views and comfort."} 
             />
 
             {/* Amenities */}
             <div>
-              <h3 className="text-xl font-bold text-slate-900 mb-4">What this place offers</h3>
+              <h2 className="text-xl font-bold text-slate-900 mb-4">
+                {property.name === "The Vergan Resort" ? "Rooms & Facilities" : "What this place offers"}
+              </h2>
               <div className="grid grid-cols-2 gap-4">
                 {["Mountain view", "Free WiFi", "Dedicated workspace", "Free parking on premises", "Room service", "Heating"].map(amenity => (
                   <div key={amenity} className="flex items-center gap-3 text-slate-600">
@@ -309,14 +343,34 @@ export default async function PropertyDetailPage({
             </div>
 
             {/* Questions & Answers Section */}
+            {property.name === "The Vergan Resort" && (
+              <div className="pt-10 border-t border-slate-100 mt-10">
+                <h2 className="text-xl font-bold text-slate-900 mb-4 flex items-center gap-2">
+                  <MapPin className="w-5 h-5 text-orange-500" />
+                  Location & How to Reach
+                </h2>
+                <div className="bg-slate-50 border border-slate-200 rounded-xl p-6">
+                  <p className="text-slate-600 leading-relaxed whitespace-pre-wrap">The Vergan Resort is ideally located near the Movera Rafting Point in Pahalgam, making it easily accessible and perfect for exploring the valley. You can reach the property by taxi or private vehicle from Srinagar or Anantnag.</p>
+                </div>
+                
+                <h2 className="text-xl font-bold text-slate-900 mt-10 mb-4 flex items-center gap-2">
+                  <Star className="w-5 h-5 text-orange-500" />
+                  Things to Do Nearby
+                </h2>
+                <div className="bg-slate-50 border border-slate-200 rounded-xl p-6">
+                  <p className="text-slate-600 leading-relaxed whitespace-pre-wrap">Located close to the famous Movera Rafting Point, guests can easily engage in white-water rafting on the Lidder River. The resort also serves as an excellent base for visiting Betaab Valley, Aru Valley, and Baisaran (Mini Switzerland).</p>
+                </div>
+              </div>
+            )}
+
             {Array.isArray(property.faqs) && property.faqs.length > 0 && (
               <div className="pt-10 border-t border-slate-100 mt-10">
-                <h3 className="text-xl font-bold text-slate-900 mb-6 flex items-center gap-2">
+                <h2 className="text-xl font-bold text-slate-900 mb-6 flex items-center gap-2">
                   <svg className="w-5 h-5 text-orange-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
-                  Questions & Answers - When Booking {property.name}
-                </h3>
+                  {property.name === "The Vergan Resort" ? "Frequently Asked Questions" : `Questions & Answers - When Booking ${property.name}`}
+                </h2>
                 <div className="space-y-6">
                   {property.faqs.map((faq: any, idx: number) => (
                     <div key={idx} className="bg-slate-50 border border-slate-200 rounded-xl p-6">
