@@ -122,8 +122,8 @@ export default async function RootLayout({
   const fontClasses = `${plusJakartaSans.variable} ${inter.variable} ${dancingScript.variable}`;
 
   return (
-    <html lang="en" className={fontClasses}>
-      <head>
+    <html lang="en" className={fontClasses} suppressHydrationWarning>
+      <head suppressHydrationWarning>
         {/* Preconnect to Cloudinary CDN — opens TCP+TLS handshake early */}
         <link rel="preconnect" href="https://res.cloudinary.com" crossOrigin="anonymous" />
         <script
