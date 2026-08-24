@@ -5,7 +5,26 @@ import Link from "next/link";
 import Image from "next/image";
 import { useState, useEffect } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import { Star, Clock, Users, MapPin, CheckCircle2, Heart, Filter, Instagram } from "lucide-react";
+import { Star, Clock, Users, MapPin, CheckCircle2, Heart, Filter } from "lucide-react";
+
+const InstagramIcon = ({ className }: { className?: string }) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width="24"
+    height="24"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className={className}
+  >
+    <rect width="20" height="20" x="2" y="2" rx="5" ry="5" />
+    <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
+    <line x1="17.5" x2="17.51" y1="6.5" y2="6.5" />
+  </svg>
+);
 import CustomizeTourModal from "@/components/CustomizeTourModal";
 
 const MONTHS = [
@@ -261,7 +280,7 @@ export default function ToursClient({ initialTours, dbCategories = [] }: { initi
                       )}
                       {tour.category?.includes('Instagram') && (
                         <div className="flex items-center gap-1 bg-gradient-to-r from-purple-600 via-pink-500 to-orange-400 text-white text-xs font-bold px-2 py-1 rounded-lg shadow-sm">
-                          <Instagram className="w-3 h-3" /> Insta
+                          <InstagramIcon className="w-3 h-3" /> Insta
                         </div>
                       )}
                       {(() => {
