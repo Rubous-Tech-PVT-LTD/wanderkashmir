@@ -7,7 +7,7 @@ import Pagination from "@/components/Pagination";
 
 export default function AdminToursTab({ initialEditTour, initialCategory, onClearEdit }: { initialEditTour?: any, initialCategory?: string | null, onClearEdit?: () => void }) {
   const TOUR_CATEGORIES = [
-    "Honeymoon", "Family", "Adventure", "Pilgrimage", "Nature",
+    "Upcoming", "Honeymoon", "Family", "Adventure", "Pilgrimage", "Nature",
     "Culture", "Skiing", "Trekking", "Wildlife", "Luxury", "Budget", "Group"
   ];
 

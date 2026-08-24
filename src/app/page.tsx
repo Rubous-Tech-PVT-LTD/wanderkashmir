@@ -446,6 +446,16 @@ export default async function Home() {
     take: 3
   });
 
+  // Fetch upcoming packages
+  const upcomingTours = await prisma.tour.findMany({
+    where: { 
+      isLive: true,
+      category: { contains: 'Upcoming', mode: 'insensitive' }
+    },
+    orderBy: { createdAt: 'desc' },
+    take: 4
+  });
+
   // Merge dynamic counts into destinations
   const dynamicDestinations = destinations.map(dest => {
     const dbCount = locationCounts[dest.name.toLowerCase()] || 0;
@@ -515,6 +525,66 @@ export default async function Home() {
 
       {/* Spacing for floating search bar */}
       <div className="h-32"></div>
+
+      {/* ─── UPCOMING PACKAGES ────────────────────────────────── */}
+      {upcomingTours.length > 0 && (
+        <section className="section-padding pb-4">
+          <div className="container-custom">
+            <div className="flex items-end justify-between mb-8">
+              <div>
+                <h2 className="text-2xl font-bold text-slate-900">Upcoming Packages</h2>
+                <p className="text-sm text-slate-500 mt-1">Book early and get the best deals on our newest tours</p>
+              </div>
+              <Link
+                href="/tours"
+                className="text-sm font-semibold text-slate-600 border border-slate-200 px-4 py-2 rounded-full hover:bg-slate-50 transition-colors"
+              >
+                View All
+              </Link>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+              {upcomingTours.map((tour) => (
+                <Link key={tour.id} href={`/tours/${tour.slug}`} className="group block bg-white rounded-2xl border border-slate-200 overflow-hidden hover:shadow-xl transition-all hover:-translate-y-1">
+                  <div className="relative aspect-[4/3] w-full overflow-hidden bg-slate-100">
+                    <Image 
+                      src={tour.images[0] || "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=500&q=80"} 
+                      alt={tour.title} 
+                      fill 
+                      sizes="(max-width: 768px) 100vw, 25vw" 
+                      className="object-cover transition-transform duration-500 group-hover:scale-105" 
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
+                    <div className="absolute top-3 left-3 bg-orange-500 text-white text-xs font-bold px-2 py-1 rounded-md shadow-sm">
+                      Upcoming
+                    </div>
+                    <div className="absolute bottom-3 left-3">
+                      <span className="bg-slate-900/80 backdrop-blur-sm text-white text-xs font-semibold px-2.5 py-1 rounded-md">
+                        {tour.duration}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="p-4">
+                    <h3 className="font-bold text-slate-900 text-base leading-tight mb-1 line-clamp-1">{tour.title}</h3>
+                    <p className="text-sm text-slate-500 mb-2 truncate">{tour.destinations.join(" • ")}</p>
+                    <div className="flex items-center justify-between mt-4">
+                      <div>
+                        {tour.originalPrice && tour.originalPrice > tour.price && (
+                          <span className="text-xs text-slate-400 line-through mr-2">₹{tour.originalPrice.toLocaleString('en-IN')}</span>
+                        )}
+                        <span className="font-bold text-emerald-600">₹{tour.price.toLocaleString('en-IN')}</span>
+                      </div>
+                      <div className="bg-slate-100 p-1.5 rounded-full text-slate-600 group-hover:bg-[var(--primary)] group-hover:text-white transition-colors">
+                        <ArrowRight className="w-4 h-4" />
+                      </div>
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* ─── POPULAR DESTINATIONS ────────────────────────────────── */}
       <section className="section-padding">
