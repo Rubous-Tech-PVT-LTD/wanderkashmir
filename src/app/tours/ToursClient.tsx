@@ -8,8 +8,12 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { Star, Clock, Users, MapPin, CheckCircle2, Heart, Filter } from "lucide-react";
 import CustomizeTourModal from "@/components/CustomizeTourModal";
 
-// Categories are now generated dynamically in the component
+const MONTHS = [
+  "January", "February", "March", "April", "May", "June", 
+  "July", "August", "September", "October", "November", "December"
+];
 
+// Categories are now generated dynamically in the component
 // Removed hardcoded tours array
 
 export default function ToursClient({ initialTours, dbCategories = [] }: { initialTours: any[], dbCategories?: any[] }) {
@@ -17,33 +21,48 @@ export default function ToursClient({ initialTours, dbCategories = [] }: { initi
   const router = useRouter();
   
   const categoryParam = searchParams.get("category");
+  const monthParam = searchParams.get("month");
   const destinationParam = searchParams.get("destination");
 
   const [selectedCat, setSelectedCat] = useState(categoryParam || "All Packages");
+  const [selectedMonth, setSelectedMonth] = useState(monthParam || "All Months");
   const [selectedDest, setSelectedDest] = useState(destinationParam || "All Destinations");
 
   useEffect(() => {
     if (categoryParam) setSelectedCat(categoryParam);
+    if (monthParam) setSelectedMonth(monthParam);
     if (destinationParam) setSelectedDest(destinationParam);
-  }, [categoryParam, destinationParam]);
+  }, [categoryParam, monthParam, destinationParam]);
 
-  // Extract all unique categories from the tours to handle any custom categories added by admin
+  // Extract all unique categories and months from the tours
   const usedCategories = new Set<string>();
+  const usedMonths = new Set<string>();
+  
   initialTours.forEach(tour => {
     if (tour.category) {
       tour.category.split(',').forEach((c: string) => {
         const trimmed = c.trim();
-        if (trimmed) usedCategories.add(trimmed);
+        if (trimmed) {
+          if (MONTHS.includes(trimmed)) {
+            usedMonths.add(trimmed);
+          } else {
+            usedCategories.add(trimmed);
+          }
+        }
       });
     }
   });
 
   const baseCategories = dbCategories.length > 0 
-    ? dbCategories.map(c => c.name)
-    : ["Honeymoon", "Family", "Adventure", "Pilgrimage", "Culture"];
+    ? dbCategories.map(c => c.name).filter(c => !MONTHS.includes(c))
+    : ["Upcoming", "Honeymoon", "Family", "Adventure", "Pilgrimage", "Culture"];
   
-  // Combine "All Packages" + base categories + any extra custom categories used by tours
+  // Combine "All Packages" + base categories + any extra custom categories used by tours (excluding months)
   const categories = ["All Packages", ...Array.from(new Set([...baseCategories, ...Array.from(usedCategories)]))];
+  
+  // Sort used months chronologically
+  const sortedUsedMonths = Array.from(usedMonths).sort((a, b) => MONTHS.indexOf(a) - MONTHS.indexOf(b));
+  const months = ["All Months", ...sortedUsedMonths];
   
   // Extract all unique destinations
   const usedDestinations = new Set<string>();
@@ -65,6 +84,7 @@ export default function ToursClient({ initialTours, dbCategories = [] }: { initi
 
   const filtered = tours.filter((t) => {
     const matchCat = selectedCat === "All Packages" || selectedCat === "All" || (t.category && t.category.toLowerCase().includes(selectedCat.toLowerCase()));
+    const matchMonth = selectedMonth === "All Months" || selectedMonth === "All" || (t.category && t.category.includes(selectedMonth));
     
     let matchDest = true;
     if (selectedDest !== "All Destinations" && selectedDest !== "All") {
@@ -72,7 +92,7 @@ export default function ToursClient({ initialTours, dbCategories = [] }: { initi
       matchDest = t.destinations && t.destinations.some((d: string) => d.toLowerCase().replace(/\s+/g, '-') === targetSlug);
     }
     
-    return matchCat && matchDest;
+    return matchCat && matchMonth && matchDest;
   });
 
   // Pagination logic
@@ -91,6 +111,15 @@ export default function ToursClient({ initialTours, dbCategories = [] }: { initi
     const params = new URLSearchParams(searchParams.toString());
     if (cat === "All Packages") params.delete("category");
     else params.set("category", cat);
+    router.push(`?${params.toString()}`, { scroll: false });
+  };
+
+  const handleMonthChange = (month: string) => {
+    setSelectedMonth(month);
+    setCurrentPage(1);
+    const params = new URLSearchParams(searchParams.toString());
+    if (month === "All Months") params.delete("month");
+    else params.set("month", month);
     router.push(`?${params.toString()}`, { scroll: false });
   };
 
@@ -130,7 +159,7 @@ export default function ToursClient({ initialTours, dbCategories = [] }: { initi
         <div className="container-custom py-8">
           {/* Filter bar */}
           <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-8">
-            <div className="flex flex-col md:flex-row gap-3 w-full md:w-auto">
+            <div className="flex flex-col md:flex-row gap-3 w-full md:w-auto flex-wrap">
               <div className="flex flex-col md:flex-row md:items-center gap-1.5 md:gap-2 w-full md:w-auto">
                 <label htmlFor="category-select" className="text-xs md:text-sm font-semibold text-slate-500 md:text-slate-600 pl-1 md:pl-0">
                   Category
@@ -148,6 +177,26 @@ export default function ToursClient({ initialTours, dbCategories = [] }: { initi
                   ))}
                 </select>
               </div>
+
+              {months.length > 1 && (
+                <div className="flex flex-col md:flex-row md:items-center gap-1.5 md:gap-2 w-full md:w-auto">
+                  <label htmlFor="month-select" className="text-xs md:text-sm font-semibold text-slate-500 md:text-slate-600 pl-1 md:pl-0 md:ml-2">
+                    Month
+                  </label>
+                  <select
+                    id="month-select"
+                    value={selectedMonth}
+                    onChange={(e) => handleMonthChange(e.target.value)}
+                    className="w-full md:w-auto text-sm font-semibold border border-slate-200 rounded-xl px-4 py-3 md:py-2.5 bg-white text-slate-700 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 cursor-pointer shadow-sm hover:border-orange-300 transition-colors"
+                  >
+                    {months.map((month) => (
+                      <option key={month} value={month}>
+                        {month}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
 
               <div className="flex flex-col md:flex-row md:items-center gap-1.5 md:gap-2 w-full md:w-auto">
                 <label htmlFor="destination-select" className="text-xs md:text-sm font-semibold text-slate-500 md:text-slate-600 pl-1 md:pl-0 md:ml-2">
