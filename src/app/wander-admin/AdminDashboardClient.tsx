@@ -18,6 +18,8 @@ import { LogOut } from "lucide-react";
 import AdminToursTab from "./AdminToursTab";
 import AdminTaxisTab from "./AdminTaxisTab";
 import AdminSeoTab from "./AdminSeoTab";
+import AdminCrmRequirementsTab from "./AdminCrmRequirementsTab";
+import AdminCrmQuotationsTab from "./AdminCrmQuotationsTab";
 import { useEffect, useCallback } from "react";
 import dynamic from "next/dynamic";
 import Pagination from "@/components/Pagination";
@@ -679,6 +681,8 @@ export default function AdminDashboardClient({
             { id: "bulk_emails", label: "Bulk Emails", icon: Mail },
             { id: "promo_codes", label: "Promo Codes", icon: CheckCircle2 },
             { id: "site_popups", label: "Site Popups", icon: Sparkles },
+            { id: "crm_requirements", label: "CRM Requirements", icon: FileText },
+            { id: "crm_quotations", label: "CRM Quotations", icon: FileText },
           ].map((item) => (
             <button
               key={item.id}
@@ -784,6 +788,8 @@ export default function AdminDashboardClient({
         { activeTab === "bulk_emails" && <AdminEmailsTab /> }
         {activeTab === "promo_codes" && <AdminPromoCodesTab />}
         {activeTab === "site_popups" && <AdminPopupsTab />}
+        {activeTab === "crm_requirements" && <AdminCrmRequirementsTab />}
+        {activeTab === "crm_quotations" && <AdminCrmQuotationsTab />}
 
         {activeTab === "approvals" && (
           <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
