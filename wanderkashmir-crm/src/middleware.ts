@@ -16,7 +16,7 @@ export async function middleware(request: NextRequest) {
   const url = request.nextUrl.clone();
   
   // Public paths that do not require authentication
-  const publicPaths = ['/login', '/api/auth/login'];
+  const publicPaths = ['/login', '/register', '/api/auth/login', '/api/auth/register'];
   
   // Check if current path is public
   const isPublicPath = publicPaths.some(path => url.pathname.startsWith(path));

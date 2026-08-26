@@ -102,6 +102,18 @@ export default function LoginPage() {
               </button>
             </div>
           </form>
+
+          <div className="mt-6 pt-6 border-t border-slate-100 text-center">
+            <p className="text-sm text-slate-600">
+              New Business Associate?{" "}
+              <a
+                href="/register"
+                className="font-semibold text-orange-600 hover:text-orange-700"
+              >
+                Create an account
+              </a>
+            </p>
+          </div>
         </div>
       </div>
     </div>
