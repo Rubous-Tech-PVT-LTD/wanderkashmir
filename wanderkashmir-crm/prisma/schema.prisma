@@ -698,6 +698,9 @@ model CrmLead {
   followUps        CrmFollowUp[]
   partner          CrmPartner?
   
+  rotationBatchId  String?
+  rotationBatch    CrmRotationBatch? @relation(fields: [rotationBatchId], references: [id])
+  
   @@index([phone])
   @@index([email])
   @@index([companyName])
@@ -925,4 +928,18 @@ model CrmAuditLog {
   newValue    Json?
   ipAddress   String?
   createdAt   DateTime @default(now())
+}
+
+model CrmRotationBatch {
+  id                  String    @id @default(cuid())
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+  
+  selectedBaIds       String[]
+  includePartners     Boolean   @default(false)
+  
+  currentRotation     Int       @default(0)
+  maxRotations        Int       
+  
+  leads               CrmLead[]
 }

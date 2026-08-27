@@ -42,7 +42,7 @@ export async function POST(req: NextRequest) {
   try {
     const session = await requireCrmAdmin();
 
-    const { baIds, mode, includeAssigned } = await req.json();
+    const { baIds, mode, maxRotations } = await req.json();
 
     if (!Array.isArray(baIds) || baIds.length === 0) {
       return NextResponse.json({ error: "No BAs selected" }, { status: 400 });
@@ -52,7 +52,10 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Invalid mode" }, { status: 400 });
     }
 
-    const whereClause = includeAssigned ? {} : { assignedBaId: null };
+    const maxR = typeof maxRotations === 'number' ? maxRotations : baIds.length;
+    
+    // Assign New Leads is only for UNASSIGNED leads
+    const whereClause = { assignedBaId: null };
 
     // Use a transaction for safety and to support PostgreSQL advisory lock
     const result = await prisma.$transaction(async (tx) => {
@@ -115,6 +118,16 @@ export async function POST(req: NextRequest) {
         }
       }
 
+      // Create the Rotation Batch to group this assignment
+      const rotationBatch = await tx.crmRotationBatch.create({
+        data: {
+          selectedBaIds: baIds,
+          includePartners: false,
+          currentRotation: 0,
+          maxRotations: maxR
+        }
+      });
+
       // Execute updates
       for (const update of leadUpdates) {
         await tx.crmLead.update({
@@ -122,6 +135,7 @@ export async function POST(req: NextRequest) {
           data: {
             assignedBaId: update.baId,
             status: "NEW", // Reset status to NEW upon assignment
+            rotationBatchId: rotationBatch.id
           }
         });
       }
@@ -133,13 +147,14 @@ export async function POST(req: NextRequest) {
           userRole: session.role,
           action: "BULK_ASSIGN_LEADS",
           entity: "CrmLead",
-          entityId: "BULK",
+          entityId: rotationBatch.id,
           newValue: {
             mode,
             totalAssigned: leadsToAssign.length,
             distribution,
             lastAssignedBaId,
-            selectedBAs: baIds
+            selectedBAs: baIds,
+            rotationBatchId: rotationBatch.id
           }
         }
       });

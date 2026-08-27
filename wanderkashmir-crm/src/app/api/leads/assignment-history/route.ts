@@ -8,12 +8,14 @@ export async function GET(req: NextRequest) {
 
     const history = await prisma.crmAuditLog.findMany({
       where: {
-        action: "BULK_ASSIGN_LEADS"
+        action: {
+          in: ["BULK_ASSIGN_LEADS", "ROTATE_LEADS"]
+        }
       },
       orderBy: {
         createdAt: "desc"
       },
-      take: 10
+      take: 20
     });
 
     // Populate Admin names if necessary
@@ -40,16 +42,28 @@ export async function GET(req: NextRequest) {
       const distribution = payload?.distribution || {};
       
       const namedDistribution: Record<string, number> = {};
-      Object.keys(distribution).forEach(baId => {
-        namedDistribution[baMap[baId] || baId] = distribution[baId];
-      });
+      
+      if (h.action === "ROTATE_LEADS") {
+        // format is "A -> B"
+        Object.keys(distribution).forEach(key => {
+          const [oldId, newId] = key.split(' -> ');
+          const oldName = baMap[oldId] || oldId;
+          const newName = baMap[newId] || newId;
+          namedDistribution[`${oldName} -> ${newName}`] = distribution[key];
+        });
+      } else {
+        Object.keys(distribution).forEach(baId => {
+          namedDistribution[baMap[baId] || baId] = distribution[baId];
+        });
+      }
 
       return {
         id: h.id,
         createdAt: h.createdAt,
         adminName: adminMap[h.userId] || h.userId,
         mode: payload?.mode,
-        totalAssigned: payload?.totalAssigned || 0,
+        action: h.action,
+        totalAssigned: payload?.totalAssigned || payload?.rotatedCount || 0,
         baCount: payload?.selectedBAs?.length || 0,
         distribution: namedDistribution,
         lastAssignedBaId: payload?.lastAssignedBaId
