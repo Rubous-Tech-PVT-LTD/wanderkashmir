@@ -20,7 +20,7 @@ type FollowUpProps = {
   ba?: any;
 };
 
-export default function FollowUpRow({ followUp, isOverdue }: { followUp: FollowUpProps, isOverdue?: boolean }) {
+export default function FollowUpRow({ followUp, isOverdue, isAdmin }: { followUp: FollowUpProps, isOverdue?: boolean, isAdmin?: boolean }) {
   const [isRescheduling, setIsRescheduling] = useState(false);
   const [newDate, setNewDate] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -89,6 +89,11 @@ export default function FollowUpRow({ followUp, isOverdue }: { followUp: FollowU
         <td className="px-6 py-4 whitespace-nowrap">
           <span className="badge badge-primary text-xs">{followUp.partner ? "PARTNER" : lead.status.replace(/_/g, " ")}</span>
         </td>
+        {isAdmin && (
+          <td className="px-6 py-4 whitespace-nowrap">
+            <span className="text-sm text-gray-700 font-medium">{followUp.ba?.name || "Unassigned"}</span>
+          </td>
+        )}
         <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
           {isRescheduling ? (
             <div className="flex items-center justify-end gap-2">

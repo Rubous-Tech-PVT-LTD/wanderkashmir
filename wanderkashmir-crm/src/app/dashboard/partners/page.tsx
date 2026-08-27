@@ -1,12 +1,15 @@
 import React from "react";
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
-import { Search, Filter, Phone, Eye } from "lucide-react";
+import { Search, Filter, Phone, Eye, CheckCircle, XCircle } from "lucide-react";
 import { getSession } from "@/lib/auth";
+import AssignBaDropdown from "@/components/leads/AssignBaDropdown";
 
-export default async function PartnersPage(props: { searchParams?: Promise<{ search?: string; page?: string }> }) {
+export default async function PartnersPage(props: { searchParams: Promise<{ [key: string]: string | undefined }> }) {
+
   const searchParams = await props.searchParams;
   const search = searchParams?.search || "";
+  const statusFilter = searchParams?.status || "";
   const page = Number(searchParams?.page) || 1;
   const take = 20;
   const skip = (page - 1) * take;
@@ -16,9 +19,13 @@ export default async function PartnersPage(props: { searchParams?: Promise<{ sea
   const role = session?.role;
 
   // Build where clause based on role & search
-  const whereClause: Record<string, unknown> = {};
+  const whereClause: any = {};
   if (role === 'BUSINESS_ASSOCIATE') {
     whereClause.assignedBaId = userId;
+  }
+  
+  if (statusFilter) {
+    whereClause.status = statusFilter;
   }
   
   if (search) {
@@ -30,7 +37,7 @@ export default async function PartnersPage(props: { searchParams?: Promise<{ sea
     ];
   }
 
-  const [partners, totalCount] = await Promise.all([
+  const [partners, totalCount, baUsers] = await Promise.all([
     prisma.crmPartner.findMany({
       where: whereClause,
       include: {
@@ -45,9 +52,15 @@ export default async function PartnersPage(props: { searchParams?: Promise<{ sea
       skip,
     }),
     prisma.crmPartner.count({ where: whereClause }),
+    role === 'CRM_ADMIN' ? prisma.crmUser.findMany({
+      where: { role: 'BUSINESS_ASSOCIATE', isActive: true },
+      select: { id: true, name: true },
+      orderBy: { name: 'asc' }
+    }) : Promise.resolve([])
   ]);
 
   const totalPages = Math.ceil(totalCount / take);
+  const isAdmin = role === 'CRM_ADMIN';
 
   return (
     <div className="space-y-6">
@@ -116,10 +129,32 @@ export default async function PartnersPage(props: { searchParams?: Promise<{ sea
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {partner.lead.assignedBa?.name || "Unassigned"}
+                        {isAdmin ? (
+                          <AssignBaDropdown 
+                            leadId={partner.leadId} 
+                            currentBaId={partner.lead.assignedBa?.name ? partner.assignedBaId : null} 
+                            baUsers={baUsers} 
+                          />
+                        ) : (
+                          partner.lead.assignedBa?.name || "Unassigned"
+                        )}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                         <div className="flex items-center justify-end gap-2">
+                          {isAdmin && partner.status === 'INACTIVE' && (
+                            <>
+                              <form action={`/api/partners/${partner.id}/approve`} method="POST">
+                                <button type="submit" className="p-1.5 text-emerald-600 hover:bg-emerald-50 rounded" title="Approve">
+                                  <CheckCircle className="h-4 w-4" />
+                                </button>
+                              </form>
+                              <form action={`/api/partners/${partner.id}/reject`} method="POST">
+                                <button type="submit" className="p-1.5 text-red-600 hover:bg-red-50 rounded" title="Reject">
+                                  <XCircle className="h-4 w-4" />
+                                </button>
+                              </form>
+                            </>
+                          )}
                           <a href={`tel:${partner.phone}`} className="p-1.5 text-blue-600 hover:bg-blue-50 rounded" title="Call">
                             <Phone className="h-4 w-4" />
                           </a>

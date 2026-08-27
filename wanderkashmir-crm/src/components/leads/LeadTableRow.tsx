@@ -6,6 +6,7 @@ import LogCallModal from "./LogCallModal";
 import WhatsAppModal from "./WhatsAppModal";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import AssignBaDropdown from "./AssignBaDropdown";
 
 type Lead = {
   id: string;
@@ -17,9 +18,18 @@ type Lead = {
   state: string | null;
   status: string;
   assignedBa: { name: string } | null;
+  assignedBaId?: string | null;
 };
 
-export default function LeadTableRow({ lead }: { lead: Lead }) {
+export default function LeadTableRow({ 
+  lead, 
+  isAdmin = false,
+  baUsers = []
+}: { 
+  lead: Lead;
+  isAdmin?: boolean;
+  baUsers?: { id: string; name: string }[];
+}) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isWaOpen, setIsWaOpen] = useState(false);
   const router = useRouter();
@@ -61,7 +71,11 @@ export default function LeadTableRow({ lead }: { lead: Lead }) {
           </span>
         </td>
         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-          {lead.assignedBa ? lead.assignedBa.name : <span className="text-gray-400 italic">Unassigned</span>}
+          {isAdmin ? (
+            <AssignBaDropdown leadId={lead.id} currentBaId={lead.assignedBaId || null} baUsers={baUsers} />
+          ) : (
+            lead.assignedBa ? lead.assignedBa.name : <span className="text-gray-400 italic">Unassigned</span>
+          )}
         </td>
         <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
           <div className="flex items-center justify-end gap-2">

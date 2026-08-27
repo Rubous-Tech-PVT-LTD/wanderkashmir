@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React, { useState, useEffect } from "react";
 import { Search, ChevronRight, X, Plus, CheckCircle, History, Save, Send, Trash, Download } from "lucide-react";
@@ -10,11 +10,13 @@ export type QuotationListItem = {
   requirementId: string;
   version: number;
   partnerPrice: number;
+  netCost?: number;
+  markup?: number;
   status: string;
   createdAt: Date;
 };
 
-export default function QuotationsClient({ quotations }: { quotations: QuotationListItem[] }) {
+export default function QuotationsClient({ quotations, isAdmin = false }: { quotations: QuotationListItem[]; isAdmin?: boolean }) {
   const router = useRouter();
   const [search, setSearch] = useState("");
   const [selectedQuotation, setSelectedQuotation] = useState<QuotationListItem | null>(null);
@@ -47,6 +49,8 @@ export default function QuotationsClient({ quotations }: { quotations: Quotation
                 <th className="px-6 py-4 font-medium">Req ID</th>
                 <th className="px-6 py-4 font-medium">Version</th>
                 <th className="px-6 py-4 font-medium">Selling Price</th>
+                {isAdmin && <th className="px-6 py-4 font-medium">Net Cost</th>}
+                {isAdmin && <th className="px-6 py-4 font-medium">Markup</th>}
                 <th className="px-6 py-4 font-medium">Status</th>
                 <th className="px-6 py-4 font-medium">Created</th>
                 <th className="px-6 py-4 font-medium">Actions</th>
@@ -62,6 +66,8 @@ export default function QuotationsClient({ quotations }: { quotations: Quotation
                     <td className="px-6 py-4 text-slate-500">WK-R-{q.requirementId.substring(0,6).toUpperCase()}</td>
                     <td className="px-6 py-4">v{q.version}</td>
                     <td className="px-6 py-4 font-medium text-slate-900">Rs. {q.partnerPrice?.toLocaleString("en-IN")||0}</td>
+                    {isAdmin && <td className="px-6 py-4 font-medium text-red-600">Rs. {q.netCost?.toLocaleString("en-IN")||0}</td>}
+                    {isAdmin && <td className="px-6 py-4 font-medium text-green-600">Rs. {q.markup?.toLocaleString("en-IN")||0}</td>}
                     <td className="px-6 py-4"><span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-slate-100 text-slate-700">{q.status}</span></td>
                     <td className="px-6 py-4 text-slate-500">{format(new Date(q.createdAt), "dd MMM yyyy")}</td>
                     <td className="px-6 py-4"><button onClick={() => setSelectedQuotation(q)} className="text-orange-500 hover:text-orange-600 font-medium text-sm flex items-center gap-1">Builder <ChevronRight className="w-4 h-4"/></button></td>
@@ -95,13 +101,14 @@ export default function QuotationsClient({ quotations }: { quotations: Quotation
           quotationId={selectedQuotation.id}
           onClose={() => setSelectedQuotation(null)}
           onUpdate={() => { setSelectedQuotation(null); router.refresh(); }}
+          isAdmin={isAdmin}
         />
       )}
     </div>
   );
 }
 
-function QuotationBuilderModal({ quotationId, onClose, onUpdate }: { quotationId: string; onClose: () => void; onUpdate: () => void }) {
+function QuotationBuilderModal({ quotationId, onClose, onUpdate, isAdmin }: { quotationId: string; onClose: () => void; onUpdate: () => void; isAdmin?: boolean }) {
   const [quotation, setQuotation] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
@@ -146,7 +153,16 @@ function QuotationBuilderModal({ quotationId, onClose, onUpdate }: { quotationId
             <div className="bg-white rounded-xl border border-slate-200 overflow-hidden mb-8">
               <table className="w-full text-left text-sm">
                 <thead className="bg-slate-100 text-slate-600 font-medium border-b border-slate-200">
-                  <tr><th className="px-4 py-3">Category</th><th className="px-4 py-3">Description</th><th className="px-4 py-3">Qty</th><th className="px-4 py-3">Unit Cost</th><th className="px-4 py-3">Unit Sell</th><th className="px-4 py-3">Total Cost</th><th className="px-4 py-3">Total Sell</th><th className="px-4 py-3"></th></tr>
+                  <tr>
+                    <th className="px-4 py-3">Category</th>
+                    <th className="px-4 py-3">Description</th>
+                    <th className="px-4 py-3">Qty</th>
+                    {isAdmin && <th className="px-4 py-3">Unit Cost</th>}
+                    <th className="px-4 py-3">Unit Sell</th>
+                    {isAdmin && <th className="px-4 py-3">Total Cost</th>}
+                    <th className="px-4 py-3">Total Sell</th>
+                    <th className="px-4 py-3"></th>
+                  </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
                   {quotation.items?.map((item: any) => (
@@ -154,9 +170,9 @@ function QuotationBuilderModal({ quotationId, onClose, onUpdate }: { quotationId
                       <td className="px-4 py-3 font-medium text-slate-800">{item.category}</td>
                       <td className="px-4 py-3 text-slate-600">{item.description}</td>
                       <td className="px-4 py-3">{item.quantity} {item.unit}</td>
-                      <td className="px-4 py-3 text-red-600">Rs. {item.unitCost}</td>
+                      {isAdmin && <td className="px-4 py-3 text-red-600">Rs. {item.unitCost}</td>}
                       <td className="px-4 py-3 text-green-600">Rs. {item.unitSellingPrice}</td>
-                      <td className="px-4 py-3 font-medium text-red-700">Rs. {item.totalCost}</td>
+                      {isAdmin && <td className="px-4 py-3 font-medium text-red-700">Rs. {item.totalCost}</td>}
                       <td className="px-4 py-3 font-medium text-green-700">Rs. {item.totalSellingPrice}</td>
                       <td className="px-4 py-3 text-right">{isEditable&&<button className="text-slate-400 hover:text-red-500"><Trash className="w-4 h-4"/></button>}</td>
                     </tr>
@@ -171,16 +187,18 @@ function QuotationBuilderModal({ quotationId, onClose, onUpdate }: { quotationId
                 <div className="space-y-4"><div><label className="text-xs font-semibold text-slate-500 uppercase tracking-wider block mb-2">Inclusions &amp; Exclusions</label><textarea className="w-full border border-slate-200 rounded-lg p-3 text-sm min-h-[100px]" value={quotation.terms||""} readOnly={!isEditable} placeholder="Enter terms..."/></div></div>
               </div>
               <div className="bg-white rounded-xl border border-slate-200 p-0 overflow-hidden flex flex-col">
-                <div className="bg-slate-900 p-4 text-white"><h4 className="font-bold flex items-center justify-between"><span>Financial Summary</span><span className="text-xs bg-white/20 px-2 py-1 rounded text-white/90">INTERNAL</span></h4></div>
+                <div className="bg-slate-900 p-4 text-white"><h4 className="font-bold flex items-center justify-between"><span>Financial Summary</span>{isAdmin && <span className="text-xs bg-white/20 px-2 py-1 rounded text-white/90">INTERNAL</span>}</h4></div>
                 <div className="p-5 space-y-3 flex-1 text-sm">
-                  <div className="flex justify-between pb-2 border-b border-slate-100"><span className="text-slate-500">Total Cost</span><span className="font-medium text-red-600">Rs. {quotation.totalCost}</span></div>
+                  {isAdmin && <div className="flex justify-between pb-2 border-b border-slate-100"><span className="text-slate-500">Total Cost</span><span className="font-medium text-red-600">Rs. {quotation.totalCost}</span></div>}
                   <div className="flex justify-between pb-2 border-b border-slate-100"><span className="text-slate-500">Total Selling (Before Discount)</span><span className="font-medium">Rs. {quotation.totalSellingPrice}</span></div>
                   <div className="flex justify-between pb-2 border-b border-slate-100 items-center"><span className="text-slate-500">Discount Amount</span><span className="text-orange-500 font-medium">- Rs. {quotation.discountType==="FIXED"?quotation.discount:((quotation.totalSellingPrice*quotation.discount)/100)}</span></div>
                   <div className="flex justify-between pb-2 border-b border-slate-100 pt-2"><span className="font-bold text-slate-900">Final Selling Price</span><span className="font-bold text-green-600 text-lg">Rs. {quotation.partnerPrice}</span></div>
-                  <div className="grid grid-cols-2 gap-4 pt-4 mt-2 bg-slate-50 p-3 rounded-lg border border-slate-100">
-                    <div><span className="block text-xs text-slate-500 mb-1">Gross Margin</span><span className="font-bold text-slate-700">Rs. {quotation.grossMargin}</span></div>
-                    <div><span className="block text-xs text-slate-500 mb-1">Net Margin</span><span className="font-bold text-blue-600">Rs. {quotation.netMargin}</span></div>
-                  </div>
+                  {isAdmin && (
+                    <div className="grid grid-cols-2 gap-4 pt-4 mt-2 bg-slate-50 p-3 rounded-lg border border-slate-100">
+                      <div><span className="block text-xs text-slate-500 mb-1">Gross Margin</span><span className="font-bold text-slate-700">Rs. {quotation.grossMargin}</span></div>
+                      <div><span className="block text-xs text-slate-500 mb-1">Net Margin</span><span className="font-bold text-blue-600">Rs. {quotation.netMargin}</span></div>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

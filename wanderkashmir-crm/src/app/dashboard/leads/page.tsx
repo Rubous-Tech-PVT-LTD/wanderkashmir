@@ -12,6 +12,8 @@ export default async function LeadsPage({
   const resolvedParams = await searchParams;
   const page = typeof resolvedParams.page === "string" ? parseInt(resolvedParams.page, 10) : 1;
   const search = typeof resolvedParams.search === "string" ? resolvedParams.search : "";
+  const unassigned = resolvedParams.unassigned === "true";
+  const statusFilter = typeof resolvedParams.status === "string" ? resolvedParams.status : "";
   const take = 15;
   const skip = (page - 1) * take;
 
@@ -25,13 +27,23 @@ export default async function LeadsPage({
       }
     : {};
 
+  if (unassigned) {
+    whereClause.assignedBaId = null;
+  }
+  
+  if (statusFilter) {
+    whereClause.status = statusFilter;
+  }
+
   const session = await getSession();
 
   if (session?.role === 'BUSINESS_ASSOCIATE') {
     whereClause.assignedBaId = session.userId;
   }
 
-  const [leads, totalCount] = await Promise.all([
+  const isAdmin = session?.role === 'CRM_ADMIN';
+
+  const [leads, totalCount, baUsers] = await Promise.all([
     prisma.crmLead.findMany({
       where: whereClause,
       take,
@@ -46,10 +58,16 @@ export default async function LeadsPage({
         city: true,
         state: true,
         status: true,
+        assignedBaId: true,
         assignedBa: { select: { name: true } },
       },
     }),
     prisma.crmLead.count({ where: whereClause }),
+    isAdmin ? prisma.crmUser.findMany({
+      where: { role: 'BUSINESS_ASSOCIATE', isActive: true },
+      select: { id: true, name: true },
+      orderBy: { name: 'asc' }
+    }) : Promise.resolve([])
   ]);
 
   const totalPages = Math.ceil(totalCount / take);
@@ -123,7 +141,7 @@ export default async function LeadsPage({
                 </tr>
               ) : (
                 leads.map((lead) => (
-                  <LeadTableRow key={lead.id} lead={lead} />
+                  <LeadTableRow key={lead.id} lead={lead} isAdmin={isAdmin} baUsers={baUsers} />
                 ))
               )}
             </tbody>

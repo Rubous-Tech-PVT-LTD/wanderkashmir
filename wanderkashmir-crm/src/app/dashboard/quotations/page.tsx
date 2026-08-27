@@ -17,11 +17,15 @@ export default async function QuotationsPage() {
       requirementId: true,
       version: true,
       partnerPrice: true,
+      ...(isAdminOrManager ? {
+        netCost: true,
+        markup: true,
+      } : {}),
       status: true,
       createdAt: true,
     },
     orderBy: { createdAt: "desc" },
   });
 
-  return <QuotationsClient quotations={quotations} />;
+  return <QuotationsClient quotations={quotations} isAdmin={isAdminOrManager} />;
 }

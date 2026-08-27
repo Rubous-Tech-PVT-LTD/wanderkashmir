@@ -112,14 +112,15 @@ export default async function FollowUpsPage() {
                 <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase">Company/Contact</th>
                 <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase">Task</th>
                 <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase">Lead Status</th>
+                {role === 'CRM_ADMIN' && <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase">Assigned BA</th>}
                 <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
               {overdue.length === 0 ? (
-                <tr><td colSpan={5} className="p-6 text-center text-gray-500">No overdue follow-ups.</td></tr>
+                <tr><td colSpan={role === 'CRM_ADMIN' ? 6 : 5} className="p-6 text-center text-gray-500">No overdue follow-ups.</td></tr>
               ) : (
-                overdue.map(f => <FollowUpRow key={f.id} followUp={f} isOverdue={true} />)
+                overdue.map(f => <FollowUpRow key={f.id} followUp={f} isOverdue={true} isAdmin={role === 'CRM_ADMIN'} />)
               )}
             </tbody>
           </table>
@@ -134,9 +135,9 @@ export default async function FollowUpsPage() {
           <table className="w-full text-left border-collapse">
             <tbody className="divide-y divide-gray-100">
               {today.length === 0 ? (
-                <tr><td colSpan={5} className="p-6 text-center text-gray-500">No follow-ups scheduled for today.</td></tr>
+                <tr><td colSpan={role === 'CRM_ADMIN' ? 6 : 5} className="p-6 text-center text-gray-500">No follow-ups scheduled for today.</td></tr>
               ) : (
-                today.map(f => <FollowUpRow key={f.id} followUp={f} />)
+                today.map(f => <FollowUpRow key={f.id} followUp={f} isAdmin={role === 'CRM_ADMIN'} />)
               )}
             </tbody>
           </table>
@@ -151,9 +152,9 @@ export default async function FollowUpsPage() {
           <table className="w-full text-left border-collapse">
             <tbody className="divide-y divide-gray-100">
               {upcoming.length === 0 ? (
-                <tr><td colSpan={5} className="p-6 text-center text-gray-500">No upcoming follow-ups.</td></tr>
+                <tr><td colSpan={role === 'CRM_ADMIN' ? 6 : 5} className="p-6 text-center text-gray-500">No upcoming follow-ups.</td></tr>
               ) : (
-                upcoming.map(f => <FollowUpRow key={f.id} followUp={f} />)
+                upcoming.map(f => <FollowUpRow key={f.id} followUp={f} isAdmin={role === 'CRM_ADMIN'} />)
               )}
             </tbody>
           </table>

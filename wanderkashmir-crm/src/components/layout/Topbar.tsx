@@ -1,6 +1,7 @@
 import { Bell } from "lucide-react";
 import { getSession } from "@/lib/auth";
 import MobileMenuToggle from "./MobileMenuToggle";
+import GlobalSearch from "./GlobalSearch";
 
 export default async function Topbar() {
   const session = await getSession();
@@ -11,6 +12,12 @@ export default async function Topbar() {
         <MobileMenuToggle />
         <h1 className="text-xl font-semibold text-gray-800 hidden sm:block">Dashboard</h1>
       </div>
+
+      {session?.role === 'CRM_ADMIN' && (
+        <div className="flex-1 max-w-xl mx-8">
+          <GlobalSearch />
+        </div>
+      )}
 
       <div className="flex items-center gap-4">
         <button className="text-gray-400 hover:text-gray-500 relative">
