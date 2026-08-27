@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { 
   LayoutDashboard, 
@@ -9,7 +10,8 @@ import {
   FileText, 
   Settings,
   LogOut,
-  X
+  X,
+  Share2
 } from "lucide-react";
 import { useMobileNav } from "./MobileNavContext";
 
@@ -23,6 +25,18 @@ const navItems = [
 
 export default function Sidebar() {
   const { isSidebarOpen, closeSidebar } = useMobileNav();
+  const [role, setRole] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetch("/api/auth/me")
+      .then(res => res.json())
+      .then(data => {
+        if (data && data.role) {
+          setRole(data.role);
+        }
+      })
+      .catch(console.error);
+  }, []);
 
   return (
     <>
@@ -62,6 +76,16 @@ export default function Sidebar() {
                 {item.name}
               </Link>
             ))}
+            
+            {role === "CRM_ADMIN" && (
+              <Link
+                href="/dashboard/leads/assignment"
+                className="flex items-center gap-3 px-3 py-3 md:py-2 text-gray-700 rounded-md hover:bg-gray-50 hover:text-primary transition-colors font-medium text-[15px] md:text-sm"
+              >
+                <Share2 className="h-5 w-5" />
+                Lead Assignment
+              </Link>
+            )}
           </nav>
         </div>
 
