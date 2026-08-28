@@ -29,6 +29,10 @@ function getBusinessRelevance(ints: string[], locs: string[]): ContentOpportunit
   return 'LOW';
 }
 
+export function toCanonicalTopic(topic: string): string {
+  return topic.trim().toLowerCase().replace(/\s+/g, ' ');
+}
+
 export async function detectOpportunities(saveToDb = false): Promise<ContentOpportunity[]> {
   const opportunities: ContentOpportunity[] = [];
   
@@ -286,116 +290,161 @@ export async function detectOpportunities(saveToDb = false): Promise<ContentOppo
            }
 
            // Final Continuous Score
-           const rawScore = volumeSignal + bizScore + intentScore + posScore + ctrScore + cannibalizationAdjustment;
-           finalScore = action === 'IGNORE' ? 0 : Math.min(Math.max(Math.round(rawScore), 0), 100);
-           
-           evidence = evidenceParts.join(' | ');
+       const rawScore = volumeSignal + bizScore + intentScore + posScore + ctrScore + cannibalizationAdjustment;
+       finalScore = action === 'IGNORE' ? 0 : Math.min(Math.max(Math.round(rawScore), 0), 100);
+       evidence = evidenceParts.join(' | ');
 
-           opportunities.push({
-             topic: displayTopic,
-             cluster: cluster.queries,
-             type: action,
-             evidence,
-             gscSignals: {
-               clicks: cluster.data.clicks,
-               impressions: cluster.data.impressions,
-               ctr,
-               position: avgPosition
-             },
-             intent,
-             businessRelevance: bizRelevance,
-             existingPage,
-             cannibalizationRisk,
-             googleTrends: trendSignal,
-             keywordPlanner: plannerVol,
-             opportunityScore: finalScore,
-             reason
-           });
-       }
+        const canonicalTopic = toCanonicalTopic(displayTopic);
+
+        opportunities.push({
+          topic: displayTopic,
+          canonicalTopic,
+          cluster: cluster.queries,
+          type: action,
+          evidence,
+          gscSignals: {
+            clicks: cluster.data.clicks,
+            impressions: cluster.data.impressions,
+            ctr,
+            position: avgPosition
+          },
+          intent,
+          businessRelevance: bizRelevance,
+          existingPage,
+          cannibalizationRisk,
+          googleTrends: trendSignal,
+          keywordPlanner: plannerVol,
+          opportunityScore: finalScore,
+          reason
+        });
+      }
     }
 
     if (saveToDb) {
-      // SAFE PERSISTENCE STRATEGY:
-      // - Upsert ALL classified opportunities (including IGNORE) so stale old classifications are corrected.
-      // - Unique key is `topic` — upsert UPDATES existing records by topic, never deletes them.
-      // - createdAt and id of existing records are always preserved by upsert semantics.
-      // - Status is preserved unless the record was RESOLVED and the topic re-appeared in GSC.
-      // - Records that vanished from GSC data entirely are marked RESOLVED (not deleted).
+      // CANONICAL PERSISTENCE & DEDUPLICATION STRATEGY:
+      // - Lookup existing records by `canonicalTopic` (case-insensitive deduplication).
+      // - If multiple records share the same canonicalTopic, pick the primary:
+      //     1. Active (status != 'RESOLVED')
+      //     2. Highest opportunityScore
+      //     3. Newest updatedAt
+      // - Update the existing primary record in place (preserving id, createdAt, original human topic).
+      // - If no record exists for this canonicalTopic, create a new record.
+      // - Any non-primary duplicate records for this canonicalTopic remain marked RESOLVED.
+      // - Topics that vanished from GSC data entirely are marked RESOLVED (never deleted).
 
-      const currentTopics = new Set(opportunities.map(op => op.topic));
+      const currentCanonicalTopics = new Set(opportunities.map(op => op.canonicalTopic || toCanonicalTopic(op.topic)));
 
-      // Pre-fetch existing statuses so we can preserve admin-managed states
-      const existingRecords = await prisma.seoOpportunity.findMany({
-        where: { topic: { in: Array.from(currentTopics) } },
-        select: { topic: true, status: true }
-      });
-      const existingStatusMap = new Map(existingRecords.map(r => [r.topic, r.status]));
+      // Fetch all existing records to inspect canonical groupings
+      const allExisting = await prisma.seoOpportunity.findMany();
+      
+      // Group by canonicalTopic
+      const existingByCanonical = new Map<string, typeof allExisting>();
+      for (const rec of allExisting) {
+        const cTopic = rec.canonicalTopic || toCanonicalTopic(rec.topic);
+        if (!existingByCanonical.has(cTopic)) {
+          existingByCanonical.set(cTopic, []);
+        }
+        existingByCanonical.get(cTopic)!.push(rec);
+      }
 
       for (const op of opportunities) {
-        const existingStatus = existingStatusMap.get(op.topic);
-        // If previously RESOLVED (was missing from GSC) but now re-appeared → reset to DISCOVERED
-        // If it has an admin-managed status (RESEARCHED etc.) → preserve it
-        // If it's a new record (no existing status) → set to DISCOVERED
-        const statusForUpdate = existingStatus === 'RESOLVED' ? 'DISCOVERED' : existingStatus ?? 'DISCOVERED';
+        const cTopic = op.canonicalTopic || toCanonicalTopic(op.topic);
+        const existingGroup = existingByCanonical.get(cTopic) || [];
 
-        await prisma.seoOpportunity.upsert({
-          where: { topic: op.topic },
-          update: {
-            // Recalculated fields — intentionally overwritten with new engine output
-            cluster: op.cluster as any,
-            gscSignals: op.gscSignals as any,
-            intent: op.intent,
-            businessRelevance: op.businessRelevance,
-            cannibalizationRisk: op.cannibalizationRisk,
-            googleTrends: op.googleTrends,
-            keywordPlanner: op.keywordPlanner,
-            type: op.type,
-            opportunityScore: op.opportunityScore,
-            reason: op.reason,
-            evidence: op.evidence,
-            existingPageUrl: op.existingPage?.url,
-            existingPageType: op.existingPage?.type,
-            status: statusForUpdate, // Preserve admin states; reset RESOLVED → DISCOVERED if re-appeared
-            updatedAt: new Date()
-          },
-          create: {
-            // New record — all fields required
-            topic: op.topic,
-            cluster: op.cluster as any,
-            gscSignals: op.gscSignals as any,
-            intent: op.intent,
-            businessRelevance: op.businessRelevance,
-            cannibalizationRisk: op.cannibalizationRisk,
-            googleTrends: op.googleTrends,
-            keywordPlanner: op.keywordPlanner,
-            type: op.type,
-            opportunityScore: op.opportunityScore,
-            reason: op.reason,
-            evidence: op.evidence,
-            existingPageUrl: op.existingPage?.url,
-            existingPageType: op.existingPage?.type,
-            status: 'DISCOVERED'
+        // Pick primary record if exists
+        let primaryRecord: typeof allExisting[0] | undefined;
+        if (existingGroup.length > 0) {
+          // Sort to find best primary
+          existingGroup.sort((a, b) => {
+            const aActive = a.status !== 'RESOLVED' ? 1 : 0;
+            const bActive = b.status !== 'RESOLVED' ? 1 : 0;
+            if (aActive !== bActive) return bActive - aActive;
+            if (a.opportunityScore !== b.opportunityScore) return b.opportunityScore - a.opportunityScore;
+            return b.updatedAt.getTime() - a.updatedAt.getTime();
+          });
+          primaryRecord = existingGroup[0];
+        }
+
+        if (primaryRecord) {
+          // Update primary record in place
+          const statusForUpdate = primaryRecord.status === 'RESOLVED' ? 'DISCOVERED' : primaryRecord.status ?? 'DISCOVERED';
+          await prisma.seoOpportunity.update({
+            where: { id: primaryRecord.id },
+            data: {
+              canonicalTopic: cTopic,
+              cluster: op.cluster as any,
+              gscSignals: op.gscSignals as any,
+              intent: op.intent,
+              businessRelevance: op.businessRelevance,
+              cannibalizationRisk: op.cannibalizationRisk,
+              googleTrends: op.googleTrends,
+              keywordPlanner: op.keywordPlanner,
+              type: op.type,
+              opportunityScore: op.opportunityScore,
+              reason: op.reason,
+              evidence: op.evidence,
+              existingPageUrl: op.existingPage?.url,
+              existingPageType: op.existingPage?.type,
+              status: statusForUpdate,
+              updatedAt: new Date()
+            }
+          });
+
+          // If there were other duplicates in this group, ensure they are RESOLVED
+          for (let i = 1; i < existingGroup.length; i++) {
+            const dup = existingGroup[i];
+            if (dup.status !== 'RESOLVED' || dup.canonicalTopic !== cTopic) {
+              await prisma.seoOpportunity.update({
+                where: { id: dup.id },
+                data: {
+                  canonicalTopic: cTopic,
+                  status: 'RESOLVED',
+                  reason: 'Duplicate canonical topic — superseded by existing opportunity.',
+                  updatedAt: new Date()
+                }
+              });
+            }
           }
-        });
+        } else {
+          // Create new record
+          const created = await prisma.seoOpportunity.create({
+            data: {
+              topic: op.topic,
+              canonicalTopic: cTopic,
+              cluster: op.cluster as any,
+              gscSignals: op.gscSignals as any,
+              intent: op.intent,
+              businessRelevance: op.businessRelevance,
+              cannibalizationRisk: op.cannibalizationRisk,
+              googleTrends: op.googleTrends,
+              keywordPlanner: op.keywordPlanner,
+              type: op.type,
+              opportunityScore: op.opportunityScore,
+              reason: op.reason,
+              evidence: op.evidence,
+              existingPageUrl: op.existingPage?.url,
+              existingPageType: op.existingPage?.type,
+              status: 'DISCOVERED'
+            }
+          });
+          // Update in-memory map
+          existingByCanonical.set(cTopic, [created]);
+        }
       }
 
       // SAFE STALE RESOLUTION:
-      // Topics that were previously in DB but are NO LONGER in current GSC data
-      // are marked RESOLVED — they are NOT deleted. Historical record is preserved.
-      const staleBefore = await prisma.seoOpportunity.findMany({
-        where: {
-          topic: { notIn: Array.from(currentTopics) },
-          status: { notIn: ["RESOLVED"] } // Don't re-process already-resolved ones
-        },
-        select: { id: true, topic: true }
+      // Topics whose canonicalTopic is no longer in current GSC data are marked RESOLVED
+      const staleBefore = allExisting.filter(r => {
+        const cTopic = r.canonicalTopic || toCanonicalTopic(r.topic);
+        return !currentCanonicalTopics.has(cTopic) && r.status !== 'RESOLVED';
       });
 
       if (staleBefore.length > 0) {
         await prisma.seoOpportunity.updateMany({
           where: { id: { in: staleBefore.map(r => r.id) } },
           data: {
-            status: "RESOLVED",
-            reason: "Topic no longer present in current GSC data window. Preserved for historical reference.",
+            status: 'RESOLVED',
+            reason: 'Topic no longer present in current GSC data window. Preserved for historical reference.',
             updatedAt: new Date()
           }
         });

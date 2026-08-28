@@ -102,6 +102,7 @@ export interface SeoStrategy {
 
 export interface ContentOpportunity {
   topic: string;
+  canonicalTopic?: string;
   cluster: string[];
   type: 'CREATE' | 'OPTIMIZE' | 'MONITOR' | 'IGNORE' | 'MANUAL_REVIEW';
   evidence: string;

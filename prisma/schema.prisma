@@ -933,6 +933,7 @@ model SystemConfig {
 model SeoOpportunity {
   id                  String   @id @default(cuid())
   topic               String   @unique
+  canonicalTopic      String?
   cluster             Json?
   gscSignals          Json?
   intent              String?
@@ -949,4 +950,6 @@ model SeoOpportunity {
   status              String   @default("DISCOVERED") // DISCOVERED, RESEARCHED, RESOLVED
   createdAt           DateTime @default(now())
   updatedAt           DateTime @updatedAt
+
+  @@index([canonicalTopic])
 }
