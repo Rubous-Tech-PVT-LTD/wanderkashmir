@@ -140,133 +140,225 @@ export async function detectOpportunities(saveToDb = false): Promise<ContentOppo
        if (matchCount > 1) cannibalizationRisk = 'HIGH';
        else if (cluster.data.pages.size > 1) cannibalizationRisk = 'MEDIUM';
 
-       // 4. Scoring & Action Logic
-       let score = 0;
+       // -------------------------------------------------------------
+       // 1. CONTINUOUS SCORING MODEL
+       // -------------------------------------------------------------
+       
        let action: ContentOpportunity['type'] = 'IGNORE';
        let reason = '';
        let evidence = '';
+       let finalScore = 0;
 
-       // Base score on volume
-       const impScore = Math.min(cluster.data.impressions / 100, 40); // Max 40 pts for volume
-       const bizScore = bizRelevance === 'HIGH' ? 30 : bizRelevance === 'MEDIUM' ? 15 : 5;
+       // A. Volume Signal (Logarithmic to prevent dominance, Max ~40)
+       // log10(100) * 10 = 20 | log10(1000) * 10 = 30 | log10(10000) * 10 = 40
+       const volumeSignal = Math.min(Math.log10(cluster.data.impressions + 1) * 12, 40);
+
+       // B. Business Relevance (Max 30)
+       let bizScore = 0;
+       if (bizRelevance === 'HIGH') bizScore = 30;
+       else if (bizRelevance === 'MEDIUM') bizScore = 15;
+       else if (bizRelevance === 'LOW') bizScore = 5;
+
+       // C. Intent Signal (Max 15)
+       let intentScore = 0;
+       if (intent === 'TRANSACTIONAL' || intent === 'COMMERCIAL') intentScore = 15;
+       else if (intent === 'LOCAL') intentScore = 10;
+       else if (intent === 'INFORMATIONAL') intentScore = 5;
+
+       // D. Position Potential (Max 15)
+       let posScore = 0;
+       if (existingPage) {
+           if (avgPosition >= 4 && avgPosition <= 10) posScore = 15; // Striking distance
+           else if (avgPosition >= 11 && avgPosition <= 20) posScore = 10; // Page 2
+           else if (avgPosition <= 3) posScore = 5; // Already winning
+           else posScore = 0; // Too deep
+       }
+
+       // E. CTR Opportunity (Max 15)
+       let ctrScore = 0;
+       let expectedCtr = 0;
+       let hasCtrDeficiency = false;
        
-       score = impScore + bizScore;
+       if (existingPage && cluster.data.impressions >= 10) {
+           // Conservative fallback benchmark
+           if (avgPosition <= 1.5) expectedCtr = 0.15;
+           else if (avgPosition <= 3.5) expectedCtr = 0.08;
+           else if (avgPosition <= 10.5) expectedCtr = 0.03;
+           else expectedCtr = 0.01;
+           
+           if (ctr < expectedCtr * 0.5) { // If CTR is less than half of conservative expectation
+               hasCtrDeficiency = true;
+               ctrScore = 15;
+           }
+       }
 
-       // Grab Free Signals (Graceful fallback)
-       const displayTopic = cluster.queries[0].split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+       // Gate: Only evaluate if the base signal shows some life (e.g. at least low relevance + some volume)
+       // This prevents thousands of absolute zero-value queries from cluttering the DB.
+       const baseEvalScore = volumeSignal + bizScore + intentScore;
+       
+       // Default evidence string builder
+       const evidenceParts = [
+           `${cluster.data.impressions} impressions`,
+           existingPage ? `Rank: ${avgPosition.toFixed(1)}` : `No page`,
+           `Biz: ${bizRelevance}`,
+           `Intent: ${intent}`
+       ];
 
-       // Evaluate all clusters that have any business relevance (score > 5 means at least LOW relevance)
-       if (score > 5) {
-         const [trends, planner] = await Promise.all([
-            googleTrendsProvider.getTrends(displayTopic),
-            keywordPlannerProvider.getPlannerData(displayTopic)
-         ]);
+       if (baseEvalScore > 5) {
+           // -------------------------------------------------------------
+           // 2. STRICT ACTION DECISION TREE
+           // -------------------------------------------------------------
+           
+           if (existingPage) {
+               if (avgPosition <= 3.5) {
+                   if (hasCtrDeficiency) {
+                       action = 'OPTIMIZE';
+                       reason = `Page ranks strong (${avgPosition.toFixed(1)}) but CTR (${(ctr*100).toFixed(1)}%) is significantly below conservative expectation (${(expectedCtr*100).toFixed(1)}%). Optimize Meta Title/Description.`;
+                   } else {
+                       action = 'MONITOR';
+                       reason = `Already ranking top-3 with healthy CTR (${(ctr*100).toFixed(1)}%). Protect and monitor.`;
+                       posScore = -10; // Penalize score slightly so active tasks rise above
+                   }
+               } else if (avgPosition >= 4 && avgPosition <= 10) {
+                   if (cluster.data.impressions >= 15 && (bizRelevance === 'HIGH' || bizRelevance === 'MEDIUM')) {
+                       action = 'OPTIMIZE';
+                       reason = `Striking distance (Pos ${avgPosition.toFixed(1)}) with meaningful volume and relevance. Page-1/top-3 improvement is plausible.`;
+                   } else {
+                       action = 'MONITOR';
+                       reason = `Striking distance, but insufficient volume or business relevance to prioritize immediate optimization.`;
+                   }
+               } else if (avgPosition > 10 && avgPosition <= 20) {
+                   if (cluster.data.impressions >= 30 && bizRelevance === 'HIGH') {
+                       action = 'OPTIMIZE';
+                       reason = `Page 2 ranking (Pos ${avgPosition.toFixed(1)}) with strong volume and high relevance. Needs content expansion/optimization.`;
+                   } else {
+                       action = 'MONITOR';
+                       reason = `Page 2 ranking, but evidence is not strong enough to prioritize over higher-impact targets.`;
+                   }
+               } else {
+                   // Position > 20
+                   action = 'IGNORE';
+                   reason = `Page ranks deep (Pos ${avgPosition.toFixed(1)}). Current GSC evidence does not indicate a near-term page-one opportunity.`;
+               }
+           } else {
+               // NO EXISTING PAGE
+               if (bizRelevance === 'HIGH' && cluster.data.impressions >= 15) {
+                   action = 'CREATE';
+                   reason = `No suitable existing page found. Query has meaningful demand and HIGH business relevance.`;
+               } else if (bizRelevance === 'MEDIUM' && cluster.data.impressions >= 50 && (intent === 'TRANSACTIONAL' || intent === 'COMMERCIAL')) {
+                   action = 'CREATE';
+                   reason = `No existing page. Moderate relevance but strong demand and commercial intent justify content creation.`;
+               } else {
+                   action = 'IGNORE';
+                   reason = `No page exists, but search demand, intent, or business relevance is too weak to justify creation.`;
+               }
+           }
 
-         if (existingPage) {
-             if (avgPosition >= 4 && avgPosition <= 20) {
-                 action = 'OPTIMIZE';
-                 score += 30; // High potential to push to top 3
-                 evidence = `Ranking Pos ${avgPosition.toFixed(1)} with ${cluster.data.impressions} impressions. Trends: ${trends.trendSignal}`;
-                 reason = `Existing page can be optimized to reach top 3.`;
-             } else if (avgPosition <= 3 && ctr < 0.05) {
-                 action = 'OPTIMIZE';
-                 score += 20;
-                 evidence = `Strong ranking (Pos ${avgPosition.toFixed(1)}) but low CTR (${(ctr*100).toFixed(1)}%). Trends: ${trends.trendSignal}`;
-                 reason = `CTR opportunity. Needs better Meta Title/Description.`;
-             } else if (avgPosition <= 3 && ctr >= 0.05) {
-                 action = 'MONITOR';
-                 score -= 20; // Don't prioritize
-                 evidence = `Ranking Pos ${avgPosition.toFixed(1)} with strong CTR. Trends: ${trends.trendSignal}`;
-                 reason = `Page is performing strongly. Protect and monitor.`;
-             } else {
-                 action = 'IGNORE'; // Way off page 2, existing page isn't working
-             }
-             
-             if (cannibalizationRisk === 'HIGH') {
-                action = 'OPTIMIZE';
-                reason += ` High cannibalization risk detected across ${matchCount} pages. Needs manual review and consolidation.`;
-                score += 10; // Prioritize fixing cannibalization
-             }
-         } else {
-             if (bizRelevance === 'HIGH' || (bizRelevance === 'MEDIUM' && cluster.data.impressions > 50)) {
-                 action = 'CREATE';
-                 score += 30;
-                 evidence = `${cluster.data.impressions} impressions for missing topic. Trends: ${trends.trendSignal}. Planner: ${planner.searchVolume}`;
-                 reason = `Significant search volume for relevant intent, but no dedicated page exists.`;
-             } else {
-                 action = 'IGNORE';
-             }
-         }
+           // -------------------------------------------------------------
+           // 3. CANNIBALIZATION OVERRIDE (Must happen last)
+           // -------------------------------------------------------------
+           let cannibalizationAdjustment = 0;
+           if (cannibalizationRisk === 'HIGH') {
+               if (action === 'CREATE' || action === 'OPTIMIZE') {
+                   action = 'MANUAL_REVIEW';
+                   reason = `Multiple existing URLs target this entity/intent. Manual review is required to resolve cannibalization before creating or optimizing.`;
+                   cannibalizationAdjustment = 10; // Prioritize review
+               }
+           }
 
-         if (cannibalizationRisk === 'HIGH' && action === 'CREATE') {
-            action = 'MANUAL_REVIEW';
-            reason = 'Strong opportunity but high cannibalization risk with existing content.';
-         }
+           // -------------------------------------------------------------
+           // 4. FETCH EXTERNAL SIGNALS & FINALIZE SCORE
+           // -------------------------------------------------------------
+           
+           // Only fetch expensive API signals if it's actionable
+           let trendSignal = 'UNAVAILABLE';
+           let plannerVol = 'UNAVAILABLE';
+           
+           if (action !== 'IGNORE' && action !== 'MONITOR') {
+             const displayTopic = cluster.queries[0].split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+             const [trends, planner] = await Promise.all([
+                googleTrendsProvider.getTrends(displayTopic),
+                keywordPlannerProvider.getPlannerData(displayTopic)
+             ]);
+             trendSignal = trends.status === 'AVAILABLE' ? trends.trendSignal : 'UNAVAILABLE';
+             plannerVol = planner.status === 'AVAILABLE' ? String(planner.searchVolume) : 'UNAVAILABLE';
+             if (trendSignal !== 'UNAVAILABLE') evidenceParts.push(`Trends: ${trendSignal}`);
+           }
 
-         opportunities.push({
-           topic: displayTopic,
-           cluster: cluster.queries,
-           type: action,
-           evidence,
-           gscSignals: {
-             clicks: cluster.data.clicks,
-             impressions: cluster.data.impressions,
-             ctr,
-             position: avgPosition
-           },
-           intent,
-           businessRelevance: bizRelevance,
-           existingPage,
-           cannibalizationRisk,
-           googleTrends: trends.status === 'AVAILABLE' ? trends.trendSignal : 'UNAVAILABLE',
-           keywordPlanner: planner.status === 'AVAILABLE' ? String(planner.searchVolume) : 'UNAVAILABLE',
-           opportunityScore: Math.min(Math.round(score), 100),
-           reason
-         });
+           // Final Continuous Score
+           const rawScore = volumeSignal + bizScore + intentScore + posScore + ctrScore + cannibalizationAdjustment;
+           finalScore = action === 'IGNORE' ? 0 : Math.min(Math.max(Math.round(rawScore), 0), 100);
+           
+           evidence = evidenceParts.join(' | ');
+
+           opportunities.push({
+             topic: cluster.queries[0], // Use primary query as topic instead of capitalized displayTopic to keep exact intent
+             cluster: cluster.queries,
+             type: action,
+             evidence,
+             gscSignals: {
+               clicks: cluster.data.clicks,
+               impressions: cluster.data.impressions,
+               ctr,
+               position: avgPosition
+             },
+             intent,
+             businessRelevance: bizRelevance,
+             existingPage,
+             cannibalizationRisk,
+             googleTrends: trendSignal,
+             keywordPlanner: plannerVol,
+             opportunityScore: finalScore,
+             reason
+           });
        }
     }
 
     if (saveToDb) {
       for (const op of opportunities) {
-        await prisma.seoOpportunity.upsert({
-          where: { topic: op.topic },
-          update: {
-            cluster: op.cluster as any,
-            gscSignals: op.gscSignals as any,
-            intent: op.intent,
-            businessRelevance: op.businessRelevance,
-            cannibalizationRisk: op.cannibalizationRisk,
-            googleTrends: op.googleTrends,
-            keywordPlanner: op.keywordPlanner,
-            type: op.type,
-            opportunityScore: op.opportunityScore,
-            reason: op.reason,
-            evidence: op.evidence,
-            existingPageUrl: op.existingPage?.url,
-            existingPageType: op.existingPage?.type,
-            updatedAt: new Date()
-          },
-          create: {
-            topic: op.topic,
-            cluster: op.cluster as any,
-            gscSignals: op.gscSignals as any,
-            intent: op.intent,
-            businessRelevance: op.businessRelevance,
-            cannibalizationRisk: op.cannibalizationRisk,
-            googleTrends: op.googleTrends,
-            keywordPlanner: op.keywordPlanner,
-            type: op.type,
-            opportunityScore: op.opportunityScore,
-            reason: op.reason,
-            evidence: op.evidence,
-            existingPageUrl: op.existingPage?.url,
-            existingPageType: op.existingPage?.type,
-            status: "DISCOVERED"
-          }
-        });
+        // Only save actionable or monitored ops to keep DB clean, but allow IGNORE if they were previously actionable
+        if (op.type !== 'IGNORE' || op.opportunityScore > 0) {
+            await prisma.seoOpportunity.upsert({
+              where: { topic: op.topic },
+              update: {
+                cluster: op.cluster as any,
+                gscSignals: op.gscSignals as any,
+                intent: op.intent,
+                businessRelevance: op.businessRelevance,
+                cannibalizationRisk: op.cannibalizationRisk,
+                googleTrends: op.googleTrends,
+                keywordPlanner: op.keywordPlanner,
+                type: op.type,
+                opportunityScore: op.opportunityScore,
+                reason: op.reason,
+                evidence: op.evidence,
+                existingPageUrl: op.existingPage?.url,
+                existingPageType: op.existingPage?.type,
+                updatedAt: new Date()
+              },
+              create: {
+                topic: op.topic,
+                cluster: op.cluster as any,
+                gscSignals: op.gscSignals as any,
+                intent: op.intent,
+                businessRelevance: op.businessRelevance,
+                cannibalizationRisk: op.cannibalizationRisk,
+                googleTrends: op.googleTrends,
+                keywordPlanner: op.keywordPlanner,
+                type: op.type,
+                opportunityScore: op.opportunityScore,
+                reason: op.reason,
+                evidence: op.evidence,
+                existingPageUrl: op.existingPage?.url,
+                existingPageType: op.existingPage?.type,
+                status: "DISCOVERED"
+              }
+            });
+        }
       }
     }
 
+    // Sort by score
     return opportunities.sort((a, b) => b.opportunityScore - a.opportunityScore);
 
   } catch (err) {
