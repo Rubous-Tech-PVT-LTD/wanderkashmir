@@ -273,9 +273,9 @@ export async function detectOpportunities(saveToDb = false): Promise<ContentOppo
            // Only fetch expensive API signals if it's actionable
            let trendSignal = 'UNAVAILABLE';
            let plannerVol = 'UNAVAILABLE';
+           const displayTopic = cluster.queries[0].split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
            
            if (action !== 'IGNORE' && action !== 'MONITOR') {
-             const displayTopic = cluster.queries[0].split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
              const [trends, planner] = await Promise.all([
                 googleTrendsProvider.getTrends(displayTopic),
                 keywordPlannerProvider.getPlannerData(displayTopic)
@@ -292,7 +292,7 @@ export async function detectOpportunities(saveToDb = false): Promise<ContentOppo
            evidence = evidenceParts.join(' | ');
 
            opportunities.push({
-             topic: cluster.queries[0], // Use primary query as topic instead of capitalized displayTopic to keep exact intent
+             topic: displayTopic,
              cluster: cluster.queries,
              type: action,
              evidence,
@@ -315,46 +315,91 @@ export async function detectOpportunities(saveToDb = false): Promise<ContentOppo
     }
 
     if (saveToDb) {
+      // SAFE PERSISTENCE STRATEGY:
+      // - Upsert ALL classified opportunities (including IGNORE) so stale old classifications are corrected.
+      // - Unique key is `topic` — upsert UPDATES existing records by topic, never deletes them.
+      // - createdAt and id of existing records are always preserved by upsert semantics.
+      // - Status is preserved unless the record was RESOLVED and the topic re-appeared in GSC.
+      // - Records that vanished from GSC data entirely are marked RESOLVED (not deleted).
+
+      const currentTopics = new Set(opportunities.map(op => op.topic));
+
+      // Pre-fetch existing statuses so we can preserve admin-managed states
+      const existingRecords = await prisma.seoOpportunity.findMany({
+        where: { topic: { in: Array.from(currentTopics) } },
+        select: { topic: true, status: true }
+      });
+      const existingStatusMap = new Map(existingRecords.map(r => [r.topic, r.status]));
+
       for (const op of opportunities) {
-        // Only save actionable or monitored ops to keep DB clean, but allow IGNORE if they were previously actionable
-        if (op.type !== 'IGNORE' || op.opportunityScore > 0) {
-            await prisma.seoOpportunity.upsert({
-              where: { topic: op.topic },
-              update: {
-                cluster: op.cluster as any,
-                gscSignals: op.gscSignals as any,
-                intent: op.intent,
-                businessRelevance: op.businessRelevance,
-                cannibalizationRisk: op.cannibalizationRisk,
-                googleTrends: op.googleTrends,
-                keywordPlanner: op.keywordPlanner,
-                type: op.type,
-                opportunityScore: op.opportunityScore,
-                reason: op.reason,
-                evidence: op.evidence,
-                existingPageUrl: op.existingPage?.url,
-                existingPageType: op.existingPage?.type,
-                updatedAt: new Date()
-              },
-              create: {
-                topic: op.topic,
-                cluster: op.cluster as any,
-                gscSignals: op.gscSignals as any,
-                intent: op.intent,
-                businessRelevance: op.businessRelevance,
-                cannibalizationRisk: op.cannibalizationRisk,
-                googleTrends: op.googleTrends,
-                keywordPlanner: op.keywordPlanner,
-                type: op.type,
-                opportunityScore: op.opportunityScore,
-                reason: op.reason,
-                evidence: op.evidence,
-                existingPageUrl: op.existingPage?.url,
-                existingPageType: op.existingPage?.type,
-                status: "DISCOVERED"
-              }
-            });
-        }
+        const existingStatus = existingStatusMap.get(op.topic);
+        // If previously RESOLVED (was missing from GSC) but now re-appeared → reset to DISCOVERED
+        // If it has an admin-managed status (RESEARCHED etc.) → preserve it
+        // If it's a new record (no existing status) → set to DISCOVERED
+        const statusForUpdate = existingStatus === 'RESOLVED' ? 'DISCOVERED' : existingStatus ?? 'DISCOVERED';
+
+        await prisma.seoOpportunity.upsert({
+          where: { topic: op.topic },
+          update: {
+            // Recalculated fields — intentionally overwritten with new engine output
+            cluster: op.cluster as any,
+            gscSignals: op.gscSignals as any,
+            intent: op.intent,
+            businessRelevance: op.businessRelevance,
+            cannibalizationRisk: op.cannibalizationRisk,
+            googleTrends: op.googleTrends,
+            keywordPlanner: op.keywordPlanner,
+            type: op.type,
+            opportunityScore: op.opportunityScore,
+            reason: op.reason,
+            evidence: op.evidence,
+            existingPageUrl: op.existingPage?.url,
+            existingPageType: op.existingPage?.type,
+            status: statusForUpdate, // Preserve admin states; reset RESOLVED → DISCOVERED if re-appeared
+            updatedAt: new Date()
+          },
+          create: {
+            // New record — all fields required
+            topic: op.topic,
+            cluster: op.cluster as any,
+            gscSignals: op.gscSignals as any,
+            intent: op.intent,
+            businessRelevance: op.businessRelevance,
+            cannibalizationRisk: op.cannibalizationRisk,
+            googleTrends: op.googleTrends,
+            keywordPlanner: op.keywordPlanner,
+            type: op.type,
+            opportunityScore: op.opportunityScore,
+            reason: op.reason,
+            evidence: op.evidence,
+            existingPageUrl: op.existingPage?.url,
+            existingPageType: op.existingPage?.type,
+            status: 'DISCOVERED'
+          }
+        });
+      }
+
+      // SAFE STALE RESOLUTION:
+      // Topics that were previously in DB but are NO LONGER in current GSC data
+      // are marked RESOLVED — they are NOT deleted. Historical record is preserved.
+      const staleBefore = await prisma.seoOpportunity.findMany({
+        where: {
+          topic: { notIn: Array.from(currentTopics) },
+          status: { notIn: ["RESOLVED"] } // Don't re-process already-resolved ones
+        },
+        select: { id: true, topic: true }
+      });
+
+      if (staleBefore.length > 0) {
+        await prisma.seoOpportunity.updateMany({
+          where: { id: { in: staleBefore.map(r => r.id) } },
+          data: {
+            status: "RESOLVED",
+            reason: "Topic no longer present in current GSC data window. Preserved for historical reference.",
+            updatedAt: new Date()
+          }
+        });
+        console.log(`[SEO Discovery] ${staleBefore.length} stale opportunities marked RESOLVED (not deleted).`);
       }
     }
 
