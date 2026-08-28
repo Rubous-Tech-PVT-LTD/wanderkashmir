@@ -2,6 +2,7 @@ import prisma from "@/lib/prisma";
 import { getGscAnalytics, getGscSiteUrl } from "@/lib/gsc-client";
 import { SeoResearch } from "./types";
 import { keywordProvider, serpProvider, googleTrendsProvider, keywordPlannerProvider } from "./research/providers";
+import { generateManualReviewRecommendation } from "./manual-review-engine";
 
 export async function runSeoResearch(target: string, type: string, targetUrl?: string, historicalBaseline?: any): Promise<SeoResearch> {
   const isExistingPage = !!targetUrl;
@@ -39,7 +40,10 @@ export async function runSeoResearch(target: string, type: string, targetUrl?: s
     plannerData = plannerRes as any;
 
     if (isExistingPage && targetUrl) {
-      const exactPageRows = analytics.filter((row: any) => row.keys[1] === targetUrl);
+      const exactPageRows = analytics.filter((row: any) => {
+        const pageKey = row.keys[1] || '';
+        return pageKey === targetUrl || (targetUrl && pageKey.endsWith(targetUrl)) || (targetUrl && targetUrl.endsWith(pageKey));
+      });
       
       if (exactPageRows.length > 0) {
         let totalClicks = 0;
@@ -65,18 +69,19 @@ export async function runSeoResearch(target: string, type: string, targetUrl?: s
           ctr: totalImpressions > 0 ? totalClicks / totalImpressions : 0,
           position: totalImpressions > 0 ? weightedPositionSum / totalImpressions : 0
         };
+      }
 
-        if (historicalBaseline) {
-          const hist = historicalBaseline;
-          if (pageMetrics.clicks >= hist.clicks && pageMetrics.impressions >= hist.impressions) {
-            performanceDelta = { status: 'STRONG_PERFORMER', reason: 'Current metrics exceed or match historical baseline.' };
-          } else if (pageMetrics.ctr >= 0.05 && pageMetrics.position <= 10) {
-             performanceDelta = { status: 'STRONG_PERFORMER', reason: 'High CTR and Page 1 ranking indicates strong current performance.' };
-          } else if (Math.abs(pageMetrics.clicks - hist.clicks) <= 2) {
-             performanceDelta = { status: 'STABLE', reason: 'Current metrics are stable compared to baseline.' };
-          } else {
-             performanceDelta = { status: 'IMPROVEMENT_CANDIDATE', reason: 'Metrics have declined from baseline.' };
-          }
+      if (historicalBaseline) {
+        const hist = historicalBaseline;
+        const currentMetrics = pageMetrics || hist;
+        if (currentMetrics.clicks >= hist.clicks && currentMetrics.impressions >= hist.impressions) {
+          performanceDelta = { status: 'STRONG_PERFORMER', reason: 'Current metrics exceed or match historical baseline.' };
+        } else if (currentMetrics.ctr >= 0.05 && currentMetrics.position <= 10) {
+           performanceDelta = { status: 'STRONG_PERFORMER', reason: 'High CTR and Page 1 ranking indicates strong current performance.' };
+        } else if (Math.abs(currentMetrics.clicks - hist.clicks) <= 2) {
+           performanceDelta = { status: 'STABLE', reason: 'Current metrics are stable compared to baseline.' };
+        } else {
+           performanceDelta = { status: 'IMPROVEMENT_CANDIDATE', reason: 'Metrics have declined from baseline.' };
         }
       }
     } else {
@@ -98,16 +103,35 @@ export async function runSeoResearch(target: string, type: string, targetUrl?: s
       select: { title: true, slug: true, type: true }
     });
 
-    const targetWords = target.toLowerCase().split(' ').filter(w => w.length > 3);
+    const stopWords = new Set(['to', 'the', 'in', 'for', 'and', 'of', 'with', 'a', 'an', 'is', 'called', 'what', 'fare', 'cost', 'guide', 'places', 'unique', 'hidden', 'best', 'top', '2026', '2025', '2024']);
+    const targetWords = target.toLowerCase().split(/[^a-z0-9]+/).filter(w => w.length > 2 && !stopWords.has(w));
+    const genericKeywords = new Set([
+      'kashmir', 'valley', 'valleys', 'premium', 'luxury', 'guide', 'places', 'tour', 'tours', 'package', 'packages',
+      'homestay', 'homestays', 'hotel', 'hotels', 'resort', 'resorts', 'taxi', 'taxis', 'cab', 'cabs', 'cabfare', 'fare',
+      'distance', 'booking', 'bookings', 'stays', 'stay', 'trip', 'travel', 'secret', 'trails', 'hidden', 'waterfalls',
+      'waterfall', 'meadow', 'meadows', 'riverfront', 'escape', 'view', 'retreat', 'exclusive', 'wonders', 'bliss',
+      'ride', 'horse', 'riding', 'trek', 'trekking', 'adventure', 'eco', 'skiing', 'mountaineering', 'camping',
+      'stargazing', 'tourism', 'safari', 'hiking', 'rafting', 'sightseeing', 'expedition', 'cottage', 'cottages',
+      'lake', 'lakes', 'wild', 'serenity', 'authentic', 'village', 'life', 'pristine', 'cascades', 'cascade'
+    ]);
+    const entityTokens = targetWords.filter(w => !genericKeywords.has(w));
+
     const competing = existingPages.filter(p => {
-      if (isExistingPage && targetUrl && targetUrl.includes(p.slug)) return false; // Don't flag itself
+      const slugClean = p.slug.toLowerCase();
+      if (isExistingPage && targetUrl && (targetUrl.toLowerCase().includes(slugClean) || slugClean.includes(targetUrl.toLowerCase().replace(/^\/[^/]+\//, '')))) {
+        return false; // Don't flag itself
+      }
       
       const titleWords = p.title.toLowerCase();
+      const hasEntityMatch = entityTokens.length > 0 
+        ? entityTokens.some(e => titleWords.includes(e) || slugClean.includes(e))
+        : true;
+
       let matches = 0;
       for (const w of targetWords) {
-        if (titleWords.includes(w)) matches++;
+        if (titleWords.includes(w) || slugClean.includes(w)) matches++;
       }
-      return matches >= Math.min(2, targetWords.length);
+      return hasEntityMatch && matches >= Math.min(2, targetWords.length) && targetWords.length > 0;
     });
 
     if (competing.length > 0) {
@@ -127,7 +151,7 @@ export async function runSeoResearch(target: string, type: string, targetUrl?: s
     } else if (isExistingPage) {
        cannibalizationRisk = { status: 'SAFE', competingPages: [], recommendation: 'OPTIMIZE_EXISTING', reason: '' };
     } else {
-       cannibalizationRisk = { status: 'SAFE', competingPages: [], recommendation: 'KEEP_SEPARATE', reason: '' };
+       cannibalizationRisk = { status: 'SAFE', competingPages: [], recommendation: 'CREATE_NEW', reason: '' };
     }
 
     // 4. Search Intent Inference (Prioritize Provider, fallback to heuristic)
@@ -150,6 +174,17 @@ export async function runSeoResearch(target: string, type: string, targetUrl?: s
     console.error("SEO Research Engine Error:", error);
   }
 
+  // 5. Generate AI-Assisted Manual Review Recommendation if competing pages exist
+  let manualReviewRecommendation;
+  if (cannibalizationRisk.competingPages.length > 0) {
+    manualReviewRecommendation = generateManualReviewRecommendation(
+      target,
+      searchIntent,
+      cannibalizationRisk.competingPages,
+      topQueries.length > 0 ? topQueries : relatedQueries
+    );
+  }
+
   return {
     target,
     pageType: type,
@@ -170,6 +205,7 @@ export async function runSeoResearch(target: string, type: string, targetUrl?: s
     searchIntent,
     contentGaps: [],
     cannibalizationRisk,
-    performanceDelta
+    performanceDelta,
+    manualReviewRecommendation
   };
 }

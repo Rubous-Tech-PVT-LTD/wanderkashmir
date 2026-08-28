@@ -73,6 +73,53 @@ export interface SeoResearch {
     status: 'STRONG_PERFORMER' | 'STABLE' | 'IMPROVEMENT_CANDIDATE' | 'INSUFFICIENT_DATA';
     reason: string;
   };
+  manualReviewRecommendation?: ManualReviewRecommendation;
+}
+
+export interface CompetingPageCandidate {
+  url: string;
+  title: string;
+  type: string;
+  role?: 'PRIMARY_CANDIDATE' | 'SUPPORTING_INFORMATIONAL' | 'SUPPORTING_TRANSPORT' | 'SUPPORTING_COMMERCIAL' | 'POTENTIAL_DUPLICATE';
+  intent?: string;
+  intentAlignment?: string;
+  score?: number;
+  reasons?: string[];
+}
+
+export interface ManualReviewRecommendation {
+  direction: 'USE_EXISTING_PRIMARY' | 'CONSOLIDATE' | 'CREATE_NEW' | 'IGNORE';
+  recommendedPrimaryPage: {
+    url: string;
+    title: string;
+    pageType: string;
+    role?: string;
+    score?: number;
+    reasons?: string[];
+    evidence?: string[];
+  } | null;
+  intent: string;
+  confidence: 'HIGH' | 'MEDIUM' | 'LOW';
+  reason: string;
+  evidence: string[];
+  competingPages: CompetingPageCandidate[];
+  targetTopic?: string;
+  searchIntent?: string;
+  confidenceReason?: string;
+  plainLanguageSummary?: string;
+  suggestedAction?: 'USE_EXISTING_PRIMARY' | 'CONSOLIDATE' | 'CREATE_NEW' | 'MANUAL_SELECTION_REQUIRED';
+}
+
+export interface AdminManualReviewDecision {
+  type: 'USE_EXISTING_PRIMARY' | 'CHOOSE_ANOTHER' | 'CREATE_NEW_PAGE' | 'IGNORE';
+  primaryPageUrl?: string;
+  primaryPageTitle?: string;
+  primaryPageType?: string;
+  source?: 'AI_RECOMMENDATION_ACCEPTED' | 'ADMIN_MANUAL_SELECTION' | 'ADMIN_CREATE_NEW_CONFIRMED' | 'ADMIN_IGNORED';
+  reason?: string;
+  confirmedDistinctIntent?: string;
+  decidedBy?: string;
+  decidedAt: string;
 }
 
 export type ComponentAction = 'PROTECT' | 'OPTIMIZE' | 'EXPAND' | 'ADD' | 'REMOVE';

@@ -948,6 +948,7 @@ model SeoOpportunity {
   existingPageUrl     String?
   existingPageType    String?
   status              String   @default("DISCOVERED") // DISCOVERED, RESEARCHED, RESOLVED
+  manualReviewDecision Json?
   createdAt           DateTime @default(now())
   updatedAt           DateTime @updatedAt
 
