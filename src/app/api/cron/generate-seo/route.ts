@@ -1,106 +1,95 @@
 import { NextResponse } from "next/server";
-import { GoogleGenerativeAI } from "@google/generative-ai";
 import prisma from "@/lib/prisma";
+import { runSeoResearch } from "@/lib/seo/research-engine";
+import { generateSeoStrategy } from "@/lib/seo/strategy-engine";
+import { generateSeoContent } from "@/lib/seo/generation-engine";
+import { validateSeoContent } from "@/lib/seo/validation-engine";
 
-export const maxDuration = 60; // Allow function to run up to 60 seconds
+export const maxDuration = 120; // AI processes can take time
 
 export async function GET(request: Request) {
-  // 1. Authenticate the Cron request
   const authHeader = request.headers.get('authorization');
-  if (authHeader !== `Bearer ${process.env.CRON_SECRET}` && process.env.NODE_ENV === 'production') {
-    // In production, require Vercel Cron Secret (but we'll allow local testing)
-    // To be safe and since user might trigger manually in local, we just log a warning if it fails in dev.
-    if (process.env.NODE_ENV === 'production') {
+  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
   }
-
-  // 2. Setup Gemini
-  const apiKey = process.env.GEMINI_API_KEY;
-  if (!apiKey) {
-    return NextResponse.json({ error: "Gemini API key is missing" }, { status: 500 });
-  }
-
-  const genAI = new GoogleGenerativeAI(apiKey);
-  const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
-
-  const { searchParams } = new URL(request.url);
-  const requestedTopic = searchParams.get('topic');
 
   try {
-    // 3. Fetch existing slugs and ContentSettings from the database
-    const settings = await prisma.contentSettings.findFirst();
-    const systemRules = settings?.defaultPromptRules || "";
+    const { searchParams } = new URL(request.url);
+    let requestedTopic = searchParams.get('topic');
+    let opportunityId = null;
+    let pageType = "TAXI"; // Default
 
-    const existingPages = await prisma.seoLandingPage.findMany({
-      select: { slug: true }
-    });
-    const existingSlugs = existingPages.map(p => p.slug);
-
-    const prompt = `
-    You are a world-class SEO copywriter and local travel expert for "WanderKashmir", a premium travel platform in Kashmir.
-    Your task is to generate exactly 1 unique, highly-searched, high-converting SEO landing page for a Kashmir tourist route, homestay location, or specific travel package.
-    
-    CRITICAL BRAND GUIDELINES FROM ADMIN:
-    ${systemRules}
-
-    IMPORTANT RULES:
-    1. Do NOT use any of these existing routes: ${existingSlugs.join(", ")}
-    2. BE CREATIVE AND NICHE. Target high-intent, low-competition keywords (e.g. "Srinagar to Gurez Valley taxi fare", "best homestays near Dal Lake for families").
-    ${requestedTopic ? `3. THE USER EXPLICITLY REQUESTED THIS TOPIC/KEYWORD: "${requestedTopic}". You MUST strictly write the page targeting this keyword.` : ''}
-    
-    JSON STRUCTURE:
-    {
-      "slug": "the-url-slug-in-kebab-case",
-      "type": "TAXI" | "HOMESTAY" | "DESTINATION",
-      "title": "SEO Meta Title (50-60 characters, include power words, highly optimized for CTR)",
-      "description": "Meta description (150-160 chars, include primary keyword, USP, and a strong Call-To-Action)",
-      "h1Heading": "The main H1 heading for the page (Engaging and keyword-rich)",
-      "content": "A highly structured, 800-1200 word SEO optimized article in rich Markdown format, strictly following the MakeMyTrip (MMT) SEO content style. YOU MUST INCLUDE: 1. A captivating introduction. 2. A 'Quick Facts / At a Glance' section using a Markdown table (e.g., Best Time to Visit, Ideal Duration, Nearest Airport, Weather). 3. 'Top Things to Do / Places to Visit' with detailed H3 subheadings and bullet points. 4. 'How to Reach' guide. 5. 'Best Time to Visit' detailed explanation. 6. Why book with WanderKashmir seamlessly integrated. CRITICAL: You MUST use double newlines (\\n\\n) between EVERY paragraph. You MUST use ## for main headings and ### for subheadings, with a blank line before and after each heading. Do NOT output a single wall of text.",
-      "imagePrompt": "A highly descriptive 1-sentence prompt for an AI image generator to create a stunning, realistic, wide-angle cinematic photo for this page. (e.g. 'A cinematic golden hour shot of a traditional wooden homestay in Aru Valley surrounded by mist and pine trees, 8k resolution')",
-      "faqs": [
-        { "question": "Highly searched Question 1?", "answer": "Detailed Answer 1" },
-        { "question": "Highly searched Question 2?", "answer": "Detailed Answer 2" },
-        { "question": "Highly searched Question 3?", "answer": "Detailed Answer 3" },
-        { "question": "Highly searched Question 4?", "answer": "Detailed Answer 4" }
-      ]
+    if (!requestedTopic) {
+        // Fetch top non-blog opportunity
+        const op = await prisma.seoOpportunity.findFirst({
+            where: { type: 'CREATE', status: 'DISCOVERED', NOT: { topic: { contains: 'blog', mode: 'insensitive' } } },
+            orderBy: { opportunityScore: 'desc' }
+        });
+        if (!op) {
+            return NextResponse.json({ success: true, message: "No SEO opportunities found to generate." });
+        }
+        requestedTopic = op.topic;
+        opportunityId = op.id;
+        
+        if (op.topic.toLowerCase().includes('homestay')) pageType = "HOMESTAY";
+        else if (op.topic.toLowerCase().includes('tour') || op.topic.toLowerCase().includes('package')) pageType = "TOUR";
     }
-    `;
 
-    // 5. Generate content with Gemini
-    const result = await model.generateContent({
-      contents: [{ role: "user", parts: [{ text: prompt }] }],
-      generationConfig: { responseMimeType: "application/json" }
-    });
-    const responseText = result.response.text();
+    // 1. Research
+    const research = await runSeoResearch(requestedTopic as string, pageType);
     
-    // Clean JSON string (remove markdown if Gemini ignores instructions)
-    const cleanedText = responseText.replace(/```json/gi, '').replace(/```/g, '').trim();
+    // 2. Strategy
+    const strategy = await generateSeoStrategy(research);
     
-    const parsedData = JSON.parse(cleanedText);
+    // 3. Generate
+    const generatedContent = await generateSeoContent(research, strategy);
 
-    // 6. Save to Database
+    // 4. Validate
+    const validation = await validateSeoContent(strategy, JSON.stringify(generatedContent, null, 2));
+
+    if (validation.status !== 'PASS') {
+        if (opportunityId) {
+            await prisma.seoOpportunity.update({
+                where: { id: opportunityId },
+                data: { status: 'REJECTED' }
+            });
+        }
+        return NextResponse.json({ success: false, message: "Validation Failed", issues: validation.issues });
+    }
+
+    // 5. Save as VALIDATED (Requires Admin Approval to go PUBLISHED)
     const newPage = await prisma.seoLandingPage.create({
       data: {
-        slug: parsedData.slug.toLowerCase().replace(/[^a-z0-9-]/g, '-'),
-        type: parsedData.type === "HOMESTAY" ? "HOMESTAY" : "TAXI",
-        title: parsedData.title,
-        description: parsedData.description,
-        h1Heading: parsedData.h1Heading,
-        content: parsedData.content,
-        faqs: parsedData.faqs,
-        imageUrl: `https://image.pollinations.ai/prompt/${encodeURIComponent(parsedData.imagePrompt || parsedData.title)}?width=800&height=400&nologo=true`
+        slug: (requestedTopic as string).toLowerCase().replace(/[^a-z0-9-]/g, '-'),
+        type: pageType,
+        title: generatedContent.title,
+        description: generatedContent.description,
+        h1Heading: generatedContent.h1Heading,
+        content: generatedContent.content,
+        faqs: generatedContent.faqs,
+        imageUrl: `https://image.pollinations.ai/prompt/${encodeURIComponent(requestedTopic as string)}?width=800&height=400&nologo=true`,
+        workflowState: "VALIDATED",
+        seoResearch: research as any,
+        seoStrategy: strategy as any,
+        validationReport: validation as any
       }
     });
 
+    if (opportunityId) {
+        await prisma.seoOpportunity.update({
+            where: { id: opportunityId },
+            data: { status: 'VALIDATED' }
+        });
+    }
+
     return NextResponse.json({
       success: true,
-      message: `Successfully generated and published SEO page for: ${newPage.slug}`,
-      page: newPage
+      message: `Successfully researched, generated, and VALIDATED SEO Page: ${newPage.slug}. Awaiting Admin Approval.`,
+      pageId: newPage.id
     });
 
   } catch (error: any) {
-    console.error("Cron Job Error:", error);
+    console.error("SEO Cron Pipeline Error:", error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }

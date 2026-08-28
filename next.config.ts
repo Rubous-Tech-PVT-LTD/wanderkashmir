@@ -39,7 +39,7 @@ const nextConfig: NextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
-  // @ts-ignore
+  // @ts-expect-error Next.js config accepts eslint key but TS types may not expose it
   eslint: {
     ignoreDuringBuilds: true,
   },

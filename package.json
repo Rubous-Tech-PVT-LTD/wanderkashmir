@@ -30,6 +30,7 @@
     "embla-carousel-autoplay": "^8.6.0",
     "embla-carousel-react": "^8.6.0",
     "framer-motion": "^12.40.0",
+    "googleapis": "^176.0.0",
     "jose": "^6.2.3",
     "leaflet": "^1.9.4",
     "lucide-react": "^1.17.0",

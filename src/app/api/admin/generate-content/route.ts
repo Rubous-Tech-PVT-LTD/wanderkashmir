@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import { getAdminSession } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 
 export const maxDuration = 300; // 5 minutes max duration for LLM processing
@@ -61,6 +62,11 @@ Return JSON format: { "message": string }`;
 
 export async function POST(request: Request) {
   try {
+    const session = await getAdminSession();
+    if (!session || session.role !== "ADMIN") {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const body = await request.json();
     const { seoPageId, platform } = body;
 

@@ -166,7 +166,29 @@ export default async function PropertyDetailPage({
         type="application/ld+json"
         dangerouslySetInnerHTML={{
           __html: JSON.stringify([
-            {
+            property.name === "The Vergan Resort" ? {
+              "@context": "https://schema.org",
+              "@type": "Hotel",
+              "name": "The Vergan Resort Pahalgam",
+              "description": "A hotel located near Movera Rafting Point in Pahalgam, offering 8 mountain-facing rooms, king-size beds, heating, free WiFi, and parking.",
+              "url": `https://www.wanderkashmir.com/stays/${property.id}`,
+              "telephone": "+91-6005473783",
+              "address": {
+                "@type": "PostalAddress",
+                "streetAddress": "Near Rafting Point, Movera, Yanier",
+                "addressLocality": "Pahalgam",
+                "addressRegion": "Jammu and Kashmir",
+                "postalCode": "192401",
+                "addressCountry": "IN"
+              },
+              "amenityFeature": [
+                { "@type": "LocationFeatureSpecification", "name": "Free WiFi", "value": true },
+                { "@type": "LocationFeatureSpecification", "name": "Parking", "value": true },
+                { "@type": "LocationFeatureSpecification", "name": "Room Service", "value": true },
+                { "@type": "LocationFeatureSpecification", "name": "Heating", "value": true },
+                { "@type": "LocationFeatureSpecification", "name": "On-site Restaurant", "value": true }
+              ]
+            } : {
               "@context": "https://schema.org",
               "@type": property.vendorProfile?.type === 'HOTEL' ? 'Hotel' : 'LodgingBusiness',
               "name": property.name,
@@ -250,12 +272,12 @@ export default async function PropertyDetailPage({
           altTexts={
             property.name === "The Vergan Resort" 
               ? [
-                  "Exterior view of The Vergan Resort in Pahalgam",
-                  "Comfortable bedroom with king size bed",
+                  "Exterior view of the resort building and grounds",
+                  "Mountain-facing bedroom with king-size bed and large windows",
                   "View of the surrounding mountains from the room",
-                  "The Vergan Resort dining area",
-                  "Property surroundings and garden",
-                  "Guest common area at The Vergan Resort",
+                  "On-site restaurant and indoor dining area",
+                  "Garden and pine forest surroundings at the property",
+                  "Guest common area at the property",
                   "Cozy evening view of the homestay",
                 ] 
               : undefined
@@ -290,8 +312,8 @@ export default async function PropertyDetailPage({
 
             {/* Description */}
             <PropertyDescription 
-              title={property.name === "The Vergan Resort" ? "About The Vergan Resort" : undefined}
-              description={property.description || "Experience the unparalleled beauty of Kashmir in this cozy property. Perfectly situated to give you the best views and comfort."} 
+              title={property.name === "The Vergan Resort" ? "About The Vergan Resort Pahalgam" : undefined}
+              description={property.name === "The Vergan Resort" ? "Located in the Yanier area, before the main Pahalgam town center, The Vergan Resort offers a peaceful stay away from the crowded markets. Situated near the Movera Rafting Point along the Lidder River, the property provides immediate access to both mountain scenery and outdoor activities.\n\nThe resort features 8 spacious, mountain-facing rooms equipped with dedicated heating, king-size beds, and uninterrupted high-speed WiFi. The on-site restaurant serves authentic Kashmiri Wazwan, and room service is available for guests." : (property.description || "Experience the unparalleled beauty of Kashmir in this cozy property. Perfectly situated to give you the best views and comfort.")} 
             />
 
             {/* Amenities */}
@@ -350,20 +372,26 @@ export default async function PropertyDetailPage({
                   Location & How to Reach
                 </h2>
                 <div className="bg-slate-50 border border-slate-200 rounded-xl p-6">
-                  <p className="text-slate-600 leading-relaxed whitespace-pre-wrap">The Vergan Resort is ideally located near the Movera Rafting Point in Pahalgam, making it easily accessible and perfect for exploring the valley. You can reach the property by taxi or private vehicle from Srinagar or Anantnag.</p>
+                  <p className="text-slate-600 leading-relaxed whitespace-pre-wrap"><strong>Address:</strong> Near Rafting Point, Movera, Yanier, Pahalgam, Anantnag, Jammu & Kashmir, 192401.<br/><br/>The Vergan Resort is situated before the main Pahalgam market on the Anantnag-Pahalgam road.<br/><br/>The resort features ample free on-site parking for guests arriving by private or rental vehicles.</p>
                 </div>
                 
                 <h2 className="text-xl font-bold text-slate-900 mt-10 mb-4 flex items-center gap-2">
                   <Star className="w-5 h-5 text-orange-500" />
-                  Things to Do Nearby
+                  Nearby Attractions & Things to Do
                 </h2>
                 <div className="bg-slate-50 border border-slate-200 rounded-xl p-6">
-                  <p className="text-slate-600 leading-relaxed whitespace-pre-wrap">Located close to the famous Movera Rafting Point, guests can easily engage in white-water rafting on the Lidder River. The resort also serves as an excellent base for visiting Betaab Valley, Aru Valley, and Baisaran (Mini Switzerland).</p>
+                  <ul className="space-y-4 text-slate-600 list-disc ml-4">
+                    <li><strong>Movera Rafting Point:</strong> A nearby location for guests interested in white-water rafting on the Lidder River.</li>
+                    <li><strong>Lidder River:</strong> Accessible by a short walk, suitable for evening strolls and enjoying the valley's natural landscape.</li>
+                    <li><strong>Aru Valley:</strong> A scenic drive past Pahalgam town, serving as the basecamp for the Kolahoi Glacier trek.</li>
+                    <li><strong>Betaab Valley:</strong> A popular meadow region known for its film history.</li>
+                    <li><strong>Baisaran (Mini Switzerland):</strong> Accessible via a pony trip from the main Pahalgam taxi stand.</li>
+                  </ul>
                 </div>
               </div>
             )}
 
-            {Array.isArray(property.faqs) && property.faqs.length > 0 && (
+            {(property.name === "The Vergan Resort" || (Array.isArray(property.faqs) && property.faqs.length > 0)) && (
               <div className="pt-10 border-t border-slate-100 mt-10">
                 <h2 className="text-xl font-bold text-slate-900 mb-6 flex items-center gap-2">
                   <svg className="w-5 h-5 text-orange-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -372,7 +400,31 @@ export default async function PropertyDetailPage({
                   {property.name === "The Vergan Resort" ? "Frequently Asked Questions" : `Questions & Answers - When Booking ${property.name}`}
                 </h2>
                 <div className="space-y-6">
-                  {property.faqs.map((faq: any, idx: number) => (
+                  {property.name === "The Vergan Resort" && (
+                    <>
+                      <div className="bg-slate-50 border border-slate-200 rounded-xl p-6">
+                        <div className="flex gap-3 mb-3">
+                          <span className="font-bold text-slate-900 shrink-0">Q:</span>
+                          <h4 className="font-bold text-slate-900">Where is The Vergan Resort located in Pahalgam?</h4>
+                        </div>
+                        <div className="flex gap-3">
+                          <span className="font-bold text-orange-500 shrink-0">A:</span>
+                          <p className="text-slate-600 leading-relaxed whitespace-pre-wrap">The resort is located in Yanier, Movera, before the main Pahalgam town center.</p>
+                        </div>
+                      </div>
+                      <div className="bg-slate-50 border border-slate-200 rounded-xl p-6">
+                        <div className="flex gap-3 mb-3">
+                          <span className="font-bold text-slate-900 shrink-0">Q:</span>
+                          <h4 className="font-bold text-slate-900">Is The Vergan Resort suitable for guests interested in river rafting?</h4>
+                        </div>
+                        <div className="flex gap-3">
+                          <span className="font-bold text-orange-500 shrink-0">A:</span>
+                          <p className="text-slate-600 leading-relaxed whitespace-pre-wrap">The resort is located near the Movera Rafting Point on the Lidder River, making it convenient for guests interested in rafting activities.</p>
+                        </div>
+                      </div>
+                    </>
+                  )}
+                  {Array.isArray(property.faqs) && property.faqs.map((faq: any, idx: number) => (
                     <div key={idx} className="bg-slate-50 border border-slate-200 rounded-xl p-6">
                       <div className="flex gap-3 mb-3">
                         <span className="font-bold text-slate-900 shrink-0">Q:</span>

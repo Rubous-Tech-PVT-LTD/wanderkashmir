@@ -331,25 +331,25 @@ model Review {
 }
 
 model Tour {
-  id            String      @id @default(cuid())
-  slug          String      @unique
+  id            String        @id @default(cuid())
+  slug          String        @unique
   title         String
   duration      String
-  destinations  String[]    @default([])
+  destinations  String[]      @default([])
   price         Float
   originalPrice Float?
   category      String
-  inclusions    String[]    @default([])
+  inclusions    String[]      @default([])
   maxPersons    Int
   badge         String?
-  images        String[]    @default([])
+  images        String[]      @default([])
   overview      String?
-  highlights    String[]    @default([])
+  highlights    String[]      @default([])
   itinerary     Json?
-  exclusions    String[]    @default([])
-  createdAt     DateTime    @default(now())
-  updatedAt     DateTime    @updatedAt
-  isLive        Boolean     @default(true)
+  exclusions    String[]      @default([])
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  isLive        Boolean       @default(true)
   categoryId    String?
   bookings      Booking[]
   promoCodes    PromoCode[]
@@ -368,8 +368,8 @@ model TourCategory {
 }
 
 model SeoLandingPage {
-  id            String         @id @default(cuid())
-  slug          String         @unique
+  id            String           @id @default(cuid())
+  slug          String           @unique
   type          String
   title         String
   description   String?
@@ -377,12 +377,29 @@ model SeoLandingPage {
   content       String?
   faqs          Json?
   imageUrl      String?
-  createdAt     DateTime       @default(now())
-  updatedAt     DateTime       @updatedAt
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
   contentAssets ContentAsset[]
   comments      SeoPageComment[]
 
+  // New SEO Intelligence Fields
+  workflowState      SeoWorkflowState @default(PUBLISHED)
+  seoResearch        Json?
+  seoStrategy        Json?
+  validationReport   Json?
+  gscInitialMetrics  Json?
+
   @@index([type])
+}
+
+enum SeoWorkflowState {
+  DRAFT
+  RESEARCHED
+  STRATEGISED
+  GENERATED
+  VALIDATED
+  PUBLISHED
+  REJECTED
 }
 
 model PromoCode {
@@ -501,6 +518,299 @@ model ContentSettings {
   updatedAt          DateTime @updatedAt
 }
 
+model SitePopup {
+  id           String   @id @default(cuid())
+  type         String
+  title        String
+  description  String
+  buttonText   String?
+  buttonLink   String?
+  displayStyle String
+  triggerRule  String
+  targetPages  String
+  isActive     Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model SeoPageComment {
+  id         String         @id @default(cuid())
+  seoPageId  String
+  name       String
+  email      String?
+  rating     Int?           @default(5)
+  comment    String
+  isApproved Boolean        @default(true)
+  createdAt  DateTime       @default(now())
+  updatedAt  DateTime       @updatedAt
+  adminReply String?
+  seoPage    SeoLandingPage @relation(fields: [seoPageId], references: [id], onDelete: Cascade)
+
+  @@index([seoPageId])
+  @@index([isApproved])
+}
+
+model CrmUser {
+  id            String                @id @default(cuid())
+  email         String                @unique
+  passwordHash  String
+  name          String
+  phone         String?
+  role          CrmRole               @default(BUSINESS_ASSOCIATE)
+  isActive      Boolean               @default(true)
+  joiningDate   DateTime              @default(now())
+  createdAt     DateTime              @default(now())
+  updatedAt     DateTime              @updatedAt
+  callLogs      CrmCallLog[]
+  commissions   CrmCommissionLedger[]
+  followUps     CrmFollowUp[]
+  assignedLeads CrmLead[]
+}
+
+model CrmLead {
+  id               String            @id @default(cuid())
+  companyName      String
+  contactPerson    String?
+  phone            String
+  email            String?
+  website          String?
+  city             String?
+  state            String?
+  agentType        String?
+  source           String?
+  status           CrmLeadStatus     @default(NEW)
+  interestLevel    String?
+  assignedBaId     String?
+  lastContactDate  DateTime?
+  nextFollowUpDate DateTime?
+  notes            String?
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  whatsappNumber   String?
+  createdBy        String?
+  rotationBatchId  String?
+  callLogs         CrmCallLog[]
+  followUps        CrmFollowUp[]
+  assignedBa       CrmUser?          @relation(fields: [assignedBaId], references: [id])
+  CrmRotationBatch CrmRotationBatch? @relation(fields: [rotationBatchId], references: [id])
+  partner          CrmPartner?
+
+  @@index([phone])
+  @@index([email])
+  @@index([companyName])
+  @@index([city])
+  @@index([state])
+  @@index([assignedBaId])
+  @@index([status])
+  @@index([nextFollowUpDate])
+  @@index([createdAt])
+}
+
+model CrmCallLog {
+  id           String    @id @default(cuid())
+  leadId       String
+  baId         String
+  outcome      String
+  notes        String?
+  followUpDate DateTime?
+  createdAt    DateTime  @default(now())
+  ba           CrmUser   @relation(fields: [baId], references: [id])
+  lead         CrmLead   @relation(fields: [leadId], references: [id], onDelete: Cascade)
+}
+
+model CrmFollowUp {
+  id          String            @id @default(cuid())
+  leadId      String
+  partnerId   String?
+  baId        String
+  task        String
+  dueDate     DateTime
+  status      CrmFollowUpStatus @default(PENDING)
+  notes       String?
+  completedAt DateTime?
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+  ba          CrmUser           @relation(fields: [baId], references: [id])
+  lead        CrmLead           @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  partner     CrmPartner?       @relation(fields: [partnerId], references: [id], onDelete: Cascade)
+}
+
+model CrmPartner {
+  id                  String           @id @default(cuid())
+  leadId              String           @unique
+  companyName         String
+  contactPerson       String?
+  phone               String
+  email               String?
+  city                String?
+  state               String?
+  website             String?
+  notes               String?
+  agentType           String?
+  status              CrmPartnerStatus @default(ACTIVE)
+  assignedBaId        String?
+  totalRequirements   Int              @default(0)
+  totalBookings       Int              @default(0)
+  totalBookingValue   Float            @default(0)
+  totalRealizedMargin Float            @default(0)
+  totalBaCommission   Float            @default(0)
+  lastBookingDate     DateTime?
+  createdAt           DateTime         @default(now())
+  updatedAt           DateTime         @updatedAt
+  bookings            CrmBooking[]
+  followUps           CrmFollowUp[]
+  lead                CrmLead          @relation(fields: [leadId], references: [id])
+  quotations          CrmQuotation[]
+  requirements        CrmRequirement[]
+}
+
+model CrmRequirement {
+  id                  String               @id @default(cuid())
+  partnerId           String
+  customerName        String
+  customerPhone       String
+  travelDate          DateTime?
+  returnDate          DateTime?
+  adults              Int                  @default(2)
+  children            Int                  @default(0)
+  rooms               Int                  @default(1)
+  pickupLocation      String?
+  dropLocation        String?
+  destinations        String[]             @default([])
+  hotelCategory       String?
+  mealPlan            String?
+  cabRequired         Boolean              @default(true)
+  sightseeingRequired Boolean              @default(true)
+  houseboatRequired   Boolean              @default(false)
+  specialRequirements String?
+  customerBudget      Float?
+  notes               String?
+  assignedOpsId       String?
+  status              CrmRequirementStatus @default(NEW)
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime             @updatedAt
+  cabType             String?
+  currency            String?              @default("INR")
+  customerEmail       String?
+  houseboatCategory   String?
+  houseboatNights     Int?
+  preferredHotel      String?
+  bookings            CrmBooking[]
+  quotations          CrmQuotation[]
+  partner             CrmPartner           @relation(fields: [partnerId], references: [id])
+}
+
+model CrmQuotation {
+  id                  String             @id @default(cuid())
+  requirementId       String
+  partnerId           String
+  baId                String
+  customerPrice       Float?
+  partnerPrice        Float
+  wanderKashmirMargin Float
+  version             Int                @default(1)
+  totalCost           Float              @default(0)
+  totalSellingPrice   Float              @default(0)
+  discount            Float              @default(0)
+  discountType        String             @default("FIXED")
+  grossMargin         Float              @default(0)
+  netMargin           Float              @default(0)
+  validUntil          DateTime?
+  terms               String?
+  cancellationPolicy  String?
+  status              CrmQuotationStatus @default(DRAFT)
+  createdAt           DateTime           @default(now())
+  updatedAt           DateTime           @updatedAt
+  bookings            CrmBooking[]
+  partner             CrmPartner         @relation(fields: [partnerId], references: [id])
+  requirement         CrmRequirement     @relation(fields: [requirementId], references: [id])
+  items               CrmQuotationItem[]
+}
+
+model CrmQuotationItem {
+  id                String                   @id @default(cuid())
+  quotationId       String
+  category          CrmQuotationItemCategory
+  description       String
+  quantity          Int                      @default(1)
+  unit              String                   @default("Per Person")
+  unitCost          Float                    @default(0)
+  unitSellingPrice  Float                    @default(0)
+  totalCost         Float                    @default(0)
+  totalSellingPrice Float                    @default(0)
+  createdAt         DateTime                 @default(now())
+  updatedAt         DateTime                 @updatedAt
+  quotation         CrmQuotation             @relation(fields: [quotationId], references: [id], onDelete: Cascade)
+}
+
+model CrmBooking {
+  id                       String               @id @default(cuid())
+  quotationId              String?
+  requirementId            String?
+  partnerId                String
+  baId                     String
+  travelDate               DateTime?
+  returnDate               DateTime?
+  customerPrice            Float?
+  partnerPrice             Float
+  wanderKashmirGrossMargin Float
+  expectedMargin           Float                @default(0)
+  totalCost                Float                @default(0)
+  realizedNetMargin        Float                @default(0)
+  status                   CrmBookingStatus     @default(PENDING)
+  paymentStatus            String               @default("PENDING")
+  tripStatus               String               @default("PENDING")
+  commissionStatus         String               @default("PENDING")
+  createdAt                DateTime             @default(now())
+  updatedAt                DateTime             @updatedAt
+  partner                  CrmPartner           @relation(fields: [partnerId], references: [id])
+  quotation                CrmQuotation?        @relation(fields: [quotationId], references: [id])
+  requirement              CrmRequirement?      @relation(fields: [requirementId], references: [id])
+  commissionLedger         CrmCommissionLedger?
+}
+
+model CrmCommissionLedger {
+  id                 String              @id @default(cuid())
+  bookingId          String              @unique
+  baId               String
+  bookingValue       Float
+  realizedNetMargin  Float
+  commissionPercent  Float
+  commissionAmount   Float
+  status             CrmCommissionStatus @default(PENDING)
+  tripCompletionDate DateTime?
+  paymentDate        DateTime?
+  approvedById       String?
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+  ba                 CrmUser             @relation(fields: [baId], references: [id])
+  booking            CrmBooking          @relation(fields: [bookingId], references: [id])
+}
+
+model CrmAuditLog {
+  id        String   @id @default(cuid())
+  userId    String
+  userRole  String
+  action    String
+  entity    String
+  entityId  String
+  oldValue  Json?
+  newValue  Json?
+  ipAddress String?
+  createdAt DateTime @default(now())
+}
+
+model CrmRotationBatch {
+  id              String    @id
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime
+  selectedBaIds   String[]
+  includePartners Boolean   @default(false)
+  currentRotation Int       @default(0)
+  maxRotations    Int
+  CrmLead         CrmLead[]
+}
+
 enum Role {
   ADMIN
   VENDOR
@@ -520,43 +830,6 @@ enum SubscriptionPlan {
   PRO
   ENTERPRISE
 }
-
-model SitePopup {
-  id           String   @id @default(cuid())
-  type         String   // OFFER, SIGN_IN, UPDATE
-  title        String
-  description  String
-  buttonText   String?
-  buttonLink   String?
-  displayStyle String   // MODAL, TOAST, BANNER
-  triggerRule  String   // IMMEDIATE, DELAY_3S, ON_SCROLL
-  targetPages  String   // ALL, HOMEPAGE, TOURS
-  isActive     Boolean  @default(false)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-}
-
-model SeoPageComment {
-  id         String   @id @default(cuid())
-  seoPageId  String
-  name       String
-  email      String?
-  rating     Int?     @default(5)
-  comment    String
-  isApproved Boolean  @default(true)
-  adminReply String?
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-
-  seoPage    SeoLandingPage @relation(fields: [seoPageId], references: [id], onDelete: Cascade)
-
-  @@index([seoPageId])
-  @@index([isApproved])
-}
-
-// ============================================================
-// CRM ISOLATED MODELS
-// ============================================================
 
 enum CrmRole {
   CRM_ADMIN
@@ -650,271 +923,30 @@ enum CrmFollowUpStatus {
   CANCELLED
 }
 
-model CrmUser {
-  id             String    @id @default(cuid())
-  email          String    @unique
-  passwordHash   String
-  name           String
-  phone          String?
-  role           CrmRole   @default(BUSINESS_ASSOCIATE)
-  isActive       Boolean   @default(true)
-  joiningDate    DateTime  @default(now())
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
-  
-  assignedLeads  CrmLead[]
-  callLogs       CrmCallLog[]
-  commissions    CrmCommissionLedger[]
-  followUps      CrmFollowUp[]
+model SystemConfig {
+  id        String   @id @default(cuid())
+  key       String   @unique  // e.g., "GSC_REFRESH_TOKEN", "GSC_SITE_URL"
+  value     String   @db.Text // Encrypted value for tokens, plain for URLs
+  updatedAt DateTime @updatedAt
 }
 
-model CrmLead {
-  id               String        @id @default(cuid())
-  companyName      String
-  contactPerson    String?
-  phone            String
-  email            String?
-  website          String?
-  city             String?
-  state            String?
-  agentType        String?
-  source           String?
-  status           CrmLeadStatus @default(NEW)
-  interestLevel    String?
-  
-  assignedBaId     String?
-  assignedBa       CrmUser?      @relation(fields: [assignedBaId], references: [id])
-  
-  lastContactDate  DateTime?
-  nextFollowUpDate DateTime?
-  notes            String?
-  
-  createdAt        DateTime      @default(now())
-  updatedAt        DateTime      @updatedAt
-
-  callLogs         CrmCallLog[]
-  followUps        CrmFollowUp[]
-  partner          CrmPartner?
-  
-  @@index([phone])
-  @@index([email])
-  @@index([companyName])
-  @@index([city])
-  @@index([state])
-  @@index([assignedBaId])
-  @@index([status])
-  @@index([nextFollowUpDate])
-  @@index([createdAt])
-}
-
-model CrmCallLog {
-  id           String    @id @default(cuid())
-  leadId       String
-  baId         String
-  outcome      String
-  notes        String?
-  followUpDate DateTime?
-  createdAt    DateTime  @default(now())
-  
-  lead         CrmLead   @relation(fields: [leadId], references: [id], onDelete: Cascade)
-  ba           CrmUser   @relation(fields: [baId], references: [id])
-}
-
-model CrmFollowUp {
-  id           String            @id @default(cuid())
-  leadId       String
-  partnerId    String?
-  baId         String
-  task         String
-  dueDate      DateTime
-  status       CrmFollowUpStatus @default(PENDING)
-  notes        String?
-  completedAt  DateTime?
-  createdAt    DateTime          @default(now())
-  updatedAt    DateTime          @updatedAt
-  
-  lead         CrmLead           @relation(fields: [leadId], references: [id], onDelete: Cascade)
-  partner      CrmPartner?       @relation(fields: [partnerId], references: [id], onDelete: Cascade)
-  ba           CrmUser           @relation(fields: [baId], references: [id])
-}
-
-model CrmPartner {
-  id                   String           @id @default(cuid())
-  leadId               String           @unique
-  companyName          String
-  contactPerson        String?
-  phone                String
-  email                String?
-  city                 String?
-  state                String?
-  website              String?
-  notes                String?
-  agentType            String?
-  status               CrmPartnerStatus @default(ACTIVE)
-  
-  assignedBaId         String?
-  
-  totalRequirements    Int              @default(0)
-  totalBookings        Int              @default(0)
-  totalBookingValue    Float            @default(0)
-  totalRealizedMargin  Float            @default(0)
-  totalBaCommission    Float            @default(0)
-  lastBookingDate      DateTime?
-  
-  createdAt            DateTime         @default(now())
-  updatedAt            DateTime         @updatedAt
-  
-  lead                 CrmLead          @relation(fields: [leadId], references: [id])
-  requirements         CrmRequirement[]
-  followUps            CrmFollowUp[]
-  quotations           CrmQuotation[]
-  bookings             CrmBooking[]
-}
-
-model CrmRequirement {
-  id                  String               @id @default(cuid())
-  partnerId           String
-  customerName        String
-  customerPhone       String
-  travelDate          DateTime?
-  returnDate          DateTime?
-  adults              Int                  @default(2)
-  children            Int                  @default(0)
-  rooms               Int                  @default(1)
-  pickupLocation      String?
-  dropLocation        String?
-  destinations        String[]             @default([])
-  hotelCategory       String?
-  mealPlan            String?
-  cabRequired         Boolean              @default(true)
-  sightseeingRequired Boolean              @default(true)
-  houseboatRequired   Boolean              @default(false)
-  specialRequirements String?
-  customerBudget      Float?
-  notes               String?
-  assignedOpsId       String?
-  status              CrmRequirementStatus @default(NEW)
-  
-  createdAt           DateTime             @default(now())
-  updatedAt           DateTime             @updatedAt
-  
-  partner             CrmPartner           @relation(fields: [partnerId], references: [id])
-  quotations          CrmQuotation[]
-  bookings            CrmBooking[]
-}
-
-model CrmQuotation {
-  id                     String             @id @default(cuid())
-  requirementId          String
-  partnerId              String
-  baId                   String
-  
-  // Legacy fields retained for backward compatibility
-  customerPrice          Float?
-  partnerPrice           Float
-  wanderKashmirMargin    Float
-  
-  // New quotation fields
-  version                Int                @default(1)
-  totalCost              Float              @default(0)
-  totalSellingPrice      Float              @default(0)
-  discount               Float              @default(0)
-  discountType           String             @default("FIXED") // FIXED or PERCENTAGE
-  grossMargin            Float              @default(0)
-  netMargin              Float              @default(0)
-  validUntil             DateTime?
-  
-  terms                  String?
-  cancellationPolicy     String?
-  status                 CrmQuotationStatus @default(DRAFT)
-  createdAt              DateTime           @default(now())
-  updatedAt              DateTime           @updatedAt
-  
-  requirement            CrmRequirement     @relation(fields: [requirementId], references: [id])
-  partner                CrmPartner         @relation(fields: [partnerId], references: [id])
-  bookings               CrmBooking[]
-  items                  CrmQuotationItem[]
-}
-
-model CrmQuotationItem {
-  id               String                   @id @default(cuid())
-  quotationId      String
-  category         CrmQuotationItemCategory
-  description      String
-  quantity         Int                      @default(1)
-  unit             String                   @default("Per Person")
-  unitCost         Float                    @default(0)
-  unitSellingPrice Float                    @default(0)
-  totalCost        Float                    @default(0)
-  totalSellingPrice Float                   @default(0)
-  createdAt        DateTime                 @default(now())
-  updatedAt        DateTime                 @updatedAt
-
-  quotation        CrmQuotation             @relation(fields: [quotationId], references: [id], onDelete: Cascade)
-}
-
-model CrmBooking {
-  id                   String           @id @default(cuid())
-  quotationId          String?
-  requirementId        String?
-  partnerId            String
-  baId                 String
-  travelDate           DateTime?
-  returnDate           DateTime?
-  customerPrice        Float?
-  partnerPrice         Float
-  
-  // Retained legacy field
-  wanderKashmirGrossMargin Float
-  
-  // New fields
-  expectedMargin       Float            @default(0)
-  totalCost            Float            @default(0)
-  
-  realizedNetMargin    Float            @default(0)
-  
-  status               CrmBookingStatus @default(PENDING)
-  paymentStatus        String           @default("PENDING")
-  tripStatus           String           @default("PENDING")
-  commissionStatus     String           @default("PENDING")
-  
-  createdAt            DateTime         @default(now())
-  updatedAt            DateTime         @updatedAt
-  
-  quotation            CrmQuotation?    @relation(fields: [quotationId], references: [id])
-  requirement          CrmRequirement?  @relation(fields: [requirementId], references: [id])
-  partner              CrmPartner       @relation(fields: [partnerId], references: [id])
-  commissionLedger     CrmCommissionLedger?
-}
-
-model CrmCommissionLedger {
-  id                  String              @id @default(cuid())
-  bookingId           String              @unique
-  baId                String
-  bookingValue        Float
-  realizedNetMargin   Float
-  commissionPercent   Float
-  commissionAmount    Float
-  status              CrmCommissionStatus @default(PENDING)
-  tripCompletionDate  DateTime?
-  paymentDate         DateTime?
-  approvedById        String?
-  createdAt           DateTime            @default(now())
-  updatedAt           DateTime            @updatedAt
-  
-  booking             CrmBooking          @relation(fields: [bookingId], references: [id])
-  ba                  CrmUser             @relation(fields: [baId], references: [id])
-}
-
-model CrmAuditLog {
-  id          String   @id @default(cuid())
-  userId      String
-  userRole    String
-  action      String
-  entity      String
-  entityId    String
-  oldValue    Json?
-  newValue    Json?
-  ipAddress   String?
-  createdAt   DateTime @default(now())
+model SeoOpportunity {
+  id                  String   @id @default(cuid())
+  topic               String   @unique
+  cluster             Json?
+  gscSignals          Json?
+  intent              String?
+  businessRelevance   String?
+  cannibalizationRisk String?
+  googleTrends        String?
+  keywordPlanner      String?
+  type                String   // CREATE, OPTIMIZE, MONITOR, IGNORE, MANUAL_REVIEW
+  opportunityScore    Int      @default(0)
+  reason              String?
+  evidence            String?
+  existingPageUrl     String?
+  existingPageType    String?
+  status              String   @default("DISCOVERED") // DISCOVERED, RESEARCHED, RESOLVED
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
 }

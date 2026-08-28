@@ -1,8 +1,14 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
+import { getAdminSession } from "@/lib/auth";
 
 export async function GET(req: Request) {
   try {
+    const session = await getAdminSession();
+    if (!session || session.role !== "ADMIN") {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const { searchParams } = new URL(req.url);
     const type = searchParams.get("type"); // e.g., TAXI, HOMESTAY, TOUR
 
@@ -22,10 +28,13 @@ export async function GET(req: Request) {
 
 export async function POST(req: Request) {
   try {
+    const session = await getAdminSession();
+    if (!session || session.role !== "ADMIN") {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const body = await req.json();
     const { slug, type, title, description, h1Heading, content, faqs, imageUrl } = body;
-
-    // Optional: add authorization check here to ensure user is ADMIN
 
     if (!slug || !type || !title || !h1Heading) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });

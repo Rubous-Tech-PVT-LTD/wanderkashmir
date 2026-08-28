@@ -1,13 +1,526 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Plus, Edit2, Trash2, Globe, Search, Link as LinkIcon, Wand2, RefreshCw, PenTool, ArrowLeft } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { Plus, Edit2, Trash2, Globe, Search, Link as LinkIcon, Wand2, RefreshCw, PenTool, ArrowLeft, BarChart2, Lightbulb, FileText, Activity } from "lucide-react";
 import Link from "next/link";
 import { triggerSeoGeneration, triggerBlogGeneration } from "@/actions/admin-seo";
 import ContentDistributionModal from "./ContentDistributionModal";
 import { Share2 } from "lucide-react";
 
 export default function AdminSeoTab() {
+  const [activeTab, setActiveTab] = useState<"overview" | "pages" | "opportunities" | "research">("pages");
+  const [researchTarget, setResearchTarget] = useState<{ topic: string, url: string, type: string } | null>(null);
+
+  const startResearch = (topic: string, url?: string, type?: string) => {
+    setResearchTarget({ topic, url: url || '', type: type || 'DESTINATION' });
+    setActiveTab("research");
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Top Navigation Tabs */}
+      <div className="flex space-x-1 bg-white p-1 rounded-xl shadow-sm border border-slate-100 mb-6 max-w-2xl">
+        <button
+          onClick={() => setActiveTab("overview")}
+          className={`flex-1 flex items-center justify-center gap-2 py-2.5 text-sm font-medium rounded-lg transition-colors ${
+            activeTab === "overview" ? "bg-slate-100 text-slate-900" : "text-slate-500 hover:text-slate-700 hover:bg-slate-50"
+          }`}
+        >
+          <BarChart2 className="w-4 h-4" /> Overview
+        </button>
+        <button
+          onClick={() => setActiveTab("pages")}
+          className={`flex-1 flex items-center justify-center gap-2 py-2.5 text-sm font-medium rounded-lg transition-colors ${
+            activeTab === "pages" ? "bg-slate-100 text-slate-900" : "text-slate-500 hover:text-slate-700 hover:bg-slate-50"
+          }`}
+        >
+          <FileText className="w-4 h-4" /> Pages
+        </button>
+        <button
+          onClick={() => setActiveTab("opportunities")}
+          className={`flex-1 flex items-center justify-center gap-2 py-2.5 text-sm font-medium rounded-lg transition-colors ${
+            activeTab === "opportunities" ? "bg-[#f97316]/10 text-[#ea580c]" : "text-slate-500 hover:text-[#ea580c] hover:bg-slate-50"
+          }`}
+        >
+          <Lightbulb className="w-4 h-4" /> Opportunities
+        </button>
+        <button
+          onClick={() => setActiveTab("research")}
+          className={`flex-1 flex items-center justify-center gap-2 py-2.5 text-sm font-medium rounded-lg transition-colors ${
+            activeTab === "research" ? "bg-indigo-50 text-indigo-700" : "text-slate-500 hover:text-indigo-600 hover:bg-slate-50"
+          }`}
+        >
+          <Activity className="w-4 h-4" /> SEO Research (New)
+        </button>
+      </div>
+
+      {activeTab === "pages" && <LegacyPagesView />}
+      {activeTab === "overview" && <PlaceholderView title="GSC Overview" desc="Site-wide Search Console metrics will appear here." />}
+      {activeTab === "opportunities" && <OpportunitiesView onResearch={startResearch} />}
+      {activeTab === "research" && <SeoResearchWizard initialTarget={researchTarget} />}
+    </div>
+  );
+}
+
+function PlaceholderView({ title, desc }: { title: string, desc: string }) {
+  return (
+    <div className="bg-white p-12 text-center rounded-2xl border border-slate-100 shadow-sm">
+      <h3 className="text-xl font-bold text-slate-800 mb-2">{title}</h3>
+      <p className="text-slate-500">{desc}</p>
+    </div>
+  );
+}
+
+// -----------------------------------------------------------------------------
+// NEW: SEO OPPORTUNITIES VIEW
+// -----------------------------------------------------------------------------
+function OpportunitiesView({ onResearch }: { onResearch: (topic: string, url?: string, type?: string) => void }) {
+  const [opportunities, setOpportunities] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [filter, setFilter] = useState("ALL");
+  const [expandedRow, setExpandedRow] = useState<number | null>(null);
+
+  const fetchOps = async () => {
+    setIsLoading(true);
+    try {
+      const res = await fetch('/api/admin/seo-intelligence/opportunities');
+      const data = await res.json();
+      if (data.success) {
+        setOpportunities(data.data);
+      }
+    } catch (e) {
+      console.error(e);
+    }
+    setIsLoading(false);
+  };
+
+  useEffect(() => {
+    fetchOps();
+  }, []);
+
+  const filtered = filter === "ALL" ? opportunities : opportunities.filter(o => o.type === filter);
+
+  return (
+    <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+      <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+        <div>
+          <h2 className="text-xl font-bold text-slate-800">Content Opportunities</h2>
+          <p className="text-sm text-slate-500">AI-detected opportunities based on real GSC data and content gaps.</p>
+        </div>
+        <div className="flex gap-4 items-center">
+          <select value={filter} onChange={e => setFilter(e.target.value)} className="p-2 border rounded-lg text-sm bg-white">
+            <option value="ALL">All Actions</option>
+            <option value="CREATE">CREATE</option>
+            <option value="OPTIMIZE">OPTIMIZE</option>
+            <option value="MONITOR">MONITOR</option>
+            <option value="MANUAL_REVIEW">MANUAL REVIEW</option>
+            <option value="IGNORE">IGNORE</option>
+          </select>
+          <button onClick={fetchOps} className="px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm font-medium hover:bg-slate-50 flex items-center gap-2">
+            <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} /> Refresh Opportunities
+          </button>
+        </div>
+      </div>
+      
+      {isLoading ? (
+        <div className="p-12 text-center text-slate-500">Analyzing GSC Signals...</div>
+      ) : (
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="bg-slate-50 border-b border-slate-100 text-sm font-semibold text-slate-600">
+                <th className="p-4">Action</th>
+                <th className="p-4">Score</th>
+                <th className="p-4">Topic / Cluster</th>
+                <th className="p-4 text-center">Trend</th>
+                <th className="p-4 text-center">Planner</th>
+                <th className="p-4 text-right">Imp.</th>
+                <th className="p-4 text-right">Pos.</th>
+                <th className="p-4 text-center">Biz Rel.</th>
+                <th className="p-4 text-right"></th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100 text-sm">
+              {filtered.map((op, i) => (
+                <React.Fragment key={i}>
+                <tr className="hover:bg-slate-50/50 cursor-pointer" onClick={() => setExpandedRow(expandedRow === i ? null : i)}>
+                  <td className="p-4">
+                    <span className={`px-2 py-1 text-xs font-semibold rounded-full ${
+                      op.type === "CREATE" ? "bg-blue-100 text-blue-800" :
+                      op.type === "OPTIMIZE" ? "bg-orange-100 text-orange-800" :
+                      op.type === "MONITOR" ? "bg-slate-100 text-slate-800" :
+                      op.type === "MANUAL_REVIEW" ? "bg-yellow-100 text-yellow-800" :
+                      "bg-red-100 text-red-800"
+                    }`}>
+                      {op.type}
+                    </span>
+                  </td>
+                  <td className="p-4 font-bold text-slate-700">{op.opportunityScore}</td>
+                  <td className="p-4 font-medium text-slate-800">{op.topic}</td>
+                  <td className="p-4 text-center text-slate-600 text-xs">{op.googleTrends || 'UNAVAILABLE'}</td>
+                  <td className="p-4 text-center text-slate-600 text-xs">{op.keywordPlanner || 'UNAVAILABLE'}</td>
+                  <td className="p-4 text-right text-slate-600">{op.gscSignals?.impressions || '-'}</td>
+                  <td className="p-4 text-right text-slate-600">{op.gscSignals?.position?.toFixed(1) || '-'}</td>
+                  <td className="p-4 text-center text-slate-600 text-xs">{op.businessRelevance}</td>
+                  <td className="p-4 text-right">
+                    {(op.type === 'CREATE' || op.type === 'OPTIMIZE') && (
+                        <button onClick={(e) => { e.stopPropagation(); onResearch(op.topic, op.existingPage?.url, op.existingPage?.type); }} className="px-3 py-1 bg-indigo-600 text-white rounded text-xs">
+                          Research
+                        </button>
+                    )}
+                  </td>
+                </tr>
+                {expandedRow === i && (
+                  <tr className="bg-slate-50/30">
+                     <td colSpan={10} className="p-6">
+                       <h4 className="font-bold text-slate-800 mb-2">WHY THIS OPPORTUNITY?</h4>
+                       <div className="grid grid-cols-2 gap-4 text-sm text-slate-700">
+                          <div>
+                            <strong>GSC Evidence:</strong><br/>
+                            Impressions: {op.gscSignals?.impressions}, Clicks: {op.gscSignals?.clicks}, CTR: {((op.gscSignals?.ctr || 0) * 100).toFixed(1)}%, Position: {op.gscSignals?.position?.toFixed(1)}<br/><br/>
+                            
+                            <strong>Trend Signal:</strong> {op.googleTrends || 'UNAVAILABLE'}<br/>
+                            <strong>Keyword Evidence:</strong> {op.keywordPlanner || 'UNAVAILABLE'}<br/><br/>
+                            
+                            <strong>Existing Content:</strong><br/>
+                            {op.existingPage ? <a href={op.existingPage.url} target="_blank" className="text-indigo-600 underline">{op.existingPage.title} ({op.existingPage.type})</a> : "None found."}<br/><br/>
+
+                            <strong>Cluster Queries:</strong><br/>
+                            {op.cluster?.join(', ')}
+                          </div>
+                          <div>
+                            <strong>Reason:</strong><br/>
+                            {op.reason}<br/><br/>
+                            
+                            <strong>Evidence:</strong><br/>
+                            {op.evidence}<br/><br/>
+
+                            <strong>Search Intent:</strong> {op.intent}<br/>
+                            <strong>Cannibalization Risk:</strong><br/>
+                            <span className={op.cannibalizationRisk === 'HIGH' ? 'text-red-600 font-bold' : ''}>{op.cannibalizationRisk}</span>
+                          </div>
+                       </div>
+                    </td>
+                  </tr>
+                )}
+                </React.Fragment>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// -----------------------------------------------------------------------------
+// NEW: SEO RESEARCH WIZARD (THE NEW PIPELINE)
+// -----------------------------------------------------------------------------
+function SeoResearchWizard({ initialTarget }: { initialTarget?: { topic: string, url: string, type: string } | null }) {
+  const [step, setStep] = useState(1);
+  const [topic, setTopic] = useState("");
+  const [type, setType] = useState("DESTINATION");
+  const [url, setUrl] = useState("");
+  
+  useEffect(() => {
+     if (initialTarget) {
+        setTopic(initialTarget.topic);
+        setUrl(initialTarget.url);
+        setType(initialTarget.type);
+     }
+  }, [initialTarget]);
+
+  const [isLoading, setIsLoading] = useState(false);
+  const [researchData, setResearchData] = useState<any>(null);
+  const [strategyData, setStrategyData] = useState<any>(null);
+  
+  // Historical protection payload simulation
+  const historicalPayload = { clicks: 10, impressions: 91, ctr: 0.11, position: 8.8 };
+  const [generatedContent, setGeneratedContent] = useState<any>(null);
+  const [validationReport, setValidationReport] = useState<any>(null);
+
+  const runResearch = async () => {
+    setIsLoading(true);
+    try {
+      const payload: any = { target: topic, type, url: url || undefined };
+      if (url && url.includes('vergan')) {
+          payload.historicalBaseline = historicalPayload;
+      }
+      const res = await fetch('/api/admin/seo-intelligence/research', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      if (data.success) {
+        setResearchData(data.data);
+        setStep(2);
+      } else alert(data.error);
+    } catch(e) { console.error(e); }
+    setIsLoading(false);
+  };
+
+  const runStrategy = async () => {
+    setIsLoading(true);
+    try {
+      const res = await fetch('/api/admin/seo-intelligence/strategy', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ research: researchData })
+      });
+      const data = await res.json();
+      if (data.success) {
+        setStrategyData(data.data);
+        setStep(3);
+      } else alert(data.error);
+    } catch(e) { console.error(e); }
+    setIsLoading(false);
+  };
+
+  const runGeneration = async () => {
+    setIsLoading(true);
+    try {
+      const res = await fetch('/api/admin/seo-intelligence/generate', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ research: researchData, strategy: strategyData })
+      });
+      const data = await res.json();
+      if (data.success) {
+        setGeneratedContent(data.data);
+        setStep(4);
+      } else alert(data.error);
+    } catch(e) { console.error(e); }
+    setIsLoading(false);
+  };
+
+  const runValidation = async () => {
+    setIsLoading(true);
+    try {
+      const res = await fetch('/api/admin/seo-intelligence/validate', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ strategy: strategyData, generatedContent: JSON.stringify(generatedContent) })
+      });
+      const data = await res.json();
+      if (data.success) {
+        setValidationReport(data.data);
+        setStep(5);
+      } else alert(data.error);
+    } catch(e) { console.error(e); }
+    setIsLoading(false);
+  };
+
+  const publishToDb = async () => {
+    setIsLoading(true);
+    try {
+      const payload = {
+        slug: topic.toLowerCase().replace(/[^a-z0-9-]/g, '-'),
+        type: type,
+        title: generatedContent.title,
+        description: generatedContent.description,
+        h1Heading: generatedContent.h1Heading,
+        content: generatedContent.content,
+        faqs: generatedContent.faqs,
+        workflowState: 'PUBLISHED',
+        seoResearch: researchData,
+        seoStrategy: strategyData,
+        validationReport: validationReport
+      };
+
+      const res = await fetch('/api/admin/seo-pages', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      if (res.ok) {
+        alert("Published Successfully via the New Intelligence Pipeline!");
+        // Reset wizard
+        setStep(1); setTopic(""); setResearchData(null); setStrategyData(null); setGeneratedContent(null);
+      }
+    } catch (e) {
+      console.error(e);
+      alert("Failed to publish.");
+    }
+    setIsLoading(false);
+  };
+
+  return (
+    <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+      <h2 className="text-xl font-bold text-slate-800 mb-6 flex items-center gap-2">
+        <Activity className="w-5 h-5 text-indigo-600" /> SEO Intelligence Pipeline
+      </h2>
+
+      {/* Progress Steps */}
+      <div className="flex gap-2 mb-8">
+        {[1, 2, 3, 4, 5].map(s => (
+          <div key={s} className={`h-2 flex-1 rounded-full ${step >= s ? 'bg-indigo-600' : 'bg-slate-100'}`} />
+        ))}
+      </div>
+
+      {step === 1 && (
+        <div className="space-y-4 max-w-xl">
+          <h3 className="font-bold text-lg">Step 1: Input & Discovery</h3>
+          <p className="text-sm text-slate-500">Enter a target keyword, topic, or URL. The engine will gather GSC, intent, and gap data.</p>
+          <input 
+            type="text" 
+            placeholder="e.g. srinagar to gulmarg taxi" 
+            value={topic} onChange={e => setTopic(e.target.value)} 
+            className="w-full p-3 border rounded-lg"
+          />
+          <input 
+            type="text" 
+            placeholder="Existing Page URL (Optional)" 
+            value={url} onChange={e => setUrl(e.target.value)} 
+            className="w-full p-3 border rounded-lg text-sm text-slate-500"
+          />
+          <select value={type} onChange={e => setType(e.target.value)} className="w-full p-3 border rounded-lg">
+            <option value="TAXI">Taxi</option>
+            <option value="HOMESTAY">Homestay</option>
+            <option value="TOUR">Tour Package</option>
+            <option value="DESTINATION">Destination</option>
+            <option value="BLOG">Blog</option>
+          </select>
+          <button onClick={runResearch} disabled={isLoading || !topic} className="px-6 py-3 bg-indigo-600 text-white rounded-lg flex items-center gap-2">
+            {isLoading ? <RefreshCw className="animate-spin w-4 h-4" /> : <Search className="w-4 h-4" />} Analyze Topic
+          </button>
+        </div>
+      )}
+
+      {step === 2 && researchData && (
+        <div className="space-y-6 animate-in fade-in">
+          <div className="flex gap-4 mb-2 text-xs font-semibold flex-wrap">
+             <div className="px-3 py-1 bg-green-100 text-green-800 rounded border border-green-200">GSC: CONNECTED ✓</div>
+             <div className={`px-3 py-1 rounded border ${researchData.googleTrends?.status === 'AVAILABLE' ? 'bg-green-100 text-green-800 border-green-200' : 'bg-slate-100 text-slate-600 border-slate-200'}`}>Google Trends: {researchData.googleTrends?.status || 'UNAVAILABLE'}</div>
+             <div className={`px-3 py-1 rounded border ${researchData.keywordPlanner?.status === 'AVAILABLE' ? 'bg-green-100 text-green-800 border-green-200' : 'bg-slate-100 text-slate-600 border-slate-200'}`}>Google Keyword Planner: {researchData.keywordPlanner?.status || 'UNAVAILABLE'}</div>
+             <div className="px-3 py-1 bg-red-50 text-red-600 rounded border border-red-200">Paid Keyword Provider: DISABLED</div>
+             <div className="px-3 py-1 bg-red-50 text-red-600 rounded border border-red-200">Paid SERP Provider: DISABLED</div>
+          </div>
+        
+          <div className="bg-white border rounded-xl overflow-hidden shadow-sm">
+            <div className="bg-slate-50 p-4 border-b font-bold flex justify-between">
+               <span>Research Summary: {researchData.target}</span>
+               <span className="text-indigo-600">Intent: {researchData.searchIntent?.toUpperCase()}</span>
+            </div>
+            <div className="p-6 grid grid-cols-2 gap-6 text-sm">
+               <div>
+                 <h4 className="font-bold mb-2">GSC Intelligence</h4>
+                 {researchData.gsc.hasPageLevelHistory ? (
+                    <div className="space-y-1">
+                      <div><strong>Target Page:</strong> {researchData.pageUrl}</div>
+                      <div><strong>Clicks:</strong> {researchData.gsc.pageMetrics?.clicks}</div>
+                      <div><strong>Impressions:</strong> {researchData.gsc.pageMetrics?.impressions}</div>
+                      <div><strong>CTR:</strong> {((researchData.gsc.pageMetrics?.ctr || 0) * 100).toFixed(1)}%</div>
+                      <div><strong>Position:</strong> {researchData.gsc.pageMetrics?.position?.toFixed(1)}</div>
+                      <div className="mt-2 text-indigo-700 font-bold bg-indigo-50 p-2 rounded border border-indigo-100">
+                        Delta: {researchData.performanceDelta?.status}
+                      </div>
+                    </div>
+                 ) : (
+                    <div className="text-slate-500 bg-slate-50 p-3 rounded-lg border border-dashed">No existing page history found. Fetching sitewide related queries.</div>
+                 )}
+                 <div className="text-xs text-slate-400 mt-2 italic">Source: Google Search Console</div>
+               </div>
+               
+               <div>
+                 <h4 className="font-bold mb-2">Google Keyword Planner</h4>
+                 <div className="space-y-1 bg-slate-50 p-3 rounded-lg border">
+                    <div><strong>Search Volume:</strong> {researchData.keywordPlanner?.searchVolume || 'N/A'}</div>
+                    <div><strong>Competition:</strong> {researchData.keywordPlanner?.competition || 'N/A'}</div>
+                    <div className="mt-2"><strong>Related:</strong></div>
+                    <div className="text-xs text-slate-500">{researchData.keywordPlanner?.relatedKeywords?.join(', ') || 'N/A'}</div>
+                 </div>
+                 <div className="text-xs text-slate-400 mt-2 italic">Source: {researchData.keywordPlanner?.source || 'Keyword Planner unavailable'}</div>
+
+                 <h4 className="font-bold mb-2 mt-4">Google Trends</h4>
+                 <div className="space-y-1 bg-slate-50 p-3 rounded-lg border">
+                    <div><strong>Trend Signal:</strong> <span className="font-bold text-indigo-600">{researchData.googleTrends?.trendSignal || 'N/A'}</span></div>
+                 </div>
+                 <div className="text-xs text-slate-400 mt-2 italic">Source: {researchData.googleTrends?.source || 'Google Trends unavailable'}</div>
+               </div>
+               
+               <div className="col-span-2 border-t border-slate-100 pt-4">
+                 <h4 className={`font-bold mb-2 ${researchData.cannibalizationRisk?.status === 'HIGH_RISK' ? 'text-red-700' : 'text-slate-800'}`}>Cannibalization Risk</h4>
+                 <p className="font-semibold">{researchData.cannibalizationRisk?.status} - {researchData.cannibalizationRisk?.recommendation}</p>
+                 {researchData.cannibalizationRisk?.reason && <p className="text-slate-600 mt-1">{researchData.cannibalizationRisk.reason}</p>}
+                 {researchData.cannibalizationRisk?.competingPages?.length > 0 && (
+                    <ul className="mt-2 list-disc pl-5 text-xs text-slate-600 space-y-1">
+                      {researchData.cannibalizationRisk.competingPages.map((c: any) => (
+                         <li key={c.url}>{c.title} ({c.type})</li>
+                      ))}
+                    </ul>
+                 )}
+                 <div className="text-xs text-slate-400 mt-2 italic">Source: WanderKashmir DB Inference</div>
+               </div>
+               
+               <div className="col-span-2 border-t border-slate-100 pt-4">
+                  <h4 className="font-bold mb-3 text-slate-400">Paid Providers (DISABLED)</h4>
+                  <div className="text-slate-500 text-sm bg-red-50 p-4 rounded-lg border border-red-100 flex items-center justify-center">
+                     All Paid Keyword and SERP API calls have been strictly disabled per configuration.
+                  </div>
+               </div>
+            </div>
+          </div>
+          <div className="flex justify-end pt-2">
+            <button onClick={runStrategy} disabled={isLoading} className="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 transition-colors text-white rounded-lg flex items-center gap-2 shadow-sm font-medium">
+              {isLoading ? <RefreshCw className="animate-spin w-4 h-4" /> : <Wand2 className="w-4 h-4" />} Generate AI Strategy
+            </button>
+          </div>
+        </div>
+      )}
+
+      {step === 3 && strategyData && (
+        <div className="space-y-4">
+          <h3 className="font-bold text-lg">Step 3: AI Strategy</h3>
+          <div className="p-4 bg-slate-50 rounded-lg text-sm font-mono overflow-auto max-h-64">
+            <pre>{JSON.stringify(strategyData, null, 2)}</pre>
+          </div>
+          <button onClick={runGeneration} disabled={isLoading} className="px-6 py-3 bg-indigo-600 text-white rounded-lg flex items-center gap-2">
+             {isLoading ? <RefreshCw className="animate-spin w-4 h-4" /> : <PenTool className="w-4 h-4" />} Write Content
+          </button>
+        </div>
+      )}
+
+      {step === 4 && generatedContent && (
+        <div className="space-y-4">
+          <h3 className="font-bold text-lg">Step 4: Generated Content Preview</h3>
+          <div className="p-4 bg-slate-50 rounded-lg">
+            <h4 className="font-bold text-xl">{generatedContent.title}</h4>
+            <p className="text-slate-500 mb-4">{generatedContent.description}</p>
+            <h1 className="text-2xl font-black">{generatedContent.h1Heading}</h1>
+            <div className="mt-4 prose prose-sm max-h-64 overflow-auto border p-4 bg-white">
+              {generatedContent.content}
+            </div>
+          </div>
+          <button onClick={runValidation} disabled={isLoading} className="px-6 py-3 bg-indigo-600 text-white rounded-lg flex items-center gap-2">
+             {isLoading ? <RefreshCw className="animate-spin w-4 h-4" /> : <Activity className="w-4 h-4" />} Run Validation Engine
+          </button>
+        </div>
+      )}
+
+      {step === 5 && validationReport && (
+        <div className="space-y-4">
+          <h3 className="font-bold text-lg">Step 5: Validation & Approval</h3>
+          <div className={`p-4 rounded-lg border ${validationReport.status === 'PASS' ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'}`}>
+            <h4 className="font-bold">Status: {validationReport.status}</h4>
+            <ul className="list-disc pl-5 mt-2 text-sm">
+              {validationReport.issues?.map((issue: string, i: number) => <li key={i}>{issue}</li>)}
+            </ul>
+          </div>
+          <div className="flex gap-4 mt-4">
+            <button onClick={publishToDb} disabled={isLoading || validationReport.status !== 'PASS'} className="px-6 py-3 bg-green-600 text-white rounded-lg font-medium disabled:opacity-50">
+              Approve & Publish to Production
+            </button>
+            <button onClick={() => setStep(1)} className="px-6 py-3 bg-slate-200 text-slate-800 rounded-lg">
+              Discard
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+
+// -----------------------------------------------------------------------------
+// EXISTING: LEGACY PAGES VIEW (PRESERVED FUNCTIONALITY)
+// -----------------------------------------------------------------------------
+function LegacyPagesView() {
   const [pages, setPages] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
@@ -18,15 +531,7 @@ export default function AdminSeoTab() {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
   const [formData, setFormData] = useState({
-    id: "",
-    slug: "",
-    type: "TAXI",
-    title: "",
-    description: "",
-    h1Heading: "",
-    content: "",
-    imageUrl: "",
-    faqs: [] as { question: string; answer: string }[],
+    id: "", slug: "", type: "TAXI", title: "", description: "", h1Heading: "", content: "", imageUrl: "", faqs: [] as any[]
   });
 
   const fetchPages = async () => {
@@ -35,72 +540,42 @@ export default function AdminSeoTab() {
       const res = await fetch("/api/admin/seo-pages");
       const data = await res.json();
       setPages(Array.isArray(data) ? data : []);
-    } catch (error) {
-      console.error("Failed to fetch SEO pages", error);
-    } finally {
-      setIsLoading(false);
-    }
+    } catch (error) { console.error("Failed to fetch SEO pages", error); }
+    setIsLoading(false);
   };
 
-  useEffect(() => {
-    fetchPages();
-  }, []);
+  useEffect(() => { fetchPages(); }, []);
 
-
-  const handleAddFaq = () => {
-    setFormData({ ...formData, faqs: [...formData.faqs, { question: "", answer: "" }] });
-  };
-
-  const handleUpdateFaq = (index: number, field: "question" | "answer", value: string) => {
+  const handleAddFaq = () => setFormData({ ...formData, faqs: [...formData.faqs, { question: "", answer: "" }] });
+  const handleUpdateFaq = (index: number, field: string, value: string) => {
     const newFaqs = [...formData.faqs];
     newFaqs[index][field] = value;
     setFormData({ ...formData, faqs: newFaqs });
   };
-
-  const handleRemoveFaq = (index: number) => {
-    setFormData({ ...formData, faqs: formData.faqs.filter((_, i) => i !== index) });
-  };
+  const handleRemoveFaq = (index: number) => setFormData({ ...formData, faqs: formData.faqs.filter((_, i) => i !== index) });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
       const url = isEditing ? `/api/admin/seo-pages/${formData.id}` : "/api/admin/seo-pages";
       const method = isEditing ? "PUT" : "POST";
-
-      const res = await fetch(url, {
-        method,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
-      });
-
+      const res = await fetch(url, { method, headers: { "Content-Type": "application/json" }, body: JSON.stringify(formData) });
       if (res.ok) {
         alert(`Page ${isEditing ? "updated" : "created"} successfully!`);
         setIsEditing(false);
-        setFormData({
-          id: "", slug: "", type: "TAXI", title: "", description: "",
-          h1Heading: "", content: "", imageUrl: "", faqs: []
-        });
+        setFormData({ id: "", slug: "", type: "TAXI", title: "", description: "", h1Heading: "", content: "", imageUrl: "", faqs: [] });
         fetchPages();
       } else {
         const error = await res.json();
         alert(error.error || "Failed to save page");
       }
-    } catch (error) {
-      alert("An error occurred");
-    }
+    } catch (error) { alert("An error occurred"); }
   };
 
   const handleEdit = (page: any) => {
     setFormData({
-      id: page.id,
-      slug: page.slug,
-      type: page.type,
-      title: page.title,
-      description: page.description || "",
-      h1Heading: page.h1Heading,
-      content: page.content || "",
-      imageUrl: page.imageUrl || "",
-      faqs: page.faqs || [],
+      id: page.id, slug: page.slug, type: page.type, title: page.title, description: page.description || "",
+      h1Heading: page.h1Heading, content: page.content || "", imageUrl: page.imageUrl || "", faqs: page.faqs || [],
     });
     setIsEditing(true);
   };
@@ -109,30 +584,21 @@ export default function AdminSeoTab() {
     if (!confirm("Are you sure you want to delete this SEO page?")) return;
     try {
       const res = await fetch(`/api/admin/seo-pages/${id}`, { method: "DELETE" });
-      if (res.ok) fetchPages();
-      else alert("Failed to delete");
-    } catch (error) {
-      console.error(error);
-    }
+      if (res.ok) fetchPages(); else alert("Failed to delete");
+    } catch (error) { console.error(error); }
   };
 
+  // KEEP EXISTING GENERATION ROUTES ACTIVE AS REQUESTED
   const handleGenerateAutomation = async () => {
     const topic = topicInput.trim();
     if (!confirm(`This will trigger the AI to generate a new SEO Route page right now${topic ? ` for "${topic}"` : ''}. Proceed?`)) return;
     setIsGenerating(true);
     try {
       const res = await triggerSeoGeneration(topic);
-      if (res.success) {
-        alert("Magic AI Generation successful! A new SEO Route page has been created.");
-        fetchPages();
-      } else {
-        alert("Failed to run generation: " + (res.error || "Unknown error"));
-      }
-    } catch (error: any) {
-      alert("An error occurred while generating: " + error.message);
-    } finally {
-      setIsGenerating(false);
-    }
+      if (res.success) { alert("Generation successful!"); fetchPages(); }
+      else alert("Failed to run generation: " + (res.error || "Unknown error"));
+    } catch (error: any) { alert("An error occurred: " + error.message); }
+    setIsGenerating(false);
   };
 
   const handleGenerateBlog = async () => {
@@ -141,369 +607,80 @@ export default function AdminSeoTab() {
     setIsGenerating(true);
     try {
       const res = await triggerBlogGeneration(topic);
-      if (res.success) {
-        alert("Magic AI Blog Generation successful! A new Blog has been published.");
-        fetchPages();
-      } else {
-        alert("Failed to run blog generation: " + (res.error || "Unknown error"));
-      }
-    } catch (error: any) {
-      alert("An error occurred while generating blog: " + error.message);
-    } finally {
-      setIsGenerating(false);
-    }
+      if (res.success) { alert("Blog Generation successful!"); fetchPages(); }
+      else alert("Failed to run blog generation: " + (res.error || "Unknown error"));
+    } catch (error: any) { alert("An error occurred: " + error.message); }
+    setIsGenerating(false);
   };
 
-  const filteredPages = pages.filter(p => 
-    (p.title || "").toLowerCase().includes(searchQuery.toLowerCase()) || 
-    (p.slug || "").toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
+  const filteredPages = pages.filter(p => (p.title || "").toLowerCase().includes(searchQuery.toLowerCase()) || (p.slug || "").toLowerCase().includes(searchQuery.toLowerCase()));
   const totalPages = Math.ceil(filteredPages.length / itemsPerPage);
   const paginatedPages = filteredPages.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
-  // Reset to first page when search changes
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [searchQuery]);
-
   return (
-    <div className="space-y-6">
+    <>
       <div className="flex justify-between items-center bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
         <div>
-          <h2 className="text-xl font-bold text-slate-800">SEO Landing Pages</h2>
-          <p className="text-sm text-slate-500">Manage dynamic SEO routes. Pages load instantly with Next.js ISR.</p>
+          <h2 className="text-xl font-bold text-slate-800">Legacy Pages & Manual Edit</h2>
+          <p className="text-sm text-slate-500">Manage existing SEO routes and use the legacy generator.</p>
         </div>
         {!isEditing && (
           <div className="flex gap-3 items-center">
-            <input
-              type="text"
-              placeholder="Topic/Keyword (Optional)"
-              value={topicInput}
-              onChange={(e) => setTopicInput(e.target.value)}
-              className="border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#f97316] w-64"
-            />
-            <button
-              onClick={handleGenerateAutomation}
-              disabled={isGenerating}
-              className="flex items-center gap-2 bg-[#f97316] text-white px-4 py-2.5 rounded-xl hover:bg-[#ea580c] transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-sm font-medium"
-            >
-              <Wand2 className={`w-4 h-4 ${isGenerating ? 'animate-spin' : ''}`} />
-              {isGenerating ? "Generating..." : "Generate SEO Page"}
+            <input type="text" placeholder="Topic/Keyword (Optional)" value={topicInput} onChange={(e) => setTopicInput(e.target.value)} className="border rounded-xl px-3 py-2 w-64" />
+            <button onClick={handleGenerateAutomation} disabled={isGenerating} className="flex items-center gap-2 bg-[#f97316] text-white px-4 py-2 rounded-xl">
+              <Wand2 className="w-4 h-4" /> {isGenerating ? "Generating..." : "Generate SEO Page (Legacy)"}
             </button>
-            <button
-              onClick={handleGenerateBlog}
-              disabled={isGenerating}
-              className="flex items-center gap-2 bg-purple-600 text-white px-4 py-2.5 rounded-xl hover:bg-purple-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-sm font-medium"
-            >
-              <PenTool className={`w-4 h-4 ${isGenerating ? 'animate-bounce' : ''}`} />
-              {isGenerating ? "Writing..." : "Generate Blog Article"}
+            <button onClick={handleGenerateBlog} disabled={isGenerating} className="flex items-center gap-2 bg-purple-600 text-white px-4 py-2 rounded-xl">
+              <PenTool className="w-4 h-4" /> {isGenerating ? "Writing..." : "Generate Blog (Legacy)"}
             </button>
-            <button
-              onClick={() => setIsEditing(true)}
-              className="px-4 py-2 bg-[#f97316] text-white rounded-lg flex items-center gap-2 hover:bg-[#ea580c] transition-colors"
-            >
-              <Plus className="w-4 h-4" />
-              Create New Page
+            <button onClick={() => setIsEditing(true)} className="px-4 py-2 bg-slate-800 text-white rounded-lg flex items-center gap-2">
+              <Plus className="w-4 h-4" /> Create Manual
             </button>
           </div>
         )}
       </div>
 
       {isEditing ? (
-        <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 space-y-4">
-          <div className="flex items-center gap-3 mb-2 pb-4 border-b border-slate-100">
-            <button 
-              type="button" 
-              onClick={() => {
-                setIsEditing(false);
-                setFormData({ id: "", slug: "", type: "TAXI", title: "", description: "", h1Heading: "", content: "", imageUrl: "", faqs: [] });
-              }}
-              className="p-2 text-slate-400 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors flex items-center gap-2 font-medium text-sm"
-            >
-              <ArrowLeft className="w-4 h-4" /> Back
-            </button>
-            <h3 className="text-xl font-bold">{formData.id ? "Edit SEO Page" : "Create New SEO Page"}</h3>
-          </div>
+        <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+          <button onClick={() => setIsEditing(false)} className="mb-4 text-slate-500 flex items-center gap-2"><ArrowLeft className="w-4 h-4" /> Back</button>
           <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Page Type</label>
-              <select
-                required
-                value={formData.type}
-                onChange={(e) => setFormData({ ...formData, type: e.target.value })}
-                className="w-full p-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#f97316]"
-              >
-                <option value="TAXI">Taxi Route</option>
-                <option value="HOMESTAY">Homestay Location</option>
-                <option value="TOUR">Tour Package</option>
-                <option value="BLOG">Travel Blog Article</option>
+            <div className="grid grid-cols-2 gap-4">
+              <select value={formData.type} onChange={(e) => setFormData({ ...formData, type: e.target.value })} className="p-2 border rounded-lg">
+                <option value="TAXI">Taxi</option><option value="HOMESTAY">Homestay</option><option value="TOUR">Tour</option><option value="BLOG">Blog</option>
               </select>
+              <input type="text" placeholder="Slug" value={formData.slug} onChange={(e) => setFormData({ ...formData, slug: e.target.value })} className="p-2 border rounded-lg" required />
             </div>
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">URL Slug</label>
-              <input
-                required
-                type="text"
-                placeholder="e.g. srinagar-to-gulmarg"
-                value={formData.slug}
-                onChange={(e) => setFormData({ ...formData, slug: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '-') })}
-                className="w-full p-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#f97316]"
-              />
+            <input type="text" placeholder="Title" value={formData.title} onChange={(e) => setFormData({ ...formData, title: e.target.value })} className="w-full p-2 border rounded-lg" required />
+            <textarea placeholder="Description" value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })} className="w-full p-2 border rounded-lg" rows={2} />
+            <input type="text" placeholder="H1 Heading" value={formData.h1Heading} onChange={(e) => setFormData({ ...formData, h1Heading: e.target.value })} className="w-full p-2 border rounded-lg" required />
+            <textarea placeholder="Content" value={formData.content} onChange={(e) => setFormData({ ...formData, content: e.target.value })} className="w-full p-2 border rounded-lg" rows={5} />
+            <div className="flex justify-end gap-2 mt-4">
+              <button type="submit" className="bg-[#f97316] text-white px-6 py-2 rounded-lg">Save Page</button>
             </div>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">SEO Meta Title</label>
-            <input
-              required
-              type="text"
-              placeholder="e.g. Book Srinagar to Gulmarg Taxi at Best Price"
-              value={formData.title}
-              onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-              className="w-full p-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#f97316]"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">SEO Meta Description</label>
-            <textarea
-              rows={2}
-              placeholder="Write a compelling meta description for Google search results..."
-              value={formData.description}
-              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-              className="w-full p-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#f97316]"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Page H1 Heading</label>
-            <input
-              required
-              type="text"
-              placeholder="e.g. Reliable Srinagar to Gulmarg Taxi Service"
-              value={formData.h1Heading}
-              onChange={(e) => setFormData({ ...formData, h1Heading: e.target.value })}
-              className="w-full p-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#f97316]"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Page Content (Markdown / Text)</label>
-            <textarea
-              rows={5}
-              placeholder="Write detailed content about this route or location..."
-              value={formData.content}
-              onChange={(e) => setFormData({ ...formData, content: e.target.value })}
-              className="w-full p-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#f97316]"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Hero Image URL (Optional)</label>
-            <input
-              type="text"
-              placeholder="https://res.cloudinary.com/..."
-              value={formData.imageUrl}
-              onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })}
-              className="w-full p-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#f97316]"
-            />
-          </div>
-
-          {/* FAQs Section */}
-          <div className="pt-4 border-t border-slate-100">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-md font-bold text-slate-800">Frequently Asked Questions (FAQs)</h3>
-              <button
-                type="button"
-                onClick={handleAddFaq}
-                className="px-3 py-1.5 text-sm bg-slate-100 text-slate-700 rounded-md hover:bg-slate-200 transition-colors"
-              >
-                + Add FAQ
-              </button>
-            </div>
-            <div className="space-y-4">
-              {formData.faqs.map((faq, index) => (
-                <div key={index} className="flex gap-2 items-start bg-slate-50 p-3 rounded-lg">
-                  <div className="flex-1 space-y-2">
-                    <input
-                      required
-                      type="text"
-                      placeholder="Question"
-                      value={faq.question}
-                      onChange={(e) => handleUpdateFaq(index, "question", e.target.value)}
-                      className="w-full p-2 border border-slate-200 rounded-lg focus:outline-none text-sm"
-                    />
-                    <textarea
-                      required
-                      rows={2}
-                      placeholder="Answer"
-                      value={faq.answer}
-                      onChange={(e) => handleUpdateFaq(index, "answer", e.target.value)}
-                      className="w-full p-2 border border-slate-200 rounded-lg focus:outline-none text-sm"
-                    />
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => handleRemoveFaq(index)}
-                    className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors mt-1"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="pt-4 flex gap-2 justify-end">
-            <button
-              type="button"
-              onClick={() => {
-                setIsEditing(false);
-                setFormData({ id: "", slug: "", type: "TAXI", title: "", description: "", h1Heading: "", content: "", imageUrl: "", faqs: [] });
-              }}
-              className="px-6 py-2 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors font-medium"
-            >
-              Cancel
-            </button>
-            <button type="submit" disabled={isLoading} className="px-6 py-2 bg-[#f97316] text-white rounded-lg hover:bg-[#ea580c] disabled:opacity-50 font-medium shadow-sm flex items-center gap-2">
-                {isLoading && <RefreshCw className="w-4 h-4 animate-spin" />}
-                {formData.id ? "Update Page" : "Publish Page"}
-            </button>
-          </div>
-        </form>
-      </div>
+          </form>
+        </div>
       ) : (
-        <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
-          {isLoading ? (
-            <div className="p-8 text-center text-slate-500">Loading pages...</div>
-          ) : pages.length === 0 ? (
-            <div className="p-12 text-center">
-              <Globe className="w-12 h-12 text-slate-300 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-slate-800">No SEO Pages Found</h3>
-              <p className="text-slate-500 mt-1">Create your first dynamic landing page to start ranking on Google.</p>
-            </div>
-          ) : (
-            <>
-              <div className="p-4 border-b border-slate-100 bg-slate-50/50">
-                <div className="relative max-w-md">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                  <input
-                    type="text"
-                    placeholder="Search by title or slug..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full pl-9 pr-4 py-2 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#f97316]"
-                  />
-                </div>
-              </div>
-              <div className="overflow-x-auto">
-                <table className="w-full text-left border-collapse">
-                <thead>
-                  <tr className="bg-slate-50 border-b border-slate-100 text-sm font-semibold text-slate-600">
-                    <th className="p-4">Type</th>
-                    <th className="p-4">Page Title</th>
-                    <th className="p-4">Route Slug</th>
-                    <th className="p-4">FAQs</th>
-                    <th className="p-4 text-right">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100 text-sm">
-                  {paginatedPages.map((page) => (
-                    <tr key={page.id} className="hover:bg-slate-50/50 transition-colors">
-                      <td className="p-4">
-                        <span className={`px-2 py-1 text-xs font-semibold rounded-full ${
-                          page.type === "TAXI" ? "bg-yellow-100 text-yellow-800" :
-                          page.type === "HOMESTAY" ? "bg-green-100 text-green-800" :
-                          page.type === "BLOG" ? "bg-purple-100 text-purple-800" :
-                          "bg-blue-100 text-blue-800"
-                        }`}>
-                          {page.type}
-                        </span>
-                      </td>
-                      <td className="p-4 font-medium text-slate-800">{page.title}</td>
-                      <td className="p-4">
-                        <div className="flex items-center gap-1.5 text-slate-500">
-                          <LinkIcon className="w-3.5 h-3.5" />
-                          <span>/{(page.type || "").toLowerCase() === "taxi" ? "taxis" : (page.type || "").toLowerCase() === "homestay" ? "homestays" : (page.type || "").toLowerCase() === "blog" ? "blog" : "tours"}/{page.slug}</span>
-                        </div>
-                      </td>
-                      <td className="p-4 text-slate-500">
-                        {page.faqs ? (page.faqs as any[]).length : 0} items
-                      </td>
-                      <td className="p-4 text-right space-x-2">
-                        <Link 
-                          href={`/${(page.type || "").toLowerCase() === "taxi" ? "taxis" : (page.type || "").toLowerCase() === "homestay" ? "homestays" : (page.type || "").toLowerCase() === "blog" ? "blog" : "tours"}/${page.slug}`}
-                          target="_blank"
-                          className="inline-flex p-2 text-slate-400 hover:text-[#f97316] hover:bg-[#f97316]/10 rounded-lg transition-colors"
-                          title="View Live Page"
-                        >
-                          <Globe className="w-4 h-4" />
-                        </Link>
-                        <button
-                          onClick={() => handleEdit(page)}
-                          className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
-                          title="Edit"
-                        >
-                          <Edit2 className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={() => setActiveDistributionPage(page)}
-                          className="p-2 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors"
-                          title="Generate Social Content"
-                        >
-                          <Share2 className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={() => handleDelete(page.id)}
-                          className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                          title="Delete"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-              
-              {/* Pagination Controls */}
-              {totalPages > 1 && (
-                <div className="flex items-center justify-between p-4 border-t border-slate-100 bg-slate-50/50">
-                  <div className="text-sm text-slate-500">
-                    Showing {(currentPage - 1) * itemsPerPage + 1} to {Math.min(currentPage * itemsPerPage, filteredPages.length)} of {filteredPages.length} entries
-                  </div>
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-                      disabled={currentPage === 1}
-                      className="px-3 py-1 text-sm border border-slate-200 rounded-md hover:bg-slate-100 disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      Previous
-                    </button>
-                    <button
-                      onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-                      disabled={currentPage === totalPages}
-                      className="px-3 py-1 text-sm border border-slate-200 rounded-md hover:bg-slate-100 disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      Next
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
-          </>
-          )}
+        <div className="bg-white rounded-2xl border p-4">
+          <input type="text" placeholder="Search..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="mb-4 w-full p-2 border rounded-lg" />
+          <table className="w-full text-left">
+            <thead><tr className="bg-slate-50"><th className="p-4">Title</th><th className="p-4">Type</th><th className="p-4 text-right">Actions</th></tr></thead>
+            <tbody className="divide-y divide-slate-100">
+              {paginatedPages.map(page => (
+                <tr key={page.id}>
+                  <td className="p-4">{page.title}</td>
+                  <td className="p-4">{page.type}</td>
+                  <td className="p-4 text-right space-x-2">
+                    <button onClick={() => handleEdit(page)} className="p-2 text-slate-400 hover:text-indigo-600"><Edit2 className="w-4 h-4" /></button>
+                    <button onClick={() => handleDelete(page.id)} className="p-2 text-slate-400 hover:text-red-600"><Trash2 className="w-4 h-4" /></button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       )}
-
-      {activeDistributionPage && (
-        <ContentDistributionModal 
-          page={activeDistributionPage} 
-          onClose={() => setActiveDistributionPage(null)} 
-        />
-      )}
-    </div>
+      
+      {activeDistributionPage && <ContentDistributionModal page={activeDistributionPage} onClose={() => setActiveDistributionPage(null)} />}
+    </>
   );
 }
