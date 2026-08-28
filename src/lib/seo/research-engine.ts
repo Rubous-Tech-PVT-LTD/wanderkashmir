@@ -9,6 +9,7 @@ export async function runSeoResearch(target: string, type: string, targetUrl?: s
   let pageMetrics;
   let topQueries: any[] = [];
   let relatedQueries: any[] = [];
+  let opportunities: any[] = [];
   let performanceDelta: NonNullable<SeoResearch['performanceDelta']> = { status: 'INSUFFICIENT_DATA', reason: 'No historical baseline provided.' };
   let cannibalizationRisk: SeoResearch['cannibalizationRisk'] = { status: 'SAFE', competingPages: [], recommendation: 'KEEP_SEPARATE', reason: '' };
   let searchIntent = 'unknown';
