@@ -135,13 +135,13 @@ export async function runSeoResearch(target: string, type: string, targetUrl?: s
       searchIntent = keywordData.intent;
     } else {
       const t = target.toLowerCase();
-      if (t.includes('buy') || t.includes('book') || t.includes('price') || t.includes('package')) {
+      if (t.includes('buy') || t.includes('book') || t.includes('price') || t.includes('cost') || t.includes('fare')) {
         searchIntent = 'transactional';
-      } else if (t.includes('best') || t.includes('review') || t.includes('top')) {
+      } else if (t.includes('best') || t.includes('review') || t.includes('top') || t.includes('hotel') || t.includes('resort') || t.includes('homestay') || t.includes('stay') || t.includes('tour') || t.includes('package')) {
         searchIntent = 'commercial';
-      } else if (t.includes('how to') || t.includes('guide') || t.includes('what is') || type === 'BLOG') {
+      } else if (t.includes('how') || t.includes('what') || t.includes('guide') || t.includes('weather') || type === 'BLOG') {
         searchIntent = 'informational';
-      } else if (t.includes('near me') || t.includes('taxi') || t.includes('srinagar to')) {
+      } else if (t.includes('near me') || t.includes('taxi') || t.includes('cab') || t.includes('to') || t.includes('distance') || type === 'TAXI') {
         searchIntent = 'local';
       }
     }
