@@ -16,6 +16,18 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, error: "Research and strategy data are required" }, { status: 400 });
     }
 
+    if (
+      (research?.cannibalizationRisk?.status === 'HIGH_RISK' ||
+       strategy?.recommendedAction === 'MANUAL_REVIEW' ||
+       strategy?.manualReviewRequired) &&
+      !strategy?.adminDecision
+    ) {
+      return NextResponse.json({
+        success: false,
+        error: "Generation blocked: Manual Review is required due to high cannibalization risk. Select an explicit Admin Decision before generating content."
+      }, { status: 400 });
+    }
+
     const content = await generateSeoContent(research, strategy, existingContent);
     return NextResponse.json({ success: true, data: content });
   } catch (error: any) {

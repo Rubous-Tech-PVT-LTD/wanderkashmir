@@ -15,6 +15,16 @@ export async function generateSeoContent(
     throw new Error("GEMINI_API_KEY is not configured");
   }
 
+  // Server-side guard: Block generation if manual review is required and no admin decision exists
+  if (
+    (research.cannibalizationRisk?.status === 'HIGH_RISK' ||
+     strategy.recommendedAction === 'MANUAL_REVIEW' ||
+     strategy.manualReviewRequired) &&
+    !strategy.adminDecision
+  ) {
+    throw new Error("Generation blocked: Manual Review is required. Admin must select a decision (e.g. Primary Page, Consolidate, Create New) before content generation.");
+  }
+
   const genAI = new GoogleGenerativeAI(apiKey);
   const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 

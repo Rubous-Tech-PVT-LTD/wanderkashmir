@@ -328,6 +328,8 @@ function SeoResearchWizard({ initialTarget }: { initialTarget?: { topic: string,
   const [isLoading, setIsLoading] = useState(false);
   const [researchData, setResearchData] = useState<any>(null);
   const [strategyData, setStrategyData] = useState<any>(null);
+  const [adminDecision, setAdminDecision] = useState<'USE_EXISTING' | 'CONSOLIDATE' | 'CREATE_NEW' | 'IGNORE' | null>(null);
+  const [selectedPrimaryPageUrl, setSelectedPrimaryPageUrl] = useState<string>("");
   
   // Historical protection payload simulation
   const historicalPayload = { clicks: 10, impressions: 91, ctr: 0.11, position: 8.8 };
@@ -336,6 +338,8 @@ function SeoResearchWizard({ initialTarget }: { initialTarget?: { topic: string,
 
   const runResearch = async () => {
     setIsLoading(true);
+    setAdminDecision(null);
+    setSelectedPrimaryPageUrl("");
     try {
       const payload: any = { target: topic, type, url: url || undefined };
       if (url && url.includes('vergan')) {
@@ -356,6 +360,8 @@ function SeoResearchWizard({ initialTarget }: { initialTarget?: { topic: string,
 
   const runStrategy = async () => {
     setIsLoading(true);
+    setAdminDecision(null);
+    setSelectedPrimaryPageUrl("");
     try {
       const res = await fetch('/api/admin/seo-intelligence/strategy', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -371,11 +377,27 @@ function SeoResearchWizard({ initialTarget }: { initialTarget?: { topic: string,
   };
 
   const runGeneration = async () => {
+    const isManualReview = strategyData?.recommendedAction === 'MANUAL_REVIEW' || strategyData?.manualReviewRequired || researchData?.cannibalizationRisk?.status === 'HIGH_RISK';
+    if (isManualReview && !adminDecision) {
+      alert("Manual Review Decision Required: Please select an Admin Decision before generating content.");
+      return;
+    }
+    if (adminDecision === 'IGNORE') {
+      alert("Opportunity marked as Ignored.");
+      setStep(1);
+      return;
+    }
+
     setIsLoading(true);
     try {
+      const finalStrategy = {
+        ...strategyData,
+        adminDecision: adminDecision || undefined,
+        selectedPrimaryPageUrl: selectedPrimaryPageUrl || undefined
+      };
       const res = await fetch('/api/admin/seo-intelligence/generate', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ research: researchData, strategy: strategyData })
+        body: JSON.stringify({ research: researchData, strategy: finalStrategy })
       });
       const data = await res.json();
       if (data.success) {
@@ -559,17 +581,173 @@ function SeoResearchWizard({ initialTarget }: { initialTarget?: { topic: string,
         </div>
       )}
 
-      {step === 3 && strategyData && (
-        <div className="space-y-4">
-          <h3 className="font-bold text-lg">Step 3: AI Strategy</h3>
-          <div className="p-4 bg-slate-50 rounded-lg text-sm font-mono overflow-auto max-h-64">
-            <pre>{JSON.stringify(strategyData, null, 2)}</pre>
+      {step === 3 && strategyData && (() => {
+        const isManualReview = strategyData.recommendedAction === 'MANUAL_REVIEW' || strategyData.manualReviewRequired || researchData?.cannibalizationRisk?.status === 'HIGH_RISK';
+        const competingPages = researchData?.cannibalizationRisk?.competingPages || [];
+
+        return (
+          <div className="space-y-6">
+            <div className="flex justify-between items-center">
+              <h3 className="font-bold text-lg">Step 3: AI Strategy & Decision</h3>
+              <span className={`px-3 py-1 text-xs font-bold rounded-full ${
+                isManualReview ? "bg-amber-100 text-amber-800 border border-amber-300" : "bg-green-100 text-green-800"
+              }`}>
+                {strategyData.recommendedAction}
+              </span>
+            </div>
+
+            {/* MANUAL REVIEW REQUIRED BANNER & DECISION PANEL */}
+            {isManualReview && (
+              <div className="bg-amber-50 border border-amber-200 rounded-xl p-5 space-y-4">
+                <div className="flex items-start gap-3">
+                  <div className="p-2 bg-amber-200/60 rounded-lg text-amber-900 font-black text-lg">⚠️</div>
+                  <div className="space-y-1">
+                    <h4 className="font-bold text-amber-900 text-base">MANUAL REVIEW REQUIRED — Competing Pages Detected</h4>
+                    <p className="text-sm text-amber-800">
+                      {competingPages.length} competing pages were detected in the database. Select and confirm the primary page and search intent before generating content.
+                    </p>
+                  </div>
+                </div>
+
+                {strategyData.competingPagesAnalysis && (
+                  <div className="bg-white/80 p-3 rounded-lg border border-amber-200 text-xs text-slate-700">
+                    <strong>Strategy Analysis:</strong> {strategyData.competingPagesAnalysis}
+                  </div>
+                )}
+
+                {competingPages.length > 0 && (
+                  <div className="space-y-2">
+                    <div className="text-xs font-bold text-slate-700 uppercase tracking-wide">Detected Competing Pages:</div>
+                    <div className="grid gap-2">
+                      {competingPages.map((page: any, idx: number) => (
+                        <div key={idx} className="flex items-center justify-between bg-white p-3 rounded-lg border text-xs">
+                          <div>
+                            <span className="font-semibold text-slate-800">{page.title}</span>
+                            <span className="ml-2 text-slate-400 font-mono">{page.url}</span>
+                          </div>
+                          <span className="px-2 py-0.5 bg-slate-100 text-slate-600 rounded font-semibold text-[10px] uppercase">
+                            {page.type}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                <div className="border-t border-amber-200 pt-4 space-y-3">
+                  <div className="text-sm font-bold text-amber-950">Select Admin Strategic Direction:</div>
+                  <div className="grid gap-2">
+                    <label className={`flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition ${adminDecision === 'USE_EXISTING' ? 'bg-indigo-50 border-indigo-400 ring-1 ring-indigo-400' : 'bg-white border-slate-200 hover:bg-slate-50'}`}>
+                      <input 
+                        type="radio" 
+                        name="adminDecision" 
+                        value="USE_EXISTING" 
+                        checked={adminDecision === 'USE_EXISTING'} 
+                        onChange={() => setAdminDecision('USE_EXISTING')} 
+                        className="mt-1"
+                      />
+                      <div className="text-xs">
+                        <span className="font-bold text-slate-800">A. Use Existing Page as Primary</span>
+                        <p className="text-slate-500">Designate one of the existing pages as the canonical destination and optimize it.</p>
+                      </div>
+                    </label>
+
+                    {adminDecision === 'USE_EXISTING' && competingPages.length > 0 && (
+                      <div className="ml-6 p-2 bg-indigo-50/50 rounded border border-indigo-200 text-xs">
+                        <label className="block font-semibold mb-1 text-slate-700">Choose Primary Page:</label>
+                        <select 
+                          value={selectedPrimaryPageUrl} 
+                          onChange={(e) => setSelectedPrimaryPageUrl(e.target.value)}
+                          className="w-full p-2 border rounded bg-white text-xs"
+                        >
+                          <option value="">-- Select Primary Destination Page --</option>
+                          {competingPages.map((p: any) => (
+                            <option key={p.url} value={p.url}>{p.title} ({p.url})</option>
+                          ))}
+                        </select>
+                      </div>
+                    )}
+
+                    <label className={`flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition ${adminDecision === 'CONSOLIDATE' ? 'bg-indigo-50 border-indigo-400 ring-1 ring-indigo-400' : 'bg-white border-slate-200 hover:bg-slate-50'}`}>
+                      <input 
+                        type="radio" 
+                        name="adminDecision" 
+                        value="CONSOLIDATE" 
+                        checked={adminDecision === 'CONSOLIDATE'} 
+                        onChange={() => setAdminDecision('CONSOLIDATE')} 
+                        className="mt-1"
+                      />
+                      <div className="text-xs">
+                        <span className="font-bold text-slate-800">B. Consolidate Search Intent into Existing Page</span>
+                        <p className="text-slate-500">Merge search intent and sections into an existing landing page without creating a duplicate.</p>
+                      </div>
+                    </label>
+
+                    <label className={`flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition ${adminDecision === 'CREATE_NEW' ? 'bg-indigo-50 border-indigo-400 ring-1 ring-indigo-400' : 'bg-white border-slate-200 hover:bg-slate-50'}`}>
+                      <input 
+                        type="radio" 
+                        name="adminDecision" 
+                        value="CREATE_NEW" 
+                        checked={adminDecision === 'CREATE_NEW'} 
+                        onChange={() => setAdminDecision('CREATE_NEW')} 
+                        className="mt-1"
+                      />
+                      <div className="text-xs">
+                        <span className="font-bold text-slate-800">C. Create Genuinely New Page</span>
+                        <p className="text-slate-500">Confirm that this search intent is distinct from existing pages and genuinely warrants a new URL.</p>
+                      </div>
+                    </label>
+
+                    <label className={`flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition ${adminDecision === 'IGNORE' ? 'bg-slate-100 border-slate-400' : 'bg-white border-slate-200 hover:bg-slate-50'}`}>
+                      <input 
+                        type="radio" 
+                        name="adminDecision" 
+                        value="IGNORE" 
+                        checked={adminDecision === 'IGNORE'} 
+                        onChange={() => setAdminDecision('IGNORE')} 
+                        className="mt-1"
+                      />
+                      <div className="text-xs">
+                        <span className="font-bold text-slate-800">D. Ignore Opportunity</span>
+                        <p className="text-slate-500">Do not optimize or create any content for this opportunity.</p>
+                      </div>
+                    </label>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* STRATEGY JSON PREVIEW */}
+            <div className="p-4 bg-slate-50 rounded-lg text-sm font-mono overflow-auto max-h-64 border">
+              <pre>{JSON.stringify(strategyData, null, 2)}</pre>
+            </div>
+
+            {/* ACTION BUTTON */}
+            <div className="flex items-center gap-4">
+              <button 
+                onClick={runGeneration} 
+                disabled={isLoading || (isManualReview && (!adminDecision || (adminDecision === 'USE_EXISTING' && competingPages.length > 0 && !selectedPrimaryPageUrl)))} 
+                className={`px-6 py-3 rounded-lg flex items-center gap-2 font-medium text-white shadow-sm transition ${
+                  isManualReview && !adminDecision
+                    ? "bg-slate-300 cursor-not-allowed text-slate-500"
+                    : adminDecision === 'IGNORE'
+                    ? "bg-slate-600 hover:bg-slate-700"
+                    : "bg-indigo-600 hover:bg-indigo-700"
+                }`}
+              >
+                {isLoading ? <RefreshCw className="animate-spin w-4 h-4" /> : <PenTool className="w-4 h-4" />}
+                {adminDecision === 'IGNORE' ? "Mark as Ignored" : "Write Content"}
+              </button>
+
+              {isManualReview && !adminDecision && (
+                <span className="text-xs text-amber-700 font-semibold animate-pulse">
+                  ⚠️ Generation blocked: Select an Admin Decision above to unlock content generation.
+                </span>
+              )}
+            </div>
           </div>
-          <button onClick={runGeneration} disabled={isLoading} className="px-6 py-3 bg-indigo-600 text-white rounded-lg flex items-center gap-2">
-             {isLoading ? <RefreshCw className="animate-spin w-4 h-4" /> : <PenTool className="w-4 h-4" />} Write Content
-          </button>
-        </div>
-      )}
+        );
+      })()}
 
       {step === 4 && generatedContent && (
         <div className="space-y-4">

@@ -87,6 +87,10 @@ export interface SeoStrategy {
   primaryTopic: string;
   queriesToProtect: string[];
   queriesToImprove: string[];
+  competingPagesAnalysis?: string;
+  manualReviewRequired?: boolean;
+  adminDecision?: 'USE_EXISTING' | 'CONSOLIDATE' | 'CREATE_NEW' | 'IGNORE';
+  selectedPrimaryPageUrl?: string;
   title: StrategyComponent;
   metaDescription: StrategyComponent;
   h1Heading: StrategyComponent;
@@ -98,7 +102,7 @@ export interface SeoStrategy {
   }[];
   faqs: StrategyComponent;
   internalLinks: StrategyComponent;
-  recommendedAction: 'KEEP' | 'OPTIMIZE' | 'MONITOR' | 'CONSOLIDATE';
+  recommendedAction: 'KEEP' | 'OPTIMIZE' | 'MONITOR' | 'CONSOLIDATE' | 'MANUAL_REVIEW';
 }
 
 export interface ContentOpportunity {
