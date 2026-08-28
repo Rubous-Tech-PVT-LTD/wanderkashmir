@@ -77,28 +77,73 @@ function PlaceholderView({ title, desc }: { title: string, desc: string }) {
 function OpportunitiesView({ onResearch }: { onResearch: (topic: string, url?: string, type?: string) => void }) {
   const [opportunities, setOpportunities] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isDiscovering, setIsDiscovering] = useState(false);
   const [filter, setFilter] = useState("ALL");
   const [expandedRow, setExpandedRow] = useState<number | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [discoveryMessage, setDiscoveryMessage] = useState<string | null>(null);
 
-  const fetchOps = async () => {
+  // Read-only: load what's currently in the DB
+  const loadFromDb = async () => {
     setIsLoading(true);
+    setError(null);
     try {
       const res = await fetch('/api/admin/seo-intelligence/opportunities');
       const data = await res.json();
-      if (data.success) {
-        setOpportunities(data.data);
+      if (!res.ok) {
+        if (res.status === 401) {
+          setError("Authentication error — please refresh the page and log in again.");
+        } else {
+          setError(data.error || "Failed to load opportunities.");
+        }
+        setOpportunities([]);
+      } else if (data.success) {
+        setOpportunities(data.data || []);
+      } else {
+        setError(data.error || "Unexpected error loading opportunities.");
+        setOpportunities([]);
       }
-    } catch (e) {
-      console.error(e);
+    } catch (e: any) {
+      setError("Network error — could not reach the server.");
+      setOpportunities([]);
     }
     setIsLoading(false);
   };
 
+  // Discovery: POST triggers detectOpportunities(true) on the server → saves to DB → reloads
+  const runDiscovery = async () => {
+    setIsDiscovering(true);
+    setError(null);
+    setDiscoveryMessage(null);
+    try {
+      const res = await fetch('/api/admin/seo-intelligence/opportunities', { method: 'POST' });
+      const data = await res.json();
+      if (!res.ok) {
+        if (res.status === 401) {
+          setError("Authentication error — please refresh the page and log in again.");
+        } else if (data.error?.includes('GSC') || data.error?.includes('refresh_token') || data.error?.includes('OAuth')) {
+          setError("GSC data unavailable — connect Google Search Console first (Admin → Settings → Connect GSC).");
+        } else {
+          setError(data.error || "Discovery failed. Check server logs.");
+        }
+        setIsDiscovering(false);
+        return;
+      }
+      setDiscoveryMessage(data.message || "Discovery complete.");
+      // Reload DB after discovery
+      await loadFromDb();
+    } catch (e: any) {
+      setError("Network error — could not reach the server.");
+    }
+    setIsDiscovering(false);
+  };
+
   useEffect(() => {
-    fetchOps();
+    loadFromDb();
   }, []);
 
   const filtered = filter === "ALL" ? opportunities : opportunities.filter(o => o.type === filter);
+  const isBusy = isLoading || isDiscovering;
 
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
@@ -107,8 +152,8 @@ function OpportunitiesView({ onResearch }: { onResearch: (topic: string, url?: s
           <h2 className="text-xl font-bold text-slate-800">Content Opportunities</h2>
           <p className="text-sm text-slate-500">AI-detected opportunities based on real GSC data and content gaps.</p>
         </div>
-        <div className="flex gap-4 items-center">
-          <select value={filter} onChange={e => setFilter(e.target.value)} className="p-2 border rounded-lg text-sm bg-white">
+        <div className="flex gap-3 items-center">
+          <select value={filter} onChange={e => setFilter(e.target.value)} className="p-2 border rounded-lg text-sm bg-white" disabled={isBusy}>
             <option value="ALL">All Actions</option>
             <option value="CREATE">CREATE</option>
             <option value="OPTIMIZE">OPTIMIZE</option>
@@ -116,14 +161,61 @@ function OpportunitiesView({ onResearch }: { onResearch: (topic: string, url?: s
             <option value="MANUAL_REVIEW">MANUAL REVIEW</option>
             <option value="IGNORE">IGNORE</option>
           </select>
-          <button onClick={fetchOps} className="px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm font-medium hover:bg-slate-50 flex items-center gap-2">
-            <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} /> Refresh Opportunities
+          {/* Refresh = reload DB only (fast) */}
+          <button onClick={loadFromDb} disabled={isBusy} className="px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm font-medium hover:bg-slate-50 flex items-center gap-2 disabled:opacity-50">
+            <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
+            Reload
+          </button>
+          {/* Discover = POST → GSC → Engine → DB → reload (slow, up to 5 min) */}
+          <button onClick={runDiscovery} disabled={isBusy} className="px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg text-sm font-semibold flex items-center gap-2 disabled:opacity-50 transition-colors">
+            <Search className={`w-4 h-4 ${isDiscovering ? 'animate-pulse' : ''}`} />
+            {isDiscovering ? 'Discovering...' : 'Refresh Opportunities'}
           </button>
         </div>
       </div>
-      
-      {isLoading ? (
-        <div className="p-12 text-center text-slate-500">Analyzing GSC Signals...</div>
+
+      {/* Status messages */}
+      {discoveryMessage && !isBusy && (
+        <div className="px-6 py-3 bg-green-50 border-b border-green-100 text-sm text-green-800 font-medium">
+          ✓ {discoveryMessage}
+        </div>
+      )}
+      {error && (
+        <div className="px-6 py-3 bg-red-50 border-b border-red-100 text-sm text-red-700">
+          ⚠ {error}
+        </div>
+      )}
+
+      {isBusy ? (
+        <div className="p-12 text-center text-slate-500">
+          {isDiscovering ? (
+            <div>
+              <div className="text-lg font-medium mb-2">Analyzing GSC Signals...</div>
+              <div className="text-sm text-slate-400">Querying Google Search Console, clustering queries, and scoring opportunities. This can take up to 2 minutes.</div>
+            </div>
+          ) : (
+            <div>Loading opportunities...</div>
+          )}
+        </div>
+      ) : filtered.length === 0 ? (
+        <div className="p-12 text-center text-slate-500">
+          {opportunities.length === 0 ? (
+            <div className="space-y-3">
+              <div className="text-lg font-semibold text-slate-700">No SEO opportunities discovered yet.</div>
+              <div className="text-sm text-slate-400 max-w-md mx-auto">
+                Click <strong>Refresh Opportunities</strong> to run the first discovery using live Google Search Console data.
+                This queries your real GSC queries, clusters them, and scores opportunities automatically.
+              </div>
+              {!error && (
+                <button onClick={runDiscovery} className="mt-4 px-5 py-2.5 bg-orange-500 hover:bg-orange-600 text-white rounded-lg text-sm font-semibold inline-flex items-center gap-2 transition-colors">
+                  <Search className="w-4 h-4" /> Run First Discovery
+                </button>
+              )}
+            </div>
+          ) : (
+            <div className="text-slate-500">No opportunities match the selected filter.</div>
+          )}
+        </div>
       ) : (
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
@@ -159,12 +251,12 @@ function OpportunitiesView({ onResearch }: { onResearch: (topic: string, url?: s
                   <td className="p-4 font-medium text-slate-800">{op.topic}</td>
                   <td className="p-4 text-center text-slate-600 text-xs">{op.googleTrends || 'UNAVAILABLE'}</td>
                   <td className="p-4 text-center text-slate-600 text-xs">{op.keywordPlanner || 'UNAVAILABLE'}</td>
-                  <td className="p-4 text-right text-slate-600">{op.gscSignals?.impressions || '-'}</td>
-                  <td className="p-4 text-right text-slate-600">{op.gscSignals?.position?.toFixed(1) || '-'}</td>
+                  <td className="p-4 text-right text-slate-600">{op.gscSignals?.impressions ?? '-'}</td>
+                  <td className="p-4 text-right text-slate-600">{op.gscSignals?.position != null ? Number(op.gscSignals.position).toFixed(1) : '-'}</td>
                   <td className="p-4 text-center text-slate-600 text-xs">{op.businessRelevance}</td>
                   <td className="p-4 text-right">
                     {(op.type === 'CREATE' || op.type === 'OPTIMIZE') && (
-                        <button onClick={(e) => { e.stopPropagation(); onResearch(op.topic, op.existingPage?.url, op.existingPage?.type); }} className="px-3 py-1 bg-indigo-600 text-white rounded text-xs">
+                        <button onClick={(e) => { e.stopPropagation(); onResearch(op.topic, op.existingPage?.url, op.existingPage?.type); }} className="px-3 py-1 bg-indigo-600 text-white rounded text-xs hover:bg-indigo-700">
                           Research
                         </button>
                     )}
@@ -177,7 +269,7 @@ function OpportunitiesView({ onResearch }: { onResearch: (topic: string, url?: s
                        <div className="grid grid-cols-2 gap-4 text-sm text-slate-700">
                           <div>
                             <strong>GSC Evidence:</strong><br/>
-                            Impressions: {op.gscSignals?.impressions}, Clicks: {op.gscSignals?.clicks}, CTR: {((op.gscSignals?.ctr || 0) * 100).toFixed(1)}%, Position: {op.gscSignals?.position?.toFixed(1)}<br/><br/>
+                            Impressions: {op.gscSignals?.impressions}, Clicks: {op.gscSignals?.clicks}, CTR: {((op.gscSignals?.ctr || 0) * 100).toFixed(1)}%, Position: {op.gscSignals?.position != null ? Number(op.gscSignals.position).toFixed(1) : '-'}<br/><br/>
                             
                             <strong>Trend Signal:</strong> {op.googleTrends || 'UNAVAILABLE'}<br/>
                             <strong>Keyword Evidence:</strong> {op.keywordPlanner || 'UNAVAILABLE'}<br/><br/>
@@ -186,7 +278,7 @@ function OpportunitiesView({ onResearch }: { onResearch: (topic: string, url?: s
                             {op.existingPage ? <a href={op.existingPage.url} target="_blank" className="text-indigo-600 underline">{op.existingPage.title} ({op.existingPage.type})</a> : "None found."}<br/><br/>
 
                             <strong>Cluster Queries:</strong><br/>
-                            {op.cluster?.join(', ')}
+                            {Array.isArray(op.cluster) ? op.cluster.join(', ') : op.cluster}
                           </div>
                           <div>
                             <strong>Reason:</strong><br/>
@@ -200,13 +292,16 @@ function OpportunitiesView({ onResearch }: { onResearch: (topic: string, url?: s
                             <span className={op.cannibalizationRisk === 'HIGH' ? 'text-red-600 font-bold' : ''}>{op.cannibalizationRisk}</span>
                           </div>
                        </div>
-                    </td>
+                     </td>
                   </tr>
                 )}
                 </React.Fragment>
               ))}
             </tbody>
           </table>
+          <div className="px-6 py-3 border-t border-slate-100 text-xs text-slate-400">
+            {filtered.length} opportunit{filtered.length === 1 ? 'y' : 'ies'} shown{filter !== 'ALL' ? ` (filtered: ${filter})` : ''} · Last updated from DB · Daily auto-discovery runs at 2:00 UTC
+          </div>
         </div>
       )}
     </div>
