@@ -39,10 +39,7 @@ const nextConfig: NextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
-  // @ts-expect-error Next.js config accepts eslint key but TS types may not expose it
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
+
   async redirects() {
     return [
       {
@@ -53,6 +50,11 @@ const nextConfig: NextConfig = {
       {
         source: '/tours/winter-kashmir-trip',
         destination: '/tours',
+        permanent: true,
+      },
+      {
+        source: '/privacy',
+        destination: '/privacy-policy',
         permanent: true,
       },
     ]

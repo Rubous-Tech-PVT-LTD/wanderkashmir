@@ -62,7 +62,7 @@ const footerLinks = {
     { label: "Cancellation Policy", href: "/cancellation" },
     { label: "Safety Guidelines", href: "/safety" },
     { label: "Terms of Service", href: "/terms" },
-    { label: "Privacy Policy", href: "/privacy" },
+    { label: "Privacy Policy", href: "/privacy-policy" },
     { label: "Sitemap", href: "/sitemap.xml" },
   ],
 };
@@ -186,7 +186,7 @@ export default function Footer() {
             <Link href="/terms" className="hover:text-slate-300 transition-colors">
               Terms
             </Link>
-            <Link href="/privacy" className="hover:text-slate-300 transition-colors">
+            <Link href="/privacy-policy" className="hover:text-slate-300 transition-colors">
               Privacy
             </Link>
             <Link href="/cookies" className="hover:text-slate-300 transition-colors">
