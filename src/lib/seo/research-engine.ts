@@ -9,9 +9,8 @@ export async function runSeoResearch(target: string, type: string, targetUrl?: s
   let pageMetrics;
   let topQueries: any[] = [];
   let relatedQueries: any[] = [];
-  let opportunities: any[] = [];
-  let performanceDelta = { status: 'INSUFFICIENT_DATA' as const, reason: 'No historical baseline provided.' };
-  let cannibalizationRisk = { status: 'SAFE' as const, competingPages: [] as any[], recommendation: 'KEEP_SEPARATE' as const, reason: '' };
+  let performanceDelta: NonNullable<SeoResearch['performanceDelta']> = { status: 'INSUFFICIENT_DATA', reason: 'No historical baseline provided.' };
+  let cannibalizationRisk: SeoResearch['cannibalizationRisk'] = { status: 'SAFE', competingPages: [], recommendation: 'KEEP_SEPARATE', reason: '' };
   let searchIntent = 'unknown';
 
   let keywordData = { status: 'UNAVAILABLE' as const, source: 'Not Configured', searchVolume: 'N/A' as const, difficulty: 'N/A' as const, intent: 'N/A' as const, relatedKeywords: [] };
