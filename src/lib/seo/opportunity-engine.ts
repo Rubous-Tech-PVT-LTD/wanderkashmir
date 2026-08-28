@@ -35,7 +35,7 @@ export async function detectOpportunities(saveToDb = false): Promise<ContentOppo
   try {
     const siteUrl = await getGscSiteUrl();
     const endDate = new Date().toISOString().split('T')[0];
-    const startDate = new Date(Date.now() - 28 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+    const startDate = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
 
     // 1. Fetch Top 500 Queries site-wide
     const analytics = await getGscAnalytics(siteUrl, startDate, endDate, ['query', 'page']);
@@ -155,7 +155,8 @@ export async function detectOpportunities(saveToDb = false): Promise<ContentOppo
        // Grab Free Signals (Graceful fallback)
        const displayTopic = cluster.queries[0].split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
 
-       if (action !== 'IGNORE' || score > 50) {
+       // Evaluate all clusters that have any business relevance (score > 5 means at least LOW relevance)
+       if (score > 5) {
          const [trends, planner] = await Promise.all([
             googleTrendsProvider.getTrends(displayTopic),
             keywordPlannerProvider.getPlannerData(displayTopic)
