@@ -561,10 +561,13 @@ function SeoResearchWizard({ initialTarget }: { initialTarget?: { topic: string,
         alert("Published Successfully via the New Intelligence Pipeline!");
         // Reset wizard
         setStep(1); setTopic(""); setResearchData(null); setStrategyData(null); setGeneratedContent(null);
+      } else {
+        const errorData = await res.json().catch(() => null);
+        alert(`Failed to publish: ${errorData?.error || res.statusText}`);
       }
     } catch (e) {
       console.error(e);
-      alert("Failed to publish.");
+      alert("Network or unexpected error while publishing.");
     }
     setIsLoading(false);
   };

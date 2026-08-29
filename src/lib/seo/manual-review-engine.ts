@@ -8,7 +8,7 @@ import { CompetingPageCandidate, ManualReviewRecommendation } from './types';
 export function generateManualReviewRecommendation(
   targetTopic: string,
   searchIntent: string,
-  competingPages: Array<{ url: string; title: string; type: string }>,
+  competingPages: Array<{ id?: string; url: string; title: string; type: string }>,
   gscQueries: any[] = []
 ): ManualReviewRecommendation {
   if (!competingPages || competingPages.length === 0) {
@@ -16,7 +16,7 @@ export function generateManualReviewRecommendation(
       targetTopic,
       searchIntent,
       recommendedPrimaryPage: null,
-      confidence: 'INSUFFICIENT_EVIDENCE',
+      confidence: 'LOW',
       confidenceReason: 'No competing pages detected in database for this entity.',
       plainLanguageSummary: 'No competing pages detected. You may proceed with normal optimization or creation.',
       competingPages: [],
@@ -128,6 +128,7 @@ export function generateManualReviewRecommendation(
     }
 
     return {
+      id: (page as any).id,
       url: page.url,
       title: page.title,
       type: pageType,
@@ -178,6 +179,7 @@ export function generateManualReviewRecommendation(
   return {
     direction: 'USE_EXISTING_PRIMARY',
     recommendedPrimaryPage: {
+      id: topCandidate.id,
       url: topCandidate.url,
       pageType: topCandidate.type,
       title: topCandidate.title,
@@ -187,7 +189,7 @@ export function generateManualReviewRecommendation(
       evidence: realEvidence
     },
     intent: isAccommodationIntent ? 'Commercial / Hotel Booking' : isTransportIntent ? 'Local / Transportation' : isInformationalIntent ? 'Informational / Research' : searchIntent.toUpperCase(),
-    confidence: confidence === 'INSUFFICIENT_EVIDENCE' ? 'LOW' : confidence,
+    confidence: confidence,
     reason: plainLanguageSummary,
     evidence: realEvidence,
     competingPages: evaluatedCandidates.map(c => ({

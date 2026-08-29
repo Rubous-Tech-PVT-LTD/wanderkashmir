@@ -87,7 +87,7 @@ export async function detectOpportunities(saveToDb = false): Promise<ContentOppo
     }
 
     // 3. Existing Page Check
-    const existingSeoPages = await prisma.seoLandingPage.findMany({ select: { slug: true, title: true, type: true }});
+    const existingSeoPages: { id?: string; type: string; slug: string; title: string }[] = await prisma.seoLandingPage.findMany({ select: { id: true, slug: true, title: true, type: true }});
     const existingProperties = await prisma.property.findMany({ select: { id: true, name: true }});
 
     for (const cluster of clusters) {
@@ -100,7 +100,7 @@ export async function detectOpportunities(saveToDb = false): Promise<ContentOppo
        const bizRelevance = getBusinessRelevance(ents.ints, ents.locs);
        
        // Detect overlapping pages by DB match OR GSC reported ranking pages
-       let existingPage: ContentOpportunity['existingPage'] | undefined;
+       let existingPage: { id?: string; url: string; title: string; type: string } | undefined = undefined;
        let cannibalizationRisk: ContentOpportunity['cannibalizationRisk'] = 'LOW';
        
        const querySlugified = primaryQuery.toLowerCase().replace(/[^a-z0-9-]/g, '-');
@@ -115,7 +115,7 @@ export async function detectOpportunities(saveToDb = false): Promise<ContentOppo
        // Match properties
        const matchedProp = existingProperties.find(p => p.name.toLowerCase().includes(ents.words.join(' ')) && ents.words.length > 0 || p.name.toLowerCase() === primaryQuery);
        if (matchedProp) {
-         existingPage = { url: `/stays/${matchedProp.id}`, title: matchedProp.name, type: 'PROPERTY' };
+         existingPage = { id: matchedProp.id, url: `/stays/${matchedProp.id}`, title: matchedProp.name, type: 'PROPERTY' };
        } else if (topRankingGscUrl) {
          // If GSC tells us what page ranks, use it! It's a real existing page.
          const urlPath = topRankingGscUrl.replace(/^https?:\/\/[^\/]+/, '');
@@ -123,6 +123,7 @@ export async function detectOpportunities(saveToDb = false): Promise<ContentOppo
          // Try to find its title in DB, otherwise use URL path
          const matchedSeo = existingSeoPages.find(p => urlPath.includes(p.slug));
          existingPage = { 
+            id: matchedSeo ? matchedSeo.id : undefined,
             url: urlPath, 
             title: matchedSeo ? matchedSeo.title : urlPath, 
             type: matchedSeo ? matchedSeo.type : 'PAGE' 
@@ -131,7 +132,7 @@ export async function detectOpportunities(saveToDb = false): Promise<ContentOppo
          // Fallback to strict DB matching if GSC didn't report a page
          const matchedSeo = existingSeoPages.find(p => querySlugified.includes(p.slug) || p.slug.includes(querySlugified) || p.title.toLowerCase().includes(primaryQuery));
          if (matchedSeo) {
-           existingPage = { url: `/${matchedSeo.type.toLowerCase()}s/${matchedSeo.slug}`, title: matchedSeo.title, type: matchedSeo.type };
+           existingPage = { id: matchedSeo.id, url: `/${matchedSeo.type.toLowerCase()}s/${matchedSeo.slug}`, title: matchedSeo.title, type: matchedSeo.type };
          }
        }
        

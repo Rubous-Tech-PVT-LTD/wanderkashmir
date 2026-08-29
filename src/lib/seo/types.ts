@@ -77,19 +77,21 @@ export interface SeoResearch {
 }
 
 export interface CompetingPageCandidate {
+  id?: string;
   url: string;
   title: string;
   type: string;
-  role?: 'PRIMARY_CANDIDATE' | 'SUPPORTING_INFORMATIONAL' | 'SUPPORTING_TRANSPORT' | 'SUPPORTING_COMMERCIAL' | 'POTENTIAL_DUPLICATE';
+  role: 'PRIMARY_CANDIDATE' | 'SUPPORTING_INFORMATIONAL' | 'SUPPORTING_TRANSPORT' | 'SUPPORTING_COMMERCIAL' | 'POTENTIAL_DUPLICATE';
   intent?: string;
-  intentAlignment?: string;
-  score?: number;
-  reasons?: string[];
+  intentAlignment: string;
+  score: number;
+  reasons: string[];
 }
 
 export interface ManualReviewRecommendation {
   direction: 'USE_EXISTING_PRIMARY' | 'CONSOLIDATE' | 'CREATE_NEW' | 'IGNORE';
   recommendedPrimaryPage: {
+    id?: string;
     url: string;
     title: string;
     pageType: string;
@@ -166,7 +168,7 @@ export interface ContentOpportunity {
   };
   intent: 'INFORMATIONAL' | 'NAVIGATIONAL' | 'COMMERCIAL' | 'TRANSACTIONAL' | 'LOCAL' | 'UNKNOWN';
   businessRelevance: 'HIGH' | 'MEDIUM' | 'LOW';
-  existingPage?: { url: string; title: string; type: string };
+  existingPage?: { id?: string; url: string; title: string; type: string };
   cannibalizationRisk: 'LOW' | 'MEDIUM' | 'HIGH';
   googleTrends?: string;
   keywordPlanner?: string;
