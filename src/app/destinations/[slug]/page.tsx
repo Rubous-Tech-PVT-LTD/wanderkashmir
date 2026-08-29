@@ -116,13 +116,15 @@ export default async function DestinationSeoPage({ params }: { params: Promise<{
         </nav>
 
         {/* Hero Section */}
-        <div className="relative rounded-3xl overflow-hidden shadow-2xl mb-12 flex flex-col md:flex-row bg-indigo-900">
-          <div className="flex-1 space-y-6 p-8 md:p-12 z-10 relative">
-            <div className="inline-flex items-center gap-2 px-3 py-1 bg-white/10 backdrop-blur-sm text-indigo-100 rounded-full text-sm font-semibold shadow-sm border border-indigo-500/30">
-              <MapPin className="w-4 h-4" />
-              Destination Guide
+        <div className="relative rounded-3xl overflow-hidden shadow-2xl mb-12 flex flex-col md:flex-row bg-indigo-900 md:items-stretch">
+          <div className="flex-1 flex flex-col justify-center space-y-6 p-8 md:p-12 z-10 relative">
+            <div>
+              <div className="inline-flex items-center gap-2 px-3 py-1 bg-white/10 backdrop-blur-sm text-indigo-100 rounded-full text-sm font-semibold shadow-sm border border-indigo-500/30">
+                <MapPin className="w-4 h-4" />
+                Destination Guide
+              </div>
             </div>
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white leading-tight">
+            <h1 className="font-bold text-white leading-tight" style={{ fontSize: 'clamp(2rem, 5vw, 3.5rem)' }}>
               {page.h1Heading}
             </h1>
             <p className="text-lg text-indigo-100 leading-relaxed max-w-2xl">
@@ -130,17 +132,14 @@ export default async function DestinationSeoPage({ params }: { params: Promise<{
             </p>
           </div>
           {page.imageUrl && (
-            <div className="w-full md:w-5/12 relative flex items-center justify-center bg-slate-50">
-              <div className="absolute inset-0 bg-gradient-to-r from-indigo-900 to-transparent z-10 md:hidden" />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent z-10 md:hidden" />
+            <div className="w-full md:w-5/12 relative bg-slate-50 flex-shrink-0 min-h-[300px] sm:min-h-[400px] md:min-h-0">
+              <div className="absolute inset-0 bg-gradient-to-t from-indigo-900/60 to-transparent z-10 md:hidden pointer-events-none" />
               <Image 
                 src={getValidImageUrl([page.imageUrl])} 
                 alt={page.h1Heading} 
-                width={0}
-                height={0}
+                fill
                 sizes="(max-width: 768px) 100vw, 40vw"
-                style={{ width: '100%', height: 'auto' }}
-                className="object-cover h-full"
+                className="object-cover"
                 priority
               />
             </div>
