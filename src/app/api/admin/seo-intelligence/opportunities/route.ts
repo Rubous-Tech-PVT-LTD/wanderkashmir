@@ -13,9 +13,6 @@ export async function GET() {
     }
 
     const opportunities = await prisma.seoOpportunity.findMany({
-      where: {
-        status: { not: "RESOLVED" }
-      },
       orderBy: {
         opportunityScore: 'desc'
       }

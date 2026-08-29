@@ -389,6 +389,24 @@ function OpportunitiesView({ onResearch }: { onResearch: (topic: string, url?: s
                             <span className={op.cannibalizationRisk === 'HIGH' ? 'text-red-600 font-bold' : ''}>{op.cannibalizationRisk}</span>
                           </div>
                        </div>
+                       {op.manualReviewDecision?.primaryPageId && (
+                           <div className="mt-4 p-4 bg-indigo-50 border border-indigo-100 rounded-xl text-sm">
+                             <h4 className="font-bold text-indigo-900 mb-2">Primary Page Selected</h4>
+                             <div className="grid grid-cols-2 gap-4 text-indigo-800">
+                               <div>
+                                 <strong>Title:</strong> {op.manualReviewDecision.primaryPageTitle}<br/>
+                                 <strong>Entity Type:</strong> {op.manualReviewDecision.primaryEntityType || 'SEO_LANDING_PAGE'}<br/>
+                                 <strong>Page Type:</strong> {op.manualReviewDecision.primaryPageType}<br/>
+                               </div>
+                               <div>
+                                 <strong>ID:</strong> {op.manualReviewDecision.primaryPageId}<br/>
+                                 <strong>Decision:</strong> {op.manualReviewDecision.type}<br/>
+                                 <strong>Opportunity Status:</strong> {op.status}<br/>
+                                 <strong>URL:</strong> <a href={op.manualReviewDecision.primaryEntityType === 'PROPERTY' ? `/stays/${op.manualReviewDecision.primaryPageId}` : `/${op.manualReviewDecision.primaryPageType?.toLowerCase()}s/${op.manualReviewDecision.primaryPageUrl?.split('/').pop()}`} target="_blank" className="underline">{op.manualReviewDecision.primaryEntityType === 'PROPERTY' ? `/stays/${op.manualReviewDecision.primaryPageId}` : `/${op.manualReviewDecision.primaryPageType?.toLowerCase()}s/${op.manualReviewDecision.primaryPageUrl?.split('/').pop()}`}</a>
+                               </div>
+                             </div>
+                           </div>
+                         )}
                      </td>
                   </tr>
                 )}
@@ -430,6 +448,7 @@ function SeoResearchWizard({ initialTarget }: { initialTarget?: { topic: string,
   const [adminDecision, setAdminDecision] = useState<'USE_EXISTING' | 'CONSOLIDATE' | 'CREATE_NEW' | 'IGNORE' | null>(null);
   const [selectedPrimaryPageUrl, setSelectedPrimaryPageUrl] = useState<string>("");
   const [selectedPrimaryPageId, setSelectedPrimaryPageId] = useState<string>("");
+  const [selectedPrimaryEntityType, setSelectedPrimaryEntityType] = useState<string>("");
   
   // Historical protection payload simulation
   const historicalPayload = { clicks: 10, impressions: 91, ctr: 0.11, position: 8.8 };
@@ -533,6 +552,7 @@ function SeoResearchWizard({ initialTarget }: { initialTarget?: { topic: string,
       const finalAdminDecision = adminDecision ? {
         action: adminDecision,
         primaryPageId: selectedPrimaryPageId || undefined,
+        primaryEntityType: selectedPrimaryEntityType || undefined,
         primaryPageUrl: selectedPrimaryPageUrl || undefined
       } : undefined;
 
@@ -709,12 +729,14 @@ function SeoResearchWizard({ initialTarget }: { initialTarget?: { topic: string,
             primaryPageUrl: rec.recommendedPrimaryPage.url,
             primaryPageTitle: rec.recommendedPrimaryPage.title,
             primaryPageType: rec.recommendedPrimaryPage.pageType,
+            primaryEntityType: rec.recommendedPrimaryPage.entityType || 'SEO_LANDING_PAGE',
             source: 'AI_RECOMMENDATION_ACCEPTED' as const,
             reason: rec.reason || rec.plainLanguageSummary
           };
           setAdminDecision('USE_EXISTING');
           setSelectedPrimaryPageUrl(rec.recommendedPrimaryPage.url);
           if (rec.recommendedPrimaryPage.id) setSelectedPrimaryPageId(rec.recommendedPrimaryPage.id);
+          setSelectedPrimaryEntityType(rec.recommendedPrimaryPage.entityType || 'SEO_LANDING_PAGE');
           try {
             await fetch('/api/admin/seo-intelligence/manual-review', {
               method: 'POST',
@@ -724,10 +746,11 @@ function SeoResearchWizard({ initialTarget }: { initialTarget?: { topic: string,
           } catch (e) { console.error("Failed to save manual review decision", e); }
         };
 
-        const handleSelectCustomPage = async (pageUrl: string, pageTitle: string, pageType: string, pageId?: string) => {
+        const handleSelectCustomPage = async (pageUrl: string, pageTitle: string, pageType: string, pageId?: string, entityType?: string) => {
           const dec = {
             type: 'CHOOSE_ANOTHER' as const,
             primaryPageId: pageId,
+            primaryEntityType: entityType || 'SEO_LANDING_PAGE',
             primaryPageUrl: pageUrl,
             primaryPageTitle: pageTitle,
             primaryPageType: pageType,
@@ -737,6 +760,7 @@ function SeoResearchWizard({ initialTarget }: { initialTarget?: { topic: string,
           setAdminDecision('USE_EXISTING');
           setSelectedPrimaryPageUrl(pageUrl);
           if (pageId) setSelectedPrimaryPageId(pageId);
+          setSelectedPrimaryEntityType(entityType || 'SEO_LANDING_PAGE');
           try {
             await fetch('/api/admin/seo-intelligence/manual-review', {
               method: 'POST',
@@ -908,7 +932,7 @@ function SeoResearchWizard({ initialTarget }: { initialTarget?: { topic: string,
                             <div className="flex items-center gap-2">
                               {adminDecision !== 'USE_EXISTING' && (
                                 <button 
-                                  onClick={() => handleSelectCustomPage(page.url, page.title, page.type, page.id)}
+                                  onClick={() => handleSelectCustomPage(page.url, page.title, page.type || page.pageType, page.id, page.entityType)}
                                   className="px-2.5 py-1 bg-white hover:bg-slate-100 text-indigo-600 border border-indigo-200 rounded text-[11px] font-semibold transition"
                                 >
                                   Pick As Primary
@@ -976,7 +1000,7 @@ function SeoResearchWizard({ initialTarget }: { initialTarget?: { topic: string,
                       <button 
                         onClick={() => {
                           const firstOther = competingPages.find((p: any) => p.url !== rec?.recommendedPrimaryPage?.url) || competingPages[0];
-                          if (firstOther) handleSelectCustomPage(firstOther.url, firstOther.title, firstOther.type);
+                          if (firstOther) handleSelectCustomPage(firstOther.url, firstOther.title, firstOther.type || firstOther.pageType, firstOther.id, firstOther.entityType);
                         }}
                         className="p-3.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded-xl font-bold text-xs flex items-center justify-center gap-2 transition"
                       >

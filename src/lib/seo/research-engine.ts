@@ -100,7 +100,10 @@ export async function runSeoResearch(target: string, type: string, targetUrl?: s
 
     // 3. Cannibalization Check (Internal DB)
     const existingPages = await prisma.seoLandingPage.findMany({
-      select: { title: true, slug: true, type: true }
+      select: { id: true, title: true, slug: true, type: true }
+    });
+    const existingProperties = await prisma.property.findMany({
+      select: { id: true, name: true, location: true }
     });
 
     const stopWords = new Set(['to', 'the', 'in', 'for', 'and', 'of', 'with', 'a', 'an', 'is', 'called', 'what', 'fare', 'cost', 'guide', 'places', 'unique', 'hidden', 'best', 'top', '2026', '2025', '2024']);
@@ -116,7 +119,23 @@ export async function runSeoResearch(target: string, type: string, targetUrl?: s
     ]);
     const entityTokens = targetWords.filter(w => !genericKeywords.has(w));
 
-    const competing = existingPages.filter(p => {
+    // Map properties to a similar structure as SeoLandingPage for competition checking
+    const propertyCandidates = existingProperties.map(p => ({
+      id: p.id,
+      title: p.name,
+      slug: p.id,
+      type: 'PROPERTY',
+      entityType: 'PROPERTY' as const
+    }));
+
+    const seoPageCandidates = existingPages.map(p => ({
+      ...p,
+      entityType: 'SEO_LANDING_PAGE' as const
+    }));
+
+    const allCandidates = [...seoPageCandidates, ...propertyCandidates];
+
+    const competing = allCandidates.filter(p => {
       const slugClean = p.slug.toLowerCase();
       if (isExistingPage && targetUrl && (targetUrl.toLowerCase().includes(slugClean) || slugClean.includes(targetUrl.toLowerCase().replace(/^\/[^/]+\//, '')))) {
         return false; // Don't flag itself
@@ -137,7 +156,13 @@ export async function runSeoResearch(target: string, type: string, targetUrl?: s
     if (competing.length > 0) {
       cannibalizationRisk = {
         status: competing.length > 1 ? 'HIGH_RISK' : 'MEDIUM_RISK',
-        competingPages: competing.map(c => ({ id: c.id, url: `/${c.type.toLowerCase()}s/${c.slug}`, title: c.title, type: c.type })),
+        competingPages: competing.map(c => ({ 
+          id: c.id, 
+          url: c.entityType === 'PROPERTY' ? `/stays/${c.id}` : `/${c.type.toLowerCase()}s/${c.slug}`, 
+          title: c.title, 
+          type: c.type,
+          entityType: c.entityType
+        })),
         recommendation: 'MANUAL_REVIEW',
         reason: `Found ${competing.length} competing pages. Requires manual review of search intent before consolidating.`
       };

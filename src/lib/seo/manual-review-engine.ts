@@ -8,7 +8,7 @@ import { CompetingPageCandidate, ManualReviewRecommendation } from './types';
 export function generateManualReviewRecommendation(
   targetTopic: string,
   searchIntent: string,
-  competingPages: Array<{ id?: string; url: string; title: string; type: string }>,
+  competingPages: Array<{ id?: string; url: string; title: string; type: string; entityType?: 'PROPERTY' | 'SEO_LANDING_PAGE' }>,
   gscQueries: any[] = []
 ): ManualReviewRecommendation {
   if (!competingPages || competingPages.length === 0) {
@@ -131,11 +131,12 @@ export function generateManualReviewRecommendation(
     }
 
     return {
-      id: (page as any).id,
+      id: page.id,
       url: page.url,
       title: page.title,
       type: pageType,
-      role,
+      entityType: page.entityType,
+      role: role,
       intentAlignment,
       score,
       reasons
@@ -197,6 +198,14 @@ export function generateManualReviewRecommendation(
     evidence: realEvidence,
     competingPages: evaluatedCandidates.map(c => ({
       ...c,
+      id: c.id,
+      url: c.url,
+      title: c.title,
+      pageType: c.type,
+      entityType: c.entityType,
+      role: c.role,
+      score: c.score,
+      reasons: c.reasons,
       intent: c.intentAlignment
     })),
     targetTopic,
@@ -206,4 +215,3 @@ export function generateManualReviewRecommendation(
     suggestedAction: 'USE_EXISTING_PRIMARY'
   };
 }
-

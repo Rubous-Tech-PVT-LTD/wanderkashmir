@@ -48,16 +48,21 @@ export async function POST(req: Request) {
     // Handle USE_EXISTING_PRIMARY or CONSOLIDATE_EXISTING (Update)
     if (action === "USE_EXISTING_PRIMARY" || action === "CONSOLIDATE_EXISTING" || action === "USE_EXISTING" || action === "CONSOLIDATE") {
       const primaryPageId = adminDecision?.primaryPageId;
+      const primaryEntityType = adminDecision?.primaryEntityType || 'SEO_LANDING_PAGE';
       if (!primaryPageId) {
         return NextResponse.json({ error: "primaryPageId is required for this action." }, { status: 400 });
       }
 
-      const existingPage = await prisma.seoLandingPage.findUnique({ where: { id: primaryPageId } });
-      if (!existingPage) {
-        return NextResponse.json({ error: "Selected primary page not found." }, { status: 400 });
-      }
+      let updatedPage = null;
 
-      const updatedPage = await prisma.seoLandingPage.update({
+      if (primaryEntityType === 'PROPERTY') {
+        // DO NOT modify Property records
+      } else {
+        const existingPage = await prisma.seoLandingPage.findUnique({ where: { id: primaryPageId } });
+        if (!existingPage) {
+          return NextResponse.json({ error: "Selected primary page not found." }, { status: 400 });
+        }
+        updatedPage = await prisma.seoLandingPage.update({
         where: { id: primaryPageId },
         data: {
           title,
@@ -72,15 +77,25 @@ export async function POST(req: Request) {
           validationReport,
         },
       });
+      }
 
       if (opportunityId) {
+        const opp = await prisma.seoOpportunity.findUnique({ where: { id: opportunityId } });
+        const mrd = (opp?.manualReviewDecision as any) || {};
+        mrd.primaryPageId = primaryPageId;
+        mrd.primaryEntityType = primaryEntityType;
+
         await prisma.seoOpportunity.update({
           where: { id: opportunityId },
-          data: { status: "RESOLVED", reason: "Successfully published/merged into production." }
+          data: { 
+            status: "RESOLVED", 
+            reason: "Successfully published/merged into production.",
+            manualReviewDecision: mrd
+          }
         });
       }
 
-      return NextResponse.json(updatedPage, { status: 200 });
+      return NextResponse.json(updatedPage || { success: true }, { status: 200 });
     } 
     
     // Handle CREATE_NEW_PAGE (Create)
@@ -112,9 +127,20 @@ export async function POST(req: Request) {
       });
 
       if (opportunityId) {
+        const opp = await prisma.seoOpportunity.findUnique({ where: { id: opportunityId } });
+        const mrd = (opp?.manualReviewDecision as any) || {};
+        if (adminDecision?.primaryPageId) {
+          mrd.primaryPageId = adminDecision.primaryPageId;
+          mrd.primaryEntityType = adminDecision.primaryEntityType || 'SEO_LANDING_PAGE';
+        }
+
         await prisma.seoOpportunity.update({
           where: { id: opportunityId },
-          data: { status: "RESOLVED", reason: "Successfully published/merged into production." }
+          data: { 
+            status: "RESOLVED", 
+            reason: "Successfully published/merged into production.",
+            manualReviewDecision: mrd
+          }
         });
       }
 
