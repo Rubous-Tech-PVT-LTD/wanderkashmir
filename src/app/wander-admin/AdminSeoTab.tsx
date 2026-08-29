@@ -427,6 +427,7 @@ function SeoResearchWizard({ initialTarget }: { initialTarget?: { topic: string,
   const [strategyData, setStrategyData] = useState<any>(null);
   const [adminDecision, setAdminDecision] = useState<'USE_EXISTING' | 'CONSOLIDATE' | 'CREATE_NEW' | 'IGNORE' | null>(null);
   const [selectedPrimaryPageUrl, setSelectedPrimaryPageUrl] = useState<string>("");
+  const [selectedPrimaryPageId, setSelectedPrimaryPageId] = useState<string>("");
   
   // Historical protection payload simulation
   const historicalPayload = { clicks: 10, impressions: 91, ctr: 0.11, position: 8.8 };
@@ -489,8 +490,11 @@ function SeoResearchWizard({ initialTarget }: { initialTarget?: { topic: string,
     try {
       const finalStrategy = {
         ...strategyData,
-        adminDecision: adminDecision || undefined,
-        selectedPrimaryPageUrl: selectedPrimaryPageUrl || undefined
+        adminDecision: adminDecision ? {
+          action: adminDecision,
+          primaryPageId: selectedPrimaryPageId || undefined,
+          primaryPageUrl: selectedPrimaryPageUrl || undefined
+        } : undefined
       };
       const res = await fetch('/api/admin/seo-intelligence/generate', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -524,6 +528,12 @@ function SeoResearchWizard({ initialTarget }: { initialTarget?: { topic: string,
   const publishToDb = async () => {
     setIsLoading(true);
     try {
+      const finalAdminDecision = adminDecision ? {
+        action: adminDecision,
+        primaryPageId: selectedPrimaryPageId || undefined,
+        primaryPageUrl: selectedPrimaryPageUrl || undefined
+      } : undefined;
+
       const payload = {
         slug: topic.toLowerCase().replace(/[^a-z0-9-]/g, '-'),
         type: type,
@@ -535,7 +545,8 @@ function SeoResearchWizard({ initialTarget }: { initialTarget?: { topic: string,
         workflowState: 'PUBLISHED',
         seoResearch: researchData,
         seoStrategy: strategyData,
-        validationReport: validationReport
+        validationReport: validationReport,
+        adminDecision: finalAdminDecision
       };
 
       const res = await fetch('/api/admin/seo-pages', {
@@ -687,6 +698,7 @@ function SeoResearchWizard({ initialTarget }: { initialTarget?: { topic: string,
           if (!rec?.recommendedPrimaryPage) return;
           const dec = {
             type: 'USE_EXISTING_PRIMARY' as const,
+            primaryPageId: rec.recommendedPrimaryPage.id,
             primaryPageUrl: rec.recommendedPrimaryPage.url,
             primaryPageTitle: rec.recommendedPrimaryPage.title,
             primaryPageType: rec.recommendedPrimaryPage.pageType,
@@ -695,6 +707,7 @@ function SeoResearchWizard({ initialTarget }: { initialTarget?: { topic: string,
           };
           setAdminDecision('USE_EXISTING');
           setSelectedPrimaryPageUrl(rec.recommendedPrimaryPage.url);
+          if (rec.recommendedPrimaryPage.id) setSelectedPrimaryPageId(rec.recommendedPrimaryPage.id);
           try {
             await fetch('/api/admin/seo-intelligence/manual-review', {
               method: 'POST',
@@ -704,9 +717,10 @@ function SeoResearchWizard({ initialTarget }: { initialTarget?: { topic: string,
           } catch (e) { console.error("Failed to save manual review decision", e); }
         };
 
-        const handleSelectCustomPage = async (pageUrl: string, pageTitle: string, pageType: string) => {
+        const handleSelectCustomPage = async (pageUrl: string, pageTitle: string, pageType: string, pageId?: string) => {
           const dec = {
             type: 'CHOOSE_ANOTHER' as const,
+            primaryPageId: pageId,
             primaryPageUrl: pageUrl,
             primaryPageTitle: pageTitle,
             primaryPageType: pageType,
@@ -715,6 +729,7 @@ function SeoResearchWizard({ initialTarget }: { initialTarget?: { topic: string,
           };
           setAdminDecision('USE_EXISTING');
           setSelectedPrimaryPageUrl(pageUrl);
+          if (pageId) setSelectedPrimaryPageId(pageId);
           try {
             await fetch('/api/admin/seo-intelligence/manual-review', {
               method: 'POST',
@@ -886,7 +901,7 @@ function SeoResearchWizard({ initialTarget }: { initialTarget?: { topic: string,
                             <div className="flex items-center gap-2">
                               {adminDecision !== 'USE_EXISTING' && (
                                 <button 
-                                  onClick={() => handleSelectCustomPage(page.url, page.title, page.type)}
+                                  onClick={() => handleSelectCustomPage(page.url, page.title, page.type, page.id)}
                                   className="px-2.5 py-1 bg-white hover:bg-slate-100 text-indigo-600 border border-indigo-200 rounded text-[11px] font-semibold transition"
                                 >
                                   Pick As Primary

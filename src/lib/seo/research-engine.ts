@@ -137,7 +137,7 @@ export async function runSeoResearch(target: string, type: string, targetUrl?: s
     if (competing.length > 0) {
       cannibalizationRisk = {
         status: competing.length > 1 ? 'HIGH_RISK' : 'MEDIUM_RISK',
-        competingPages: competing.map(c => ({ url: `/${c.type.toLowerCase()}s/${c.slug}`, title: c.title, type: c.type })),
+        competingPages: competing.map(c => ({ id: c.id, url: `/${c.type.toLowerCase()}s/${c.slug}`, title: c.title, type: c.type })),
         recommendation: 'MANUAL_REVIEW',
         reason: `Found ${competing.length} competing pages. Requires manual review of search intent before consolidating.`
       };

@@ -63,7 +63,7 @@ export interface SeoResearch {
   
   cannibalizationRisk: {
     status?: 'SAFE' | 'MEDIUM_RISK' | 'HIGH_RISK';
-    competingPages: { url: string; title: string; type: string }[];
+    competingPages: { id?: string; url: string; title: string; type: string }[];
     recommendation: 'CREATE_NEW' | 'KEEP_SEPARATE' | 'OPTIMIZE_EXISTING' | 'CONSOLIDATE' | 'REDIRECT' | 'REWRITE_FOR_DIFFERENT_INTENT' | 'MANUAL_REVIEW';
     reason?: string;
   };
