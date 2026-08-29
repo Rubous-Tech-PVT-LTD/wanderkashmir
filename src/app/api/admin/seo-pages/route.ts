@@ -65,6 +65,7 @@ export async function POST(req: Request) {
           h1Heading,
           content,
           faqs,
+          ...(imageUrl && { imageUrl }),
           workflowState,
           seoResearch,
           seoStrategy,
