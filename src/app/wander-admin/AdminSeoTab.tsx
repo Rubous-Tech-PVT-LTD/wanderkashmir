@@ -1226,20 +1226,32 @@ function LegacyPagesView() {
             <tbody className="divide-y divide-slate-100">
               {paginatedPages.map(page => {
                 const getPageUrl = (p: any) => {
-                  switch (p.type) {
-                    case 'BLOG': return `/blogs/${p.slug}`;
-                    case 'HOMESTAY': return `/homestays/${p.slug}`;
-                    case 'DESTINATION': return `/destinations/${p.slug}`;
-                    case 'TOUR': return `/tours/${p.slug}`;
-                    case 'TAXI': return `/taxis/${p.slug}`;
-                    default: return `/${p.type.toLowerCase()}s/${p.slug}`;
+                  const t = (p.type || '').toUpperCase();
+                  let route = '';
+                  switch (t) {
+                    case 'BLOG': route = `/blogs/${p.slug}`; break;
+                    case 'HOMESTAY': route = `/homestays/${p.slug}`; break;
+                    case 'DESTINATION': route = `/destinations/${p.slug}`; break;
+                    case 'TOUR': route = `/tours/${p.slug}`; break;
+                    case 'TAXI': route = `/taxis/${p.slug}`; break;
+                    default: route = `/${t.toLowerCase()}s/${p.slug}`; break;
                   }
+                  return `https://www.wanderkashmir.com${route}`;
                 };
                 const liveUrl = getPageUrl(page);
                 return (
                 <tr key={page.id}>
-                  <td className="p-4">{page.title}</td>
-                  <td className="p-4">{page.type}</td>
+                  <td className="p-4">
+                    <div className="font-medium text-slate-800">{page.title}</div>
+                    <a href={liveUrl} target="_blank" rel="noreferrer" className="text-xs text-indigo-500 hover:underline mt-1 inline-block font-mono">
+                      {liveUrl}
+                    </a>
+                  </td>
+                  <td className="p-4">
+                    <span className="px-2.5 py-1 bg-slate-100 rounded text-xs font-semibold text-slate-600 border border-slate-200">
+                      {page.type}
+                    </span>
+                  </td>
                   <td className="p-4 text-right space-x-2">
                     <a href={liveUrl} target="_blank" rel="noreferrer" className="inline-block p-2 text-slate-400 hover:text-emerald-600" title="View Live Page">
                       <Globe className="w-4 h-4" />
