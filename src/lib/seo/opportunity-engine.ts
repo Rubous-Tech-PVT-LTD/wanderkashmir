@@ -367,7 +367,7 @@ export async function detectOpportunities(saveToDb = false): Promise<ContentOppo
 
         if (primaryRecord) {
           // Update primary record in place
-          const statusForUpdate = primaryRecord.status === 'RESOLVED' ? 'DISCOVERED' : primaryRecord.status ?? 'DISCOVERED';
+          const statusForUpdate = primaryRecord.status;
           await prisma.seoOpportunity.update({
             where: { id: primaryRecord.id },
             data: {

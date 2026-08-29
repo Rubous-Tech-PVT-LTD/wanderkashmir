@@ -36,7 +36,7 @@ export async function POST(req: Request) {
     const body = await req.json();
     const { 
       slug, type, title, description, h1Heading, content, faqs, imageUrl,
-      workflowState, seoResearch, seoStrategy, validationReport, adminDecision 
+      workflowState, seoResearch, seoStrategy, validationReport, adminDecision, opportunityId 
     } = body;
 
     if (!title || !h1Heading) {
@@ -71,6 +71,14 @@ export async function POST(req: Request) {
           validationReport,
         },
       });
+
+      if (opportunityId) {
+        await prisma.seoOpportunity.update({
+          where: { id: opportunityId },
+          data: { status: "RESOLVED", reason: "Successfully published/merged into production." }
+        });
+      }
+
       return NextResponse.json(updatedPage, { status: 200 });
     } 
     
@@ -101,6 +109,13 @@ export async function POST(req: Request) {
           validationReport,
         },
       });
+
+      if (opportunityId) {
+        await prisma.seoOpportunity.update({
+          where: { id: opportunityId },
+          data: { status: "RESOLVED", reason: "Successfully published/merged into production." }
+        });
+      }
 
       return NextResponse.json(newPage, { status: 201 });
     }

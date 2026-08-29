@@ -9,10 +9,10 @@ import { Share2 } from "lucide-react";
 
 export default function AdminSeoTab() {
   const [activeTab, setActiveTab] = useState<"overview" | "pages" | "opportunities" | "research">("pages");
-  const [researchTarget, setResearchTarget] = useState<{ topic: string, url: string, type: string } | null>(null);
+  const [researchTarget, setResearchTarget] = useState<{ topic: string, url: string, type: string, opportunityId?: string } | null>(null);
 
-  const startResearch = (topic: string, url?: string, type?: string) => {
-    setResearchTarget({ topic, url: url || '', type: type || 'DESTINATION' });
+  const startResearch = (topic: string, url?: string, type?: string, opportunityId?: string) => {
+    setResearchTarget({ topic, url: url || '', type: type || 'DESTINATION', opportunityId });
     setActiveTab("research");
   };
 
@@ -171,7 +171,7 @@ function GscOverviewView() {
 // -----------------------------------------------------------------------------
 // NEW: SEO OPPORTUNITIES VIEW
 // -----------------------------------------------------------------------------
-function OpportunitiesView({ onResearch }: { onResearch: (topic: string, url?: string, type?: string) => void }) {
+function OpportunitiesView({ onResearch }: { onResearch: (topic: string, url?: string, type?: string, opportunityId?: string) => void }) {
   const [opportunities, setOpportunities] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isDiscovering, setIsDiscovering] = useState(false);
@@ -353,7 +353,7 @@ function OpportunitiesView({ onResearch }: { onResearch: (topic: string, url?: s
                   <td className="p-4 text-center text-slate-600 text-xs">{op.businessRelevance}</td>
                   <td className="p-4 text-right">
                     {(op.type === 'CREATE' || op.type === 'OPTIMIZE') && (
-                        <button onClick={(e) => { e.stopPropagation(); onResearch(op.topic, op.existingPage?.url, op.existingPage?.type); }} className="px-3 py-1 bg-indigo-600 text-white rounded text-xs hover:bg-indigo-700">
+                        <button onClick={(e) => { e.stopPropagation(); onResearch(op.topic, op.existingPage?.url, op.existingPage?.type, op.id); }} className="px-3 py-1 bg-indigo-600 text-white rounded text-xs hover:bg-indigo-700">
                           Research
                         </button>
                     )}
@@ -408,17 +408,19 @@ function OpportunitiesView({ onResearch }: { onResearch: (topic: string, url?: s
 // -----------------------------------------------------------------------------
 // NEW: SEO RESEARCH WIZARD (THE NEW PIPELINE)
 // -----------------------------------------------------------------------------
-function SeoResearchWizard({ initialTarget }: { initialTarget?: { topic: string, url: string, type: string } | null }) {
+function SeoResearchWizard({ initialTarget }: { initialTarget?: { topic: string, url: string, type: string, opportunityId?: string } | null }) {
   const [step, setStep] = useState(1);
   const [topic, setTopic] = useState("");
   const [type, setType] = useState("DESTINATION");
   const [url, setUrl] = useState("");
+  const [opportunityId, setOpportunityId] = useState<string | undefined>();
   
   useEffect(() => {
      if (initialTarget) {
         setTopic(initialTarget.topic);
         setUrl(initialTarget.url);
         setType(initialTarget.type);
+        setOpportunityId(initialTarget.opportunityId);
      }
   }, [initialTarget]);
 
@@ -535,6 +537,7 @@ function SeoResearchWizard({ initialTarget }: { initialTarget?: { topic: string,
       } : undefined;
 
       const payload = {
+        opportunityId,
         slug: topic.toLowerCase().replace(/[^a-z0-9-]/g, '-'),
         type: type,
         title: generatedContent.title,
@@ -1228,6 +1231,28 @@ function LegacyPagesView() {
               ))}
             </tbody>
           </table>
+          
+          {totalPages > 1 && (
+            <div className="flex justify-between items-center mt-4 px-4 py-2 bg-slate-50 border-t rounded-b-lg">
+              <button 
+                onClick={() => setCurrentPage(p => Math.max(1, p - 1))} 
+                disabled={currentPage === 1}
+                className="px-3 py-1 bg-white border rounded shadow-sm disabled:opacity-50"
+              >
+                Previous
+              </button>
+              <span className="text-sm text-slate-500">
+                Page {currentPage} of {totalPages}
+              </span>
+              <button 
+                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} 
+                disabled={currentPage === totalPages}
+                className="px-3 py-1 bg-white border rounded shadow-sm disabled:opacity-50"
+              >
+                Next
+              </button>
+            </div>
+          )}
         </div>
       )}
       
