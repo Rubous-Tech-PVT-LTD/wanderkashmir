@@ -13,6 +13,10 @@ export function generateManualReviewRecommendation(
 ): ManualReviewRecommendation {
   if (!competingPages || competingPages.length === 0) {
     return {
+      direction: 'CREATE_NEW',
+      intent: searchIntent.toUpperCase(),
+      reason: 'No competing pages detected. You may proceed with normal optimization or creation.',
+      evidence: ['No competing pages detected in database for this entity.'],
       targetTopic,
       searchIntent,
       recommendedPrimaryPage: null,
@@ -20,7 +24,6 @@ export function generateManualReviewRecommendation(
       confidenceReason: 'No competing pages detected in database for this entity.',
       plainLanguageSummary: 'No competing pages detected. You may proceed with normal optimization or creation.',
       competingPages: [],
-      suggestedAction: 'CREATE_NEW'
     };
   }
 
