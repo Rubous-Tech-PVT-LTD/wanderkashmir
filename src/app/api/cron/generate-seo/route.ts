@@ -17,7 +17,6 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     let requestedTopic = searchParams.get('topic');
     let opportunityId = null;
-    let pageType = "TAXI"; // Default
 
     if (!requestedTopic) {
         // Fetch top non-blog opportunity
@@ -30,9 +29,40 @@ export async function GET(request: Request) {
         }
         requestedTopic = op.topic;
         opportunityId = op.id;
-        
-        if (op.topic.toLowerCase().includes('homestay')) pageType = "HOMESTAY";
-        else if (op.topic.toLowerCase().includes('tour') || op.topic.toLowerCase().includes('package')) pageType = "TOUR";
+    }
+
+    // Determine Page Type based on Prioritized Intent Rules
+    let pageType = "TAXI"; // Safe Fallback
+    const lowerTopic = (requestedTopic as string).toLowerCase();
+
+    // 1. General Roundup / Listicle Intent (BLOG)
+    if (
+      (lowerTopic.includes('best') || lowerTopic.includes('top') || lowerTopic.includes('cheap')) &&
+      (lowerTopic.includes('hotels') || lowerTopic.includes('resorts') || lowerTopic.includes('places to stay'))
+    ) {
+      pageType = "BLOG";
+    }
+    // 2. Homestay (HOMESTAY)
+    else if (lowerTopic.includes('homestay')) {
+      pageType = "HOMESTAY";
+    }
+    // 3. Tour / Package (TOUR)
+    else if (/\btour\b/.test(lowerTopic) || lowerTopic.includes('package')) {
+      pageType = "TOUR";
+    }
+    // 4. Specific Entity / Destination Guide (DESTINATION)
+    else if (
+      lowerTopic.includes('hotel') || 
+      lowerTopic.includes('resort') || 
+      lowerTopic.includes('place') || 
+      lowerTopic.includes('destination') || 
+      lowerTopic.includes('sightseeing')
+    ) {
+      pageType = "DESTINATION";
+    }
+    // 5. Taxi / Cab (TAXI)
+    else if (lowerTopic.includes('taxi') || lowerTopic.includes('cab') || lowerTopic.includes('transfer')) {
+      pageType = "TAXI";
     }
 
     // 1. Research

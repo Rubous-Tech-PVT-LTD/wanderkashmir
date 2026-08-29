@@ -1197,7 +1197,7 @@ function LegacyPagesView() {
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <select value={formData.type} onChange={(e) => setFormData({ ...formData, type: e.target.value })} className="p-2 border rounded-lg">
-                <option value="TAXI">Taxi</option><option value="HOMESTAY">Homestay</option><option value="TOUR">Tour</option><option value="BLOG">Blog</option>
+                <option value="TAXI">Taxi</option><option value="HOMESTAY">Homestay</option><option value="TOUR">Tour</option><option value="BLOG">Blog</option><option value="DESTINATION">Destination</option>
               </select>
               <input type="text" placeholder="Slug" value={formData.slug} onChange={(e) => setFormData({ ...formData, slug: e.target.value })} className="p-2 border rounded-lg" required />
             </div>
