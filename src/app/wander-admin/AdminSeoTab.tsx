@@ -1223,16 +1223,32 @@ function LegacyPagesView() {
           <table className="w-full text-left">
             <thead><tr className="bg-slate-50"><th className="p-4">Title</th><th className="p-4">Type</th><th className="p-4 text-right">Actions</th></tr></thead>
             <tbody className="divide-y divide-slate-100">
-              {paginatedPages.map(page => (
+              {paginatedPages.map(page => {
+                const getPageUrl = (p: any) => {
+                  switch (p.type) {
+                    case 'BLOG': return `/blogs/${p.slug}`;
+                    case 'HOMESTAY': return `/homestays/${p.slug}`;
+                    case 'DESTINATION': return `/destinations/${p.slug}`;
+                    case 'TOUR': return `/tours/${p.slug}`;
+                    case 'TAXI': return `/taxis/${p.slug}`;
+                    default: return `/${p.type.toLowerCase()}s/${p.slug}`;
+                  }
+                };
+                const liveUrl = getPageUrl(page);
+                return (
                 <tr key={page.id}>
                   <td className="p-4">{page.title}</td>
                   <td className="p-4">{page.type}</td>
                   <td className="p-4 text-right space-x-2">
+                    <a href={liveUrl} target="_blank" rel="noreferrer" className="inline-block p-2 text-slate-400 hover:text-emerald-600" title="View Live Page">
+                      <Globe className="w-4 h-4" />
+                    </a>
                     <button onClick={() => handleEdit(page)} className="p-2 text-slate-400 hover:text-indigo-600"><Edit2 className="w-4 h-4" /></button>
                     <button onClick={() => handleDelete(page.id)} className="p-2 text-slate-400 hover:text-red-600"><Trash2 className="w-4 h-4" /></button>
                   </td>
                 </tr>
-              ))}
+                );
+              })}
             </tbody>
           </table>
           
