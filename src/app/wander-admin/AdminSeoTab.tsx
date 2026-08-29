@@ -55,18 +55,115 @@ export default function AdminSeoTab() {
       </div>
 
       {activeTab === "pages" && <LegacyPagesView />}
-      {activeTab === "overview" && <PlaceholderView title="GSC Overview" desc="Site-wide Search Console metrics will appear here." />}
+      {activeTab === "overview" && <GscOverviewView />}
       {activeTab === "opportunities" && <OpportunitiesView onResearch={startResearch} />}
       {activeTab === "research" && <SeoResearchWizard initialTarget={researchTarget} />}
     </div>
   );
 }
 
-function PlaceholderView({ title, desc }: { title: string, desc: string }) {
+function GscOverviewView() {
+  const [data, setData] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchOverview = async () => {
+      try {
+        const res = await fetch('/api/admin/seo-intelligence/overview');
+        const json = await res.json();
+        
+        if (!res.ok) {
+          setError(json.error || 'Failed to fetch GSC overview');
+        } else {
+          setData(json.data);
+        }
+      } catch (err: any) {
+        setError('Network error connecting to GSC overview');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchOverview();
+  }, []);
+
+  if (isLoading) {
+    return (
+      <div className="bg-white p-12 text-center rounded-2xl border border-slate-100 shadow-sm flex flex-col items-center gap-3">
+        <RefreshCw className="animate-spin w-8 h-8 text-indigo-500" />
+        <p className="text-slate-500 font-medium">Loading Google Search Console data...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    if (error === 'GSC not connected') {
+      return (
+        <div className="bg-white p-12 text-center rounded-2xl border border-red-100 shadow-sm">
+          <Activity className="w-12 h-12 text-red-400 mx-auto mb-4" />
+          <h3 className="text-xl font-bold text-slate-800 mb-2">GSC Not Connected</h3>
+          <p className="text-slate-500 max-w-md mx-auto">
+            Google Search Console is not currently connected. Please go to Settings to connect your account and enable SEO Intelligence.
+          </p>
+        </div>
+      );
+    }
+
+    return (
+      <div className="bg-white p-12 text-center rounded-2xl border border-red-100 shadow-sm">
+        <h3 className="text-xl font-bold text-red-600 mb-2">Error Loading GSC Data</h3>
+        <p className="text-slate-500">{error}</p>
+      </div>
+    );
+  }
+
+  if (data && !data.hasData) {
+    return (
+      <div className="bg-white p-12 text-center rounded-2xl border border-slate-100 shadow-sm">
+        <BarChart2 className="w-12 h-12 text-slate-300 mx-auto mb-4" />
+        <h3 className="text-xl font-bold text-slate-800 mb-2">No GSC data available for this period</h3>
+        <p className="text-slate-500">Google Search Console is connected, but returned no metrics for the last 30 days.</p>
+      </div>
+    );
+  }
+
   return (
-    <div className="bg-white p-12 text-center rounded-2xl border border-slate-100 shadow-sm">
-      <h3 className="text-xl font-bold text-slate-800 mb-2">{title}</h3>
-      <p className="text-slate-500">{desc}</p>
+    <div className="bg-white p-8 rounded-2xl border border-slate-100 shadow-sm space-y-6">
+      <div className="flex justify-between items-center border-b border-slate-100 pb-4">
+        <div>
+          <h3 className="text-xl font-bold text-slate-800 flex items-center gap-2">
+            <BarChart2 className="w-5 h-5 text-indigo-600" />
+            GSC Overview
+          </h3>
+          <p className="text-sm text-slate-500 mt-1">
+            Site-wide metrics for {data.siteUrl} ({data.startDate} to {data.endDate})
+          </p>
+        </div>
+        <div className="px-3 py-1 bg-green-50 text-green-700 border border-green-200 rounded-full text-xs font-bold flex items-center gap-1.5">
+          <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+          CONNECTED
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="bg-slate-50 p-6 rounded-xl border border-slate-100">
+          <div className="text-sm font-semibold text-slate-500 mb-1">Total Clicks</div>
+          <div className="text-3xl font-black text-slate-800">{data.metrics.clicks.toLocaleString()}</div>
+        </div>
+        <div className="bg-slate-50 p-6 rounded-xl border border-slate-100">
+          <div className="text-sm font-semibold text-slate-500 mb-1">Total Impressions</div>
+          <div className="text-3xl font-black text-slate-800">{data.metrics.impressions.toLocaleString()}</div>
+        </div>
+        <div className="bg-slate-50 p-6 rounded-xl border border-slate-100">
+          <div className="text-sm font-semibold text-slate-500 mb-1">Average CTR</div>
+          <div className="text-3xl font-black text-slate-800">{(data.metrics.ctr * 100).toFixed(2)}%</div>
+        </div>
+        <div className="bg-slate-50 p-6 rounded-xl border border-slate-100">
+          <div className="text-sm font-semibold text-slate-500 mb-1">Average Position</div>
+          <div className="text-3xl font-black text-slate-800">{data.metrics.position.toFixed(1)}</div>
+        </div>
+      </div>
     </div>
   );
 }
