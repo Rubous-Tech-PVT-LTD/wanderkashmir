@@ -49,14 +49,17 @@ export default async function DestinationsPage({
           <>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
               {routes.map((route) => {
-                const basePath =
-                  route.type === "TAXI"
-                    ? "taxis"
-                    : route.type === "HOMESTAY"
-                    ? "homestays"
-                    : route.type === "BLOG"
-                    ? "blog"
-                    : "tours";
+                const getBasePath = (type: string) => {
+                  switch (type) {
+                    case "BLOG": return "blogs";
+                    case "HOMESTAY": return "homestays";
+                    case "DESTINATION": return "destinations";
+                    case "TOUR": return "tours";
+                    case "TAXI": return "taxis";
+                    default: return type ? `${type.toLowerCase()}s` : "tours";
+                  }
+                };
+                const basePath = getBasePath(route.type);
                 
                 return (
                   <Link
