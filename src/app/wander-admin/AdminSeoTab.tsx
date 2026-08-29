@@ -1212,6 +1212,7 @@ function LegacyPagesView() {
             <textarea placeholder="Description" value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })} className="w-full p-2 border rounded-lg" rows={2} />
             <input type="text" placeholder="H1 Heading" value={formData.h1Heading} onChange={(e) => setFormData({ ...formData, h1Heading: e.target.value })} className="w-full p-2 border rounded-lg" required />
             <textarea placeholder="Content" value={formData.content} onChange={(e) => setFormData({ ...formData, content: e.target.value })} className="w-full p-2 border rounded-lg" rows={5} />
+            <input type="text" placeholder="Image URL (e.g. from Cloudinary)" value={formData.imageUrl || ""} onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })} className="w-full p-2 border rounded-lg" />
             <div className="flex justify-end gap-2 mt-4">
               <button type="submit" className="bg-[#f97316] text-white px-6 py-2 rounded-lg">Save Page</button>
             </div>
