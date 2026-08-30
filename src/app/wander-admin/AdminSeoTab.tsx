@@ -335,13 +335,14 @@ function OpportunitiesView({ onResearch }: { onResearch: (topic: string, url?: s
                 <tr className="hover:bg-slate-50/50 cursor-pointer" onClick={() => setExpandedRow(expandedRow === i ? null : i)}>
                   <td className="p-4">
                     <span className={`px-2 py-1 text-xs font-semibold rounded-full ${
+                      op.status === "RESOLVED" ? "bg-green-100 text-green-800" :
                       op.type === "CREATE" ? "bg-blue-100 text-blue-800" :
                       op.type === "OPTIMIZE" ? "bg-orange-100 text-orange-800" :
                       op.type === "MONITOR" ? "bg-slate-100 text-slate-800" :
                       op.type === "MANUAL_REVIEW" ? "bg-yellow-100 text-yellow-800" :
                       "bg-red-100 text-red-800"
                     }`}>
-                      {op.type}
+                      {op.status === "RESOLVED" ? "RESOLVED" : op.type}
                     </span>
                   </td>
                   <td className="p-4 font-bold text-slate-700">{op.opportunityScore}</td>
@@ -352,7 +353,7 @@ function OpportunitiesView({ onResearch }: { onResearch: (topic: string, url?: s
                   <td className="p-4 text-right text-slate-600">{op.gscSignals?.position != null ? Number(op.gscSignals.position).toFixed(1) : '-'}</td>
                   <td className="p-4 text-center text-slate-600 text-xs">{op.businessRelevance}</td>
                   <td className="p-4 text-right">
-                    {(op.type === 'CREATE' || op.type === 'OPTIMIZE') && (
+                    {(op.type === 'CREATE' || op.type === 'OPTIMIZE') && op.status !== 'RESOLVED' && (
                         <button onClick={(e) => { e.stopPropagation(); onResearch(op.topic, op.existingPage?.url, op.existingPage?.type, op.id); }} className="px-3 py-1 bg-indigo-600 text-white rounded text-xs hover:bg-indigo-700">
                           Research
                         </button>
