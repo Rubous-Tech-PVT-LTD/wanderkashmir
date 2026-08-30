@@ -1,4 +1,4 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import { GoogleGenerativeAI, SchemaType } from "@google/generative-ai";
 import { SeoResearch, SeoStrategy } from "./types";
 import { PrismaClient } from "@prisma/client";
 
@@ -83,7 +83,30 @@ Return ONLY valid JSON matching this exact structure, with no markdown formattin
   try {
     const result = await model.generateContent({
       contents: [{ role: "user", parts: [{ text: prompt }] }],
-      generationConfig: { responseMimeType: "application/json" }
+      generationConfig: { 
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: SchemaType.OBJECT,
+          properties: {
+            title: { type: SchemaType.STRING },
+            description: { type: SchemaType.STRING },
+            h1Heading: { type: SchemaType.STRING },
+            content: { type: SchemaType.STRING },
+            faqs: {
+              type: SchemaType.ARRAY,
+              items: {
+                type: SchemaType.OBJECT,
+                properties: {
+                  question: { type: SchemaType.STRING },
+                  answer: { type: SchemaType.STRING }
+                },
+                required: ["question", "answer"]
+              }
+            }
+          },
+          required: ["title", "description", "h1Heading", "content", "faqs"]
+        }
+      }
     });
     
     const text = result.response.text();
