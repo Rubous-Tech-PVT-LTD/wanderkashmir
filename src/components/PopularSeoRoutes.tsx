@@ -22,7 +22,7 @@ export default async function PopularSeoRoutes() {
           {routes.map((route) => {
             const getBasePath = (type: string) => {
               switch (type) {
-                case "BLOG": return "blogs";
+                case "BLOG": return "blog";
                 case "HOMESTAY": return "homestays";
                 case "DESTINATION": return "destinations";
                 case "TOUR": return "tours";

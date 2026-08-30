@@ -1254,7 +1254,7 @@ function LegacyPagesView() {
                   const t = (p.type || '').toUpperCase();
                   let route = '';
                   switch (t) {
-                    case 'BLOG': route = `/blogs/${p.slug}`; break;
+                    case 'BLOG': route = `/blog/${p.slug}`; break;
                     case 'HOMESTAY': route = `/homestays/${p.slug}`; break;
                     case 'DESTINATION': route = `/destinations/${p.slug}`; break;
                     case 'TOUR': route = `/tours/${p.slug}`; break;
