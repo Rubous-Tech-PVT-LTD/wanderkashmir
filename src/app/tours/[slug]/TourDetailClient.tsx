@@ -376,6 +376,14 @@ export default function TourDetailClient({ initialTour }: { initialTour: any }) 
                           {inc}
                         </li>
                       ))}
+                      <li className="flex items-start gap-2.5 text-sm text-slate-700">
+                        <CheckCircle2 className="w-4 h-4 text-orange-500 flex-shrink-0 mt-0.5" />
+                        Package Quality: This package is 3 star; it includes 3 star hotel, 3 star transport, and hospitality.
+                      </li>
+                      <li className="flex items-start gap-2.5 text-sm text-slate-700">
+                        <CheckCircle2 className="w-4 h-4 text-orange-500 flex-shrink-0 mt-0.5" />
+                        Pick-up: Srinagar. Option for pickup available; customers can decide where they need to be picked up. We mostly pick-up at Srinagar or Anantnag. Note: if pickup location is different, additional charges may apply depending on the customer's location.
+                      </li>
                     </ul>
                   </div>
                   <div>
@@ -628,9 +636,9 @@ export default function TourDetailClient({ initialTour }: { initialTour: any }) 
                       href={`https://wa.me/916005888754?text=${encodeURIComponent(`Hello WanderKashmir, I need help planning my trip for ${tour.title}.`)}`} 
                       target="_blank" 
                       rel="noopener noreferrer" 
-                      className="w-full flex items-center gap-2.5 px-4 py-2.5 bg-orange-500 border border-orange-500 rounded-xl text-sm text-orange-500 hover:bg-orange-500 hover:text-white transition-colors"
+                      className="w-full flex items-center justify-center gap-2.5 px-4 py-2.5 bg-orange-500 border border-orange-500 rounded-xl text-sm text-white hover:bg-orange-600 transition-colors"
                     >
-                      <MessageCircle className="w-4 h-4 text-orange-500" />
+                      <MessageCircle className="w-4 h-4 text-white" />
                       Chat on WhatsApp
                     </a>
                   </div>
