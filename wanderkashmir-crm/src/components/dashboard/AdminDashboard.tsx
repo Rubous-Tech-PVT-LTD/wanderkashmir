@@ -27,7 +27,7 @@ export default async function AdminDashboard({ session }: { session: any }) {
     prisma.crmLead.count({ where: { assignedBaId: null } }),
     
     prisma.crmPartner.count({ where: { status: "ACTIVE" } }),
-    prisma.crmPartner.count({ where: { status: "INACTIVE" } }), // Assuming INACTIVE means pending approval based on schema
+    prisma.crmLead.count({ where: { status: "INTERESTED" } }), // Pending partners are leads waiting to be converted
     
     prisma.crmRequirement.count({ where: { status: { notIn: ["CONFIRMED", "CANCELLED", "CONVERTED_TO_BOOKING"] } } }),
     prisma.crmQuotation.count({ where: { status: { in: ["DRAFT", "INTERNAL_REVIEW", "REVISED"] } } }),
@@ -44,7 +44,7 @@ export default async function AdminDashboard({ session }: { session: any }) {
     { name: "New Leads", count: newLeads, icon: CheckCircle, href: "/dashboard/leads?status=NEW", color: "bg-cyan-100 text-cyan-600" },
     { name: "Unassigned Leads", count: unassignedLeads, icon: AlertCircle, href: "/dashboard/leads?unassigned=true", color: "bg-red-100 text-red-600" },
     { name: "Active Partners", count: activePartners, icon: Users, href: "/dashboard/partners?status=ACTIVE", color: "bg-emerald-100 text-emerald-600" },
-    { name: "Pending Partners", count: pendingPartners, icon: Clock, href: "/dashboard/partners?status=INACTIVE", color: "bg-amber-100 text-amber-600" },
+    { name: "Pending Partners", count: pendingPartners, icon: Clock, href: "/dashboard/leads?pendingProof=true", color: "bg-amber-100 text-amber-600" },
     { name: "Active Req.", count: activeRequirements, icon: FileText, href: "/dashboard/requirements", color: "bg-purple-100 text-purple-600" },
     { name: "Pending Quotes", count: pendingQuotations, icon: TrendingUp, href: "/dashboard/quotations", color: "bg-orange-100 text-orange-600" },
     { name: "Active Bookings", count: activeBookings, icon: BookOpen, href: "/dashboard/bookings", color: "bg-indigo-100 text-indigo-600" },

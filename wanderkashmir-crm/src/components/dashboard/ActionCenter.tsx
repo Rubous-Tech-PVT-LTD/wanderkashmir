@@ -52,7 +52,7 @@ export default function ActionCenter({
         )}
         
         {pendingPartners > 0 && (
-          <Link href="/dashboard/partners?status=INACTIVE" className="flex items-center gap-3 p-3 rounded-lg border border-amber-100 bg-amber-50 hover:bg-amber-100 transition-colors">
+          <Link href="/dashboard/leads?pendingProof=true" className="flex items-center gap-3 p-3 rounded-lg border border-amber-100 bg-amber-50 hover:bg-amber-100 transition-colors">
             <div className="bg-amber-200 text-amber-700 p-2 rounded-full flex-shrink-0">
               <Users className="h-4 w-4" />
             </div>
