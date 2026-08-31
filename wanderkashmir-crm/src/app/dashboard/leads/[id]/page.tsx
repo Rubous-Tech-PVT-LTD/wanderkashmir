@@ -53,6 +53,7 @@ export default async function LeadDetailsPage({ params }: { params: Promise<{ id
           <LeadDetailsActions
             leadId={lead.id}
             leadPhone={lead.phone}
+            leadEmail={lead.email}
             leadContactName={lead.contactPerson || lead.companyName}
             leadCompanyName={lead.companyName}
             baName={lead.assignedBa?.name || ""}

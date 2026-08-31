@@ -380,9 +380,9 @@ export default function TourDetailClient({ initialTour }: { initialTour: any }) 
                         <CheckCircle2 className="w-4 h-4 text-orange-500 flex-shrink-0 mt-0.5" />
                         Package Quality: This package is 3 star; it includes 3 star hotel, 3 star transport, and hospitality.
                       </li>
-                      <li className="flex items-start gap-2.5 text-sm text-slate-700">
-                        <CheckCircle2 className="w-4 h-4 text-orange-500 flex-shrink-0 mt-0.5" />
-                        Pick-up: Srinagar. Option for pickup available; customers can decide where they need to be picked up. We mostly pick-up at Srinagar or Anantnag. Note: if pickup location is different, additional charges may apply depending on the customer's location.
+                      <li className="flex items-start gap-2.5 text-sm text-slate-800 bg-orange-50 p-3 rounded-lg border border-orange-100 mt-2">
+                        <CheckCircle2 className="w-4 h-4 text-orange-600 flex-shrink-0 mt-0.5" />
+                        <span><strong className="text-slate-900">Pick-up: Srinagar.</strong> Option for pickup available; customers can decide where they need to be picked up. We mostly pick-up at Srinagar or Anantnag. <strong className="text-orange-700">Note:</strong> if pickup location is different, additional charges may apply depending on the customer's location.</span>
                       </li>
                     </ul>
                   </div>

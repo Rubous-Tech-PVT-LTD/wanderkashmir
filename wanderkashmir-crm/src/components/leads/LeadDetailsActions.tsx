@@ -1,14 +1,16 @@
 "use client";
 
 import { useState } from "react";
-import { MessageCircle, Phone, ArrowRightLeft } from "lucide-react";
+import { MessageCircle, Phone, ArrowRightLeft, Mail } from "lucide-react";
 import WhatsAppModal from "./WhatsAppModal";
 import LogCallModal from "./LogCallModal";
 import ConvertPartnerModal from "./ConvertPartnerModal";
+import CrmEmailModal from "./CrmEmailModal";
 
 type ActionProps = {
   leadId: string;
   leadPhone: string;
+  leadEmail?: string | null;
   leadContactName: string;
   leadCompanyName: string;
   baName: string;
@@ -18,6 +20,7 @@ type ActionProps = {
 export default function LeadDetailsActions({ 
   leadId, 
   leadPhone, 
+  leadEmail,
   leadContactName, 
   leadCompanyName, 
   baName,
@@ -26,6 +29,7 @@ export default function LeadDetailsActions({
   const [isWaOpen, setIsWaOpen] = useState(false);
   const [isCallOpen, setIsCallOpen] = useState(false);
   const [isConvertOpen, setIsConvertOpen] = useState(false);
+  const [isEmailOpen, setIsEmailOpen] = useState(false);
 
   return (
     <>
@@ -47,6 +51,14 @@ export default function LeadDetailsActions({
         >
           <MessageCircle className="h-4 w-4" />
           WhatsApp
+        </button>
+
+        <button
+          onClick={() => setIsEmailOpen(true)}
+          className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-purple-700 bg-purple-50 border border-purple-200 rounded-md hover:bg-purple-100"
+        >
+          <Mail className="h-4 w-4" />
+          Email
         </button>
 
         {canConvert && (
@@ -86,6 +98,16 @@ export default function LeadDetailsActions({
           leadId={leadId}
           onClose={() => setIsConvertOpen(false)}
           onSuccess={() => window.location.reload()}
+        />
+      )}
+
+      {isEmailOpen && (
+        <CrmEmailModal
+          isOpen={isEmailOpen}
+          onClose={() => setIsEmailOpen(false)}
+          leadId={leadId}
+          leadEmail={leadEmail || null}
+          leadName={leadContactName || leadCompanyName}
         />
       )}
     </>
