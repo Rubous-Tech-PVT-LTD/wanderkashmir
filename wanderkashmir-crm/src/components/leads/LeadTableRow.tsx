@@ -7,6 +7,8 @@ import WhatsAppModal from "./WhatsAppModal";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import AssignBaDropdown from "./AssignBaDropdown";
+import RejectProofModal from "./RejectProofModal";
+import { Check, XCircle } from "lucide-react";
 
 type Lead = {
   id: string;
@@ -34,6 +36,8 @@ export default function LeadTableRow({
 }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isWaOpen, setIsWaOpen] = useState(false);
+  const [isRejectModalOpen, setIsRejectModalOpen] = useState(false);
+  const [isConverting, setIsConverting] = useState(false);
   const router = useRouter();
 
   const handleCall = () => {
@@ -47,6 +51,27 @@ export default function LeadTableRow({
 
   const handleSuccess = () => {
     router.refresh(); // Refresh the page to reflect the new lead status and call log
+  };
+
+  const handleAccept = async () => {
+    if (!window.confirm("Are you sure you want to approve this proof and convert the lead to a Partner?")) return;
+    
+    setIsConverting(true);
+    try {
+      const res = await fetch(`/api/leads/${lead.id}/convert`, {
+        method: "POST",
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || "Failed to convert lead");
+      }
+      alert("Lead successfully converted to Partner!");
+      router.refresh();
+    } catch (error: any) {
+      alert(error.message);
+    } finally {
+      setIsConverting(false);
+    }
   };
 
   return (
@@ -88,6 +113,26 @@ export default function LeadTableRow({
         </td>
         <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
           <div className="flex items-center justify-end gap-2">
+            {isAdmin && lead.status === 'INTERESTED' && (
+              <>
+                <button
+                  onClick={handleAccept}
+                  disabled={isConverting}
+                  className="p-2 text-white bg-green-600 rounded-md hover:bg-green-700 transition-colors disabled:opacity-50"
+                  title="Approve & Convert to Partner"
+                >
+                  <Check className="h-4 w-4" />
+                </button>
+                <button
+                  onClick={() => setIsRejectModalOpen(true)}
+                  className="p-2 text-white bg-red-600 rounded-md hover:bg-red-700 transition-colors"
+                  title="Reject Proof"
+                >
+                  <XCircle className="h-4 w-4" />
+                </button>
+                <div className="w-px h-6 bg-gray-300 mx-1"></div>
+              </>
+            )}
             <button
               onClick={handleCall}
               className="p-2 text-blue-600 bg-blue-50 rounded-md hover:bg-blue-100 transition-colors"
@@ -153,7 +198,26 @@ export default function LeadTableRow({
               </div>
             </div>
 
-            <div className="pt-2 border-t border-gray-100 flex items-center justify-between gap-2">
+            <div className="pt-2 border-t border-gray-100 flex flex-col gap-2">
+              {isAdmin && lead.status === 'INTERESTED' && (
+                <div className="flex gap-2 w-full pb-2 border-b border-gray-100">
+                  <button
+                    onClick={handleAccept}
+                    disabled={isConverting}
+                    className="flex-1 flex justify-center items-center gap-1 py-2 px-3 text-white bg-green-600 rounded-md hover:bg-green-700 transition-colors font-medium text-sm disabled:opacity-50"
+                  >
+                    <Check className="h-4 w-4" />
+                    Approve
+                  </button>
+                  <button
+                    onClick={() => setIsRejectModalOpen(true)}
+                    className="flex-1 flex justify-center items-center gap-1 py-2 px-3 text-white bg-red-600 rounded-md hover:bg-red-700 transition-colors font-medium text-sm"
+                  >
+                    <XCircle className="h-4 w-4" />
+                    Reject
+                  </button>
+                </div>
+              )}
               <div className="flex gap-2 flex-1">
                 <button
                   onClick={handleCall}
@@ -207,6 +271,14 @@ export default function LeadTableRow({
             companyName: lead.companyName,
             baName: lead.assignedBa?.name || "",
           }}
+        />
+      )}
+
+      {isRejectModalOpen && (
+        <RejectProofModal
+          leadId={lead.id}
+          onClose={() => setIsRejectModalOpen(false)}
+          onSuccess={handleSuccess}
         />
       )}
     </>
