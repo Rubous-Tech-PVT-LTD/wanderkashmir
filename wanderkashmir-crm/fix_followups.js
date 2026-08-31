@@ -1,6 +1,6 @@
 const { PrismaClient } = require('@prisma/client');
 
-process.env.DATABASE_URL = "postgresql://neondb_owner:npg_NufcLth5xKR3@ep-gentle-sun-ap5b6ph4.c-7.us-east-1.aws.neon.tech/neondb?sslmode=require";
+require('dotenv').config({ path: '../.env' });
 
 const prisma = new PrismaClient();
 
