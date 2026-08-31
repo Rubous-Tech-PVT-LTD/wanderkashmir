@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Mail, Sparkles, X, AlertTriangle, Send } from "lucide-react";
+import { Mail, Sparkles, X, AlertTriangle, Send, Eye, Code } from "lucide-react";
 import { generateCrmEmailWithAiAction, sendCrmEmailAction } from "@/actions/email";
 
 type CrmEmailModalProps = {
@@ -30,6 +30,7 @@ export default function CrmEmailModal({ isOpen, onClose, leadId, leadEmail, lead
   const [customPrompt, setCustomPrompt] = useState("");
   const [subject, setSubject] = useState("");
   const [bodyHtml, setBodyHtml] = useState("");
+  const [viewMode, setViewMode] = useState<"code" | "preview">("code");
   
   const [isGenerating, setIsGenerating] = useState(false);
   const [isSending, setIsSending] = useState(false);
@@ -209,12 +210,36 @@ export default function CrmEmailModal({ isOpen, onClose, leadId, leadEmail, lead
                 </div>
                 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Body (HTML)</label>
-                  <textarea 
-                    className="w-full border-gray-300 rounded-md shadow-sm focus:border-primary focus:ring-primary text-sm p-2 border font-mono min-h-[200px]"
-                    value={bodyHtml}
-                    onChange={(e) => setBodyHtml(e.target.value)}
-                  />
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="block text-sm font-medium text-gray-700">Body (HTML)</label>
+                    <div className="flex bg-gray-100 rounded-md p-0.5">
+                      <button
+                        onClick={() => setViewMode("code")}
+                        className={`flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-sm ${viewMode === "code" ? "bg-white shadow-sm text-gray-900" : "text-gray-500 hover:text-gray-700"}`}
+                      >
+                        <Code className="h-3 w-3" /> Code
+                      </button>
+                      <button
+                        onClick={() => setViewMode("preview")}
+                        className={`flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-sm ${viewMode === "preview" ? "bg-white shadow-sm text-gray-900" : "text-gray-500 hover:text-gray-700"}`}
+                      >
+                        <Eye className="h-3 w-3" /> Preview
+                      </button>
+                    </div>
+                  </div>
+                  
+                  {viewMode === "code" ? (
+                    <textarea 
+                      className="w-full border-gray-300 rounded-md shadow-sm focus:border-primary focus:ring-primary text-sm p-2 border font-mono min-h-[300px]"
+                      value={bodyHtml}
+                      onChange={(e) => setBodyHtml(e.target.value)}
+                    />
+                  ) : (
+                    <div 
+                      className="w-full border border-gray-300 rounded-md shadow-sm min-h-[300px] bg-white overflow-auto p-4"
+                      dangerouslySetInnerHTML={{ __html: bodyHtml || "<p class='text-gray-400 text-sm'>No content to preview.</p>" }}
+                    />
+                  )}
                 </div>
                 <div className="text-xs text-gray-500">
                   You can manually edit the HTML code above before sending.
@@ -236,7 +261,7 @@ export default function CrmEmailModal({ isOpen, onClose, leadId, leadEmail, lead
             <button
               onClick={handleInitiateSend}
               disabled={isGenerating || !leadEmail || !subject || !bodyHtml}
-              className="px-4 py-2 text-sm font-medium text-white bg-primary rounded-md hover:bg-primary/90 disabled:opacity-50 flex items-center gap-2"
+              className="px-4 py-2 text-sm font-medium text-white bg-orange-600 rounded-md hover:bg-orange-700 disabled:bg-gray-300 disabled:text-gray-500 disabled:cursor-not-allowed flex items-center gap-2"
             >
               <Send className="h-4 w-4" />
               Send Email
