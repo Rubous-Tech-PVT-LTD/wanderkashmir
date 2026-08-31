@@ -2,6 +2,7 @@ import { Bell } from "lucide-react";
 import { getSession } from "@/lib/auth";
 import MobileMenuToggle from "./MobileMenuToggle";
 import GlobalSearch from "./GlobalSearch";
+import NotificationBell from "./NotificationBell";
 
 export default async function Topbar() {
   const session = await getSession();
@@ -20,10 +21,7 @@ export default async function Topbar() {
       )}
 
       <div className="flex items-center gap-4">
-        <button className="text-gray-400 hover:text-gray-500 relative">
-          <Bell className="h-6 w-6" />
-          <span className="absolute top-0 right-0 block h-2 w-2 rounded-full bg-red-500 ring-2 ring-white"></span>
-        </button>
+        <NotificationBell />
         
         <div className="flex items-center gap-3 pl-4 border-l border-gray-200">
           <div className="hidden sm:block text-right">

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { ArrowLeft, Phone, Mail, Building, MapPin, Calendar, CheckSquare } from "lucide-react";
 import { getSession } from "@/lib/auth";
 import LeadDetailsActions from "@/components/leads/LeadDetailsActions";
+import InterestProofSection from "@/components/leads/InterestProofSection";
 
 export default async function LeadDetailsPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -114,6 +115,15 @@ export default async function LeadDetailsPage({ params }: { params: Promise<{ id
               Imported on: {new Date(lead.createdAt).toLocaleDateString()}
             </p>
           </div>
+
+          {lead.interestProofUrl && (
+            <InterestProofSection 
+              leadId={lead.id} 
+              proofUrl={lead.interestProofUrl} 
+              status={lead.interestProofStatus} 
+              isAdmin={session?.role === 'CRM_ADMIN'} 
+            />
+          )}
         </div>
 
         {/* Right Col: Call History & Follow ups */}

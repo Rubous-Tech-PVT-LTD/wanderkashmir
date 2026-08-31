@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 import { Search, Filter, Download, Plus } from "lucide-react";
 import LeadTableRow from "@/components/leads/LeadTableRow";
+import NotifyBAsButton from "@/components/leads/NotifyBAsButton";
 import { getSession } from "@/lib/auth";
 
 export default async function LeadsPage({
@@ -80,6 +81,7 @@ export default async function LeadsPage({
           <p className="text-sm text-gray-500 mt-1">Total {totalCount} leads found</p>
         </div>
         <div className="flex items-center gap-3 w-full sm:w-auto">
+          {isAdmin && <NotifyBAsButton />}
           <Link href="/dashboard/leads/import" className="btn-secondary w-full sm:w-auto justify-center">
             <Download className="h-4 w-4 mr-2" /> Import CSV
           </Link>

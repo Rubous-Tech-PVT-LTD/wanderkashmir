@@ -15,7 +15,7 @@ export async function POST(
     // Await the params to get the lead id
     const { id: leadId } = await params;
     const body = await request.json();
-    const { outcome, notes, followUpDate, followUpTask } = body;
+    const { outcome, notes, followUpDate, followUpTask, interestProof } = body;
 
     if (!outcome) {
       return NextResponse.json({ error: 'Outcome is required' }, { status: 400 });
@@ -74,9 +74,16 @@ export async function POST(
     }
 
     if (shouldUpdateStatus) {
+      const updateData: any = { status: newStatus };
+      
+      if (newStatus === 'INTERESTED' && interestProof) {
+        updateData.interestProofUrl = interestProof;
+        updateData.interestProofStatus = 'PENDING';
+      }
+
       await prisma.crmLead.update({
         where: { id: leadId },
-        data: { status: newStatus as import('@prisma/client').CrmLeadStatus },
+        data: updateData,
       });
     }
 

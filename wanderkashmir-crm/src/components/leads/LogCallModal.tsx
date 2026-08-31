@@ -14,6 +14,7 @@ export default function LogCallModal({ leadId, onClose, onSuccess }: LogCallModa
   const [notes, setNotes] = useState("");
   const [followUpDate, setFollowUpDate] = useState("");
   const [followUpTask, setFollowUpTask] = useState("");
+  const [interestProof, setInterestProof] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
 
@@ -35,7 +36,8 @@ export default function LogCallModal({ leadId, onClose, onSuccess }: LogCallModa
           outcome,
           notes,
           followUpDate: followUpDate ? new Date(followUpDate).toISOString() : null,
-          followUpTask
+          followUpTask,
+          interestProof: outcome === "INTERESTED" ? interestProof : null
         }),
       });
 
@@ -99,6 +101,33 @@ export default function LogCallModal({ leadId, onClose, onSuccess }: LogCallModa
               onChange={(e) => setNotes(e.target.value)}
             />
           </div>
+
+          {outcome === "INTERESTED" && (
+            <div className="p-3 bg-blue-50 border border-blue-100 rounded-md">
+              <label className="block text-sm font-medium text-blue-900 mb-1">
+                Upload Proof of Interest (Required)
+              </label>
+              <p className="text-xs text-blue-700 mb-2">
+                Please upload a screenshot of email, WhatsApp chat, or call logs.
+              </p>
+              <input
+                type="file"
+                accept="image/*"
+                required={outcome === "INTERESTED"}
+                className="w-full text-sm text-gray-700 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-100 file:text-blue-700 hover:file:bg-blue-200"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) {
+                    const reader = new FileReader();
+                    reader.onloadend = () => {
+                      setInterestProof(reader.result as string);
+                    };
+                    reader.readAsDataURL(file);
+                  }
+                }}
+              />
+            </div>
+          )}
 
           <div className="pt-2 border-t border-gray-100">
             <h4 className="text-sm font-medium text-gray-900 mb-3">Schedule Follow-up (Optional)</h4>
