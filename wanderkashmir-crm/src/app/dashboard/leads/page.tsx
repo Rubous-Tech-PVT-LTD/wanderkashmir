@@ -14,6 +14,7 @@ export default async function LeadsPage({
   const page = typeof resolvedParams.page === "string" ? parseInt(resolvedParams.page, 10) : 1;
   const search = typeof resolvedParams.search === "string" ? resolvedParams.search : "";
   const unassigned = resolvedParams.unassigned === "true";
+  const pendingProof = resolvedParams.pendingProof === "true";
   const statusFilter = typeof resolvedParams.status === "string" ? resolvedParams.status : "";
   const take = 15;
   const skip = (page - 1) * take;
@@ -30,6 +31,11 @@ export default async function LeadsPage({
 
   if (unassigned) {
     whereClause.assignedBaId = null;
+  }
+  
+  if (pendingProof) {
+    whereClause.interestProofStatus = 'PENDING';
+    whereClause.interestProofUrl = { not: null };
   }
   
   if (statusFilter) {
@@ -61,6 +67,8 @@ export default async function LeadsPage({
         status: true,
         assignedBaId: true,
         assignedBa: { select: { name: true } },
+        interestProofStatus: true,
+        interestProofUrl: true,
       },
     }),
     prisma.crmLead.count({ where: whereClause }),
@@ -108,9 +116,19 @@ export default async function LeadsPage({
               />
             </form>
           </div>
-          <button className="btn-secondary">
-            <Filter className="h-4 w-4 mr-2" /> Filters
-          </button>
+          <div className="flex gap-2">
+            {isAdmin && (
+              <Link
+                href={pendingProof ? "/dashboard/leads" : "/dashboard/leads?pendingProof=true"}
+                className={`btn-secondary ${pendingProof ? 'bg-yellow-50 border-yellow-200 text-yellow-700' : ''}`}
+              >
+                Pending Proof
+              </Link>
+            )}
+            <button className="btn-secondary">
+              <Filter className="h-4 w-4 mr-2" /> Filters
+            </button>
+          </div>
         </div>
 
         <div className="overflow-x-auto">
