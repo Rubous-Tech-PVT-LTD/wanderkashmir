@@ -18,8 +18,8 @@ export default async function QuotationsPage() {
       version: true,
       partnerPrice: true,
       ...(isAdminOrManager ? {
-        netCost: true,
-        markup: true,
+        totalCost: true,
+        grossMargin: true,
       } : {}),
       status: true,
       createdAt: true,

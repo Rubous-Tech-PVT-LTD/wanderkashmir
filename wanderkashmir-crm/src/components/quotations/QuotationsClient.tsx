@@ -10,8 +10,8 @@ export type QuotationListItem = {
   requirementId: string;
   version: number;
   partnerPrice: number;
-  netCost?: number;
-  markup?: number;
+  totalCost?: number;
+  grossMargin?: number;
   status: string;
   createdAt: Date;
 };
@@ -49,8 +49,8 @@ export default function QuotationsClient({ quotations, isAdmin = false }: { quot
                 <th className="px-6 py-4 font-medium">Req ID</th>
                 <th className="px-6 py-4 font-medium">Version</th>
                 <th className="px-6 py-4 font-medium">Selling Price</th>
-                {isAdmin && <th className="px-6 py-4 font-medium">Net Cost</th>}
-                {isAdmin && <th className="px-6 py-4 font-medium">Markup</th>}
+                {isAdmin && <th className="px-6 py-4 font-medium">Total Cost</th>}
+                {isAdmin && <th className="px-6 py-4 font-medium">Gross Margin</th>}
                 <th className="px-6 py-4 font-medium">Status</th>
                 <th className="px-6 py-4 font-medium">Created</th>
                 <th className="px-6 py-4 font-medium">Actions</th>
@@ -66,8 +66,8 @@ export default function QuotationsClient({ quotations, isAdmin = false }: { quot
                     <td className="px-6 py-4 text-slate-500">WK-R-{q.requirementId.substring(0,6).toUpperCase()}</td>
                     <td className="px-6 py-4">v{q.version}</td>
                     <td className="px-6 py-4 font-medium text-slate-900">Rs. {q.partnerPrice?.toLocaleString("en-IN")||0}</td>
-                    {isAdmin && <td className="px-6 py-4 font-medium text-red-600">Rs. {q.netCost?.toLocaleString("en-IN")||0}</td>}
-                    {isAdmin && <td className="px-6 py-4 font-medium text-green-600">Rs. {q.markup?.toLocaleString("en-IN")||0}</td>}
+                    {isAdmin && <td className="px-6 py-4 font-medium text-red-600">Rs. {q.totalCost?.toLocaleString("en-IN")||0}</td>}
+                    {isAdmin && <td className="px-6 py-4 font-medium text-green-600">Rs. {q.grossMargin?.toLocaleString("en-IN")||0}</td>}
                     <td className="px-6 py-4"><span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-slate-100 text-slate-700">{q.status}</span></td>
                     <td className="px-6 py-4 text-slate-500">{format(new Date(q.createdAt), "dd MMM yyyy")}</td>
                     <td className="px-6 py-4"><button onClick={() => setSelectedQuotation(q)} className="text-orange-500 hover:text-orange-600 font-medium text-sm flex items-center gap-1">Builder <ChevronRight className="w-4 h-4"/></button></td>
