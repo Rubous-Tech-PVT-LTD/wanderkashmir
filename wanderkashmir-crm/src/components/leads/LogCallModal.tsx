@@ -118,9 +118,41 @@ export default function LogCallModal({ leadId, onClose, onSuccess }: LogCallModa
                 onChange={(e) => {
                   const file = e.target.files?.[0];
                   if (file) {
+                    // Compress image before converting to base64 to avoid Vercel 4.5MB payload limit
                     const reader = new FileReader();
-                    reader.onloadend = () => {
-                      setInterestProof(reader.result as string);
+                    reader.onload = (event) => {
+                      const img = new Image();
+                      img.onload = () => {
+                        const canvas = document.createElement("canvas");
+                        let width = img.width;
+                        let height = img.height;
+                        
+                        // Max dimensions
+                        const MAX_WIDTH = 1200;
+                        const MAX_HEIGHT = 1200;
+                        
+                        if (width > height) {
+                          if (width > MAX_WIDTH) {
+                            height = Math.round((height * MAX_WIDTH) / width);
+                            width = MAX_WIDTH;
+                          }
+                        } else {
+                          if (height > MAX_HEIGHT) {
+                            width = Math.round((width * MAX_HEIGHT) / height);
+                            height = MAX_HEIGHT;
+                          }
+                        }
+                        
+                        canvas.width = width;
+                        canvas.height = height;
+                        const ctx = canvas.getContext("2d");
+                        ctx?.drawImage(img, 0, 0, width, height);
+                        
+                        // Compress to JPEG with 0.7 quality
+                        const compressedBase64 = canvas.toDataURL("image/jpeg", 0.7);
+                        setInterestProof(compressedBase64);
+                      };
+                      img.src = event.target?.result as string;
                     };
                     reader.readAsDataURL(file);
                   }
