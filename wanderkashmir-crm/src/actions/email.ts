@@ -30,6 +30,18 @@ export async function generateCrmEmailWithAiAction(
       return { success: false, error: "Lead not found" };
     }
 
+    const baUser = await prisma.crmUser.findUnique({
+      where: { id: session.userId }
+    });
+    
+    let baWaLink = "https://wa.me/919906660126"; // Default WanderKashmir number
+    if (baUser?.phone) {
+      const cleanPhone = baUser.phone.replace(/[^0-9]/g, "");
+      if (cleanPhone) {
+        baWaLink = `https://wa.me/${cleanPhone}`;
+      }
+    }
+
     if (session.role === "BUSINESS_ASSOCIATE" && lead.assignedBaId !== session.userId) {
       return { success: false, error: "Forbidden: You do not have access to this lead", status: 403 };
     }
@@ -64,6 +76,9 @@ export async function generateCrmEmailWithAiAction(
     
     The email must follow the platform's warm orange brand aesthetics.
     Use inline styling for CSS.
+    
+    CRITICAL: Any Call-to-Action (CTA) buttons or links you generate (e.g. "Connect with Us", "Chat on WhatsApp") MUST strictly use the following WhatsApp link for the href attribute: ${baWaLink}
+    DO NOT use "#" or dummy links.
     
     LEAD CONTEXT (Do not invent facts outside of this context):
     ${leadContext}
