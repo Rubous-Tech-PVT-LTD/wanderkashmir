@@ -120,7 +120,7 @@ export default function CrmEmailModal({ isOpen, onClose, leadId, leadEmail, lead
               <button
                 onClick={handleConfirmSend}
                 disabled={isSending}
-                className="flex-1 px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/90 font-medium disabled:opacity-50 flex items-center justify-center gap-2"
+                className="flex-1 px-4 py-2 bg-orange-600 text-white rounded-md hover:bg-orange-700 font-medium disabled:opacity-50 flex items-center justify-center gap-2"
               >
                 {isSending ? "Sending..." : "Confirm Send"}
                 {!isSending && <Send className="h-4 w-4" />}
