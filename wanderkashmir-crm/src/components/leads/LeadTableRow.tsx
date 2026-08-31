@@ -95,7 +95,7 @@ export default function LeadTableRow({
         <td className="px-6 py-4 whitespace-nowrap">
           <div className="flex flex-col gap-1 items-start">
             <span className={`badge ${lead.status === 'NEW' ? 'badge-primary' : lead.status === 'CONNECTED' ? 'bg-blue-100 text-blue-800' : lead.status === 'INTERESTED' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}>
-              {lead.status === 'INTERESTED' ? 'PENDING ACCEPTED' : lead.status.replace(/_/g, " ")}
+              {lead.status.replace(/_/g, " ")}
             </span>
             {lead.interestProofStatus === 'PENDING' && (
               <span className="badge bg-yellow-100 text-yellow-800 text-[10px] uppercase tracking-wide">
@@ -177,7 +177,7 @@ export default function LeadTableRow({
               </div>
               <div className="flex flex-col gap-1 items-end">
                 <span className={`badge text-xs ${lead.status === 'NEW' ? 'badge-primary' : lead.status === 'CONNECTED' ? 'bg-blue-100 text-blue-800' : lead.status === 'INTERESTED' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}>
-                  {lead.status === 'INTERESTED' ? 'PENDING ACCEPTED' : lead.status.replace(/_/g, " ")}
+                  {lead.status.replace(/_/g, " ")}
                 </span>
                 {lead.interestProofStatus === 'PENDING' && (
                   <span className="badge bg-yellow-100 text-yellow-800 text-[10px] uppercase tracking-wide">

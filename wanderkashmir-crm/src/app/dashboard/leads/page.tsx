@@ -121,7 +121,7 @@ export default async function LeadsPage({
                 href={pendingProof ? "/dashboard/leads" : "/dashboard/leads?pendingProof=true"}
                 className={`btn-secondary ${pendingProof ? 'bg-yellow-50 border-yellow-200 text-yellow-700' : ''}`}
               >
-                Pending Proof
+                Pending Approval
               </Link>
             )}
             <button className="btn-secondary">
