@@ -188,6 +188,10 @@ export default async function PartnersPage(props: { searchParams: Promise<{ [key
                               <span className="text-xs text-gray-400 uppercase tracking-wider">Location</span>
                               <span className="font-medium text-gray-900">{partner.city || "-"} {partner.state ? `, ${partner.state}` : ""}</span>
                             </div>
+                            <div className="flex flex-col col-span-2">
+                              <span className="text-xs text-gray-400 uppercase tracking-wider">Assigned BA</span>
+                              <span className="font-medium text-gray-900">{partner.lead.assignedBa?.name || "Unassigned"}</span>
+                            </div>
                           </div>
 
                           <div className="pt-2 border-t border-gray-100 flex items-center justify-between gap-2">

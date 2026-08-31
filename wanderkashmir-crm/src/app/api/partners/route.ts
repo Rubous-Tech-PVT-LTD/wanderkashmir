@@ -7,9 +7,9 @@ export async function GET(req: NextRequest) {
     const user = await getSession();
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-    let whereClause: any = {};
+    let whereClause: any = { status: "ACTIVE" };
     if (user.role === "BUSINESS_ASSOCIATE") {
-      whereClause.assignedBaId = user.id;
+      whereClause.assignedBaId = user.userId;
     }
 
     const partners = await prisma.crmPartner.findMany({
