@@ -34,8 +34,7 @@ export default async function LeadsPage({
   }
   
   if (pendingProof) {
-    whereClause.interestProofStatus = 'PENDING';
-    whereClause.interestProofUrl = { not: null };
+    whereClause.status = 'INTERESTED';
   }
   
   if (statusFilter) {
