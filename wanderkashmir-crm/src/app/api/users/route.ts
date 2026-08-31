@@ -27,6 +27,9 @@ export async function GET(req: NextRequest) {
         isActive: true,
         createdAt: true,
         joiningDate: true,
+        _count: {
+          select: { assignedLeads: true }
+        }
       },
       orderBy: { createdAt: "desc" }
     });

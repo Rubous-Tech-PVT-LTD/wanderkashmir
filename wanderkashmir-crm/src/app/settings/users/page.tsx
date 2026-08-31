@@ -58,6 +58,16 @@ export default function UsersManagementPage() {
     }
   };
 
+  const handleToggleStatus = (user: any) => {
+    if (user.isActive && user._count?.assignedLeads > 0) {
+      if (window.confirm(`This BA currently has ${user._count.assignedLeads} assigned leads. Deactivating this BA will move these leads to Unassigned. Continue?`)) {
+        toggleUserStatus(user.id, user.isActive);
+      }
+    } else {
+      toggleUserStatus(user.id, user.isActive);
+    }
+  };
+
   const toggleUserStatus = async (id: string, currentStatus: boolean) => {
     try {
       const res = await fetch(`/api/users/${id}`, {
@@ -138,7 +148,7 @@ export default function UsersManagementPage() {
                 </td>
                 <td className="px-6 py-4">
                   <button 
-                    onClick={() => toggleUserStatus(user.id, user.isActive)}
+                    onClick={() => handleToggleStatus(user)}
                     className={`text-sm font-medium ${user.isActive ? 'text-red-500 hover:text-red-600' : 'text-emerald-500 hover:text-emerald-600'}`}
                   >
                     {user.isActive ? 'Deactivate' : 'Activate'}

@@ -14,7 +14,7 @@ const updateUserSchema = z.object({
 
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    await requireCrmAdmin();
+    const session = await requireCrmAdmin();
     const id = (await params).id;
 
     const body = await req.json();
@@ -27,16 +27,48 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       delete updateData.password;
     }
 
-    const updatedUser = await prisma.crmUser.update({
-      where: { id },
-      data: updateData,
-      select: {
-        id: true,
-        email: true,
-        name: true,
-        role: true,
-        isActive: true,
+    const updatedUser = await prisma.$transaction(async (tx) => {
+      const user = await tx.crmUser.update({
+        where: { id },
+        data: updateData,
+        select: {
+          id: true,
+          email: true,
+          name: true,
+          role: true,
+          isActive: true,
+        }
+      });
+
+      if (data.isActive === false) {
+        const leads = await tx.crmLead.findMany({
+          where: { assignedBaId: id },
+          select: { id: true }
+        });
+
+        if (leads.length > 0) {
+          await tx.crmLead.updateMany({
+            where: { assignedBaId: id },
+            data: { assignedBaId: null }
+          });
+
+          const auditLogs = leads.map(lead => ({
+            userId: session.userId,
+            userRole: session.role,
+            action: "LEAD_UNASSIGNED_BA_DEACTIVATED",
+            entity: "CrmLead",
+            entityId: lead.id,
+            oldValue: { assignedBaId: id },
+            newValue: { assignedBaId: null },
+          }));
+
+          await tx.crmAuditLog.createMany({
+            data: auditLogs
+          });
+        }
       }
+
+      return user;
     });
 
     return NextResponse.json(updatedUser);
