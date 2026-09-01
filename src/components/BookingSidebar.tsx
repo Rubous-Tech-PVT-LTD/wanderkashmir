@@ -32,7 +32,8 @@ export default function BookingSidebar({ propertyId, pricePerNight, rating, isLo
   // Add-ons & Room Selection State (from Zustand)
   const { 
     selectedTaxiId, selectedGuideId, taxiAmount, guideAmount,
-    selectedRoomId, selectedRoomName, selectedMealPlan, roomBasePrice
+    selectedRoomId, selectedRoomName, selectedMealPlan, roomBasePrice,
+    isModalOpen, setIsModalOpen
   } = useBookingStore();
 
   // Removed local selectedRoomTypeId and dynamicPrice states
@@ -52,15 +53,39 @@ export default function BookingSidebar({ propertyId, pricePerNight, rating, isLo
   const [isApplyingPromo, setIsApplyingPromo] = useState(false);
   const [promoError, setPromoError] = useState("");
 
-  // Load saved details from localStorage on mount
+  // Load saved details and restore any pending stay parameters from localStorage on mount
   useEffect(() => {
     if (typeof window !== "undefined") {
       const savedName = localStorage.getItem("wk_guest_name");
       const savedPhone = localStorage.getItem("wk_guest_phone");
       if (savedName) setGuestName(savedName);
       if (savedPhone) setGuestPhone(savedPhone);
+
+      try {
+        const pending = localStorage.getItem("wk_pending_stay");
+        if (pending) {
+          const parsed = JSON.parse(pending);
+          if (parsed.propertyId === propertyId) {
+            if (parsed.checkIn) setCheckIn(new Date(parsed.checkIn));
+            if (parsed.checkOut) setCheckOut(new Date(parsed.checkOut));
+            if (parsed.rooms) setRooms(Number(parsed.rooms) || 1);
+            if (parsed.adults) setAdults(Number(parsed.adults) || 2);
+            if (parsed.childrenCount) setChildrenCount(Number(parsed.childrenCount) || 0);
+            if (parsed.guestName) setGuestName(parsed.guestName);
+            if (parsed.guestPhone) setGuestPhone(parsed.guestPhone);
+            if (parsed.specialRequests) setSpecialRequests(parsed.specialRequests);
+            if (parsed.autoOpenModal) {
+              setShowModal(true);
+              setIsModalOpen(true);
+              localStorage.removeItem("wk_pending_stay");
+            }
+          }
+        }
+      } catch (e) {
+        console.warn("Error restoring pending stay:", e);
+      }
     }
-  }, []);
+  }, [propertyId, setIsModalOpen]);
   const [specialRequests, setSpecialRequests] = useState<string>("");
   const [otherGuests, setOtherGuests] = useState<{name: string, age: string}[]>([]);
 
@@ -394,7 +419,7 @@ export default function BookingSidebar({ propertyId, pricePerNight, rating, isLo
       </div>
 
       {/* Multi-Step Checkout Modal */}
-      {showModal && typeof document !== "undefined" && createPortal(
+      {(showModal || isModalOpen) && typeof document !== "undefined" && createPortal(
         <div className="fixed inset-0 z-[9999] bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg max-h-[90vh] flex flex-col overflow-hidden">
             <div className="p-4 border-b border-slate-100 flex items-center justify-between bg-slate-50">
@@ -406,7 +431,10 @@ export default function BookingSidebar({ propertyId, pricePerNight, rating, isLo
                 )}
               </h2>
               <button 
-                onClick={() => setShowModal(false)} 
+                onClick={() => {
+                  setShowModal(false);
+                  setIsModalOpen(false);
+                }} 
                 className="p-2 text-slate-400 hover:text-slate-800 hover:bg-slate-200 rounded-full transition-colors"
               >
                 <X className="w-5 h-5" />

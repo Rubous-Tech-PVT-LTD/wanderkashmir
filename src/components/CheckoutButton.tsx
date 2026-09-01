@@ -43,7 +43,22 @@ export default function CheckoutButton({
 
   const handleCheckout = async () => {
     if (!isLoggedIn) {
-      router.push("/sign-in");
+      if (typeof window !== "undefined") {
+        localStorage.setItem("wk_pending_stay", JSON.stringify({
+          propertyId,
+          roomTypeId,
+          checkIn,
+          checkOut,
+          rooms,
+          adults,
+          childrenCount,
+          guestName,
+          guestPhone,
+          specialRequests,
+          autoOpenModal: true
+        }));
+      }
+      router.push(`/sign-in?redirect_url=${encodeURIComponent(window.location.pathname)}`);
       return;
     }
     
