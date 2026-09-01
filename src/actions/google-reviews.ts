@@ -8,7 +8,8 @@ export async function getGooglePlaceReviews(placeId: string) {
       return null;
     }
 
-    const url = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${placeId}&fields=reviews,rating,user_ratings_total&reviews_sort=newest&key=${apiKey}`;
+    const cleanPlaceId = encodeURIComponent(placeId.trim());
+    const url = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${cleanPlaceId}&fields=reviews,rating,user_ratings_total&reviews_sort=newest&key=${apiKey}`;
     
     const response = await fetch(url, {
       // Revalidate every 1 hour so new reviews show up quickly
