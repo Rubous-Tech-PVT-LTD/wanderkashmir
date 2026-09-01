@@ -535,7 +535,8 @@ export default async function PropertyDetailPage({
                     </div>
                   ))}
                 </div>
-              )}
+              </div>
+            )}
             </div>
 
             {/* Reviews Section */}
