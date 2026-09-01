@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Search, ChevronRight, X, Plus, CheckCircle, History, Save, Send, Trash, Download, Copy, Upload } from "lucide-react";
+import { Search, ChevronRight, X, Plus, CheckCircle, History, Save, Send, Trash, Download, Copy, Upload, AlertCircle } from "lucide-react";
 import { format } from "date-fns";
 import { useRouter, useSearchParams } from "next/navigation";
 
@@ -69,7 +69,7 @@ export default function QuotationsClient({ quotations, isAdmin = false }: { quot
             </thead>
             <tbody className="divide-y divide-slate-100">
               {filtered.length === 0 ? (
-                <tr><td colSpan={7} className="px-6 py-8 text-center text-slate-500">No quotations found.</td></tr>
+                <tr><td colSpan={9} className="px-6 py-8 text-center text-slate-500">No quotations found.</td></tr>
               ) : filtered.map(q => (
                 <React.Fragment key={q.id}>
                   <tr className="hover:bg-slate-50/50 transition-colors hidden md:table-row">
@@ -84,7 +84,7 @@ export default function QuotationsClient({ quotations, isAdmin = false }: { quot
                     <td className="px-6 py-4"><button onClick={() => setSelectedQuotation(q)} className="text-orange-500 hover:text-orange-600 font-medium text-sm flex items-center gap-1">Builder <ChevronRight className="w-4 h-4"/></button></td>
                   </tr>
                   <tr className="md:hidden">
-                    <td colSpan={7} className="p-0">
+                    <td colSpan={9} className="p-0">
                       <div className="p-4 border-b border-slate-100 bg-white space-y-3">
                         <div className="flex justify-between items-start">
                           <div><h3 className="font-semibold text-slate-900 text-lg">WK-Q-{q.id.substring(0,6).toUpperCase()}</h3><p className="text-xs text-slate-500">Req: WK-R-{q.requirementId.substring(0,6).toUpperCase()}</p></div>
@@ -111,7 +111,16 @@ export default function QuotationsClient({ quotations, isAdmin = false }: { quot
         <QuotationBuilderModal
           quotationId={selectedQuotation.id}
           onClose={() => setSelectedQuotation(null)}
-          onUpdate={() => { setSelectedQuotation(null); router.refresh(); }}
+          onUpdate={(newId?: string) => { 
+            setSelectedQuotation(null); 
+            router.refresh(); 
+            if(newId) {
+               setTimeout(() => {
+                 const updatedQ = quotations.find(q => q.id === newId);
+                 if(updatedQ) setSelectedQuotation(updatedQ);
+               }, 500);
+            }
+          }}
           isAdmin={isAdmin}
         />
       )}
@@ -119,44 +128,182 @@ export default function QuotationsClient({ quotations, isAdmin = false }: { quot
   );
 }
 
-function QuotationBuilderModal({ quotationId, onClose, onUpdate, isAdmin }: { quotationId: string; onClose: () => void; onUpdate: () => void; isAdmin?: boolean }) {
+function QuotationBuilderModal({ quotationId, onClose, onUpdate, isAdmin }: { quotationId: string; onClose: () => void; onUpdate: (newId?: string) => void; isAdmin?: boolean }) {
   const [quotation, setQuotation] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  
+  // Form State
+  const [items, setItems] = useState<any[]>([]);
+  const [terms, setTerms] = useState("");
+  const [discount, setDiscount] = useState(0);
+  const [discountType, setDiscountType] = useState("FIXED");
+
+  // Status Modals
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [proofUrls, setProofUrls] = useState<string[]>([]);
+  
+  // Async states
+  const [saving, setSaving] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [processingAction, setProcessingAction] = useState<string | null>(null);
   const [confirming, setConfirming] = useState(false);
   const [creatingBooking, setCreatingBooking] = useState(false);
   const router = useRouter();
 
-  useEffect(() => {
+  const fetchQuotation = async () => {
     setLoading(true);
-    fetch(`/api/quotations/${quotationId}`).then(r => r.json()).then(d => setQuotation(d)).catch(console.error).finally(() => setLoading(false));
+    try {
+      const res = await fetch(`/api/quotations/${quotationId}`);
+      const data = await res.json();
+      setQuotation(data);
+      setItems(data.items || []);
+      setTerms(data.terms || "");
+      setDiscount(data.discount || 0);
+      setDiscountType(data.discountType || "FIXED");
+    } catch(e) {
+      console.error(e);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchQuotation();
   }, [quotationId]);
 
   if (loading || !quotation) {
     return (
       <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-        <div className="bg-white rounded-2xl p-8">Loading Builder...</div>
+        <div className="bg-white rounded-2xl p-8 shadow-xl">Loading Builder...</div>
       </div>
     );
   }
 
-  const isEditable = quotation.status !== "ACCEPTED" && quotation.status !== "SENT" && quotation.status !== "INTERNAL_REVIEW" && quotation.status !== "CONFIRMED";
+  // Permissions & Visibility
+  const isEditable = (quotation.status === "DRAFT" || quotation.status === "REVISED");
+  const canSubmit = !isAdmin && isEditable; 
+  const canAdminApprove = isAdmin && quotation.status === "INTERNAL_REVIEW";
+
+  // Calculations
+  const calculatedTotalCost = items.reduce((acc, item) => acc + (Number(item.quantity || 1) * Number(item.unitCost || 0)), 0);
+  const calculatedTotalSelling = items.reduce((acc, item) => acc + (Number(item.quantity || 1) * Number(item.unitSellingPrice || 0)), 0);
+  const calculatedDiscountAmount = discountType === "FIXED" ? Number(discount) : (calculatedTotalSelling * Number(discount) / 100);
+  const calculatedFinalSelling = calculatedTotalSelling - calculatedDiscountAmount;
+  const calculatedGrossMargin = calculatedFinalSelling - calculatedTotalCost;
+
+  // Item Handlers
+  const handleAddItem = () => {
+    setItems([...items, { category: "HOTEL", description: "", quantity: 1, unit: "Night", unitCost: 0, unitSellingPrice: 0 }]);
+  };
+
+  const handleItemChange = (index: number, field: string, value: any) => {
+    const newItems = [...items];
+    newItems[index][field] = value;
+    setItems(newItems);
+  };
+
+  const handleDeleteItem = (index: number) => {
+    const newItems = [...items];
+    newItems.splice(index, 1);
+    setItems(newItems);
+  };
+
+  // API Handlers
+  const handleSaveDraft = async () => {
+    setSaving(true);
+    try {
+      const res = await fetch(`/api/quotations/${quotation.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ items, terms, discount, discountType })
+      });
+      if (res.ok) {
+        alert("Draft saved successfully!");
+        fetchQuotation(); // refresh
+      } else {
+        const err = await res.json();
+        alert(err.error || "Failed to save draft");
+      }
+    } catch(e) {
+      alert("Error saving draft");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleAction = async (action: string) => {
+    if (action === "SUBMIT" && items.length === 0) {
+      return alert("Cannot submit an empty quotation. Please add items.");
+    }
+    
+    // Auto-save before submit to prevent mismatches
+    if (action === "SUBMIT" && isEditable) {
+       await fetch(`/api/quotations/${quotation.id}`, {
+         method: "PUT",
+         headers: { "Content-Type": "application/json" },
+         body: JSON.stringify({ items, terms, discount, discountType })
+       });
+    }
+
+    let reason = "";
+    if (action === "REJECT" || action === "REQUEST_REVISION") {
+      reason = prompt("Please provide a reason or note:") || "";
+      if (!reason && action === "REJECT") return; // cancel if empty reject reason
+    }
+
+    setProcessingAction(action);
+    try {
+      const res = await fetch(`/api/quotations/${quotation.id}/action`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action, reason })
+      });
+      if (res.ok) {
+        onUpdate(); 
+      } else {
+        const err = await res.json();
+        alert(err.error || "Action failed");
+      }
+    } catch(e) {
+      alert("Error performing action");
+    } finally {
+      setProcessingAction(null);
+    }
+  };
+
+  const handleDuplicateVersion = async () => {
+    setProcessingAction("DUPLICATE");
+    try {
+      const res = await fetch(`/api/quotations/${quotation.id}/version`, {
+        method: "POST",
+      });
+      if (res.ok) {
+        const newQuote = await res.json();
+        onUpdate(newQuote.id);
+      } else {
+        alert("Failed to duplicate version");
+      }
+    } catch(e) {
+      alert("Error creating new version");
+    } finally {
+      setProcessingAction(null);
+    }
+  };
 
   const handleCopyQuotation = () => {
     let text = `*Quotation: WK-Q-${quotation.id.substring(0,6).toUpperCase()}*\n`;
     text += `*Valid Until:* ${quotation.validUntil ? format(new Date(quotation.validUntil), "dd MMM yyyy") : "TBD"}\n\n`;
     text += `*Itinerary & Services:*\n`;
-    quotation.items?.forEach((item: any) => {
+    items.forEach((item: any) => {
       text += `- ${item.category}: ${item.description} (${item.quantity} ${item.unit})\n`;
     });
-    text += `\n*Total Selling Price:* Rs. ${quotation.partnerPrice?.toLocaleString("en-IN")}\n`;
-    if (quotation.terms) {
-      text += `\n*Terms & Policies:*\n${quotation.terms}\n`;
+    text += `\n*Total Selling Price:* Rs. ${calculatedFinalSelling.toLocaleString("en-IN")}\n`;
+    if (terms) {
+      text += `\n*Terms & Policies:*\n${terms}\n`;
     }
     
     navigator.clipboard.writeText(text).then(() => {
-      alert("Quotation copied to clipboard!");
+      alert("Quotation copied successfully!");
     }).catch(err => {
       console.error("Failed to copy text: ", err);
     });
@@ -213,100 +360,246 @@ function QuotationBuilderModal({ quotationId, onClose, onUpdate, isAdmin }: { qu
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 print:p-0 print:bg-white print:block overflow-y-auto">
       <div className="bg-white rounded-2xl w-full max-w-6xl h-[90vh] overflow-hidden flex flex-col shadow-2xl print:shadow-none print:h-auto print:rounded-none">
-        <div className="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-900 text-white print:hidden">
+        
+        {/* Header */}
+        <div className="p-4 border-b border-slate-100 flex flex-wrap justify-between items-center bg-slate-900 text-white gap-3 print:hidden">
           <div>
-            <h3 className="text-xl font-bold flex items-center gap-3">
+            <h3 className="text-xl font-bold flex flex-wrap items-center gap-2">
               Quotation Builder
               <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-white/20">WK-Q-{quotation.id.substring(0,6).toUpperCase()}</span>
               <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-blue-500 text-white">v{quotation.version}</span>
               <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-orange-500 text-white">{quotation.status}</span>
             </h3>
           </div>
-          <div className="flex items-center gap-3 print:hidden">
-            <button onClick={handleCopyQuotation} className="flex items-center gap-2 bg-white/10 hover:bg-white/20 px-4 py-2 rounded-lg text-sm font-medium transition-colors"><Copy className="w-4 h-4"/> Copy Text</button>
-            <button onClick={() => window.print()} className="flex items-center gap-2 bg-white/10 hover:bg-white/20 px-4 py-2 rounded-lg text-sm font-medium transition-colors"><Download className="w-4 h-4"/> Download PDF</button>
+          <div className="flex items-center gap-2 print:hidden overflow-x-auto">
+            <button onClick={handleCopyQuotation} className="flex whitespace-nowrap items-center gap-2 bg-white/10 hover:bg-white/20 px-4 py-2 rounded-lg text-sm font-medium transition-colors"><Copy className="w-4 h-4"/> Copy Text</button>
+            <button onClick={() => window.print()} className="flex whitespace-nowrap items-center gap-2 bg-white/10 hover:bg-white/20 px-4 py-2 rounded-lg text-sm font-medium transition-colors"><Download className="w-4 h-4"/> Download PDF</button>
             <button onClick={onClose} className="p-2 hover:bg-white/10 rounded-full transition-colors"><X className="w-5 h-5"/></button>
           </div>
         </div>
+
+        {/* Main Workspace */}
         <div className="flex flex-col md:flex-row flex-1 overflow-hidden print:hidden">
           <div className="flex-1 overflow-y-auto bg-slate-50 p-4 md:p-6">
+            
+            {/* Itinerary */}
             <div className="flex justify-between items-center mb-4 md:mb-6">
               <h4 className="text-lg font-bold text-slate-900">Itinerary &amp; Services</h4>
-              {isEditable && <button className="text-orange-500 hover:text-orange-600 font-medium text-sm flex items-center gap-1 bg-orange-50 px-3 py-1.5 rounded-lg border border-orange-100"><Plus className="w-4 h-4"/> Add Item</button>}
+              {isEditable && (
+                <button onClick={handleAddItem} className="text-orange-500 hover:text-orange-600 font-medium text-sm flex items-center gap-1 bg-orange-50 px-3 py-1.5 rounded-lg border border-orange-100">
+                  <Plus className="w-4 h-4"/> Add Item
+                </button>
+              )}
             </div>
-            <div className="bg-white rounded-xl border border-slate-200 overflow-hidden mb-8">
-              <table className="w-full text-left text-sm">
+
+            <div className="bg-white rounded-xl border border-slate-200 overflow-x-auto mb-8">
+              <table className="w-full text-left text-sm min-w-[600px]">
                 <thead className="bg-slate-100 text-slate-600 font-medium border-b border-slate-200">
                   <tr>
                     <th className="px-4 py-3">Category</th>
-                    <th className="px-4 py-3">Description</th>
-                    <th className="px-4 py-3">Qty</th>
-                    {isAdmin && <th className="px-4 py-3">Unit Cost</th>}
-                    <th className="px-4 py-3">Unit Sell</th>
+                    <th className="px-4 py-3 min-w-[200px]">Description</th>
+                    <th className="px-4 py-3 w-24">Qty</th>
+                    {isAdmin && <th className="px-4 py-3 w-32">Unit Cost</th>}
+                    <th className="px-4 py-3 w-32">Unit Sell</th>
                     {isAdmin && <th className="px-4 py-3">Total Cost</th>}
                     <th className="px-4 py-3">Total Sell</th>
                     <th className="px-4 py-3"></th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
-                  {quotation.items?.map((item: any) => (
-                    <tr key={item.id} className="hover:bg-slate-50">
-                      <td className="px-4 py-3 font-medium text-slate-800">{item.category}</td>
-                      <td className="px-4 py-3 text-slate-600">{item.description}</td>
-                      <td className="px-4 py-3">{item.quantity} {item.unit}</td>
-                      {isAdmin && <td className="px-4 py-3 text-red-600">Rs. {item.unitCost}</td>}
-                      <td className="px-4 py-3 text-green-600">Rs. {item.unitSellingPrice}</td>
-                      {isAdmin && <td className="px-4 py-3 font-medium text-red-700">Rs. {item.totalCost}</td>}
-                      <td className="px-4 py-3 font-medium text-green-700">Rs. {item.totalSellingPrice}</td>
-                      <td className="px-4 py-3 text-right">{isEditable&&<button className="text-slate-400 hover:text-red-500"><Trash className="w-4 h-4"/></button>}</td>
+                  {items.map((item, index) => (
+                    <tr key={item.id || index} className="hover:bg-slate-50">
+                      <td className="px-4 py-3 font-medium text-slate-800">
+                        {isEditable ? (
+                          <select value={item.category} onChange={e=>handleItemChange(index, "category", e.target.value)} className="w-full border-slate-200 rounded p-1 text-sm bg-slate-50 focus:bg-white border">
+                            <option value="HOTEL">Hotel</option>
+                            <option value="CAB">Cab</option>
+                            <option value="HOUSEBOAT">Houseboat</option>
+                            <option value="SIGHTSEEING">Sightseeing</option>
+                            <option value="ACTIVITY">Activity</option>
+                            <option value="TRANSFER">Transfer</option>
+                            <option value="OTHER">Other</option>
+                          </select>
+                        ) : item.category}
+                      </td>
+                      <td className="px-4 py-3">
+                        {isEditable ? (
+                          <input type="text" value={item.description} onChange={e=>handleItemChange(index, "description", e.target.value)} placeholder="E.g. Deluxe Room" className="w-full border border-slate-200 rounded p-1 text-sm bg-slate-50 focus:bg-white" />
+                        ) : <span className="text-slate-600">{item.description}</span>}
+                      </td>
+                      <td className="px-4 py-3 flex items-center gap-1">
+                        {isEditable ? (
+                          <input type="number" min="1" value={item.quantity} onChange={e=>handleItemChange(index, "quantity", parseInt(e.target.value)||0)} className="w-16 border border-slate-200 rounded p-1 text-sm bg-slate-50 focus:bg-white" />
+                        ) : item.quantity}
+                      </td>
+                      {isAdmin && (
+                        <td className="px-4 py-3 text-red-600">
+                          {isEditable ? (
+                            <input type="number" value={item.unitCost} onChange={e=>handleItemChange(index, "unitCost", parseFloat(e.target.value)||0)} className="w-24 border border-slate-200 rounded p-1 text-sm bg-slate-50 focus:bg-white" />
+                          ) : `Rs. ${item.unitCost}`}
+                        </td>
+                      )}
+                      <td className="px-4 py-3 text-green-600">
+                        {isEditable ? (
+                          <input type="number" value={item.unitSellingPrice} onChange={e=>handleItemChange(index, "unitSellingPrice", parseFloat(e.target.value)||0)} className="w-24 border border-slate-200 rounded p-1 text-sm bg-slate-50 focus:bg-white" />
+                        ) : `Rs. ${item.unitSellingPrice}`}
+                      </td>
+                      {isAdmin && (
+                        <td className="px-4 py-3 font-medium text-red-700">Rs. {(Number(item.quantity||1)*Number(item.unitCost||0)).toLocaleString("en-IN")}</td>
+                      )}
+                      <td className="px-4 py-3 font-medium text-green-700">Rs. {(Number(item.quantity||1)*Number(item.unitSellingPrice||0)).toLocaleString("en-IN")}</td>
+                      <td className="px-4 py-3 text-right">
+                        {isEditable && (
+                          <button onClick={() => handleDeleteItem(index)} className="text-slate-400 hover:text-red-500 transition-colors p-1"><Trash className="w-4 h-4"/></button>
+                        )}
+                      </td>
                     </tr>
                   ))}
-                  {!quotation.items?.length && <tr><td colSpan={8} className="px-4 py-8 text-center text-slate-500">No items added to this quotation.</td></tr>}
+                  {items.length === 0 && <tr><td colSpan={8} className="px-4 py-8 text-center text-slate-500">No items added to this quotation.</td></tr>}
                 </tbody>
               </table>
             </div>
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
               <div className="bg-white rounded-xl border border-slate-200 p-4 md:p-5">
                 <h4 className="font-bold text-slate-900 mb-4">Terms &amp; Policies</h4>
-                <div className="space-y-4"><div><label className="text-xs font-semibold text-slate-500 uppercase tracking-wider block mb-2">Inclusions &amp; Exclusions</label><textarea className="w-full border border-slate-200 rounded-lg p-3 text-sm min-h-[100px]" value={quotation.terms||""} readOnly={!isEditable} placeholder="Enter terms..."/></div></div>
+                <div className="space-y-4">
+                  <div>
+                    <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider block mb-2">Inclusions, Exclusions &amp; Policies</label>
+                    <textarea 
+                      className="w-full border border-slate-200 rounded-lg p-3 text-sm min-h-[160px] bg-slate-50 focus:bg-white focus:outline-none focus:ring-1 focus:ring-orange-500" 
+                      value={terms} 
+                      onChange={e=>setTerms(e.target.value)}
+                      readOnly={!isEditable} 
+                      placeholder="Enter inclusions, exclusions, and payment terms here..."
+                    />
+                  </div>
+                </div>
               </div>
-              <div className="bg-white rounded-xl border border-slate-200 p-0 overflow-hidden flex flex-col">
-                <div className="bg-slate-900 p-4 text-white"><h4 className="font-bold flex items-center justify-between"><span>Financial Summary</span>{isAdmin && <span className="text-xs bg-white/20 px-2 py-1 rounded text-white/90">INTERNAL</span>}</h4></div>
-                <div className="p-5 space-y-3 flex-1 text-sm">
-                  {isAdmin && <div className="flex justify-between pb-2 border-b border-slate-100"><span className="text-slate-500">Total Cost</span><span className="font-medium text-red-600">Rs. {quotation.totalCost}</span></div>}
-                  <div className="flex justify-between pb-2 border-b border-slate-100"><span className="text-slate-500">Total Selling (Before Discount)</span><span className="font-medium">Rs. {quotation.totalSellingPrice}</span></div>
-                  <div className="flex justify-between pb-2 border-b border-slate-100 items-center"><span className="text-slate-500">Discount Amount</span><span className="text-orange-500 font-medium">- Rs. {quotation.discountType==="FIXED"?quotation.discount:((quotation.totalSellingPrice*quotation.discount)/100)}</span></div>
-                  <div className="flex justify-between pb-2 border-b border-slate-100 pt-2"><span className="font-bold text-slate-900">Final Selling Price</span><span className="font-bold text-green-600 text-lg">Rs. {quotation.partnerPrice}</span></div>
+              <div className="bg-white rounded-xl border border-slate-200 p-0 overflow-hidden flex flex-col h-fit">
+                <div className="bg-slate-900 p-4 text-white">
+                  <h4 className="font-bold flex items-center justify-between">
+                    <span>Financial Summary</span>
+                    {isAdmin && <span className="text-[10px] bg-red-500/80 px-2 py-0.5 rounded text-white font-bold tracking-widest">ADMIN PREVIEW</span>}
+                  </h4>
+                </div>
+                <div className="p-5 space-y-3 text-sm flex-1">
                   {isAdmin && (
-                    <div className="grid grid-cols-2 gap-4 pt-4 mt-2 bg-slate-50 p-3 rounded-lg border border-slate-100">
-                      <div><span className="block text-xs text-slate-500 mb-1">Gross Margin</span><span className="font-bold text-slate-700">Rs. {quotation.grossMargin}</span></div>
-                      <div><span className="block text-xs text-slate-500 mb-1">Net Margin</span><span className="font-bold text-blue-600">Rs. {quotation.netMargin}</span></div>
+                    <div className="flex justify-between pb-2 border-b border-slate-100">
+                      <span className="text-slate-500">Total Cost</span>
+                      <span className="font-medium text-red-600">Rs. {calculatedTotalCost.toLocaleString("en-IN")}</span>
+                    </div>
+                  )}
+                  <div className="flex justify-between pb-2 border-b border-slate-100">
+                    <span className="text-slate-500">Total Selling (Before Discount)</span>
+                    <span className="font-medium">Rs. {calculatedTotalSelling.toLocaleString("en-IN")}</span>
+                  </div>
+                  <div className="flex justify-between pb-2 border-b border-slate-100 items-center">
+                    <span className="text-slate-500">Discount Amount</span>
+                    <div className="flex items-center gap-2">
+                      {isEditable ? (
+                        <input type="number" value={discount} onChange={e=>setDiscount(Number(e.target.value))} className="w-20 text-right border border-slate-200 rounded px-2 py-1 text-sm bg-slate-50 focus:bg-white" />
+                      ) : (
+                        <span className="text-orange-500 font-medium">- Rs. {calculatedDiscountAmount.toLocaleString("en-IN")}</span>
+                      )}
+                    </div>
+                  </div>
+                  <div className="flex justify-between pb-2 border-b border-slate-100 pt-2 bg-green-50 p-2 rounded-lg -mx-2 px-2 border-l-4 border-l-green-500">
+                    <span className="font-bold text-slate-900">Final Selling Price</span>
+                    <span className="font-bold text-green-600 text-lg">Rs. {calculatedFinalSelling.toLocaleString("en-IN")}</span>
+                  </div>
+                  {isAdmin && (
+                    <div className="grid grid-cols-2 gap-4 pt-4 mt-4 bg-slate-50 p-3 rounded-lg border border-slate-200">
+                      <div>
+                        <span className="block text-xs text-slate-500 mb-1">Expected Gross Margin</span>
+                        <span className="font-bold text-slate-700 text-base">Rs. {calculatedGrossMargin.toLocaleString("en-IN")}</span>
+                      </div>
+                      <div>
+                        <span className="block text-xs text-slate-500 mb-1">Margin %</span>
+                        <span className={`font-bold text-base ${calculatedFinalSelling > 0 && (calculatedGrossMargin/calculatedFinalSelling) >= 0.1 ? 'text-green-600' : 'text-red-500'}`}>
+                          {calculatedFinalSelling > 0 ? ((calculatedGrossMargin / calculatedFinalSelling) * 100).toFixed(1) : 0}%
+                        </span>
+                      </div>
                     </div>
                   )}
                 </div>
               </div>
             </div>
           </div>
+
+          {/* Action Sidebar */}
           <div className="w-full md:w-80 border-t md:border-l border-slate-200 bg-white flex flex-col shrink-0">
-            <div className="p-4 md:p-6 border-b border-slate-100">
+            <div className="p-4 md:p-6 border-b border-slate-100 bg-slate-50/50">
               <h4 className="font-bold text-slate-900 mb-4 uppercase tracking-wider text-xs text-slate-500">Actions</h4>
               <div className="space-y-3">
-                {(quotation.status==="DRAFT"||quotation.status==="REVISED")&&<button className="w-full flex items-center justify-center gap-2 bg-slate-900 hover:bg-slate-800 text-white py-2.5 rounded-xl font-medium transition-colors"><Send className="w-4 h-4"/> Submit for Approval</button>}
-                {quotation.status==="INTERNAL_REVIEW"&&<><button className="w-full flex items-center justify-center gap-2 bg-green-500 hover:bg-green-600 text-white py-2.5 rounded-xl font-medium transition-colors"><CheckCircle className="w-4 h-4"/> Approve Quotation</button><button className="w-full flex items-center justify-center gap-2 bg-red-50 hover:bg-red-100 text-red-600 py-2.5 rounded-xl font-medium transition-colors">Reject Quotation</button></>}
-                {(quotation.status==="APPROVED"||quotation.status==="SENT"||quotation.status==="ACCEPTED")&&<><button onClick={() => setShowConfirmModal(true)} className="w-full flex items-center justify-center gap-2 bg-blue-500 hover:bg-blue-600 text-white py-2.5 rounded-xl font-medium transition-colors"><Upload className="w-4 h-4"/> Mark as Confirmed</button><button className="w-full flex items-center justify-center gap-2 bg-orange-50 hover:bg-orange-100 text-orange-600 py-2.5 rounded-xl font-medium transition-colors border border-orange-200"><History className="w-4 h-4"/> Revise (New Version)</button></>}
-                {quotation.status==="CONFIRMED"&&<><button onClick={handleCreateBooking} disabled={creatingBooking} className="w-full flex items-center justify-center gap-2 bg-green-500 hover:bg-green-600 text-white py-2.5 rounded-xl font-medium transition-colors disabled:opacity-50"><CheckCircle className="w-4 h-4"/> {creatingBooking ? "Creating Booking..." : "Create Booking"}</button></>}
+                
+                {isEditable && (
+                  <button onClick={handleSaveDraft} disabled={saving} className="w-full flex items-center justify-center gap-2 bg-slate-100 hover:bg-slate-200 text-slate-900 border border-slate-300 py-2.5 rounded-xl font-medium transition-colors disabled:opacity-50">
+                    <Save className="w-4 h-4"/> {saving ? "Saving..." : "Save Draft"}
+                  </button>
+                )}
+
+                {canSubmit && (
+                  <button onClick={() => handleAction("SUBMIT")} disabled={processingAction === "SUBMIT"} className="w-full flex items-center justify-center gap-2 bg-slate-900 hover:bg-slate-800 text-white py-2.5 rounded-xl font-medium transition-colors disabled:opacity-50">
+                    <Send className="w-4 h-4"/> {processingAction === "SUBMIT" ? "Submitting..." : "Submit for Approval"}
+                  </button>
+                )}
+
+                {canAdminApprove && (
+                  <>
+                    <button onClick={() => handleAction("APPROVE")} disabled={processingAction !== null} className="w-full flex items-center justify-center gap-2 bg-green-500 hover:bg-green-600 text-white py-2.5 rounded-xl font-medium transition-colors disabled:opacity-50">
+                      <CheckCircle className="w-4 h-4"/> {processingAction === "APPROVE" ? "Approving..." : "Approve Quotation"}
+                    </button>
+                    <button onClick={() => handleAction("REQUEST_REVISION")} disabled={processingAction !== null} className="w-full flex items-center justify-center gap-2 bg-orange-50 hover:bg-orange-100 text-orange-600 border border-orange-200 py-2.5 rounded-xl font-medium transition-colors disabled:opacity-50">
+                      <AlertCircle className="w-4 h-4"/> {processingAction === "REQUEST_REVISION" ? "Processing..." : "Request Revision"}
+                    </button>
+                    <button onClick={() => handleAction("REJECT")} disabled={processingAction !== null} className="w-full flex items-center justify-center gap-2 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 py-2.5 rounded-xl font-medium transition-colors disabled:opacity-50">
+                      <X className="w-4 h-4"/> {processingAction === "REJECT" ? "Rejecting..." : "Reject Quotation"}
+                    </button>
+                  </>
+                )}
+
+                {(quotation.status === "APPROVED" || quotation.status === "SENT" || quotation.status === "ACCEPTED") && (
+                  <button onClick={() => setShowConfirmModal(true)} className="w-full flex items-center justify-center gap-2 bg-blue-500 hover:bg-blue-600 text-white py-2.5 rounded-xl font-medium transition-colors shadow-sm shadow-blue-500/20">
+                    <Upload className="w-4 h-4"/> Mark as Confirmed
+                  </button>
+                )}
+
+                {quotation.status !== "DRAFT" && (
+                  <button onClick={handleDuplicateVersion} disabled={processingAction === "DUPLICATE"} className="w-full flex items-center justify-center gap-2 bg-white hover:bg-slate-50 text-slate-700 py-2.5 rounded-xl font-medium transition-colors border border-slate-200 disabled:opacity-50 mt-4">
+                    <History className="w-4 h-4"/> {processingAction === "DUPLICATE" ? "Duplicating..." : "Revise (New Version)"}
+                  </button>
+                )}
+
+                {quotation.status === "CONFIRMED" && (
+                  <button onClick={handleCreateBooking} disabled={creatingBooking} className="w-full flex items-center justify-center gap-2 bg-green-500 hover:bg-green-600 text-white py-2.5 rounded-xl font-medium transition-colors disabled:opacity-50 shadow-md shadow-green-500/20 mt-4">
+                    <CheckCircle className="w-4 h-4"/> {creatingBooking ? "Creating Booking..." : "Create Booking"}
+                  </button>
+                )}
+
               </div>
             </div>
+            
             <div className="p-6 flex-1 overflow-y-auto">
-              <h4 className="font-bold text-slate-900 mb-4 uppercase tracking-wider text-xs text-slate-500">Version History</h4>
+              <h4 className="font-bold text-slate-900 mb-4 uppercase tracking-wider text-xs text-slate-500">Version Context</h4>
               <div className="space-y-4">
-                <div className="p-3 border-2 border-orange-500 rounded-xl bg-orange-50 relative">
-                  <span className="absolute -top-2.5 right-3 bg-orange-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">CURRENT</span>
+                <div className="p-4 border-2 border-orange-500 rounded-xl bg-orange-50 relative shadow-sm">
+                  <span className="absolute -top-2.5 right-3 bg-orange-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm">VIEWING</span>
                   <div className="font-bold text-slate-900 text-sm">Version {quotation.version}</div>
                   <div className="text-xs text-slate-500 mb-2">{format(new Date(quotation.createdAt),"dd MMM yyyy HH:mm")}</div>
-                  <div className="flex justify-between items-center text-sm"><span className="text-slate-700">Rs. {quotation.partnerPrice}</span><span className="font-medium text-orange-600 text-xs">{quotation.status}</span></div>
+                  <div className="flex justify-between items-center text-sm pt-2 border-t border-orange-200/50 mt-2">
+                    <span className="font-semibold text-slate-800">Rs. {calculatedFinalSelling.toLocaleString("en-IN")}</span>
+                    <span className="font-bold text-orange-600 text-[10px] uppercase tracking-wider">{quotation.status}</span>
+                  </div>
                 </div>
-                {quotation.version>1&&(<div className="p-3 border border-slate-200 rounded-xl bg-slate-50 cursor-pointer hover:bg-slate-100 transition-colors"><div className="font-bold text-slate-600 text-sm">Version {quotation.version-1}</div><div className="flex justify-between items-center text-sm mt-1"><span className="font-medium text-slate-500 text-xs">REVISED</span></div></div>)}
+                {quotation.version > 1 && (
+                  <div className="p-3 border border-slate-200 rounded-xl bg-slate-50 cursor-not-allowed opacity-75">
+                    <div className="font-bold text-slate-600 text-sm flex items-center justify-between">
+                      <span>Version {quotation.version-1}</span>
+                      <span className="text-[10px] bg-slate-200 text-slate-500 px-1.5 py-0.5 rounded uppercase">Historical</span>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -337,8 +630,8 @@ function QuotationBuilderModal({ quotationId, onClose, onUpdate, isAdmin }: { qu
               </tr>
             </thead>
             <tbody>
-              {quotation.items?.map((item: any) => (
-                <tr key={item.id}>
+              {items.map((item: any, idx: number) => (
+                <tr key={idx}>
                   <td className="p-3 border border-slate-300 font-medium">{item.category}</td>
                   <td className="p-3 border border-slate-300">{item.description}</td>
                   <td className="p-3 border border-slate-300">{item.quantity} {item.unit}</td>
@@ -348,16 +641,16 @@ function QuotationBuilderModal({ quotationId, onClose, onUpdate, isAdmin }: { qu
           </table>
           
           <div className="flex justify-end mb-10">
-            <div className="bg-slate-50 p-4 rounded-lg border border-slate-200 w-64">
-              <div className="text-sm text-slate-500 mb-1">Total Package Price</div>
-              <div className="text-2xl font-bold text-slate-900">Rs. {quotation.partnerPrice?.toLocaleString("en-IN")}</div>
+            <div className="bg-slate-50 p-4 rounded-lg border border-slate-200 w-64 text-right">
+              <div className="text-sm text-slate-500 mb-1 font-medium uppercase tracking-wider">Total Package Price</div>
+              <div className="text-2xl font-bold text-slate-900">Rs. {calculatedFinalSelling.toLocaleString("en-IN")}</div>
             </div>
           </div>
           
-          {quotation.terms && (
+          {terms && (
              <div className="mb-6 page-break-inside-avoid">
                <h3 className="text-lg font-bold mb-3 text-slate-900 border-b border-slate-200 pb-2">Terms, Conditions &amp; Exclusions</h3>
-               <div className="whitespace-pre-wrap text-sm text-slate-700 leading-relaxed">{quotation.terms}</div>
+               <div className="whitespace-pre-wrap text-sm text-slate-700 leading-relaxed">{terms}</div>
              </div>
           )}
           
@@ -370,7 +663,7 @@ function QuotationBuilderModal({ quotationId, onClose, onUpdate, isAdmin }: { qu
       </div>
 
       {showConfirmModal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60] flex items-center justify-center p-4">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60] flex items-center justify-center p-4 print:hidden">
           <div className="bg-white rounded-2xl w-full max-w-md p-6 shadow-2xl">
             <h3 className="text-xl font-bold mb-2">Confirm Quotation</h3>
             <p className="text-sm text-slate-500 mb-6">Upload proof of vendor confirmation (e.g. email screenshot or chat) to proceed with booking creation.</p>
