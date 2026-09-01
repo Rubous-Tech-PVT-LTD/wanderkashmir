@@ -1,6 +1,6 @@
 "use client";
 
-import { Users, Home, Utensils, BedDouble } from "lucide-react";
+import { Users, Home, Utensils } from "lucide-react";
 import { useBookingStore } from "@/store/bookingStore";
 
 const MEAL_PLANS = [
@@ -67,7 +67,7 @@ export default function RoomSelector({ roomTypes }: { roomTypes: any[] }) {
               </div>
               <div className="text-right shrink-0">
                 <div className="text-2xl font-black text-slate-900">
-                  ₹{room.basePrice.toLocaleString("en-IN")}
+                  ₹{Number(room.basePrice).toLocaleString("en-IN")}
                 </div>
                 <div className="text-xs text-slate-500">per night</div>
               </div>
@@ -125,7 +125,7 @@ export default function RoomSelector({ roomTypes }: { roomTypes: any[] }) {
                         </div>
                         <div className="text-right shrink-0">
                           <div className="font-bold text-orange-600">
-                            ₹{price.toLocaleString("en-IN")}
+                            ₹{Number(price).toLocaleString("en-IN")}
                           </div>
                           <div className="text-xs text-slate-400">/ night</div>
                         </div>
@@ -162,7 +162,7 @@ export default function RoomSelector({ roomTypes }: { roomTypes: any[] }) {
                 </div>
                 <div className="text-right shrink-0">
                   <div className="font-bold text-orange-600">
-                    ₹{room.basePrice.toLocaleString("en-IN")}
+                    ₹{Number(room.basePrice).toLocaleString("en-IN")}
                   </div>
                   <div className="text-xs text-slate-400">/ night</div>
                 </div>

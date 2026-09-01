@@ -83,7 +83,7 @@ export default async function PropertyDetailPage({
   try {
     property = await prisma.property.findUnique({
       where: { id },
-      include: { vendorProfile: true, roomTypes: true }
+      include: { vendorProfile: true }
     });
   } catch (error) {
     console.error("DB Error fetching property:", error);
@@ -92,6 +92,22 @@ export default async function PropertyDetailPage({
   if (!property) {
     notFound();
   }
+
+  // Fetch roomTypes separately so a schema mismatch doesn't 404 the whole page
+  let roomTypes: any[] = [];
+  try {
+    const rt = await prisma.property.findUnique({
+      where: { id },
+      include: { roomTypes: true }
+    });
+    roomTypes = rt?.roomTypes ?? [];
+  } catch (error) {
+    console.error("DB Error fetching roomTypes (non-fatal):", error);
+    // roomTypes stays empty — RoomSelector handles empty gracefully
+  }
+
+  // Merge roomTypes onto property object for downstream use
+  property.roomTypes = roomTypes;
 
   // Handle dynamic data & types
   const propData: any = property;
