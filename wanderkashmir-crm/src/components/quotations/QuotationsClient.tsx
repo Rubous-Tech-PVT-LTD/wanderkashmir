@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Search, ChevronRight, X, Plus, CheckCircle, History, Save, Send, Trash, Download, Copy, Upload, AlertCircle } from "lucide-react";
+import { Search, ChevronRight, X, Plus, CheckCircle, History, Save, Send, Trash, Download, Copy, Upload, AlertCircle, MapPin, Calendar, Clock, ArrowDown, ArrowUp } from "lucide-react";
 import { format } from "date-fns";
 import { useRouter, useSearchParams } from "next/navigation";
 
@@ -10,6 +10,7 @@ export type QuotationListItem = {
   requirementId: string;
   version: number;
   partnerPrice: number;
+  retailPrice?: number | null;
   totalCost?: number;
   grossMargin?: number;
   status: string;
@@ -59,9 +60,9 @@ export default function QuotationsClient({ quotations, isAdmin = false }: { quot
                 <th className="px-6 py-4 font-medium">Quotation ID</th>
                 <th className="px-6 py-4 font-medium">Req ID</th>
                 <th className="px-6 py-4 font-medium">Version</th>
-                <th className="px-6 py-4 font-medium">Selling Price</th>
-                {isAdmin && <th className="px-6 py-4 font-medium">Total Cost</th>}
-                {isAdmin && <th className="px-6 py-4 font-medium">Gross Margin</th>}
+                <th className="px-6 py-4 font-medium">Retail Price</th>
+                <th className="px-6 py-4 font-medium">B2B Price</th>
+                {isAdmin && <th className="px-6 py-4 font-medium">Internal Cost</th>}
                 <th className="px-6 py-4 font-medium">Status</th>
                 <th className="px-6 py-4 font-medium">Created</th>
                 <th className="px-6 py-4 font-medium">Actions</th>
@@ -76,9 +77,11 @@ export default function QuotationsClient({ quotations, isAdmin = false }: { quot
                     <td className="px-6 py-4 font-medium text-slate-900">WK-Q-{q.id.substring(0,6).toUpperCase()}</td>
                     <td className="px-6 py-4 text-slate-500">WK-R-{q.requirementId.substring(0,6).toUpperCase()}</td>
                     <td className="px-6 py-4">v{q.version}</td>
-                    <td className="px-6 py-4 font-medium text-slate-900">Rs. {q.partnerPrice?.toLocaleString("en-IN")||0}</td>
+                    <td className="px-6 py-4 font-medium text-slate-600">
+                      {q.retailPrice !== null && q.retailPrice !== undefined ? `Rs. ${q.retailPrice.toLocaleString("en-IN")}` : <span className="text-slate-400 italic">Not Set</span>}
+                    </td>
+                    <td className="px-6 py-4 font-bold text-slate-900">Rs. {q.partnerPrice?.toLocaleString("en-IN")||0}</td>
                     {isAdmin && <td className="px-6 py-4 font-medium text-red-600">Rs. {q.totalCost?.toLocaleString("en-IN")||0}</td>}
-                    {isAdmin && <td className="px-6 py-4 font-medium text-green-600">Rs. {q.grossMargin?.toLocaleString("en-IN")||0}</td>}
                     <td className="px-6 py-4"><span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-slate-100 text-slate-700">{q.status}</span></td>
                     <td className="px-6 py-4 text-slate-500">{format(new Date(q.createdAt), "dd MMM yyyy")}</td>
                     <td className="px-6 py-4"><button onClick={() => setSelectedQuotation(q)} className="text-orange-500 hover:text-orange-600 font-medium text-sm flex items-center gap-1">Builder <ChevronRight className="w-4 h-4"/></button></td>
@@ -94,8 +97,14 @@ export default function QuotationsClient({ quotations, isAdmin = false }: { quot
                           </div>
                         </div>
                         <div className="grid grid-cols-2 gap-2 text-sm text-slate-600">
-                          <div className="flex flex-col"><span className="text-xs text-slate-400 uppercase tracking-wider">Selling Price</span><span className="font-semibold text-slate-900">Rs. {q.partnerPrice?.toLocaleString("en-IN")||0}</span></div>
-                          <div className="flex flex-col"><span className="text-xs text-slate-400 uppercase tracking-wider">Created</span><span className="font-medium">{format(new Date(q.createdAt), "dd MMM yyyy")}</span></div>
+                          <div className="flex flex-col">
+                            <span className="text-xs text-slate-400 uppercase tracking-wider">Retail Price</span>
+                            <span className="font-semibold text-slate-700">{q.retailPrice !== null && q.retailPrice !== undefined ? `Rs. ${q.retailPrice.toLocaleString("en-IN")}` : 'Not Set'}</span>
+                          </div>
+                          <div className="flex flex-col">
+                            <span className="text-xs text-slate-400 uppercase tracking-wider">B2B Price</span>
+                            <span className="font-bold text-slate-900">Rs. {q.partnerPrice?.toLocaleString("en-IN")||0}</span>
+                          </div>
                         </div>
                         <div className="pt-3 border-t border-slate-100"><button onClick={() => setSelectedQuotation(q)} className="w-full flex items-center justify-center gap-1 py-2.5 bg-orange-50 text-orange-600 rounded-lg font-medium active:bg-orange-100 transition-colors">Builder <ChevronRight className="w-4 h-4"/></button></div>
                       </div>
@@ -134,9 +143,11 @@ function QuotationBuilderModal({ quotationId, onClose, onUpdate, isAdmin }: { qu
   
   // Form State
   const [items, setItems] = useState<any[]>([]);
+  const [itinerary, setItinerary] = useState<any[]>([]);
   const [terms, setTerms] = useState("");
   const [discount, setDiscount] = useState(0);
   const [discountType, setDiscountType] = useState("FIXED");
+  const [retailPrice, setRetailPrice] = useState<string>("");
 
   // Status Modals
   const [showConfirmModal, setShowConfirmModal] = useState(false);
@@ -144,7 +155,6 @@ function QuotationBuilderModal({ quotationId, onClose, onUpdate, isAdmin }: { qu
   
   // Async states
   const [saving, setSaving] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
   const [processingAction, setProcessingAction] = useState<string | null>(null);
   const [confirming, setConfirming] = useState(false);
   const [creatingBooking, setCreatingBooking] = useState(false);
@@ -157,9 +167,11 @@ function QuotationBuilderModal({ quotationId, onClose, onUpdate, isAdmin }: { qu
       const data = await res.json();
       setQuotation(data);
       setItems(data.items || []);
+      setItinerary(data.itinerary || []);
       setTerms(data.terms || "");
       setDiscount(data.discount || 0);
       setDiscountType(data.discountType || "FIXED");
+      setRetailPrice(data.retailPrice !== null && data.retailPrice !== undefined ? String(data.retailPrice) : "");
     } catch(e) {
       console.error(e);
     } finally {
@@ -190,6 +202,44 @@ function QuotationBuilderModal({ quotationId, onClose, onUpdate, isAdmin }: { qu
   const calculatedDiscountAmount = discountType === "FIXED" ? Number(discount) : (calculatedTotalSelling * Number(discount) / 100);
   const calculatedFinalSelling = calculatedTotalSelling - calculatedDiscountAmount;
   const calculatedGrossMargin = calculatedFinalSelling - calculatedTotalCost;
+  const displayRetailPrice = retailPrice ? Number(retailPrice) : null;
+
+  // Itinerary Handlers
+  const handleAddDay = () => {
+    if (itinerary.length >= 10) return;
+    setItinerary([...itinerary, { 
+      dayNumber: itinerary.length + 1, 
+      title: "", 
+      destination: "", 
+      description: "", 
+      activities: "", 
+      overnight: "" 
+    }]);
+  };
+
+  const handleItineraryChange = (index: number, field: string, value: string) => {
+    const newItin = [...itinerary];
+    newItin[index][field] = value;
+    setItinerary(newItin);
+  };
+
+  const handleDeleteDay = (index: number) => {
+    const newItin = [...itinerary];
+    newItin.splice(index, 1);
+    // Renumber days
+    newItin.forEach((day, i) => { day.dayNumber = i + 1; });
+    setItinerary(newItin);
+  };
+
+  const moveDay = (index: number, direction: 'up' | 'down') => {
+    if (direction === 'up' && index === 0) return;
+    if (direction === 'down' && index === itinerary.length - 1) return;
+    const newItin = [...itinerary];
+    const targetIdx = direction === 'up' ? index - 1 : index + 1;
+    [newItin[index], newItin[targetIdx]] = [newItin[targetIdx], newItin[index]];
+    newItin.forEach((day, i) => { day.dayNumber = i + 1; });
+    setItinerary(newItin);
+  };
 
   // Item Handlers
   const handleAddItem = () => {
@@ -212,10 +262,19 @@ function QuotationBuilderModal({ quotationId, onClose, onUpdate, isAdmin }: { qu
   const handleSaveDraft = async () => {
     setSaving(true);
     try {
+      const payload = {
+        items,
+        itinerary,
+        terms,
+        discount,
+        discountType,
+        retailPrice: retailPrice !== "" ? Number(retailPrice) : null
+      };
+
       const res = await fetch(`/api/quotations/${quotation.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ items, terms, discount, discountType })
+        body: JSON.stringify(payload)
       });
       if (res.ok) {
         alert("Draft saved successfully!");
@@ -233,22 +292,21 @@ function QuotationBuilderModal({ quotationId, onClose, onUpdate, isAdmin }: { qu
 
   const handleAction = async (action: string) => {
     if (action === "SUBMIT" && items.length === 0) {
-      return alert("Cannot submit an empty quotation. Please add items.");
+      return alert("Cannot submit an empty quotation. Please add services.");
     }
     
-    // Auto-save before submit to prevent mismatches
     if (action === "SUBMIT" && isEditable) {
        await fetch(`/api/quotations/${quotation.id}`, {
          method: "PUT",
          headers: { "Content-Type": "application/json" },
-         body: JSON.stringify({ items, terms, discount, discountType })
+         body: JSON.stringify({ items, itinerary, terms, discount, discountType, retailPrice: retailPrice !== "" ? Number(retailPrice) : null })
        });
     }
 
     let reason = "";
     if (action === "REJECT" || action === "REQUEST_REVISION") {
       reason = prompt("Please provide a reason or note:") || "";
-      if (!reason && action === "REJECT") return; // cancel if empty reject reason
+      if (!reason && action === "REJECT") return;
     }
 
     setProcessingAction(action);
@@ -293,17 +351,36 @@ function QuotationBuilderModal({ quotationId, onClose, onUpdate, isAdmin }: { qu
   const handleCopyQuotation = () => {
     let text = `*Quotation: WK-Q-${quotation.id.substring(0,6).toUpperCase()}*\n`;
     text += `*Valid Until:* ${quotation.validUntil ? format(new Date(quotation.validUntil), "dd MMM yyyy") : "TBD"}\n\n`;
-    text += `*Itinerary & Services:*\n`;
+    
+    if (itinerary.length > 0) {
+      text += `*Day-wise Itinerary:*\n`;
+      itinerary.forEach((day) => {
+        text += `\nDay ${day.dayNumber}: ${day.title}\n`;
+        if (day.destination) text += `Destination: ${day.destination}\n`;
+        if (day.description) text += `${day.description}\n`;
+        if (day.activities) text += `Activities: ${day.activities}\n`;
+        if (day.overnight) text += `Overnight: ${day.overnight}\n`;
+      });
+      text += `\n`;
+    }
+
+    text += `*Services & Inclusions:*\n`;
     items.forEach((item: any) => {
       text += `- ${item.category}: ${item.description} (${item.quantity} ${item.unit})\n`;
     });
-    text += `\n*Total Selling Price:* Rs. ${calculatedFinalSelling.toLocaleString("en-IN")}\n`;
+    
+    text += `\n*Pricing Summary:*\n`;
+    if (displayRetailPrice) {
+      text += `Actual Price (Retail): Rs. ${displayRetailPrice.toLocaleString("en-IN")}\n`;
+    }
+    text += `B2B Price: Rs. ${calculatedFinalSelling.toLocaleString("en-IN")}\n`;
+
     if (terms) {
       text += `\n*Terms & Policies:*\n${terms}\n`;
     }
     
     navigator.clipboard.writeText(text).then(() => {
-      alert("Quotation copied successfully!");
+      alert("Quotation copied successfully (Internal details hidden)!");
     }).catch(err => {
       console.error("Failed to copy text: ", err);
     });
@@ -359,7 +436,7 @@ function QuotationBuilderModal({ quotationId, onClose, onUpdate, isAdmin }: { qu
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 print:p-0 print:bg-white print:block overflow-y-auto">
-      <div className="bg-white rounded-2xl w-full max-w-6xl h-[90vh] overflow-hidden flex flex-col shadow-2xl print:shadow-none print:h-auto print:rounded-none">
+      <div className="bg-white rounded-2xl w-full max-w-7xl h-[94vh] overflow-hidden flex flex-col shadow-2xl print:shadow-none print:h-auto print:rounded-none">
         
         {/* Header */}
         <div className="p-4 border-b border-slate-100 flex flex-wrap justify-between items-center bg-slate-900 text-white gap-3 print:hidden">
@@ -380,14 +457,118 @@ function QuotationBuilderModal({ quotationId, onClose, onUpdate, isAdmin }: { qu
 
         {/* Main Workspace */}
         <div className="flex flex-col md:flex-row flex-1 overflow-hidden print:hidden">
-          <div className="flex-1 overflow-y-auto bg-slate-50 p-4 md:p-6">
+          <div className="flex-1 overflow-y-auto bg-slate-50 p-4 md:p-6 pb-20">
             
-            {/* Itinerary */}
-            <div className="flex justify-between items-center mb-4 md:mb-6">
-              <h4 className="text-lg font-bold text-slate-900">Itinerary &amp; Services</h4>
+            {/* PRICING SECTION (Top Level for BA and Admin) */}
+            <div className="bg-white rounded-xl border border-slate-200 overflow-hidden mb-8 shadow-sm">
+              <div className="bg-slate-100/50 p-4 border-b border-slate-200 flex justify-between items-center">
+                <h4 className="font-bold text-slate-900">Quotation Pricing Configuration</h4>
+              </div>
+              <div className="p-5 flex flex-col md:flex-row gap-6">
+                <div className="flex-1">
+                  <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider block mb-2">Actual Price (Retail) <span className="lowercase text-[10px] text-slate-400 font-normal ml-1">Customer-facing</span></label>
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500">Rs.</span>
+                    <input 
+                      type="number"
+                      min="0"
+                      className="w-full pl-9 pr-3 py-2.5 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 font-medium"
+                      value={retailPrice}
+                      onChange={e => setRetailPrice(e.target.value)}
+                      readOnly={!isEditable}
+                      placeholder="e.g. 65000"
+                    />
+                  </div>
+                </div>
+                <div className="flex-1">
+                  <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider block mb-2">B2B Price <span className="lowercase text-[10px] text-slate-400 font-normal ml-1">Calculated from services</span></label>
+                  <div className="w-full pl-4 pr-3 py-2.5 border border-slate-200 rounded-lg bg-slate-50 font-bold text-slate-900">
+                    Rs. {calculatedFinalSelling.toLocaleString("en-IN")}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* DAY-WISE ITINERARY */}
+            <div className="flex justify-between items-center mb-4 mt-8">
+              <h4 className="text-lg font-bold text-slate-900">Day-wise Itinerary</h4>
+              {isEditable && itinerary.length < 10 && (
+                <button onClick={handleAddDay} className="text-blue-600 hover:text-blue-700 font-medium text-sm flex items-center gap-1 bg-blue-50 px-3 py-1.5 rounded-lg border border-blue-100">
+                  <Plus className="w-4 h-4"/> Add Day
+                </button>
+              )}
+            </div>
+
+            {itinerary.length === 0 ? (
+              <div className="bg-white border border-slate-200 border-dashed rounded-xl p-8 text-center text-slate-500 mb-8">
+                No itinerary days added yet.
+              </div>
+            ) : (
+              <div className="space-y-4 mb-8">
+                {itinerary.map((day, idx) => (
+                  <div key={idx} className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden flex flex-col md:flex-row">
+                    <div className="bg-slate-50 border-b md:border-b-0 md:border-r border-slate-200 w-full md:w-32 p-4 flex flex-col items-center justify-center shrink-0">
+                      <div className="font-bold text-slate-900 text-lg">DAY {day.dayNumber}</div>
+                      {isEditable && (
+                        <div className="flex items-center gap-2 mt-3 text-slate-400">
+                          <button onClick={() => moveDay(idx, 'up')} disabled={idx === 0} className="hover:text-slate-700 disabled:opacity-30"><ArrowUp className="w-4 h-4"/></button>
+                          <button onClick={() => moveDay(idx, 'down')} disabled={idx === itinerary.length - 1} className="hover:text-slate-700 disabled:opacity-30"><ArrowDown className="w-4 h-4"/></button>
+                        </div>
+                      )}
+                    </div>
+                    <div className="p-4 md:p-5 flex-1 grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="md:col-span-2 flex gap-4">
+                        <div className="flex-1">
+                          <label className="text-[10px] font-semibold text-slate-500 uppercase block mb-1">Title</label>
+                          {isEditable ? (
+                            <input type="text" value={day.title} onChange={e=>handleItineraryChange(idx, "title", e.target.value)} placeholder="e.g. Srinagar Arrival" className="w-full border border-slate-200 rounded p-2 text-sm bg-slate-50 focus:bg-white" />
+                          ) : <div className="font-medium">{day.title || "-"}</div>}
+                        </div>
+                        <div className="w-1/3">
+                          <label className="text-[10px] font-semibold text-slate-500 uppercase block mb-1">Destination</label>
+                          {isEditable ? (
+                            <input type="text" value={day.destination} onChange={e=>handleItineraryChange(idx, "destination", e.target.value)} placeholder="e.g. Srinagar" className="w-full border border-slate-200 rounded p-2 text-sm bg-slate-50 focus:bg-white" />
+                          ) : <div className="text-sm">{day.destination || "-"}</div>}
+                        </div>
+                      </div>
+                      <div className="md:col-span-2">
+                        <label className="text-[10px] font-semibold text-slate-500 uppercase block mb-1">Description</label>
+                        {isEditable ? (
+                          <textarea value={day.description} onChange={e=>handleItineraryChange(idx, "description", e.target.value)} placeholder="Brief description of the day's events..." className="w-full border border-slate-200 rounded p-2 text-sm bg-slate-50 focus:bg-white h-20 resize-none" />
+                        ) : <div className="text-sm text-slate-600">{day.description || "-"}</div>}
+                      </div>
+                      <div>
+                        <label className="text-[10px] font-semibold text-slate-500 uppercase block mb-1">Activities</label>
+                        {isEditable ? (
+                          <input type="text" value={day.activities} onChange={e=>handleItineraryChange(idx, "activities", e.target.value)} placeholder="e.g. Shikara Ride" className="w-full border border-slate-200 rounded p-2 text-sm bg-slate-50 focus:bg-white" />
+                        ) : <div className="text-sm">{day.activities || "-"}</div>}
+                      </div>
+                      <div>
+                        <label className="text-[10px] font-semibold text-slate-500 uppercase block mb-1">Overnight</label>
+                        {isEditable ? (
+                          <input type="text" value={day.overnight} onChange={e=>handleItineraryChange(idx, "overnight", e.target.value)} placeholder="e.g. Srinagar Hotel" className="w-full border border-slate-200 rounded p-2 text-sm bg-slate-50 focus:bg-white" />
+                        ) : <div className="text-sm font-medium">{day.overnight || "-"}</div>}
+                      </div>
+                    </div>
+                    {isEditable && (
+                      <div className="p-3 flex items-start justify-end md:justify-center border-t md:border-t-0 md:border-l border-slate-100">
+                        <button onClick={() => handleDeleteDay(idx)} className="text-slate-400 hover:text-red-500 p-2 rounded-lg hover:bg-red-50 transition-colors">
+                          <Trash className="w-4 h-4"/>
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+
+            
+            {/* ITINERARY SERVICES */}
+            <div className="flex justify-between items-center mb-4 mt-8">
+              <h4 className="text-lg font-bold text-slate-900">Services & Inclusions</h4>
               {isEditable && (
                 <button onClick={handleAddItem} className="text-orange-500 hover:text-orange-600 font-medium text-sm flex items-center gap-1 bg-orange-50 px-3 py-1.5 rounded-lg border border-orange-100">
-                  <Plus className="w-4 h-4"/> Add Item
+                  <Plus className="w-4 h-4"/> Add Service
                 </button>
               )}
             </div>
@@ -455,7 +636,7 @@ function QuotationBuilderModal({ quotationId, onClose, onUpdate, isAdmin }: { qu
                       </td>
                     </tr>
                   ))}
-                  {items.length === 0 && <tr><td colSpan={8} className="px-4 py-8 text-center text-slate-500">No items added to this quotation.</td></tr>}
+                  {items.length === 0 && <tr><td colSpan={8} className="px-4 py-8 text-center text-slate-500">No services added to this quotation.</td></tr>}
                 </tbody>
               </table>
             </div>
@@ -479,48 +660,59 @@ function QuotationBuilderModal({ quotationId, onClose, onUpdate, isAdmin }: { qu
               <div className="bg-white rounded-xl border border-slate-200 p-0 overflow-hidden flex flex-col h-fit">
                 <div className="bg-slate-900 p-4 text-white">
                   <h4 className="font-bold flex items-center justify-between">
-                    <span>Financial Summary</span>
+                    <span>Internal Financial Breakdown</span>
                     {isAdmin && <span className="text-[10px] bg-red-500/80 px-2 py-0.5 rounded text-white font-bold tracking-widest">ADMIN PREVIEW</span>}
                   </h4>
                 </div>
                 <div className="p-5 space-y-3 text-sm flex-1">
-                  {isAdmin && (
-                    <div className="flex justify-between pb-2 border-b border-slate-100">
-                      <span className="text-slate-500">Total Cost</span>
-                      <span className="font-medium text-red-600">Rs. {calculatedTotalCost.toLocaleString("en-IN")}</span>
+                  {!isAdmin ? (
+                    <div className="text-slate-500 text-center py-6">
+                      Detailed financial breakdown is restricted. <br/>
+                      <span className="text-xs">You can manage the Retail Price and services above.</span>
                     </div>
-                  )}
-                  <div className="flex justify-between pb-2 border-b border-slate-100">
-                    <span className="text-slate-500">Total Selling (Before Discount)</span>
-                    <span className="font-medium">Rs. {calculatedTotalSelling.toLocaleString("en-IN")}</span>
-                  </div>
-                  <div className="flex justify-between pb-2 border-b border-slate-100 items-center">
-                    <span className="text-slate-500">Discount Amount</span>
-                    <div className="flex items-center gap-2">
-                      {isEditable ? (
-                        <input type="number" value={discount} onChange={e=>setDiscount(Number(e.target.value))} className="w-20 text-right border border-slate-200 rounded px-2 py-1 text-sm bg-slate-50 focus:bg-white" />
-                      ) : (
-                        <span className="text-orange-500 font-medium">- Rs. {calculatedDiscountAmount.toLocaleString("en-IN")}</span>
-                      )}
-                    </div>
-                  </div>
-                  <div className="flex justify-between pb-2 border-b border-slate-100 pt-2 bg-green-50 p-2 rounded-lg -mx-2 px-2 border-l-4 border-l-green-500">
-                    <span className="font-bold text-slate-900">Final Selling Price</span>
-                    <span className="font-bold text-green-600 text-lg">Rs. {calculatedFinalSelling.toLocaleString("en-IN")}</span>
-                  </div>
-                  {isAdmin && (
-                    <div className="grid grid-cols-2 gap-4 pt-4 mt-4 bg-slate-50 p-3 rounded-lg border border-slate-200">
-                      <div>
-                        <span className="block text-xs text-slate-500 mb-1">Expected Gross Margin</span>
-                        <span className="font-bold text-slate-700 text-base">Rs. {calculatedGrossMargin.toLocaleString("en-IN")}</span>
+                  ) : (
+                    <>
+                      <div className="flex justify-between pb-2 border-b border-slate-100">
+                        <span className="text-slate-500 font-medium">Total Vendor Cost</span>
+                        <span className="font-medium text-red-600">Rs. {calculatedTotalCost.toLocaleString("en-IN")}</span>
                       </div>
-                      <div>
-                        <span className="block text-xs text-slate-500 mb-1">Margin %</span>
-                        <span className={`font-bold text-base ${calculatedFinalSelling > 0 && (calculatedGrossMargin/calculatedFinalSelling) >= 0.1 ? 'text-green-600' : 'text-red-500'}`}>
-                          {calculatedFinalSelling > 0 ? ((calculatedGrossMargin / calculatedFinalSelling) * 100).toFixed(1) : 0}%
+                      <div className="flex justify-between pb-2 border-b border-slate-100">
+                        <span className="text-slate-500 font-medium">Actual Price (Retail)</span>
+                        <span className="font-medium text-slate-900">
+                          {displayRetailPrice ? `Rs. ${displayRetailPrice.toLocaleString("en-IN")}` : <span className="text-slate-400 italic">Not Set</span>}
                         </span>
                       </div>
-                    </div>
+                      <div className="flex justify-between pb-2 border-b border-slate-100">
+                        <span className="text-slate-500 font-medium">Total Selling (Before Discount)</span>
+                        <span className="font-medium">Rs. {calculatedTotalSelling.toLocaleString("en-IN")}</span>
+                      </div>
+                      <div className="flex justify-between pb-2 border-b border-slate-100 items-center">
+                        <span className="text-slate-500 font-medium">Discount Given</span>
+                        <div className="flex items-center gap-2">
+                          {isEditable ? (
+                            <input type="number" value={discount} onChange={e=>setDiscount(Number(e.target.value))} className="w-20 text-right border border-slate-200 rounded px-2 py-1 text-sm bg-slate-50 focus:bg-white" />
+                          ) : (
+                            <span className="text-orange-500 font-medium">- Rs. {calculatedDiscountAmount.toLocaleString("en-IN")}</span>
+                          )}
+                        </div>
+                      </div>
+                      <div className="flex justify-between pb-2 border-b border-slate-100 pt-2 bg-green-50 p-2 rounded-lg -mx-2 px-2 border-l-4 border-l-green-500">
+                        <span className="font-bold text-slate-900">Final B2B Price</span>
+                        <span className="font-bold text-green-600 text-lg">Rs. {calculatedFinalSelling.toLocaleString("en-IN")}</span>
+                      </div>
+                      <div className="grid grid-cols-2 gap-4 pt-4 mt-4 bg-slate-50 p-3 rounded-lg border border-slate-200">
+                        <div>
+                          <span className="block text-xs text-slate-500 mb-1">Expected Margin</span>
+                          <span className="font-bold text-slate-700 text-base">Rs. {calculatedGrossMargin.toLocaleString("en-IN")}</span>
+                        </div>
+                        <div>
+                          <span className="block text-xs text-slate-500 mb-1">Margin %</span>
+                          <span className={`font-bold text-base ${calculatedFinalSelling > 0 && (calculatedGrossMargin/calculatedFinalSelling) >= 0.1 ? 'text-green-600' : 'text-red-500'}`}>
+                            {calculatedFinalSelling > 0 ? ((calculatedGrossMargin / calculatedFinalSelling) * 100).toFixed(2) : 0}%
+                          </span>
+                        </div>
+                      </div>
+                    </>
                   )}
                 </div>
               </div>
@@ -605,63 +797,108 @@ function QuotationBuilderModal({ quotationId, onClose, onUpdate, isAdmin }: { qu
           </div>
         </div>
         
-        {/* Hidden Print Section */}
-        <div className="hidden print:block p-8 bg-white text-black min-h-screen">
-          <div className="flex justify-between items-end border-b-2 border-orange-500 pb-4 mb-6">
+        {/* Hidden Print Section - CUSTOMER FACING ONLY */}
+        <div className="hidden print:block p-8 bg-white text-black min-h-screen font-sans">
+          
+          <div className="flex justify-between items-end border-b-2 border-orange-500 pb-4 mb-8">
             <div>
-              <h1 className="text-4xl font-bold text-orange-500">WanderKashmir</h1>
-              <p className="text-sm text-slate-600 mt-1">Srinagar, Jammu &amp; Kashmir</p>
+              <h1 className="text-4xl font-bold text-orange-500 tracking-tight">WanderKashmir</h1>
+              <p className="text-sm text-slate-600 mt-1 font-medium">Srinagar, Jammu &amp; Kashmir</p>
             </div>
             <div className="text-right text-sm text-slate-600">
-              <p className="font-bold text-slate-900">Quotation Ref: WK-Q-{quotation.id.substring(0,6).toUpperCase()}</p>
+              <p className="font-bold text-slate-900 text-base">Ref: WK-Q-{quotation.id.substring(0,6).toUpperCase()}</p>
               <p>Date: {format(new Date(quotation.createdAt), "dd MMM yyyy")}</p>
               <p>Valid Until: {quotation.validUntil ? format(new Date(quotation.validUntil), "dd MMM yyyy") : "TBD"}</p>
             </div>
           </div>
           
-          <h2 className="text-2xl font-bold mb-4 text-slate-900">Travel Itinerary &amp; Package Details</h2>
-          
-          <table className="w-full text-left text-sm mb-6 border-collapse">
-            <thead>
-              <tr className="bg-slate-100 text-slate-800">
-                <th className="p-3 border border-slate-300">Category</th>
-                <th className="p-3 border border-slate-300">Description</th>
-                <th className="p-3 border border-slate-300">Quantity</th>
-              </tr>
-            </thead>
-            <tbody>
-              {items.map((item: any, idx: number) => (
-                <tr key={idx}>
-                  <td className="p-3 border border-slate-300 font-medium">{item.category}</td>
-                  <td className="p-3 border border-slate-300">{item.description}</td>
-                  <td className="p-3 border border-slate-300">{item.quantity} {item.unit}</td>
+          {itinerary.length > 0 && (
+            <div className="mb-10 page-break-inside-avoid">
+              <h2 className="text-2xl font-bold mb-6 text-slate-900 border-b border-slate-200 pb-2">Day-wise Itinerary</h2>
+              <div className="space-y-6">
+                {itinerary.map((day: any) => (
+                  <div key={day.dayNumber} className="flex gap-4">
+                    <div className="shrink-0 w-16 pt-1">
+                      <div className="text-orange-500 font-bold text-sm tracking-wider">DAY {day.dayNumber}</div>
+                    </div>
+                    <div className="flex-1 pb-4 border-b border-slate-100 last:border-b-0">
+                      <h3 className="font-bold text-lg text-slate-900 mb-1">{day.title}</h3>
+                      {day.destination && <div className="text-sm font-medium text-slate-500 mb-2">{day.destination}</div>}
+                      <p className="text-sm text-slate-700 leading-relaxed mb-2">{day.description}</p>
+                      <div className="flex flex-wrap gap-4 text-xs mt-2">
+                        {day.activities && (
+                          <div className="bg-slate-50 px-3 py-1.5 rounded-full text-slate-600 border border-slate-100 flex items-center gap-1.5">
+                            <span className="font-semibold text-slate-800">Activities:</span> {day.activities}
+                          </div>
+                        )}
+                        {day.overnight && (
+                          <div className="bg-blue-50 px-3 py-1.5 rounded-full text-blue-700 border border-blue-100 flex items-center gap-1.5">
+                            <span className="font-semibold text-blue-900">Overnight:</span> {day.overnight}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <div className="mb-10 page-break-inside-avoid">
+            <h2 className="text-2xl font-bold mb-4 text-slate-900 border-b border-slate-200 pb-2">Services &amp; Inclusions</h2>
+            <table className="w-full text-left text-sm border-collapse">
+              <thead>
+                <tr className="bg-slate-100 text-slate-800">
+                  <th className="p-3 border border-slate-200 font-bold w-1/4">Category</th>
+                  <th className="p-3 border border-slate-200 font-bold">Description</th>
+                  <th className="p-3 border border-slate-200 font-bold w-32 text-center">Quantity</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {items.map((item: any, idx: number) => (
+                  <tr key={idx}>
+                    <td className="p-3 border border-slate-200 font-medium">{item.category}</td>
+                    <td className="p-3 border border-slate-200">{item.description}</td>
+                    <td className="p-3 border border-slate-200 text-center">{item.quantity} {item.unit}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
           
-          <div className="flex justify-end mb-10">
-            <div className="bg-slate-50 p-4 rounded-lg border border-slate-200 w-64 text-right">
-              <div className="text-sm text-slate-500 mb-1 font-medium uppercase tracking-wider">Total Package Price</div>
-              <div className="text-2xl font-bold text-slate-900">Rs. {calculatedFinalSelling.toLocaleString("en-IN")}</div>
+          <div className="flex justify-end mb-12 page-break-inside-avoid">
+            <div className="w-80">
+              <div className="border border-slate-200 rounded-xl overflow-hidden">
+                {displayRetailPrice && (
+                  <div className="bg-slate-50 p-4 border-b border-slate-200 flex justify-between items-center">
+                    <span className="text-sm font-bold text-slate-600">Actual Price (Retail)</span>
+                    <span className="text-lg font-bold text-slate-500 line-through decoration-slate-400">Rs. {displayRetailPrice.toLocaleString("en-IN")}</span>
+                  </div>
+                )}
+                <div className="bg-slate-900 text-white p-5 flex flex-col">
+                  <span className="text-sm font-medium text-slate-300 mb-1 uppercase tracking-wider">Offer Price (B2B)</span>
+                  <span className="text-3xl font-bold">Rs. {calculatedFinalSelling.toLocaleString("en-IN")}</span>
+                </div>
+              </div>
             </div>
           </div>
           
           {terms && (
              <div className="mb-6 page-break-inside-avoid">
                <h3 className="text-lg font-bold mb-3 text-slate-900 border-b border-slate-200 pb-2">Terms, Conditions &amp; Exclusions</h3>
-               <div className="whitespace-pre-wrap text-sm text-slate-700 leading-relaxed">{terms}</div>
+               <div className="whitespace-pre-wrap text-sm text-slate-700 leading-relaxed p-4 bg-slate-50 rounded-lg border border-slate-100">{terms}</div>
              </div>
           )}
           
-          <div className="mt-12 text-center text-sm text-slate-500 border-t border-slate-200 pt-6">
-            <p>Thank you for choosing WanderKashmir.</p>
+          <div className="mt-16 text-center text-sm text-slate-500 border-t border-slate-200 pt-8">
+            <p className="font-medium text-slate-700 mb-1">Thank you for choosing WanderKashmir.</p>
             <p>For any queries, please contact your travel advisor.</p>
           </div>
         </div>
 
       </div>
 
+      {/* Confirmation Modal */}
       {showConfirmModal && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60] flex items-center justify-center p-4 print:hidden">
           <div className="bg-white rounded-2xl w-full max-w-md p-6 shadow-2xl">

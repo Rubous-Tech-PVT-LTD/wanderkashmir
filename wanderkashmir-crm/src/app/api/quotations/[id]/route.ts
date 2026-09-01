@@ -94,6 +94,26 @@ export async function PUT(
     }
 
     const items = data.items || [];
+    const itinerary = data.itinerary || null;
+    const retailPrice = data.retailPrice !== undefined && data.retailPrice !== null ? Number(data.retailPrice) : null;
+
+    if (retailPrice !== null && retailPrice < 0) {
+      return NextResponse.json({ error: "Retail price cannot be negative" }, { status: 400 });
+    }
+
+    if (itinerary) {
+      if (!Array.isArray(itinerary)) {
+         return NextResponse.json({ error: "Itinerary must be an array" }, { status: 400 });
+      }
+      if (itinerary.length > 10) {
+         return NextResponse.json({ error: "Maximum 10 days allowed in itinerary" }, { status: 400 });
+      }
+      for (const day of itinerary) {
+        if (!day.dayNumber || day.dayNumber < 1 || day.dayNumber > 10) {
+           return NextResponse.json({ error: "Invalid day number in itinerary" }, { status: 400 });
+        }
+      }
+    }
     
     // Server-side financial recalculation
     let totalCost = 0;
@@ -188,6 +208,8 @@ export async function PUT(
           totalCost,
           totalSellingPrice,
           partnerPrice,
+          retailPrice,
+          itinerary,
           grossMargin,
           netMargin,
           wanderKashmirMargin,

@@ -57,6 +57,8 @@ export async function POST(
         terms: existing.terms,
         cancellationPolicy: existing.cancellationPolicy,
         partnerPrice: existing.partnerPrice,
+        retailPrice: existing.retailPrice,
+        itinerary: existing.itinerary ? JSON.parse(JSON.stringify(existing.itinerary)) : null,
         version: newVersionNum,
         status: "DRAFT", // New version always starts as draft
         items: {

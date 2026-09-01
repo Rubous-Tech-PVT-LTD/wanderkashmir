@@ -697,6 +697,8 @@ model CrmQuotation {
   baId                String
   customerPrice       Float?
   partnerPrice        Float
+  retailPrice         Float?
+  itinerary           Json?
   wanderKashmirMargin Float
   version             Int                @default(1)
   totalCost           Float              @default(0)
