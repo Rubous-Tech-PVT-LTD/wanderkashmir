@@ -125,6 +125,37 @@ export default function RequirementsClient({ requirements }: { requirements: Req
 
 function RequirementDetailModal({ requirement, onClose }: { requirement: RequirementListItem; onClose: () => void }) {
   const [activeTab, setActiveTab] = useState("details");
+  const [loadingQuotation, setLoadingQuotation] = useState(false);
+  const router = useRouter();
+
+  const handleQuotation = async () => {
+    setLoadingQuotation(true);
+    try {
+      const res = await fetch(`/api/quotations?requirementId=${requirement.id}`);
+      const data = await res.json();
+      if (data && data.length > 0) {
+        router.push(`/dashboard/quotations?reqId=${requirement.id}`);
+      } else {
+        const createRes = await fetch("/api/quotations", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ requirementId: requirement.id }),
+        });
+        if (createRes.ok) {
+          router.push(`/dashboard/quotations?reqId=${requirement.id}`);
+        } else {
+          const err = await createRes.json();
+          alert("Failed to create quotation: " + (err.error || "Unknown error"));
+        }
+      }
+    } catch (e) {
+      console.error(e);
+      alert("An error occurred");
+    } finally {
+      setLoadingQuotation(false);
+    }
+  };
+
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col shadow-2xl">
@@ -168,7 +199,7 @@ function RequirementDetailModal({ requirement, onClose }: { requirement: Require
                     <div className="flex flex-col border-b border-slate-50 pb-2"><span className="text-slate-500 mb-1">Destinations:</span><span className="font-medium">{requirement.destinations?.join(", ")||"None selected"}</span></div>
                   </div>
                 </div>
-                <div className="pt-4 mt-4 border-t border-slate-100"><button className="w-full bg-slate-900 hover:bg-slate-800 text-white py-3 rounded-xl font-medium transition-colors">Create/View Quotation</button></div>
+                <div className="pt-4 mt-4 border-t border-slate-100"><button onClick={handleQuotation} disabled={loadingQuotation} className="w-full bg-slate-900 hover:bg-slate-800 text-white py-3 rounded-xl font-medium transition-colors disabled:opacity-50">{loadingQuotation ? "Processing..." : "Create/View Quotation"}</button></div>
               </div>
             </div>
           )}

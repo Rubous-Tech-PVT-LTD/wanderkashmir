@@ -705,12 +705,15 @@ model CrmQuotation {
   discountType        String             @default("FIXED")
   grossMargin         Float              @default(0)
   netMargin           Float              @default(0)
+  status              CrmQuotationStatus   @default(DRAFT)
   validUntil          DateTime?
-  terms               String?
-  cancellationPolicy  String?
-  status              CrmQuotationStatus @default(DRAFT)
-  createdAt           DateTime           @default(now())
-  updatedAt           DateTime           @updatedAt
+  terms               String?              @db.Text
+  cancellationPolicy  String?              @db.Text
+  confirmationProofUrl String?
+  confirmedAt          DateTime?
+  confirmedById        String?
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime             @updatedAt
   bookings            CrmBooking[]
   partner             CrmPartner         @relation(fields: [partnerId], references: [id])
   requirement         CrmRequirement     @relation(fields: [requirementId], references: [id])
@@ -918,6 +921,7 @@ enum CrmQuotationStatus {
   REJECTED
   CANCELLED
   EXPIRED
+  CONFIRMED
 }
 
 enum CrmQuotationItemCategory {

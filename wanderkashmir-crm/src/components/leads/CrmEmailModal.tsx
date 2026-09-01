@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Mail, Sparkles, X, AlertTriangle, Send, Eye, Code } from "lucide-react";
+import { Mail, Sparkles, X, AlertTriangle, Send, Eye, Code, Paperclip, Trash2 } from "lucide-react";
 import { generateCrmEmailWithAiAction, sendCrmEmailAction } from "@/actions/email";
 
 type CrmEmailModalProps = {
@@ -31,6 +31,7 @@ export default function CrmEmailModal({ isOpen, onClose, leadId, leadEmail, lead
   const [subject, setSubject] = useState("");
   const [bodyHtml, setBodyHtml] = useState("");
   const [viewMode, setViewMode] = useState<"code" | "preview">("code");
+  const [attachments, setAttachments] = useState<File[]>([]);
   
   const [isGenerating, setIsGenerating] = useState(false);
   const [isSending, setIsSending] = useState(false);
@@ -38,6 +39,56 @@ export default function CrmEmailModal({ isOpen, onClose, leadId, leadEmail, lead
   const [success, setSuccess] = useState(false);
   
   const [showWarning, setShowWarning] = useState(false);
+
+  const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 MB
+  const MAX_TOTAL_SIZE = 15 * 1024 * 1024; // 15 MB
+  const MAX_FILES = 4;
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files) return;
+    
+    const newFiles = Array.from(e.target.files);
+    let currentTotalSize = attachments.reduce((acc, file) => acc + file.size, 0);
+    const validFiles: File[] = [];
+
+    let currentError = "";
+
+    for (const file of newFiles) {
+      if (attachments.length + validFiles.length >= MAX_FILES) {
+        currentError = `Maximum of ${MAX_FILES} attachments allowed.`;
+        break;
+      }
+      
+      if (file.size > MAX_FILE_SIZE) {
+        currentError = `File ${file.name} exceeds the 5MB limit.`;
+        continue;
+      }
+      
+      if (currentTotalSize + file.size > MAX_TOTAL_SIZE) {
+        currentError = `Adding ${file.name} exceeds the total 15MB limit.`;
+        break;
+      }
+      
+      currentTotalSize += file.size;
+      validFiles.push(file);
+    }
+    
+    if (currentError) {
+      setError(currentError);
+    } else {
+      setError("");
+    }
+    
+    if (validFiles.length > 0) {
+      setAttachments(prev => [...prev, ...validFiles]);
+    }
+    
+    e.target.value = "";
+  };
+
+  const removeAttachment = (index: number) => {
+    setAttachments(prev => prev.filter((_, i) => i !== index));
+  };
 
   if (!isOpen) return null;
 
@@ -78,7 +129,15 @@ export default function CrmEmailModal({ isOpen, onClose, leadId, leadEmail, lead
     setIsSending(true);
     
     try {
-      const res = await sendCrmEmailAction(leadId, subject, bodyHtml);
+      const formData = new FormData();
+      formData.append("leadId", leadId);
+      formData.append("subject", subject);
+      formData.append("bodyHtml", bodyHtml);
+      attachments.forEach((file) => {
+        formData.append("attachments", file);
+      });
+
+      const res = await sendCrmEmailAction(formData);
       if (res.success) {
         setSuccess(true);
         setTimeout(() => onClose(), 2000);
@@ -243,6 +302,55 @@ export default function CrmEmailModal({ isOpen, onClose, leadId, leadEmail, lead
                 </div>
                 <div className="text-xs text-gray-500">
                   You can manually edit the HTML code above before sending.
+                </div>
+
+                {/* Attachments Section */}
+                <div className="pt-2 border-t border-gray-100">
+                  <div className="flex items-center justify-between mb-2">
+                    <label className="block text-sm font-medium text-gray-700 flex items-center gap-2">
+                      <Paperclip className="h-4 w-4" />
+                      Attachments
+                    </label>
+                    <span className="text-xs text-gray-500">
+                      Max {MAX_FILES} files, 5MB each (15MB total)
+                    </span>
+                  </div>
+                  
+                  <div className="flex flex-col gap-2">
+                    {attachments.length > 0 && (
+                      <div className="space-y-2 mb-2">
+                        {attachments.map((file, index) => (
+                          <div key={index} className="flex items-center justify-between bg-gray-50 p-2 rounded-md border border-gray-200 text-sm">
+                            <span className="truncate flex-1 mr-2 text-gray-700">{file.name}</span>
+                            <div className="flex items-center gap-3">
+                              <span className="text-xs text-gray-500 whitespace-nowrap">
+                                {(file.size / (1024 * 1024)).toFixed(2)} MB
+                              </span>
+                              <button
+                                onClick={() => removeAttachment(index)}
+                                className="text-gray-400 hover:text-red-500 transition-colors"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    
+                    <div className="relative">
+                      <input
+                        type="file"
+                        multiple
+                        onChange={handleFileChange}
+                        disabled={attachments.length >= MAX_FILES}
+                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-not-allowed"
+                      />
+                      <div className={`w-full border-2 border-dashed rounded-md p-3 text-center text-sm transition-colors ${attachments.length >= MAX_FILES ? 'bg-gray-50 border-gray-200 text-gray-400' : 'bg-gray-50 hover:bg-gray-100 border-gray-300 text-gray-600'}`}>
+                        Click to add files or drag and drop
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
             </>

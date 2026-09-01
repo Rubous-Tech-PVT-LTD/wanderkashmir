@@ -114,11 +114,17 @@ export async function generateCrmEmailWithAiAction(
 }
 
 export async function sendCrmEmailAction(
-  leadId: string,
-  subject: string,
-  bodyHtml: string
+  formData: FormData
 ) {
   try {
+    const leadId = formData.get("leadId") as string;
+    const subject = formData.get("subject") as string;
+    const bodyHtml = formData.get("bodyHtml") as string;
+    const attachments = formData.getAll("attachments") as File[];
+
+    if (!leadId || !subject || !bodyHtml) {
+      return { success: false, error: "Missing required fields." };
+    }
     const session = await getSession();
     if (!session) {
       return { success: false, error: "Unauthorized", status: 401 };
@@ -140,8 +146,36 @@ export async function sendCrmEmailAction(
       return { success: false, error: "Lead does not have an email address." };
     }
 
+    // Server-side validation
+    const MAX_FILE_SIZE = 5 * 1024 * 1024;
+    const MAX_TOTAL_SIZE = 15 * 1024 * 1024;
+    const MAX_FILES = 4;
+    
+    if (attachments.length > MAX_FILES) {
+      return { success: false, error: `Maximum of ${MAX_FILES} attachments allowed.` };
+    }
+    
+    let totalSize = 0;
+    const processedAttachments = [];
+    
+    for (const file of attachments) {
+      if (file.size > MAX_FILE_SIZE) {
+        return { success: false, error: `File ${file.name} exceeds the 5MB limit.` };
+      }
+      totalSize += file.size;
+      if (totalSize > MAX_TOTAL_SIZE) {
+        return { success: false, error: `Total attachment size exceeds the 15MB limit.` };
+      }
+      
+      const buffer = Buffer.from(await file.arrayBuffer());
+      processedAttachments.push({
+        filename: file.name,
+        content: buffer
+      });
+    }
+
     // Call Resend
-    const res = await sendCrmLeadEmail(lead.email, subject, bodyHtml);
+    const res = await sendCrmLeadEmail(lead.email, subject, bodyHtml, processedAttachments);
 
     if (res.success) {
       // Create CrmAuditLog
@@ -156,7 +190,9 @@ export async function sendCrmEmailAction(
             recipient: lead.email,
             subject: subject,
             resendId: res.data?.id || "mocked",
-            status: "sent"
+            status: "sent",
+            attachmentCount: processedAttachments.length,
+            attachmentNames: processedAttachments.map(a => a.filename)
           },
         }
       });
