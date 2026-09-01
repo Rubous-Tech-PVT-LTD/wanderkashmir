@@ -45,8 +45,8 @@ export default function RoomSelector({ roomTypes }: { roomTypes: any[] }) {
             </div>
             
             <div className="flex gap-4 text-sm text-slate-600 mb-6 pb-6 border-b border-slate-100">
-              <div className="flex items-center gap-1"><Users className="w-4 h-4" /> Up to {room.capacity} guests</div>
-              <div className="flex items-center gap-1"><Home className="w-4 h-4" /> {room.totalUnits} units</div>
+              <div className="flex items-center gap-1"><Users className="w-4 h-4" /> Up to {room.capacity} {room.capacity === 1 ? 'guest' : 'guests'} / room</div>
+              <div className="flex items-center gap-1"><Home className="w-4 h-4" /> {room.totalUnits} {room.totalUnits === 1 ? 'unit' : 'units'}</div>
             </div>
 
             {/* Base Room Selection (If no meal plans, or just selecting room without meal plan) */}

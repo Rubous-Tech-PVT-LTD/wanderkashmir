@@ -190,8 +190,8 @@ export default function RoomManagementPage({ params }: { params: Promise<{ prope
                   <input required value={basePrice} onChange={e => setBasePrice(Number(e.target.value))} type="number" className="w-full p-2 border border-slate-200 rounded-lg" />
                 </div>
                 <div>
-                  <label className="block text-sm font-bold text-slate-700 mb-1">Capacity (Guests)</label>
-                  <input required value={capacity} onChange={e => setCapacity(Number(e.target.value))} type="number" className="w-full p-2 border border-slate-200 rounded-lg" />
+                  <label className="block text-sm font-bold text-slate-700 mb-1">Max Guests per Room (Capacity)</label>
+                  <input required value={capacity} onChange={e => setCapacity(Number(e.target.value))} type="number" min={1} placeholder="e.g. 2 for Double, 4 for Family" className="w-full p-2 border border-slate-200 rounded-lg" />
                 </div>
                 <div>
                   <label className="block text-sm font-bold text-slate-700 mb-1">Total Physical Units</label>
