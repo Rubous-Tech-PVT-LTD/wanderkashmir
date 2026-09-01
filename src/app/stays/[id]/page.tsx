@@ -355,12 +355,7 @@ export default async function PropertyDetailPage({
             {/* Rooms Section */}
             <div id="rooms" className="pt-10 border-t border-slate-100 mt-10">
               <h2 className="text-2xl font-bold text-slate-900 mb-6">Available Rooms</h2>
-              <RoomSelector
-                roomTypes={property.roomTypes}
-                pricePerNight={property.pricePerNight ?? propData.pricePerNight ?? 0}
-                propertyId={property.id}
-                propertyName={property.name}
-              />
+              <RoomSelector roomTypes={property.roomTypes} />
             </div>
 
             {/* Property Rules (J&K Govt) */}
