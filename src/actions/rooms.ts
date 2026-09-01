@@ -18,6 +18,11 @@ export async function addRoomType(propertyId: string, data: any) {
         basePrice: data.basePrice,
         capacity: data.capacity,
         totalUnits: data.totalUnits,
+        priceEP: data.priceEP ?? null,
+        priceCP: data.priceCP ?? null,
+        priceMAP: data.priceMAP ?? null,
+        extraBedPrice: data.extraBedPrice ?? null,
+        childNoBedPrice: data.childNoBedPrice ?? null,
       }
     });
 
@@ -26,6 +31,52 @@ export async function addRoomType(propertyId: string, data: any) {
   } catch (error) {
     console.error("Error adding room type:", error);
     return { success: false, error: "Failed to add room type" };
+  }
+}
+
+// Update an existing Room Type
+export async function updateRoomType(id: string, data: any) {
+  try {
+    const userId = await getCurrentUserId();
+    if (!userId) return { success: false, error: "Unauthorized" };
+
+    // Verify ownership (the vendor must own the property this room belongs to)
+    const existing = await prisma.roomType.findUnique({
+      where: { id },
+      include: {
+        property: {
+          include: {
+            vendorProfile: true
+          }
+        }
+      }
+    });
+
+    if (!existing || existing.property.vendorProfile.userId !== userId) {
+      return { success: false, error: "Room type not found or access denied." };
+    }
+
+    const roomType = await prisma.roomType.update({
+      where: { id },
+      data: {
+        name: data.name,
+        description: data.description,
+        basePrice: data.basePrice,
+        capacity: data.capacity,
+        totalUnits: data.totalUnits,
+        priceEP: data.priceEP ?? null,
+        priceCP: data.priceCP ?? null,
+        priceMAP: data.priceMAP ?? null,
+        extraBedPrice: data.extraBedPrice ?? null,
+        childNoBedPrice: data.childNoBedPrice ?? null,
+      }
+    });
+
+    revalidatePath("/partner", "layout");
+    return { success: true, roomType };
+  } catch (error) {
+    console.error("Error updating room type:", error);
+    return { success: false, error: "Failed to update room type" };
   }
 }
 

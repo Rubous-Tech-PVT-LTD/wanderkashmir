@@ -152,16 +152,26 @@ model Property {
 }
 
 model RoomType {
-  id          String          @id @default(cuid())
-  propertyId  String
-  name        String
-  description String?
-  basePrice   Float
-  capacity    Int             @default(2)
-  totalUnits  Int             @default(1)
-  bookings    Booking[]
-  inventories RoomInventory[]
-  property    Property        @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  id              String          @id @default(cuid())
+  propertyId      String
+  name            String
+  description     String?
+  basePrice       Float
+  capacity        Int             @default(2)
+  totalUnits      Int             @default(1)
+  
+  // Meal Plan Pricing
+  priceEP         Float?
+  priceCP         Float?
+  priceMAP        Float?
+  
+  // Occupancy Add-ons
+  extraBedPrice   Float?
+  childNoBedPrice Float?
+
+  bookings        Booking[]
+  inventories     RoomInventory[]
+  property        Property        @relation(fields: [propertyId], references: [id], onDelete: Cascade)
 }
 
 model RoomInventory {
