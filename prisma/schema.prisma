@@ -152,13 +152,13 @@ model Property {
 }
 
 model RoomType {
-  id              String          @id @default(cuid())
-  propertyId      String
-  name            String
-  description     String?
-  basePrice       Float
-  capacity        Int             @default(2)
-  totalUnits      Int             @default(1)
+  id          String          @id @default(cuid())
+  propertyId  String
+  name        String
+  description String?
+  basePrice   Float
+  capacity    Int             @default(2)
+  totalUnits  Int             @default(1)
   
   // Meal Plan Pricing
   priceEP         Float?
@@ -169,9 +169,9 @@ model RoomType {
   extraBedPrice   Float?
   childNoBedPrice Float?
 
-  bookings        Booking[]
-  inventories     RoomInventory[]
-  property        Property        @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  bookings    Booking[]
+  inventories RoomInventory[]
+  property    Property        @relation(fields: [propertyId], references: [id], onDelete: Cascade)
 }
 
 model RoomInventory {
@@ -378,38 +378,26 @@ model TourCategory {
 }
 
 model SeoLandingPage {
-  id            String           @id @default(cuid())
-  slug          String           @unique
-  type          String
-  title         String
-  description   String?
-  h1Heading     String
-  content       String?
-  faqs          Json?
-  imageUrl      String?
-  createdAt     DateTime         @default(now())
-  updatedAt     DateTime         @updatedAt
-  contentAssets ContentAsset[]
-  comments      SeoPageComment[]
-
-  // New SEO Intelligence Fields
-  workflowState      SeoWorkflowState @default(PUBLISHED)
-  seoResearch        Json?
-  seoStrategy        Json?
-  validationReport   Json?
-  gscInitialMetrics  Json?
+  id                String           @id @default(cuid())
+  slug              String           @unique
+  type              String
+  title             String
+  description       String?
+  h1Heading         String
+  content           String?
+  faqs              Json?
+  imageUrl          String?
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+  gscInitialMetrics Json?
+  seoResearch       Json?
+  seoStrategy       Json?
+  validationReport  Json?
+  workflowState     SeoWorkflowState @default(PUBLISHED)
+  contentAssets     ContentAsset[]
+  comments          SeoPageComment[]
 
   @@index([type])
-}
-
-enum SeoWorkflowState {
-  DRAFT
-  RESEARCHED
-  STRATEGISED
-  GENERATED
-  VALIDATED
-  PUBLISHED
-  REJECTED
 }
 
 model PromoCode {
@@ -578,32 +566,34 @@ model CrmUser {
 }
 
 model CrmLead {
-  id               String            @id @default(cuid())
-  companyName      String
-  contactPerson    String?
-  phone            String
-  email            String?
-  website          String?
-  city             String?
-  state            String?
-  agentType        String?
-  source           String?
-  status           CrmLeadStatus     @default(NEW)
-  interestLevel    String?
-  assignedBaId     String?
-  lastContactDate  DateTime?
-  nextFollowUpDate DateTime?
-  notes            String?
-  createdAt        DateTime          @default(now())
-  updatedAt        DateTime          @updatedAt
-  whatsappNumber   String?
-  createdBy        String?
-  rotationBatchId  String?
-  callLogs         CrmCallLog[]
-  followUps        CrmFollowUp[]
-  assignedBa       CrmUser?          @relation(fields: [assignedBaId], references: [id])
-  CrmRotationBatch CrmRotationBatch? @relation(fields: [rotationBatchId], references: [id])
-  partner          CrmPartner?
+  id                  String            @id @default(cuid())
+  companyName         String
+  contactPerson       String?
+  phone               String
+  email               String?
+  website             String?
+  city                String?
+  state               String?
+  agentType           String?
+  source              String?
+  status              CrmLeadStatus     @default(NEW)
+  interestLevel       String?
+  assignedBaId        String?
+  lastContactDate     DateTime?
+  nextFollowUpDate    DateTime?
+  notes               String?
+  createdAt           DateTime          @default(now())
+  updatedAt           DateTime          @updatedAt
+  whatsappNumber      String?
+  createdBy           String?
+  rotationBatchId     String?
+  interestProofStatus String?
+  interestProofUrl    String?
+  callLogs            CrmCallLog[]
+  followUps           CrmFollowUp[]
+  assignedBa          CrmUser?          @relation(fields: [assignedBaId], references: [id])
+  CrmRotationBatch    CrmRotationBatch? @relation(fields: [rotationBatchId], references: [id])
+  partner             CrmPartner?
 
   @@index([phone])
   @@index([email])
@@ -711,30 +701,35 @@ model CrmRequirement {
 }
 
 model CrmQuotation {
-  id                  String             @id @default(cuid())
-  requirementId       String
-  partnerId           String
-  baId                String
-  customerPrice       Float?
-  partnerPrice        Float
-  wanderKashmirMargin Float
-  version             Int                @default(1)
-  totalCost           Float              @default(0)
-  totalSellingPrice   Float              @default(0)
-  discount            Float              @default(0)
-  discountType        String             @default("FIXED")
-  grossMargin         Float              @default(0)
-  netMargin           Float              @default(0)
-  validUntil          DateTime?
-  terms               String?
-  cancellationPolicy  String?
-  status              CrmQuotationStatus @default(DRAFT)
-  createdAt           DateTime           @default(now())
-  updatedAt           DateTime           @updatedAt
-  bookings            CrmBooking[]
-  partner             CrmPartner         @relation(fields: [partnerId], references: [id])
-  requirement         CrmRequirement     @relation(fields: [requirementId], references: [id])
-  items               CrmQuotationItem[]
+  id                   String             @id @default(cuid())
+  requirementId        String
+  partnerId            String
+  baId                 String
+  customerPrice        Float?
+  partnerPrice         Float
+  wanderKashmirMargin  Float
+  version              Int                @default(1)
+  totalCost            Float              @default(0)
+  totalSellingPrice    Float              @default(0)
+  discount             Float              @default(0)
+  discountType         String             @default("FIXED")
+  grossMargin          Float              @default(0)
+  netMargin            Float              @default(0)
+  validUntil           DateTime?
+  terms                String?
+  cancellationPolicy   String?
+  status               CrmQuotationStatus @default(DRAFT)
+  createdAt            DateTime           @default(now())
+  updatedAt            DateTime           @updatedAt
+  confirmationProofUrl String?
+  confirmedAt          DateTime?
+  confirmedById        String?
+  itinerary            Json?
+  retailPrice          Float?
+  bookings             CrmBooking[]
+  partner              CrmPartner         @relation(fields: [partnerId], references: [id])
+  requirement          CrmRequirement     @relation(fields: [requirementId], references: [id])
+  items                CrmQuotationItem[]
 }
 
 model CrmQuotationItem {
@@ -821,6 +816,56 @@ model CrmRotationBatch {
   CrmLead         CrmLead[]
 }
 
+model SystemConfig {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  value     String
+  updatedAt DateTime @updatedAt
+}
+
+model SeoOpportunity {
+  id                   String   @id @default(cuid())
+  topic                String   @unique
+  cluster              Json?
+  gscSignals           Json?
+  intent               String?
+  businessRelevance    String?
+  cannibalizationRisk  String?
+  googleTrends         String?
+  keywordPlanner       String?
+  type                 String
+  opportunityScore     Int      @default(0)
+  reason               String?
+  evidence             String?
+  existingPageUrl      String?
+  existingPageType     String?
+  status               String   @default("DISCOVERED")
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+  canonicalTopic       String?
+  manualReviewDecision Json?
+
+  @@index([canonicalTopic])
+}
+
+model CrmNotification {
+  id        String   @id
+  message   String
+  userId    String?
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
+
+enum SeoWorkflowState {
+  DRAFT
+  RESEARCHED
+  STRATEGISED
+  GENERATED
+  VALIDATED
+  PUBLISHED
+  REJECTED
+}
+
 enum Role {
   ADMIN
   VENDOR
@@ -898,6 +943,7 @@ enum CrmQuotationStatus {
   REJECTED
   CANCELLED
   EXPIRED
+  CONFIRMED
 }
 
 enum CrmQuotationItemCategory {
@@ -931,36 +977,4 @@ enum CrmFollowUpStatus {
   COMPLETED
   RESCHEDULED
   CANCELLED
-}
-
-model SystemConfig {
-  id        String   @id @default(cuid())
-  key       String   @unique  // e.g., "GSC_REFRESH_TOKEN", "GSC_SITE_URL"
-  value     String   @db.Text // Encrypted value for tokens, plain for URLs
-  updatedAt DateTime @updatedAt
-}
-
-model SeoOpportunity {
-  id                  String   @id @default(cuid())
-  topic               String   @unique
-  canonicalTopic      String?
-  cluster             Json?
-  gscSignals          Json?
-  intent              String?
-  businessRelevance   String?
-  cannibalizationRisk String?
-  googleTrends        String?
-  keywordPlanner      String?
-  type                String   // CREATE, OPTIMIZE, MONITOR, IGNORE, MANUAL_REVIEW
-  opportunityScore    Int      @default(0)
-  reason              String?
-  evidence            String?
-  existingPageUrl     String?
-  existingPageType    String?
-  status              String   @default("DISCOVERED") // DISCOVERED, RESEARCHED, RESOLVED
-  manualReviewDecision Json?
-  createdAt           DateTime @default(now())
-  updatedAt           DateTime @updatedAt
-
-  @@index([canonicalTopic])
 }
