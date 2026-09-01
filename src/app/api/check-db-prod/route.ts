@@ -4,7 +4,7 @@ import prisma from "@/lib/prisma";
 export async function GET(req: Request) {
   try {
     const cols = await prisma.$queryRawUnsafe(
-      `SELECT column_name FROM information_schema.columns WHERE table_name = 'RoomType'`
+      `SELECT column_name FROM information_schema.columns WHERE table_name = 'Property'`
     );
     return NextResponse.json({ success: true, columns: cols });
   } catch (error: any) {
