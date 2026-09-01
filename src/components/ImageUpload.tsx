@@ -107,18 +107,19 @@ export default function ImageUpload({
           <div className="flex flex-wrap gap-4">
             {photos.map((mediaUrl) => renderMedia(mediaUrl, uploadedPhotos.indexOf(mediaUrl), false))}
             
-            {photos.length < photoLimit && (
-              <CldUploadWidget 
-                uploadPreset="wanderkashmir_preset" 
-                onSuccess={handleUpload}
-                options={{
-                  multiple: true,
-                  resourceType: "image",
-                  clientAllowedFormats: ["png", "jpg", "jpeg", "webp", "gif"],
-                  maxFiles: Math.max(1, photoLimit - photos.length),
-                }}
-              >
-                {({ open }) => (
+            <CldUploadWidget 
+              uploadPreset="wanderkashmir_preset" 
+              onSuccess={handleUpload}
+              options={{
+                multiple: true,
+                resourceType: "image",
+                clientAllowedFormats: ["png", "jpg", "jpeg", "webp", "gif"],
+                maxFiles: Math.max(1, photoLimit - photos.length),
+              }}
+            >
+              {({ open }) => {
+                if (photos.length >= photoLimit) return null;
+                return (
                   <button 
                     type="button" 
                     onClick={() => open()}
@@ -127,9 +128,9 @@ export default function ImageUpload({
                     <Plus className="w-6 h-6 mb-1" />
                     <span className="text-[10px] font-bold text-center px-1 uppercase">Add Photo</span>
                   </button>
-                )}
-              </CldUploadWidget>
-            )}
+                );
+              }}
+            </CldUploadWidget>
           </div>
         </div>
       )}
@@ -143,18 +144,19 @@ export default function ImageUpload({
           <div className="flex flex-wrap gap-4">
             {videos.map((mediaUrl) => renderMedia(mediaUrl, uploadedPhotos.indexOf(mediaUrl), true))}
             
-            {videos.length < videoLimit && (
-              <CldUploadWidget 
-                uploadPreset="wanderkashmir_preset" 
-                onSuccess={handleUpload}
-                options={{
-                  multiple: true,
-                  resourceType: "video",
-                  clientAllowedFormats: ["mp4", "mov", "webm", "avi", "mkv", "ogg"],
-                  maxFiles: Math.max(1, videoLimit - videos.length),
-                }}
-              >
-                {({ open }) => (
+            <CldUploadWidget 
+              uploadPreset="wanderkashmir_preset" 
+              onSuccess={handleUpload}
+              options={{
+                multiple: true,
+                resourceType: "video",
+                clientAllowedFormats: ["mp4", "mov", "webm", "avi", "mkv", "ogg"],
+                maxFiles: Math.max(1, videoLimit - videos.length),
+              }}
+            >
+              {({ open }) => {
+                if (videos.length >= videoLimit) return null;
+                return (
                   <button 
                     type="button" 
                     onClick={() => open()}
@@ -163,9 +165,9 @@ export default function ImageUpload({
                     <Plus className="w-6 h-6 mb-1" />
                     <span className="text-[10px] font-bold text-center px-1 uppercase">Add Video</span>
                   </button>
-                )}
-              </CldUploadWidget>
-            )}
+                );
+              }}
+            </CldUploadWidget>
           </div>
         </div>
       )}
