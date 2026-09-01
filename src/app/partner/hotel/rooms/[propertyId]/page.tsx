@@ -77,35 +77,41 @@ export default function RoomManagementPage({ params }: { params: Promise<{ prope
     setBasePrice(room.basePrice || 4500);
     setCapacity(room.capacity || 2);
     setTotalUnits(room.totalUnits || 1);
-    setPriceEP(room.priceEP ? String(room.priceEP) : "");
-    setPriceCP(room.priceCP ? String(room.priceCP) : "");
-    setPriceMAP(room.priceMAP ? String(room.priceMAP) : "");
-    setExtraBedPriceEP(room.extraBedPriceEP ? String(room.extraBedPriceEP) : "");
-    setExtraBedPriceCP(room.extraBedPriceCP ? String(room.extraBedPriceCP) : "");
-    setExtraBedPriceMAP(room.extraBedPriceMAP ? String(room.extraBedPriceMAP) : "");
-    setChildNoBedPriceEP(room.childNoBedPriceEP ? String(room.childNoBedPriceEP) : "");
-    setChildNoBedPriceCP(room.childNoBedPriceCP ? String(room.childNoBedPriceCP) : "");
-    setChildNoBedPriceMAP(room.childNoBedPriceMAP ? String(room.childNoBedPriceMAP) : "");
+    setPriceEP(room.priceEP !== null && room.priceEP !== undefined ? String(room.priceEP) : "");
+    setPriceCP(room.priceCP !== null && room.priceCP !== undefined ? String(room.priceCP) : "");
+    setPriceMAP(room.priceMAP !== null && room.priceMAP !== undefined ? String(room.priceMAP) : "");
+    setExtraBedPriceEP(room.extraBedPriceEP !== null && room.extraBedPriceEP !== undefined ? String(room.extraBedPriceEP) : "");
+    setExtraBedPriceCP(room.extraBedPriceCP !== null && room.extraBedPriceCP !== undefined ? String(room.extraBedPriceCP) : "");
+    setExtraBedPriceMAP(room.extraBedPriceMAP !== null && room.extraBedPriceMAP !== undefined ? String(room.extraBedPriceMAP) : "");
+    setChildNoBedPriceEP(room.childNoBedPriceEP !== null && room.childNoBedPriceEP !== undefined ? String(room.childNoBedPriceEP) : "");
+    setChildNoBedPriceCP(room.childNoBedPriceCP !== null && room.childNoBedPriceCP !== undefined ? String(room.childNoBedPriceCP) : "");
+    setChildNoBedPriceMAP(room.childNoBedPriceMAP !== null && room.childNoBedPriceMAP !== undefined ? String(room.childNoBedPriceMAP) : "");
     setShowAddForm(true);
   };
 
   const handleSaveRoomType = async (e: React.FormEvent) => {
     e.preventDefault();
+    const parseNum = (val: string) => {
+      if (val === undefined || val === null || val.trim() === "") return null;
+      const n = parseFloat(val);
+      return isNaN(n) ? null : n;
+    };
+
     const data = {
       name, 
       description, 
-      basePrice, 
-      capacity, 
-      totalUnits,
-      priceEP: priceEP ? parseFloat(priceEP) : null,
-      priceCP: priceCP ? parseFloat(priceCP) : null,
-      priceMAP: priceMAP ? parseFloat(priceMAP) : null,
-      extraBedPriceEP: extraBedPriceEP ? parseFloat(extraBedPriceEP) : null,
-      extraBedPriceCP: extraBedPriceCP ? parseFloat(extraBedPriceCP) : null,
-      extraBedPriceMAP: extraBedPriceMAP ? parseFloat(extraBedPriceMAP) : null,
-      childNoBedPriceEP: childNoBedPriceEP ? parseFloat(childNoBedPriceEP) : null,
-      childNoBedPriceCP: childNoBedPriceCP ? parseFloat(childNoBedPriceCP) : null,
-      childNoBedPriceMAP: childNoBedPriceMAP ? parseFloat(childNoBedPriceMAP) : null,
+      basePrice: Number(basePrice) || 0, 
+      capacity: Number(capacity) || 2, 
+      totalUnits: Number(totalUnits) || 1,
+      priceEP: parseNum(priceEP),
+      priceCP: parseNum(priceCP),
+      priceMAP: parseNum(priceMAP),
+      extraBedPriceEP: parseNum(extraBedPriceEP),
+      extraBedPriceCP: parseNum(extraBedPriceCP),
+      extraBedPriceMAP: parseNum(extraBedPriceMAP),
+      childNoBedPriceEP: parseNum(childNoBedPriceEP),
+      childNoBedPriceCP: parseNum(childNoBedPriceCP),
+      childNoBedPriceMAP: parseNum(childNoBedPriceMAP),
     };
 
     let res;

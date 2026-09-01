@@ -10,27 +10,36 @@ export async function addRoomType(propertyId: string, data: any) {
     const userId = await getCurrentUserId();
     if (!userId) return { success: false, error: "Unauthorized" };
 
+    const parseNum = (val: any) => {
+      if (val === undefined || val === null || val === "") return null;
+      const n = Number(val);
+      return isNaN(n) ? null : n;
+    };
+
     const roomType = await prisma.roomType.create({
       data: {
         propertyId,
         name: data.name,
-        description: data.description,
-        basePrice: data.basePrice,
-        capacity: data.capacity,
-        totalUnits: data.totalUnits,
-        priceEP: data.priceEP ?? null,
-        priceCP: data.priceCP ?? null,
-        priceMAP: data.priceMAP ?? null,
-        extraBedPriceEP: data.extraBedPriceEP ?? null,
-        extraBedPriceCP: data.extraBedPriceCP ?? null,
-        extraBedPriceMAP: data.extraBedPriceMAP ?? null,
-        childNoBedPriceEP: data.childNoBedPriceEP ?? null,
-        childNoBedPriceCP: data.childNoBedPriceCP ?? null,
-        childNoBedPriceMAP: data.childNoBedPriceMAP ?? null,
+        description: data.description || null,
+        basePrice: Number(data.basePrice) || 0,
+        capacity: Number(data.capacity) || 2,
+        totalUnits: Number(data.totalUnits) || 1,
+        priceEP: parseNum(data.priceEP),
+        priceCP: parseNum(data.priceCP),
+        priceMAP: parseNum(data.priceMAP),
+        extraBedPriceEP: parseNum(data.extraBedPriceEP),
+        extraBedPriceCP: parseNum(data.extraBedPriceCP),
+        extraBedPriceMAP: parseNum(data.extraBedPriceMAP),
+        childNoBedPriceEP: parseNum(data.childNoBedPriceEP),
+        childNoBedPriceCP: parseNum(data.childNoBedPriceCP),
+        childNoBedPriceMAP: parseNum(data.childNoBedPriceMAP),
+        ...(data.extraBedPrice !== undefined && { extraBedPrice: parseNum(data.extraBedPrice) }),
+        ...(data.childNoBedPrice !== undefined && { childNoBedPrice: parseNum(data.childNoBedPrice) }),
       }
     });
 
     revalidatePath("/partner", "layout");
+    revalidatePath("/stays", "layout");
     return { success: true, roomType };
   } catch (error) {
     console.error("Error adding room type:", error);
@@ -60,27 +69,36 @@ export async function updateRoomType(id: string, data: any) {
       return { success: false, error: "Room type not found or access denied." };
     }
 
+    const parseNum = (val: any) => {
+      if (val === undefined || val === null || val === "") return null;
+      const n = Number(val);
+      return isNaN(n) ? null : n;
+    };
+
     const roomType = await prisma.roomType.update({
       where: { id },
       data: {
         name: data.name,
-        description: data.description,
-        basePrice: data.basePrice,
-        capacity: data.capacity,
-        totalUnits: data.totalUnits,
-        priceEP: data.priceEP ?? null,
-        priceCP: data.priceCP ?? null,
-        priceMAP: data.priceMAP ?? null,
-        extraBedPriceEP: data.extraBedPriceEP ?? null,
-        extraBedPriceCP: data.extraBedPriceCP ?? null,
-        extraBedPriceMAP: data.extraBedPriceMAP ?? null,
-        childNoBedPriceEP: data.childNoBedPriceEP ?? null,
-        childNoBedPriceCP: data.childNoBedPriceCP ?? null,
-        childNoBedPriceMAP: data.childNoBedPriceMAP ?? null,
+        description: data.description || null,
+        basePrice: Number(data.basePrice) || 0,
+        capacity: Number(data.capacity) || 2,
+        totalUnits: Number(data.totalUnits) || 1,
+        priceEP: parseNum(data.priceEP),
+        priceCP: parseNum(data.priceCP),
+        priceMAP: parseNum(data.priceMAP),
+        extraBedPriceEP: parseNum(data.extraBedPriceEP),
+        extraBedPriceCP: parseNum(data.extraBedPriceCP),
+        extraBedPriceMAP: parseNum(data.extraBedPriceMAP),
+        childNoBedPriceEP: parseNum(data.childNoBedPriceEP),
+        childNoBedPriceCP: parseNum(data.childNoBedPriceCP),
+        childNoBedPriceMAP: parseNum(data.childNoBedPriceMAP),
+        ...(data.extraBedPrice !== undefined && { extraBedPrice: parseNum(data.extraBedPrice) }),
+        ...(data.childNoBedPrice !== undefined && { childNoBedPrice: parseNum(data.childNoBedPrice) }),
       }
     });
 
     revalidatePath("/partner", "layout");
+    revalidatePath("/stays", "layout");
     return { success: true, roomType };
   } catch (error) {
     console.error("Error updating room type:", error);

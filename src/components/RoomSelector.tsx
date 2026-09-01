@@ -34,7 +34,7 @@ export default function RoomSelector({ roomTypes }: { roomTypes: any[] }) {
   if (!roomTypes || roomTypes.length === 0) {
     return (
       <div className="bg-slate-50 border border-slate-200 border-dashed rounded-2xl p-10 text-center">
-        <p className="text-slate-500 font-medium">Rooms information coming soon.</p>
+        <p className="text-slate-500 font-medium">Room availability is currently being updated.</p>
       </div>
     );
   }
@@ -173,9 +173,11 @@ export default function RoomSelector({ roomTypes }: { roomTypes: any[] }) {
             {(room.extraBedPriceEP ||
               room.extraBedPriceCP ||
               room.extraBedPriceMAP ||
+              room.extraBedPrice ||
               room.childNoBedPriceEP ||
               room.childNoBedPriceCP ||
-              room.childNoBedPriceMAP) && (
+              room.childNoBedPriceMAP ||
+              room.childNoBedPrice) && (
               <div className="mt-5 pt-5 border-t border-slate-100">
                 <h4 className="font-semibold text-slate-700 mb-3 text-xs uppercase tracking-wide">
                   Additional Charges
@@ -183,7 +185,8 @@ export default function RoomSelector({ roomTypes }: { roomTypes: any[] }) {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {(room.extraBedPriceEP ||
                     room.extraBedPriceCP ||
-                    room.extraBedPriceMAP) && (
+                    room.extraBedPriceMAP ||
+                    room.extraBedPrice) && (
                     <div className="text-sm">
                       <div className="font-medium text-slate-700 mb-1">
                         Extra Bed
@@ -207,12 +210,22 @@ export default function RoomSelector({ roomTypes }: { roomTypes: any[] }) {
                             {room.extraBedPriceMAP.toLocaleString("en-IN")}
                           </li>
                         )}
+                        {!room.extraBedPriceEP &&
+                          !room.extraBedPriceCP &&
+                          !room.extraBedPriceMAP &&
+                          room.extraBedPrice && (
+                            <li>
+                              Per Night: ₹
+                              {room.extraBedPrice.toLocaleString("en-IN")}
+                            </li>
+                          )}
                       </ul>
                     </div>
                   )}
                   {(room.childNoBedPriceEP ||
                     room.childNoBedPriceCP ||
-                    room.childNoBedPriceMAP) && (
+                    room.childNoBedPriceMAP ||
+                    room.childNoBedPrice) && (
                     <div className="text-sm">
                       <div className="font-medium text-slate-700 mb-1">
                         Child (No Bed)
@@ -236,6 +249,15 @@ export default function RoomSelector({ roomTypes }: { roomTypes: any[] }) {
                             {room.childNoBedPriceMAP.toLocaleString("en-IN")}
                           </li>
                         )}
+                        {!room.childNoBedPriceEP &&
+                          !room.childNoBedPriceCP &&
+                          !room.childNoBedPriceMAP &&
+                          room.childNoBedPrice && (
+                            <li>
+                              Per Night: ₹
+                              {room.childNoBedPrice.toLocaleString("en-IN")}
+                            </li>
+                          )}
                       </ul>
                     </div>
                   )}
