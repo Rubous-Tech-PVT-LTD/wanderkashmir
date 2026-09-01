@@ -29,8 +29,13 @@ export default function BookingSidebar({ propertyId, pricePerNight, rating, isLo
   const [nights, setNights] = useState<number>(1);
   const [isAvailable, setIsAvailable] = useState<boolean | null>(null);
   const [availableRoomTypes, setAvailableRoomTypes] = useState<any[]>([]);
-  const [selectedRoomTypeId, setSelectedRoomTypeId] = useState<string | null>(null);
-  const [dynamicPrice, setDynamicPrice] = useState<number | null>(null);
+  // Add-ons & Room Selection State (from Zustand)
+  const { 
+    selectedTaxiId, selectedGuideId, taxiAmount, guideAmount,
+    selectedRoomId, selectedRoomName, selectedMealPlan, roomBasePrice
+  } = useBookingStore();
+
+  // Removed local selectedRoomTypeId and dynamicPrice states
   const [isChecking, setIsChecking] = useState<boolean>(false);
   const searchParams = useSearchParams();
 
@@ -58,9 +63,6 @@ export default function BookingSidebar({ propertyId, pricePerNight, rating, isLo
   }, []);
   const [specialRequests, setSpecialRequests] = useState<string>("");
   const [otherGuests, setOtherGuests] = useState<{name: string, age: string}[]>([]);
-
-  // Add-ons State (from Zustand)
-  const { selectedTaxiId, selectedGuideId, taxiAmount, guideAmount } = useBookingStore();
 
   // Adjust otherGuests array when total guests count changes
   useEffect(() => {
@@ -123,12 +125,9 @@ export default function BookingSidebar({ propertyId, pricePerNight, rating, isLo
         setAvailableRoomTypes(data.availableRoomTypes || []);
         
         if (data.availableRoomTypes && data.availableRoomTypes.length > 0) {
-          // Auto-select first room
-          setSelectedRoomTypeId(data.availableRoomTypes[0].id);
-          setDynamicPrice(data.availableRoomTypes[0].totalPrice);
+          // Room availability verified
         } else {
-          setSelectedRoomTypeId(null);
-          setDynamicPrice(null);
+          // Room not available
         }
       } catch (error) {
         console.error("Availability check failed", error);
@@ -142,14 +141,14 @@ export default function BookingSidebar({ propertyId, pricePerNight, rating, isLo
     return () => clearTimeout(debounceTimer);
   }, [propertyId, checkIn, checkOut, rooms]);
 
-  // If dynamicPrice exists (from RoomTypes), it represents the total for 1 room for the entire stay.
-  // We multiply by number of rooms.
-  const basePrice = dynamicPrice !== null 
-    ? dynamicPrice * rooms
+  // If roomBasePrice exists (from Zustand), it represents the total for 1 room for 1 night
+  // We multiply by number of nights and rooms.
+  const basePrice = roomBasePrice !== null 
+    ? roomBasePrice * nights * rooms
     : pricePerNight * nights * rooms;
   
-  const displayPricePerNight = dynamicPrice !== null && nights > 0
-    ? Math.round(dynamicPrice / nights)
+  const displayPricePerNight = roomBasePrice !== null
+    ? roomBasePrice
     : pricePerNight;
   
   const addonAmount = (taxiAmount * nights) + (guideAmount * nights);
@@ -210,6 +209,14 @@ export default function BookingSidebar({ propertyId, pricePerNight, rating, isLo
           <Star className="w-4 h-4 fill-slate-900 text-slate-900" /> {rating}
         </div>
       </div>
+
+      {selectedRoomId && (
+        <div className="bg-orange-50 border border-orange-100 rounded-xl p-3 mb-6">
+          <div className="text-xs text-orange-600 font-bold uppercase mb-1">Selected Room</div>
+          <div className="font-bold text-slate-900 text-sm">{selectedRoomName}</div>
+          {selectedMealPlan && <div className="text-xs text-slate-600 mt-1">Meal Plan: <span className="font-semibold">{selectedMealPlan}</span></div>}
+        </div>
+      )}
 
       <div className="border border-slate-300 rounded-xl mb-4 divide-y divide-slate-300">
         <div className="flex divide-x divide-slate-300">
@@ -332,85 +339,48 @@ export default function BookingSidebar({ propertyId, pricePerNight, rating, isLo
           Sold Out for these dates
         </div>
       )}
-
-      {isAvailable === true && availableRoomTypes.length > 0 && (
+      
+      {!isChecking && isAvailable === true && availableRoomTypes.length > 0 && selectedRoomId && (
         <div className="mb-4">
-          <label className="block text-[10px] font-bold uppercase text-slate-900 mb-2">Select Room Type</label>
-          <div className="space-y-2">
-            {availableRoomTypes.map(rt => {
-              const roomCapacity = rt.capacity || 2;
-              const maxCapacity = roomCapacity * rooms;
-              const isCapacityValid = (adults + childrenCount) <= maxCapacity;
-              
-              return (
-                <label 
-                  key={rt.id} 
-                  className={`flex items-center justify-between p-3 border rounded-xl cursor-pointer transition-colors ${
-                    !isCapacityValid ? 'opacity-50 border-slate-100 bg-slate-50 cursor-not-allowed' :
-                    selectedRoomTypeId === rt.id 
-                      ? 'border-orange-500 bg-orange-500' 
-                      : 'border-slate-200 hover:border-slate-300'
-                  }`}
-                >
-                  <div className="flex items-center gap-2">
-                    <input 
-                      type="radio" 
-                      name="roomType"
-                      className="w-4 h-4 text-orange-500"
-                      disabled={!isCapacityValid}
-                      checked={selectedRoomTypeId === rt.id} 
-                      onChange={() => {
-                        if (isCapacityValid) {
-                          setSelectedRoomTypeId(rt.id);
-                          setDynamicPrice(rt.totalPrice);
-                        }
-                      }} 
-                    />
-                    <div>
-                      <span className="block font-bold text-slate-900 text-sm">{rt.name}</span>
-                      <span className={`block text-xs ${isCapacityValid ? 'text-slate-500' : 'text-red-500 font-semibold'}`}>
-                        {isCapacityValid ? `Up to 2 guests/room` : `Max ${maxCapacity} guests for ${rooms} rooms`}
-                      </span>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <span className="block font-bold text-slate-900">₹{rt.pricePerNight.toLocaleString()} <span className="text-xs font-normal text-slate-500">avg/night</span></span>
-                    <span className="block text-xs font-semibold text-orange-500">Total: ₹{(rt.totalPrice * rooms).toLocaleString()}</span>
-                  </div>
-                </label>
-              );
-            })}
+          <div className="text-xs text-green-600 font-bold flex items-center gap-1">
+            <CheckCircle2 className="w-4 h-4" /> Selected room available for these dates
           </div>
         </div>
       )}
 
-      {isAvailable === true ? (
-        <button 
-          onClick={() => setShowModal(true)}
-          className="w-full bg-orange-500 text-white font-bold py-3.5 rounded-xl hover:bg-orange-500 transition-colors shadow-md"
+      {/* Checkout Button */}
+      <div className="mt-6">
+        <button
+          onClick={() => {
+            if (availableRoomTypes.length > 0 && !selectedRoomId) {
+               alert("Please select a room type from the Available Rooms section to continue.");
+               document.getElementById("rooms")?.scrollIntoView({ behavior: "smooth" });
+               return;
+            }
+            if (isAvailable && checkIn && checkOut) setShowModal(true)
+          }}
+          disabled={!isAvailable || isChecking}
+          className="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-4 rounded-xl flex justify-center items-center gap-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
           Continue
         </button>
-      ) : (
-        <button disabled className="w-full bg-slate-200 text-slate-400 font-bold py-3.5 rounded-xl transition-colors">
-          {isChecking ? "Checking availability..." : "Not Available"}
-        </button>
-      )}
+      </div>
       
       <p className="text-center text-xs text-slate-500 mt-4">You won't be charged yet</p>
 
       <div className="mt-6 pt-6 border-t border-slate-100 space-y-3">
-        <div className="flex justify-between text-slate-600 text-sm">
-          <span className="underline decoration-slate-300">
-            {dynamicPrice !== null 
-              ? `${nights} nights x ${rooms} room(s)`
-              : propertyType === "HOMESTAY"
-                ? `₹${pricePerNight.toLocaleString('en-IN')} x ${nights} nights`
-                : `₹${pricePerNight.toLocaleString('en-IN')} x ${nights} nights x ${rooms} room(s)`
-            }
-          </span>
-          <span className="font-semibold text-slate-900">₹{basePrice.toLocaleString('en-IN')}</span>
-        </div>
+        {selectedRoomId && (
+          <div className="flex justify-between text-sm mb-2">
+            <span className="text-slate-500">{selectedRoomName} {selectedMealPlan ? `(${selectedMealPlan})` : ''} x {rooms}</span>
+            <span className="font-medium text-slate-900">₹{basePrice.toLocaleString('en-IN')}</span>
+          </div>
+        )}
+        {!selectedRoomId && (
+          <div className="flex justify-between text-sm mb-2">
+            <span className="text-slate-500">₹{displayPricePerNight.toLocaleString('en-IN')} x {nights} night{nights > 1 ? 's' : ''} x {rooms} room{rooms > 1 ? 's' : ''}</span>
+            <span className="font-medium text-slate-900">₹{basePrice.toLocaleString('en-IN')}</span>
+          </div>
+        )}
       </div>
 
       {/* Multi-Step Checkout Modal */}
@@ -670,7 +640,7 @@ export default function BookingSidebar({ propertyId, pricePerNight, rating, isLo
                       selectedGuideId={selectedGuideId}
                       promoCode={appliedPromo || undefined}
                       discountAmount={discountAmount}
-                      roomTypeId={selectedRoomTypeId || undefined}
+                      roomTypeId={selectedRoomId || undefined}
                     />
                     <button 
                       onClick={() => setModalStep(1)}

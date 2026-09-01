@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { X } from "lucide-react";
 import BookingSidebar from "./BookingSidebar";
+import { useBookingStore } from "@/store/bookingStore";
 
 interface MobileBookingWrapperProps {
   propertyId: string;
@@ -22,9 +23,12 @@ export default function MobileBookingWrapperClient({
   maxGuests = 2
 }: MobileBookingWrapperProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const { roomBasePrice, selectedRoomName, selectedMealPlan } = useBookingStore();
+  
+  const displayPrice = roomBasePrice !== null ? roomBasePrice : pricePerNight;
 
   // Rough estimation of taxes & fees (e.g. 15% combined)
-  const taxesAndFees = Math.round(pricePerNight * 0.15);
+  const taxesAndFees = Math.round(displayPrice * 0.15);
 
   return (
     <>

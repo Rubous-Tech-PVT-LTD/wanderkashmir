@@ -24,6 +24,7 @@ import { getGooglePlaceReviews } from "@/actions/google-reviews";
 import GoogleReviewsList from "@/components/GoogleReviewsList";
 import PropertyStickyNav from "@/components/PropertyStickyNav";
 import { Utensils, CheckCircle } from "lucide-react";
+import RoomSelector from "@/components/RoomSelector";
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
   const { id } = await params;
@@ -338,94 +339,7 @@ export default async function PropertyDetailPage({
             {/* Rooms Section */}
             <div id="rooms" className="pt-10 border-t border-slate-100 mt-10">
               <h2 className="text-2xl font-bold text-slate-900 mb-6">Available Rooms</h2>
-              {property.roomTypes && property.roomTypes.length > 0 ? (
-                <div className="space-y-6">
-                  {property.roomTypes.map((room: any) => (
-                    <div key={room.id} className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
-                      <div className="flex justify-between items-start mb-4">
-                        <div>
-                          <h3 className="text-xl font-bold text-slate-900">{room.name}</h3>
-                          <p className="text-sm text-slate-500 mt-1">{room.description}</p>
-                        </div>
-                        <div className="text-right">
-                          <div className="text-2xl font-black text-slate-900">₹{room.basePrice}</div>
-                          <div className="text-xs text-slate-500">per night (Base Price)</div>
-                        </div>
-                      </div>
-                      
-                      <div className="flex gap-4 text-sm text-slate-600 mb-6 pb-6 border-b border-slate-100">
-                        <div className="flex items-center gap-1"><Users className="w-4 h-4" /> Up to {room.capacity} guests</div>
-                        <div className="flex items-center gap-1"><Home className="w-4 h-4" /> {room.totalUnits} units</div>
-                      </div>
-
-                      {/* Meal Plans */}
-                      {(room.priceEP || room.priceCP || room.priceMAP) && (
-                        <div className="mb-6">
-                          <h4 className="font-bold text-slate-900 mb-3 flex items-center gap-2">
-                            <Utensils className="w-4 h-4 text-orange-500" /> Meal Plans
-                          </h4>
-                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                            {room.priceEP && (
-                              <div className="bg-slate-50 rounded-xl p-3 border border-slate-100">
-                                <div className="font-bold text-slate-800 text-sm">EP Plan</div>
-                                <div className="text-xs text-slate-500 mb-1">Room Only</div>
-                                <div className="font-bold text-orange-600">₹{room.priceEP} <span className="text-xs font-normal text-slate-500">/night</span></div>
-                              </div>
-                            )}
-                            {room.priceCP && (
-                              <div className="bg-slate-50 rounded-xl p-3 border border-slate-100">
-                                <div className="font-bold text-slate-800 text-sm">CP Plan</div>
-                                <div className="text-xs text-slate-500 mb-1">Breakfast</div>
-                                <div className="font-bold text-orange-600">₹{room.priceCP} <span className="text-xs font-normal text-slate-500">/night</span></div>
-                              </div>
-                            )}
-                            {room.priceMAP && (
-                              <div className="bg-slate-50 rounded-xl p-3 border border-slate-100">
-                                <div className="font-bold text-slate-800 text-sm">MAP Plan</div>
-                                <div className="text-xs text-slate-500 mb-1">Breakfast + Dinner</div>
-                                <div className="font-bold text-orange-600">₹{room.priceMAP} <span className="text-xs font-normal text-slate-500">/night</span></div>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Extra Charges */}
-                      {(room.extraBedPriceEP || room.extraBedPriceCP || room.extraBedPriceMAP || room.childNoBedPriceEP || room.childNoBedPriceCP || room.childNoBedPriceMAP) && (
-                        <div>
-                          <h4 className="font-bold text-slate-900 mb-3 text-sm">Extra Persons (Optional)</h4>
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            {(room.extraBedPriceEP || room.extraBedPriceCP || room.extraBedPriceMAP) && (
-                              <div className="text-sm">
-                                <div className="font-medium text-slate-700 mb-2">Extra Bed</div>
-                                <ul className="space-y-1 text-slate-600 text-xs">
-                                  {room.extraBedPriceEP && <li>EP: ₹{room.extraBedPriceEP}</li>}
-                                  {room.extraBedPriceCP && <li>CP: ₹{room.extraBedPriceCP}</li>}
-                                  {room.extraBedPriceMAP && <li>MAP: ₹{room.extraBedPriceMAP}</li>}
-                                </ul>
-                              </div>
-                            )}
-                            {(room.childNoBedPriceEP || room.childNoBedPriceCP || room.childNoBedPriceMAP) && (
-                              <div className="text-sm">
-                                <div className="font-medium text-slate-700 mb-2">Child (No Bed)</div>
-                                <ul className="space-y-1 text-slate-600 text-xs">
-                                  {room.childNoBedPriceEP && <li>EP: ₹{room.childNoBedPriceEP}</li>}
-                                  {room.childNoBedPriceCP && <li>CP: ₹{room.childNoBedPriceCP}</li>}
-                                  {room.childNoBedPriceMAP && <li>MAP: ₹{room.childNoBedPriceMAP}</li>}
-                                </ul>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="bg-slate-50 border border-slate-200 border-dashed rounded-2xl p-10 text-center">
-                  <p className="text-slate-500 font-medium">Rooms information coming soon.</p>
-                </div>
-              )}
+              <RoomSelector roomTypes={property.roomTypes} />
             </div>
 
             {/* Property Rules (J&K Govt) */}
