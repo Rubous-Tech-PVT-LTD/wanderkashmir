@@ -1,15 +1,15 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { use } from "react";
+import { useParams } from "next/navigation";
 import { getRoomTypes, addRoomType, updateRoomType, deleteRoomType, updateRoomInventory } from "@/actions/rooms";
 import { ArrowLeft, Plus, Trash2, Calendar as CalendarIcon, Save, Edit } from "lucide-react";
 import Link from "next/link";
 import toast from "react-hot-toast";
 
-export default function RoomManagementPage({ params }: { params: Promise<{ propertyId: string }> }) {
-  const resolvedParams = use(params);
-  const propertyId = resolvedParams.propertyId;
+export default function RoomManagementPage() {
+  const routeParams = useParams();
+  const propertyId = (routeParams?.propertyId as string) || "";
 
   const [roomTypes, setRoomTypes] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);

@@ -8,7 +8,11 @@ import { revalidatePath } from "next/cache";
 export async function addRoomType(propertyId: string, data: any) {
   try {
     const userId = await getCurrentUserId();
-    if (!userId) return { success: false, error: "Unauthorized" };
+    if (!userId) return { success: false, error: "Unauthorized. Please log in again." };
+
+    if (!propertyId) {
+      return { success: false, error: "Invalid Property ID." };
+    }
 
     const parseNum = (val: any) => {
       if (val === undefined || val === null || val === "") return null;
@@ -19,7 +23,7 @@ export async function addRoomType(propertyId: string, data: any) {
     const roomType = await prisma.roomType.create({
       data: {
         propertyId,
-        name: data.name,
+        name: data.name || "Room",
         description: data.description || null,
         basePrice: Number(data.basePrice) || 0,
         capacity: Number(data.capacity) || 2,
@@ -38,12 +42,17 @@ export async function addRoomType(propertyId: string, data: any) {
       }
     });
 
-    revalidatePath("/partner", "layout");
-    revalidatePath("/stays", "layout");
+    try {
+      revalidatePath("/partner", "layout");
+      revalidatePath("/stays", "layout");
+    } catch (e) {
+      console.warn("Revalidation warning:", e);
+    }
+
     return { success: true, roomType };
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error adding room type:", error);
-    return { success: false, error: "Failed to add room type" };
+    return { success: false, error: error?.message || "Failed to add room type" };
   }
 }
 
@@ -51,7 +60,11 @@ export async function addRoomType(propertyId: string, data: any) {
 export async function updateRoomType(id: string, data: any) {
   try {
     const userId = await getCurrentUserId();
-    if (!userId) return { success: false, error: "Unauthorized" };
+    if (!userId) return { success: false, error: "Unauthorized. Please log in again." };
+
+    if (!id) {
+      return { success: false, error: "Invalid Room Type ID." };
+    }
 
     // Verify ownership (the vendor must own the property this room belongs to)
     const existing = await prisma.roomType.findUnique({
@@ -78,7 +91,7 @@ export async function updateRoomType(id: string, data: any) {
     const roomType = await prisma.roomType.update({
       where: { id },
       data: {
-        name: data.name,
+        name: data.name || "Room",
         description: data.description || null,
         basePrice: Number(data.basePrice) || 0,
         capacity: Number(data.capacity) || 2,
@@ -97,12 +110,17 @@ export async function updateRoomType(id: string, data: any) {
       }
     });
 
-    revalidatePath("/partner", "layout");
-    revalidatePath("/stays", "layout");
+    try {
+      revalidatePath("/partner", "layout");
+      revalidatePath("/stays", "layout");
+    } catch (e) {
+      console.warn("Revalidation warning:", e);
+    }
+
     return { success: true, roomType };
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error updating room type:", error);
-    return { success: false, error: "Failed to update room type" };
+    return { success: false, error: error?.message || "Failed to update room type" };
   }
 }
 
