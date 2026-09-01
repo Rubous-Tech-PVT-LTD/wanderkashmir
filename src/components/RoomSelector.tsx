@@ -1,15 +1,33 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Users, Home, Utensils, CheckCircle2 } from "lucide-react";
+import { Users, Home, Utensils, BedDouble } from "lucide-react";
 import { useBookingStore } from "@/store/bookingStore";
+
+const MEAL_PLANS = [
+  {
+    key: "EP" as const,
+    priceField: "priceEP",
+    label: "Stay Essentials",
+    subtitle: "Accommodation Only",
+  },
+  {
+    key: "CP" as const,
+    priceField: "priceCP",
+    label: "Stay & Breakfast",
+    subtitle: "Breakfast Included",
+  },
+  {
+    key: "MAP" as const,
+    priceField: "priceMAP",
+    label: "Stay & Dining",
+    subtitle: "Breakfast + Dinner Included",
+  },
+] as const;
 
 export default function RoomSelector({ roomTypes }: { roomTypes: any[] }) {
   const { selectedRoomId, selectedMealPlan, setSelectedRoom } = useBookingStore();
-  
-  // Local state for radio button management before we decide to use them directly
-  
-  const handleSelectRoom = (room: any, mealPlan: string | null, price: number) => {
+
+  const handleSelect = (room: any, mealPlan: string | null, price: number) => {
     setSelectedRoom(room.id, room.name, mealPlan, price);
   };
 
@@ -25,142 +43,199 @@ export default function RoomSelector({ roomTypes }: { roomTypes: any[] }) {
     <div className="space-y-6">
       {roomTypes.map((room: any) => {
         const isRoomSelected = selectedRoomId === room.id;
-        
+        const availablePlans = MEAL_PLANS.filter((p) => !!room[p.priceField]);
+        const hasMealPlans = availablePlans.length > 0;
+
         return (
-          <div 
-            key={room.id} 
+          <div
+            key={room.id}
             className={`bg-white border rounded-2xl p-6 shadow-sm transition-all duration-200 ${
-              isRoomSelected ? 'border-orange-500 ring-1 ring-orange-500' : 'border-slate-200 hover:border-orange-200'
+              isRoomSelected
+                ? "border-orange-500 ring-1 ring-orange-500"
+                : "border-slate-200 hover:border-orange-200"
             }`}
           >
+            {/* Room Header */}
             <div className="flex justify-between items-start mb-4">
-              <div>
+              <div className="flex-1 pr-4">
                 <h3 className="text-xl font-bold text-slate-900">{room.name}</h3>
-                <p className="text-sm text-slate-500 mt-1">{room.description}</p>
+                {room.description && (
+                  <p className="text-sm text-slate-500 mt-1 line-clamp-2">
+                    {room.description}
+                  </p>
+                )}
               </div>
-              <div className="text-right">
-                <div className="text-2xl font-black text-slate-900">₹{room.basePrice}</div>
-                <div className="text-xs text-slate-500">per night (Base Price)</div>
+              <div className="text-right shrink-0">
+                <div className="text-2xl font-black text-slate-900">
+                  ₹{room.basePrice.toLocaleString("en-IN")}
+                </div>
+                <div className="text-xs text-slate-500">per night</div>
               </div>
             </div>
-            
+
+            {/* Capacity & Units */}
             <div className="flex gap-4 text-sm text-slate-600 mb-6 pb-6 border-b border-slate-100">
-              <div className="flex items-center gap-1"><Users className="w-4 h-4" /> Up to {room.capacity} {room.capacity === 1 ? 'guest' : 'guests'} / room</div>
-              <div className="flex items-center gap-1"><Home className="w-4 h-4" /> {room.totalUnits} {room.totalUnits === 1 ? 'unit' : 'units'}</div>
+              <div className="flex items-center gap-1">
+                <Users className="w-4 h-4" /> Up to {room.capacity}{" "}
+                {room.capacity === 1 ? "guest" : "guests"} / room
+              </div>
+              <div className="flex items-center gap-1">
+                <Home className="w-4 h-4" /> {room.totalUnits}{" "}
+                {room.totalUnits === 1 ? "unit" : "units"}
+              </div>
             </div>
 
-            {/* Base Room Selection (If no meal plans, or just selecting room without meal plan) */}
-            <div className="mb-6">
-               <label className={`flex items-center gap-3 cursor-pointer p-3 rounded-xl border transition-colors ${
-                  isRoomSelected && selectedMealPlan === null ? 'border-orange-500 bg-orange-50/50' : 'border-slate-100 hover:bg-slate-50'
-               }`}>
-                  <input 
-                    type="radio" 
-                    name="roomSelection" 
-                    className="w-5 h-5 text-orange-600 focus:ring-orange-500"
-                    checked={isRoomSelected && selectedMealPlan === null}
-                    onChange={() => handleSelectRoom(room, null, room.basePrice)}
-                  />
-                  <div>
-                    <div className="font-bold text-slate-900">Room Only (Standard)</div>
-                    <div className="text-sm text-slate-500">₹{room.basePrice} / night</div>
-                  </div>
-               </label>
-            </div>
-
-            {/* Meal Plans */}
-            {(room.priceEP || room.priceCP || room.priceMAP) && (
-              <div className="mb-6">
-                <h4 className="font-bold text-slate-900 mb-3 flex items-center gap-2">
-                  <Utensils className="w-4 h-4 text-orange-500" /> Meal Plans
+            {/* Meal Plan Options */}
+            {hasMealPlans ? (
+              <div>
+                <h4 className="font-semibold text-slate-700 mb-3 flex items-center gap-2 text-sm">
+                  <Utensils className="w-4 h-4 text-orange-500" />
+                  Select a Plan
                 </h4>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                  {room.priceEP && (
-                    <label className={`cursor-pointer bg-slate-50 rounded-xl p-3 border transition-colors ${
-                      isRoomSelected && selectedMealPlan === 'EP' ? 'border-orange-500 bg-orange-50/50' : 'border-slate-100 hover:border-orange-200'
-                    }`}>
-                      <div className="flex items-start gap-2">
-                        <input 
-                          type="radio" 
-                          name="roomSelection"
-                          className="mt-1 w-4 h-4 text-orange-600 focus:ring-orange-500"
-                          checked={isRoomSelected && selectedMealPlan === 'EP'}
-                          onChange={() => handleSelectRoom(room, 'EP', room.priceEP)}
-                        />
-                        <div>
-                          <div className="font-bold text-slate-800 text-sm">EP Plan</div>
-                          <div className="text-xs text-slate-500 mb-1">Room Only</div>
-                          <div className="font-bold text-orange-600">₹{room.priceEP} <span className="text-xs font-normal text-slate-500">/night</span></div>
+                <div className="space-y-2">
+                  {availablePlans.map((plan) => {
+                    const price = room[plan.priceField] as number;
+                    const isSelected =
+                      isRoomSelected && selectedMealPlan === plan.key;
+                    return (
+                      <label
+                        key={plan.key}
+                        className={`flex items-center justify-between gap-3 cursor-pointer p-4 rounded-xl border transition-all ${
+                          isSelected
+                            ? "border-orange-500 bg-orange-50/60 ring-1 ring-orange-400"
+                            : "border-slate-100 bg-slate-50 hover:border-orange-200 hover:bg-orange-50/20"
+                        }`}
+                      >
+                        <div className="flex items-center gap-3">
+                          <input
+                            type="radio"
+                            name={`room-${room.id}`}
+                            className="w-4 h-4 accent-orange-500"
+                            checked={isSelected}
+                            onChange={() => handleSelect(room, plan.key, price)}
+                          />
+                          <div>
+                            <div className="font-bold text-slate-900 text-sm">
+                              {plan.label}
+                            </div>
+                            <div className="text-xs text-slate-500">
+                              {plan.subtitle}
+                            </div>
+                          </div>
                         </div>
-                      </div>
-                    </label>
-                  )}
-                  {room.priceCP && (
-                    <label className={`cursor-pointer bg-slate-50 rounded-xl p-3 border transition-colors ${
-                      isRoomSelected && selectedMealPlan === 'CP' ? 'border-orange-500 bg-orange-50/50' : 'border-slate-100 hover:border-orange-200'
-                    }`}>
-                      <div className="flex items-start gap-2">
-                        <input 
-                          type="radio" 
-                          name="roomSelection"
-                          className="mt-1 w-4 h-4 text-orange-600 focus:ring-orange-500"
-                          checked={isRoomSelected && selectedMealPlan === 'CP'}
-                          onChange={() => handleSelectRoom(room, 'CP', room.priceCP)}
-                        />
-                        <div>
-                          <div className="font-bold text-slate-800 text-sm">CP Plan</div>
-                          <div className="text-xs text-slate-500 mb-1">Breakfast</div>
-                          <div className="font-bold text-orange-600">₹{room.priceCP} <span className="text-xs font-normal text-slate-500">/night</span></div>
+                        <div className="text-right shrink-0">
+                          <div className="font-bold text-orange-600">
+                            ₹{price.toLocaleString("en-IN")}
+                          </div>
+                          <div className="text-xs text-slate-400">/ night</div>
                         </div>
-                      </div>
-                    </label>
-                  )}
-                  {room.priceMAP && (
-                    <label className={`cursor-pointer bg-slate-50 rounded-xl p-3 border transition-colors ${
-                      isRoomSelected && selectedMealPlan === 'MAP' ? 'border-orange-500 bg-orange-50/50' : 'border-slate-100 hover:border-orange-200'
-                    }`}>
-                      <div className="flex items-start gap-2">
-                        <input 
-                          type="radio" 
-                          name="roomSelection"
-                          className="mt-1 w-4 h-4 text-orange-600 focus:ring-orange-500"
-                          checked={isRoomSelected && selectedMealPlan === 'MAP'}
-                          onChange={() => handleSelectRoom(room, 'MAP', room.priceMAP)}
-                        />
-                        <div>
-                          <div className="font-bold text-slate-800 text-sm">MAP Plan</div>
-                          <div className="text-xs text-slate-500 mb-1">Breakfast + Dinner</div>
-                          <div className="font-bold text-orange-600">₹{room.priceMAP} <span className="text-xs font-normal text-slate-500">/night</span></div>
-                        </div>
-                      </div>
-                    </label>
-                  )}
+                      </label>
+                    );
+                  })}
                 </div>
               </div>
+            ) : (
+              /* No meal plans — show base room selection */
+              <label
+                className={`flex items-center justify-between gap-3 cursor-pointer p-4 rounded-xl border transition-all ${
+                  isRoomSelected && selectedMealPlan === null
+                    ? "border-orange-500 bg-orange-50/60 ring-1 ring-orange-400"
+                    : "border-slate-100 bg-slate-50 hover:border-orange-200 hover:bg-orange-50/20"
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <input
+                    type="radio"
+                    name={`room-${room.id}`}
+                    className="w-4 h-4 accent-orange-500"
+                    checked={isRoomSelected && selectedMealPlan === null}
+                    onChange={() => handleSelect(room, null, room.basePrice)}
+                  />
+                  <div>
+                    <div className="font-bold text-slate-900 text-sm">
+                      Stay Essentials
+                    </div>
+                    <div className="text-xs text-slate-500">
+                      Accommodation Only
+                    </div>
+                  </div>
+                </div>
+                <div className="text-right shrink-0">
+                  <div className="font-bold text-orange-600">
+                    ₹{room.basePrice.toLocaleString("en-IN")}
+                  </div>
+                  <div className="text-xs text-slate-400">/ night</div>
+                </div>
+              </label>
             )}
 
-            {/* Extra Charges */}
-            {(room.extraBedPriceEP || room.extraBedPriceCP || room.extraBedPriceMAP || room.childNoBedPriceEP || room.childNoBedPriceCP || room.childNoBedPriceMAP) && (
-              <div>
-                <h4 className="font-bold text-slate-900 mb-3 text-sm">Extra Persons (Optional)</h4>
+            {/* Extra Charges (Informational Only) */}
+            {(room.extraBedPriceEP ||
+              room.extraBedPriceCP ||
+              room.extraBedPriceMAP ||
+              room.childNoBedPriceEP ||
+              room.childNoBedPriceCP ||
+              room.childNoBedPriceMAP) && (
+              <div className="mt-5 pt-5 border-t border-slate-100">
+                <h4 className="font-semibold text-slate-700 mb-3 text-xs uppercase tracking-wide">
+                  Additional Charges
+                </h4>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {(room.extraBedPriceEP || room.extraBedPriceCP || room.extraBedPriceMAP) && (
+                  {(room.extraBedPriceEP ||
+                    room.extraBedPriceCP ||
+                    room.extraBedPriceMAP) && (
                     <div className="text-sm">
-                      <div className="font-medium text-slate-700 mb-2">Extra Bed</div>
-                      <ul className="space-y-1 text-slate-600 text-xs">
-                        {room.extraBedPriceEP && <li>EP: ₹{room.extraBedPriceEP}</li>}
-                        {room.extraBedPriceCP && <li>CP: ₹{room.extraBedPriceCP}</li>}
-                        {room.extraBedPriceMAP && <li>MAP: ₹{room.extraBedPriceMAP}</li>}
+                      <div className="font-medium text-slate-700 mb-1">
+                        Extra Bed
+                      </div>
+                      <ul className="space-y-0.5 text-slate-500 text-xs">
+                        {room.extraBedPriceEP && (
+                          <li>
+                            Stay Essentials: ₹
+                            {room.extraBedPriceEP.toLocaleString("en-IN")}
+                          </li>
+                        )}
+                        {room.extraBedPriceCP && (
+                          <li>
+                            Stay & Breakfast: ₹
+                            {room.extraBedPriceCP.toLocaleString("en-IN")}
+                          </li>
+                        )}
+                        {room.extraBedPriceMAP && (
+                          <li>
+                            Stay & Dining: ₹
+                            {room.extraBedPriceMAP.toLocaleString("en-IN")}
+                          </li>
+                        )}
                       </ul>
                     </div>
                   )}
-                  {(room.childNoBedPriceEP || room.childNoBedPriceCP || room.childNoBedPriceMAP) && (
+                  {(room.childNoBedPriceEP ||
+                    room.childNoBedPriceCP ||
+                    room.childNoBedPriceMAP) && (
                     <div className="text-sm">
-                      <div className="font-medium text-slate-700 mb-2">Child (No Bed)</div>
-                      <ul className="space-y-1 text-slate-600 text-xs">
-                        {room.childNoBedPriceEP && <li>EP: ₹{room.childNoBedPriceEP}</li>}
-                        {room.childNoBedPriceCP && <li>CP: ₹{room.childNoBedPriceCP}</li>}
-                        {room.childNoBedPriceMAP && <li>MAP: ₹{room.childNoBedPriceMAP}</li>}
+                      <div className="font-medium text-slate-700 mb-1">
+                        Child (No Bed)
+                      </div>
+                      <ul className="space-y-0.5 text-slate-500 text-xs">
+                        {room.childNoBedPriceEP && (
+                          <li>
+                            Stay Essentials: ₹
+                            {room.childNoBedPriceEP.toLocaleString("en-IN")}
+                          </li>
+                        )}
+                        {room.childNoBedPriceCP && (
+                          <li>
+                            Stay & Breakfast: ₹
+                            {room.childNoBedPriceCP.toLocaleString("en-IN")}
+                          </li>
+                        )}
+                        {room.childNoBedPriceMAP && (
+                          <li>
+                            Stay & Dining: ₹
+                            {room.childNoBedPriceMAP.toLocaleString("en-IN")}
+                          </li>
+                        )}
                       </ul>
                     </div>
                   )}
@@ -173,3 +248,4 @@ export default function RoomSelector({ roomTypes }: { roomTypes: any[] }) {
     </div>
   );
 }
+
