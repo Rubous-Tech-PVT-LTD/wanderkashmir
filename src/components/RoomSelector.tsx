@@ -24,17 +24,81 @@ const MEAL_PLANS = [
   },
 ] as const;
 
-export default function RoomSelector({ roomTypes }: { roomTypes: any[] }) {
+export default function RoomSelector({
+  roomTypes,
+  pricePerNight,
+  propertyId,
+  propertyName,
+}: {
+  roomTypes: any[];
+  pricePerNight: number;
+  propertyId: string;
+  propertyName: string;
+}) {
   const { selectedRoomId, selectedMealPlan, setSelectedRoom } = useBookingStore();
 
   const handleSelect = (room: any, mealPlan: string | null, price: number) => {
     setSelectedRoom(room.id, room.name, mealPlan, price);
   };
 
+  // If no room types configured — show a base-price selectable card so booking still works
   if (!roomTypes || roomTypes.length === 0) {
+    const fallbackId = `${propertyId}-base`;
+    const isSelected = selectedRoomId === fallbackId;
     return (
-      <div className="bg-slate-50 border border-slate-200 border-dashed rounded-2xl p-10 text-center">
-        <p className="text-slate-500 font-medium">Rooms information coming soon.</p>
+      <div
+        className={`bg-white border rounded-2xl p-6 shadow-sm transition-all duration-200 ${
+          isSelected
+            ? "border-orange-500 ring-1 ring-orange-500"
+            : "border-slate-200 hover:border-orange-200"
+        }`}
+      >
+        <div className="flex justify-between items-start mb-4">
+          <div>
+            <h3 className="text-xl font-bold text-slate-900">{propertyName}</h3>
+            <p className="text-sm text-slate-500 mt-1">Standard Room</p>
+          </div>
+          <div className="text-right">
+            <div className="text-2xl font-black text-slate-900">
+              ₹{Number(pricePerNight).toLocaleString("en-IN")}
+            </div>
+            <div className="text-xs text-slate-500">per night</div>
+          </div>
+        </div>
+        <label
+          className={`flex items-center justify-between gap-3 cursor-pointer p-4 rounded-xl border transition-all ${
+            isSelected
+              ? "border-orange-500 bg-orange-50/60 ring-1 ring-orange-400"
+              : "border-slate-100 bg-slate-50 hover:border-orange-200 hover:bg-orange-50/20"
+          }`}
+        >
+          <div className="flex items-center gap-3">
+            <input
+              type="radio"
+              name={`room-${fallbackId}`}
+              className="w-4 h-4 accent-orange-500"
+              checked={isSelected}
+              onChange={() =>
+                setSelectedRoom(
+                  fallbackId,
+                  `${propertyName} — Standard Room`,
+                  null,
+                  pricePerNight
+                )
+              }
+            />
+            <div>
+              <div className="font-bold text-slate-900 text-sm">Stay Essentials</div>
+              <div className="text-xs text-slate-500">Accommodation Only</div>
+            </div>
+          </div>
+          <div className="text-right shrink-0">
+            <div className="font-bold text-orange-600">
+              ₹{Number(pricePerNight).toLocaleString("en-IN")}
+            </div>
+            <div className="text-xs text-slate-400">/ night</div>
+          </div>
+        </label>
       </div>
     );
   }
