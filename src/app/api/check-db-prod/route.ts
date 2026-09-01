@@ -4,7 +4,7 @@ import prisma from "@/lib/prisma";
 export async function GET(req: Request) {
   try {
     const roomTypes = await prisma.$queryRawUnsafe(
-      `SELECT * FROM "RoomType" WHERE "propertyId" = 'cmtikvzum0001mfgk0rdv5194'`
+      `SELECT id, name, "priceEP", "priceCP", "extraBedPrice" FROM "RoomType" WHERE "propertyId" = 'cmtikvzum0001mfgk0rdv5194'`
     );
     return NextResponse.json({ success: true, roomTypes });
   } catch (error: any) {
