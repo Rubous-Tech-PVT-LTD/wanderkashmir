@@ -49,6 +49,24 @@ export default function RoomSelector({
     setSelectedRoom(room.id, room.name, mealPlan, price);
   };
 
+  // Automatically select the default room on initial load
+  useEffect(() => {
+    if (hasRoomTypes && !selectedRoomId) {
+      const firstRoom = roomTypes[0];
+      const firstPlan = MEAL_PLANS.find((p) => {
+        const val = firstRoom[p.priceField];
+        return typeof val === "number" && val > 0;
+      });
+      if (firstPlan) {
+        setSelectedRoom(firstRoom.id, firstRoom.name, firstPlan.key, firstRoom[firstPlan.priceField]);
+      } else {
+        setSelectedRoom(firstRoom.id, firstRoom.name, null, Number(firstRoom.basePrice));
+      }
+    } else if (!hasRoomTypes && hasValidBasePrice && selectedRoomId === null && propertyBasePrice) {
+      setSelectedRoom(null, "Standard Accommodation", null, propertyBasePrice);
+    }
+  }, [hasRoomTypes, hasValidBasePrice, roomTypes, propertyBasePrice, selectedRoomId, setSelectedRoom]);
+
   // ─── CASE 1: REAL ROOM TYPES CONFIGURED ───
   if (hasRoomTypes) {
     return (

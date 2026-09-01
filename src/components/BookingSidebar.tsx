@@ -352,17 +352,27 @@ export default function BookingSidebar({ propertyId, pricePerNight, rating, isLo
       <div className="mt-6">
         <button
           onClick={() => {
-            if (availableRoomTypes.length > 0 && !selectedRoomId) {
-               alert("Please select a room type from the Available Rooms section to continue.");
-               document.getElementById("rooms")?.scrollIntoView({ behavior: "smooth" });
-               return;
+            if (!checkIn || !checkOut) {
+              const today = new Date();
+              const tmrw = new Date(today);
+              tmrw.setDate(tmrw.getDate() + 1);
+              const dayAfter = new Date(tmrw);
+              dayAfter.setDate(dayAfter.getDate() + 2);
+              setCheckIn(tmrw);
+              setCheckOut(dayAfter);
             }
-            if (isAvailable && checkIn && checkOut) setShowModal(true)
+            if (isAvailable !== false) {
+              setShowModal(true);
+            }
           }}
-          disabled={!isAvailable || isChecking}
-          className="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-4 rounded-xl flex justify-center items-center gap-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          disabled={isChecking || isAvailable === false || displayPricePerNight <= 0}
+          className={`w-full font-bold py-4 rounded-xl flex justify-center items-center gap-2 transition-all ${
+            isAvailable === false || displayPricePerNight <= 0
+              ? "bg-slate-200 text-slate-400 cursor-not-allowed"
+              : "bg-orange-500 hover:bg-orange-600 text-white shadow-lg shadow-orange-500/25 active:scale-[0.99]"
+          }`}
         >
-          Continue
+          {isChecking ? "Checking..." : isAvailable === false ? "Sold Out" : "Continue"}
         </button>
       </div>
       
