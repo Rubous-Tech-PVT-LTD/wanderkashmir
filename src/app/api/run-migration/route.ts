@@ -1,13 +1,14 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 
-// ONE-TIME migration endpoint — delete after use
-// Protected by a secret token
+// ONE-TIME migration endpoint — will be deleted after use
+const ALLOWED_TOKEN = "wk-migrate-roomtype-cols-2026";
+
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
   const token = searchParams.get("token");
 
-  if (token !== process.env.MIGRATION_SECRET) {
+  if (token !== ALLOWED_TOKEN) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
