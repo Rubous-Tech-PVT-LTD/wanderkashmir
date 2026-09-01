@@ -10,28 +10,50 @@ export default async function HotelDashboardPage() {
     redirect("/partner");
   }
 
-  // Fetch properties belonging to this vendor
-  const properties = await prisma.property.findMany({
-    where: { vendorProfileId: session.vendorProfileId },
-    orderBy: { createdAt: "desc" },
-    include: {
-      roomTypes: {
-        include: {
-          inventories: true,
+  let properties: any[] = [];
+  let bookings: any[] = [];
+
+  try {
+    properties = await prisma.property.findMany({
+      where: { vendorProfileId: session.vendorProfileId },
+      orderBy: { createdAt: "desc" },
+      include: {
+        roomTypes: {
+          include: {
+            inventories: true,
+          },
         },
       },
-    },
-  });
+    });
+  } catch (err) {
+    console.error("Error fetching vendor properties with roomTypes:", err);
+    try {
+      properties = await prisma.property.findMany({
+        where: { vendorProfileId: session.vendorProfileId },
+        orderBy: { createdAt: "desc" },
+      });
+    } catch (fallbackErr) {
+      console.error("Fallback property query error:", fallbackErr);
+      properties = [];
+    }
+  }
 
-  // Fetch bookings for this vendor's properties
-  const bookings = await prisma.booking.findMany({
-    where: {
-      property: {
-        vendorProfileId: session.vendorProfileId,
+  try {
+    bookings = await prisma.booking.findMany({
+      where: {
+        property: {
+          vendorProfileId: session.vendorProfileId,
+        },
       },
-    },
-    orderBy: { createdAt: "desc" },
-  });
+      orderBy: { createdAt: "desc" },
+    });
+  } catch (err) {
+    console.error("Error fetching vendor bookings:", err);
+    bookings = [];
+  }
 
-  return <HotelClient vendorProfileId={session.vendorProfileId} properties={properties} bookings={bookings} />;
+  const safeProperties = JSON.parse(JSON.stringify(properties));
+  const safeBookings = JSON.parse(JSON.stringify(bookings));
+
+  return <HotelClient vendorProfileId={session.vendorProfileId} properties={safeProperties} bookings={safeBookings} />;
 }
