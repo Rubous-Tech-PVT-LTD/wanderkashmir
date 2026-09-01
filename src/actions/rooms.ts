@@ -21,8 +21,12 @@ export async function addRoomType(propertyId: string, data: any) {
         priceEP: data.priceEP ?? null,
         priceCP: data.priceCP ?? null,
         priceMAP: data.priceMAP ?? null,
-        extraBedPrice: data.extraBedPrice ?? null,
-        childNoBedPrice: data.childNoBedPrice ?? null,
+        extraBedPriceEP: data.extraBedPriceEP ?? null,
+        extraBedPriceCP: data.extraBedPriceCP ?? null,
+        extraBedPriceMAP: data.extraBedPriceMAP ?? null,
+        childNoBedPriceEP: data.childNoBedPriceEP ?? null,
+        childNoBedPriceCP: data.childNoBedPriceCP ?? null,
+        childNoBedPriceMAP: data.childNoBedPriceMAP ?? null,
       }
     });
 
@@ -67,8 +71,12 @@ export async function updateRoomType(id: string, data: any) {
         priceEP: data.priceEP ?? null,
         priceCP: data.priceCP ?? null,
         priceMAP: data.priceMAP ?? null,
-        extraBedPrice: data.extraBedPrice ?? null,
-        childNoBedPrice: data.childNoBedPrice ?? null,
+        extraBedPriceEP: data.extraBedPriceEP ?? null,
+        extraBedPriceCP: data.extraBedPriceCP ?? null,
+        extraBedPriceMAP: data.extraBedPriceMAP ?? null,
+        childNoBedPriceEP: data.childNoBedPriceEP ?? null,
+        childNoBedPriceCP: data.childNoBedPriceCP ?? null,
+        childNoBedPriceMAP: data.childNoBedPriceMAP ?? null,
       }
     });
 

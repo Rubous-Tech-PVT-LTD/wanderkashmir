@@ -25,8 +25,12 @@ export default function RoomManagementPage({ params }: { params: Promise<{ prope
   const [priceEP, setPriceEP] = useState<string>("");
   const [priceCP, setPriceCP] = useState<string>("");
   const [priceMAP, setPriceMAP] = useState<string>("");
-  const [extraBedPrice, setExtraBedPrice] = useState<string>("");
-  const [childNoBedPrice, setChildNoBedPrice] = useState<string>("");
+  const [extraBedPriceEP, setExtraBedPriceEP] = useState<string>("");
+  const [extraBedPriceCP, setExtraBedPriceCP] = useState<string>("");
+  const [extraBedPriceMAP, setExtraBedPriceMAP] = useState<string>("");
+  const [childNoBedPriceEP, setChildNoBedPriceEP] = useState<string>("");
+  const [childNoBedPriceCP, setChildNoBedPriceCP] = useState<string>("");
+  const [childNoBedPriceMAP, setChildNoBedPriceMAP] = useState<string>("");
 
   // Inventory State
   const [selectedRoomId, setSelectedRoomId] = useState<string | null>(null);
@@ -57,8 +61,12 @@ export default function RoomManagementPage({ params }: { params: Promise<{ prope
     setPriceEP("");
     setPriceCP("");
     setPriceMAP("");
-    setExtraBedPrice("");
-    setChildNoBedPrice("");
+    setExtraBedPriceEP("");
+    setExtraBedPriceCP("");
+    setExtraBedPriceMAP("");
+    setChildNoBedPriceEP("");
+    setChildNoBedPriceCP("");
+    setChildNoBedPriceMAP("");
     setShowAddForm(true);
   };
 
@@ -72,8 +80,12 @@ export default function RoomManagementPage({ params }: { params: Promise<{ prope
     setPriceEP(room.priceEP ? String(room.priceEP) : "");
     setPriceCP(room.priceCP ? String(room.priceCP) : "");
     setPriceMAP(room.priceMAP ? String(room.priceMAP) : "");
-    setExtraBedPrice(room.extraBedPrice ? String(room.extraBedPrice) : "");
-    setChildNoBedPrice(room.childNoBedPrice ? String(room.childNoBedPrice) : "");
+    setExtraBedPriceEP(room.extraBedPriceEP ? String(room.extraBedPriceEP) : "");
+    setExtraBedPriceCP(room.extraBedPriceCP ? String(room.extraBedPriceCP) : "");
+    setExtraBedPriceMAP(room.extraBedPriceMAP ? String(room.extraBedPriceMAP) : "");
+    setChildNoBedPriceEP(room.childNoBedPriceEP ? String(room.childNoBedPriceEP) : "");
+    setChildNoBedPriceCP(room.childNoBedPriceCP ? String(room.childNoBedPriceCP) : "");
+    setChildNoBedPriceMAP(room.childNoBedPriceMAP ? String(room.childNoBedPriceMAP) : "");
     setShowAddForm(true);
   };
 
@@ -88,8 +100,12 @@ export default function RoomManagementPage({ params }: { params: Promise<{ prope
       priceEP: priceEP ? parseFloat(priceEP) : null,
       priceCP: priceCP ? parseFloat(priceCP) : null,
       priceMAP: priceMAP ? parseFloat(priceMAP) : null,
-      extraBedPrice: extraBedPrice ? parseFloat(extraBedPrice) : null,
-      childNoBedPrice: childNoBedPrice ? parseFloat(childNoBedPrice) : null,
+      extraBedPriceEP: extraBedPriceEP ? parseFloat(extraBedPriceEP) : null,
+      extraBedPriceCP: extraBedPriceCP ? parseFloat(extraBedPriceCP) : null,
+      extraBedPriceMAP: extraBedPriceMAP ? parseFloat(extraBedPriceMAP) : null,
+      childNoBedPriceEP: childNoBedPriceEP ? parseFloat(childNoBedPriceEP) : null,
+      childNoBedPriceCP: childNoBedPriceCP ? parseFloat(childNoBedPriceCP) : null,
+      childNoBedPriceMAP: childNoBedPriceMAP ? parseFloat(childNoBedPriceMAP) : null,
     };
 
     let res;
@@ -220,21 +236,40 @@ export default function RoomManagementPage({ params }: { params: Promise<{ prope
 
             <div>
               <h3 className="font-bold text-slate-800 border-b border-slate-200 pb-2 mb-4">Additional Charges (Optional)</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-bold text-slate-700 mb-1">Extra Bed</label>
-                  <div className="text-xs text-slate-500 mb-2">Additional Bed Charge</div>
+              <div className="mb-6">
+                <label className="block text-sm font-bold text-slate-700 mb-1">Extra Bed</label>
+                <div className="text-xs text-slate-500 mb-2">Additional Bed Charge by Meal Plan</div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div className="relative">
-                    <span className="absolute left-3 top-2.5 text-slate-500">₹</span>
-                    <input value={extraBedPrice} onChange={e => setExtraBedPrice(e.target.value)} type="number" placeholder="Leave empty if N/A" className="w-full p-2 pl-7 border border-slate-200 rounded-lg" />
+                    <span className="absolute left-3 top-2.5 text-slate-500 text-sm font-bold">EP ₹</span>
+                    <input value={extraBedPriceEP} onChange={e => setExtraBedPriceEP(e.target.value)} type="number" placeholder="500" className="w-full p-2 pl-11 border border-slate-200 rounded-lg" />
+                  </div>
+                  <div className="relative">
+                    <span className="absolute left-3 top-2.5 text-slate-500 text-sm font-bold">CP ₹</span>
+                    <input value={extraBedPriceCP} onChange={e => setExtraBedPriceCP(e.target.value)} type="number" placeholder="600" className="w-full p-2 pl-11 border border-slate-200 rounded-lg" />
+                  </div>
+                  <div className="relative">
+                    <span className="absolute left-3 top-2.5 text-slate-500 text-sm font-bold">MAP ₹</span>
+                    <input value={extraBedPriceMAP} onChange={e => setExtraBedPriceMAP(e.target.value)} type="number" placeholder="700" className="w-full p-2 pl-14 border border-slate-200 rounded-lg" />
                   </div>
                 </div>
-                <div>
-                  <label className="block text-sm font-bold text-slate-700 mb-1">CNB (Child No Bed)</label>
-                  <div className="text-xs text-slate-500 mb-2">Child Without Extra Bed</div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-bold text-slate-700 mb-1">CNB (Child No Bed)</label>
+                <div className="text-xs text-slate-500 mb-2">Child Without Extra Bed Charge by Meal Plan</div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div className="relative">
-                    <span className="absolute left-3 top-2.5 text-slate-500">₹</span>
-                    <input value={childNoBedPrice} onChange={e => setChildNoBedPrice(e.target.value)} type="number" placeholder="Leave empty if N/A" className="w-full p-2 pl-7 border border-slate-200 rounded-lg" />
+                    <span className="absolute left-3 top-2.5 text-slate-500 text-sm font-bold">EP ₹</span>
+                    <input value={childNoBedPriceEP} onChange={e => setChildNoBedPriceEP(e.target.value)} type="number" placeholder="Leave empty" className="w-full p-2 pl-11 border border-slate-200 rounded-lg" />
+                  </div>
+                  <div className="relative">
+                    <span className="absolute left-3 top-2.5 text-slate-500 text-sm font-bold">CP ₹</span>
+                    <input value={childNoBedPriceCP} onChange={e => setChildNoBedPriceCP(e.target.value)} type="number" placeholder="200" className="w-full p-2 pl-11 border border-slate-200 rounded-lg" />
+                  </div>
+                  <div className="relative">
+                    <span className="absolute left-3 top-2.5 text-slate-500 text-sm font-bold">MAP ₹</span>
+                    <input value={childNoBedPriceMAP} onChange={e => setChildNoBedPriceMAP(e.target.value)} type="number" placeholder="400" className="w-full p-2 pl-14 border border-slate-200 rounded-lg" />
                   </div>
                 </div>
               </div>
@@ -272,6 +307,14 @@ export default function RoomManagementPage({ params }: { params: Promise<{ prope
                     {room.priceMAP && <span className="bg-slate-100 text-slate-600 text-xs px-2 py-1 rounded">MAP: ₹{room.priceMAP}</span>}
                     {room.extraBedPrice && <span className="bg-slate-100 text-slate-600 text-xs px-2 py-1 rounded">Ex. Bed: ₹{room.extraBedPrice}</span>}
                     {room.childNoBedPrice && <span className="bg-slate-100 text-slate-600 text-xs px-2 py-1 rounded">CNB: ₹{room.childNoBedPrice}</span>}
+                    
+                    {room.extraBedPriceEP && <span className="bg-slate-100 text-slate-600 text-xs px-2 py-1 rounded">Ex. Bed (EP): ₹{room.extraBedPriceEP}</span>}
+                    {room.extraBedPriceCP && <span className="bg-slate-100 text-slate-600 text-xs px-2 py-1 rounded">Ex. Bed (CP): ₹{room.extraBedPriceCP}</span>}
+                    {room.extraBedPriceMAP && <span className="bg-slate-100 text-slate-600 text-xs px-2 py-1 rounded">Ex. Bed (MAP): ₹{room.extraBedPriceMAP}</span>}
+                    
+                    {room.childNoBedPriceEP && <span className="bg-slate-100 text-slate-600 text-xs px-2 py-1 rounded">CNB (EP): ₹{room.childNoBedPriceEP}</span>}
+                    {room.childNoBedPriceCP && <span className="bg-slate-100 text-slate-600 text-xs px-2 py-1 rounded">CNB (CP): ₹{room.childNoBedPriceCP}</span>}
+                    {room.childNoBedPriceMAP && <span className="bg-slate-100 text-slate-600 text-xs px-2 py-1 rounded">CNB (MAP): ₹{room.childNoBedPriceMAP}</span>}
                   </div>
                 </div>
                 <div className="flex gap-2">

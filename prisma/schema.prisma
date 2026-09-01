@@ -168,6 +168,12 @@ model RoomType {
   // Occupancy Add-ons
   extraBedPrice   Float?
   childNoBedPrice Float?
+  extraBedPriceEP    Float?
+  extraBedPriceCP    Float?
+  extraBedPriceMAP   Float?
+  childNoBedPriceEP  Float?
+  childNoBedPriceCP  Float?
+  childNoBedPriceMAP Float?
 
   bookings    Booking[]
   inventories RoomInventory[]
