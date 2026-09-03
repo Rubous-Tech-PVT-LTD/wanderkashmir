@@ -4,16 +4,18 @@ import { Users, FileText, Calendar, TrendingUp } from "lucide-react";
 
 export default async function BADashboard({ session }: { session: any }) {
   // Each model has a different field name for the BA relationship
-  const [newLeadsCount, requirementsCount, quotationsCount, followUpsCount] = await Promise.all([
+  const [newLeadsCount, requirementsCount, quotationsCount, followUpsCount, reachedLeadsCount] = await Promise.all([
     prisma.crmLead.count({ where: { assignedBaId: session.userId, status: "NEW" } }),
     prisma.crmRequirement.count({ where: { partner: { assignedBaId: session.userId } } }),
     prisma.crmQuotation.count({ where: { baId: session.userId } }),
     prisma.crmFollowUp.count({ where: { baId: session.userId } }),
+    prisma.crmLeadReachedLog.count({ where: { baId: session.userId } }),
   ]);
 
   const kpis = [
     { name: "New Leads", count: newLeadsCount, icon: Users, href: "/dashboard/leads", color: "bg-blue-100 text-blue-600" },
     { name: "Follow-ups", count: followUpsCount, icon: Calendar, href: "/dashboard/follow-ups", color: "bg-orange-100 text-orange-600" },
+    { name: "Reached Leads", count: reachedLeadsCount, icon: FileText, href: "/dashboard/leads/reached", color: "bg-teal-100 text-teal-600" },
     { name: "Requirements", count: requirementsCount, icon: FileText, href: "/dashboard/requirements", color: "bg-purple-100 text-purple-600" },
     { name: "Quotations", count: quotationsCount, icon: TrendingUp, href: "/dashboard/quotations", color: "bg-green-100 text-green-600" },
   ];

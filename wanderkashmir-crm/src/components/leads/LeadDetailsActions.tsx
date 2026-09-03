@@ -6,6 +6,8 @@ import WhatsAppModal from "./WhatsAppModal";
 import LogCallModal from "./LogCallModal";
 import ConvertPartnerModal from "./ConvertPartnerModal";
 import CrmEmailModal from "./CrmEmailModal";
+import MarkReachedModal from "./MarkReachedModal";
+import { Flag } from "lucide-react";
 
 type ActionProps = {
   leadId: string;
@@ -30,6 +32,7 @@ export default function LeadDetailsActions({
   const [isCallOpen, setIsCallOpen] = useState(false);
   const [isConvertOpen, setIsConvertOpen] = useState(false);
   const [isEmailOpen, setIsEmailOpen] = useState(false);
+  const [isReachedOpen, setIsReachedOpen] = useState(false);
 
   return (
     <>
@@ -59,6 +62,14 @@ export default function LeadDetailsActions({
         >
           <Mail className="h-4 w-4" />
           Email
+        </button>
+
+        <button
+          onClick={() => setIsReachedOpen(true)}
+          className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-amber-700 bg-amber-50 border border-amber-200 rounded-md hover:bg-amber-100"
+        >
+          <Flag className="h-4 w-4" />
+          Mark as Reached
         </button>
 
         {canConvert && (
@@ -97,6 +108,14 @@ export default function LeadDetailsActions({
         <ConvertPartnerModal
           leadId={leadId}
           onClose={() => setIsConvertOpen(false)}
+          onSuccess={() => window.location.reload()}
+        />
+      )}
+
+      {isReachedOpen && (
+        <MarkReachedModal
+          leadId={leadId}
+          onClose={() => setIsReachedOpen(false)}
           onSuccess={() => window.location.reload()}
         />
       )}

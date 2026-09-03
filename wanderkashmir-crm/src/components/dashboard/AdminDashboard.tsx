@@ -21,6 +21,7 @@ export default async function AdminDashboard({ session }: { session: any }) {
     overdueFollowUps,
     quotationsAwaitingReview,
     requirementsAwaitingAction,
+    reachedLeads,
   ] = await Promise.all([
     prisma.crmLead.count(),
     prisma.crmLead.count({ where: { status: "NEW" } }),
@@ -37,6 +38,7 @@ export default async function AdminDashboard({ session }: { session: any }) {
     prisma.crmFollowUp.count({ where: { status: "PENDING", dueDate: { lt: new Date() } } }),
     prisma.crmQuotation.count({ where: { status: "INTERNAL_REVIEW" } }),
     prisma.crmRequirement.count({ where: { status: { in: ["NEW", "UNDER_REVIEW"] } } }),
+    prisma.crmLeadReachedLog.count(),
   ]);
 
   const kpis = [
@@ -48,6 +50,7 @@ export default async function AdminDashboard({ session }: { session: any }) {
     { name: "Active Req.", count: activeRequirements, icon: FileText, href: "/dashboard/requirements", color: "bg-purple-100 text-purple-600" },
     { name: "Pending Quotes", count: pendingQuotations, icon: TrendingUp, href: "/dashboard/quotations", color: "bg-orange-100 text-orange-600" },
     { name: "Active Bookings", count: activeBookings, icon: BookOpen, href: "/dashboard/bookings", color: "bg-indigo-100 text-indigo-600" },
+    { name: "Reached Leads", count: reachedLeads, icon: FileText, href: "/dashboard/leads/reached", color: "bg-teal-100 text-teal-600" },
   ];
 
   return (

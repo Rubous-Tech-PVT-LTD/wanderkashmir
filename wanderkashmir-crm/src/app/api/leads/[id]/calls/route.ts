@@ -21,6 +21,12 @@ export async function POST(
       return NextResponse.json({ error: 'Outcome is required' }, { status: 400 });
     }
 
+    const isDirectComplete = outcome === 'Not Interested' || outcome === 'Wrong Number' || outcome === 'NOT_INTERESTED' || outcome === 'WRONG_NUMBER';
+
+    if (isDirectComplete && (!notes || notes.trim() === '')) {
+      return NextResponse.json({ error: 'Internal Notes are mandatory for this outcome' }, { status: 400 });
+    }
+
     // 1. Verify lead exists and user has permission
     const lead = await prisma.crmLead.findUnique({
       where: { id: leadId },
@@ -67,8 +73,11 @@ export async function POST(
       } else if (outcome === 'INTERESTED') {
         newStatus = 'INTERESTED';
         shouldUpdateStatus = true;
-      } else if (outcome === 'NOT_INTERESTED') {
+      } else if (outcome === 'NOT_INTERESTED' || outcome === 'Not Interested') {
         newStatus = 'NOT_INTERESTED';
+        shouldUpdateStatus = true;
+      } else if (outcome === 'WRONG_NUMBER' || outcome === 'Wrong Number') {
+        newStatus = 'WRONG_NUMBER';
         shouldUpdateStatus = true;
       }
     }
@@ -87,9 +96,26 @@ export async function POST(
       });
     }
 
-    // 4. Create Follow-up if requested
+    // 4. Handle Reached/Follow-up Logic
     let followUp = null;
-    if (followUpDate) {
+    
+    if (isDirectComplete) {
+      // Create AUTOMATIC Reached Log
+      await prisma.crmLeadReachedLog.upsert({
+        where: { leadId },
+        create: {
+          leadId,
+          baId: session.userId,
+          source: 'AUTOMATIC',
+          remarks: notes,
+        },
+        update: {
+          source: 'AUTOMATIC',
+          remarks: notes,
+        }
+      });
+      // Ensure no follow-up is created
+    } else if (followUpDate) {
       followUp = await prisma.crmFollowUp.create({
         data: {
           leadId,

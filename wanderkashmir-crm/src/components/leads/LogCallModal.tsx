@@ -25,6 +25,12 @@ export default function LogCallModal({ leadId, onClose, onSuccess }: LogCallModa
       return;
     }
 
+    const isDirectComplete = outcome === 'NOT_INTERESTED' || outcome === 'WRONG_NUMBER';
+    if (isDirectComplete && (!notes || notes.trim() === '')) {
+      setError("Internal Notes are mandatory for this outcome");
+      return;
+    }
+
     setIsSubmitting(true);
     setError("");
 
@@ -92,8 +98,11 @@ export default function LogCallModal({ leadId, onClose, onSuccess }: LogCallModa
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Call Notes</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Call Notes {(outcome === 'NOT_INTERESTED' || outcome === 'WRONG_NUMBER') ? '*' : ''}
+            </label>
             <textarea
+              required={outcome === 'NOT_INTERESTED' || outcome === 'WRONG_NUMBER'}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary focus:border-primary text-sm"
               rows={3}
               placeholder="e.g. Agent handles Kashmir packages and is interested in B2B rates."
@@ -161,8 +170,9 @@ export default function LogCallModal({ leadId, onClose, onSuccess }: LogCallModa
             </div>
           )}
 
-          <div className="pt-2 border-t border-gray-100">
-            <h4 className="text-sm font-medium text-gray-900 mb-3">Schedule Follow-up (Optional)</h4>
+          {!(outcome === 'NOT_INTERESTED' || outcome === 'WRONG_NUMBER') && (
+            <div className="pt-2 border-t border-gray-100">
+              <h4 className="text-sm font-medium text-gray-900 mb-3">Schedule Follow-up (Optional)</h4>
             
             <div className="space-y-3">
               <div>
@@ -187,6 +197,7 @@ export default function LogCallModal({ leadId, onClose, onSuccess }: LogCallModa
               </div>
             </div>
           </div>
+          )}
 
           <div className="flex items-center justify-end gap-3 pt-4">
             <button

@@ -553,37 +553,39 @@ model CrmUser {
   commissions   CrmCommissionLedger[]
   followUps     CrmFollowUp[]
   assignedLeads CrmLead[]
+  reachedLogs   CrmLeadReachedLog[]
 }
 
 model CrmLead {
-  id               String            @id @default(cuid())
-  companyName      String
-  contactPerson    String?
-  phone            String
-  email            String?
-  website          String?
-  city             String?
-  state            String?
-  agentType        String?
-  source           String?
-  status           CrmLeadStatus     @default(NEW)
-  interestLevel    String?
-  assignedBaId     String?
-  lastContactDate  DateTime?
-  nextFollowUpDate DateTime?
-  notes            String?
-  createdAt        DateTime          @default(now())
-  updatedAt        DateTime          @updatedAt
-  whatsappNumber   String?
-  createdBy        String?
-  rotationBatchId  String?
-  callLogs         CrmCallLog[]
-  followUps        CrmFollowUp[]
-  assignedBa       CrmUser?          @relation(fields: [assignedBaId], references: [id])
-  rotationBatch    CrmRotationBatch? @relation(fields: [rotationBatchId], references: [id])
-  partner          CrmPartner?
-  interestProofUrl String?
+  id                  String             @id @default(cuid())
+  companyName         String
+  contactPerson       String?
+  phone               String
+  email               String?
+  website             String?
+  city                String?
+  state               String?
+  agentType           String?
+  source              String?
+  status              CrmLeadStatus      @default(NEW)
+  interestLevel       String?
+  assignedBaId        String?
+  lastContactDate     DateTime?
+  nextFollowUpDate    DateTime?
+  notes               String?
+  createdAt           DateTime           @default(now())
+  updatedAt           DateTime           @updatedAt
+  whatsappNumber      String?
+  createdBy           String?
+  rotationBatchId     String?
+  callLogs            CrmCallLog[]
+  followUps           CrmFollowUp[]
+  assignedBa          CrmUser?           @relation(fields: [assignedBaId], references: [id])
+  rotationBatch       CrmRotationBatch?  @relation(fields: [rotationBatchId], references: [id])
+  partner             CrmPartner?
+  interestProofUrl    String?
   interestProofStatus String?
+  reachedLog          CrmLeadReachedLog?
 
   @@index([phone])
   @@index([email])
@@ -606,6 +608,27 @@ model CrmCallLog {
   createdAt    DateTime  @default(now())
   ba           CrmUser   @relation(fields: [baId], references: [id])
   lead         CrmLead   @relation(fields: [leadId], references: [id], onDelete: Cascade)
+}
+
+enum CrmLeadReachedSource {
+  MANUAL
+  AUTOMATIC
+}
+
+model CrmLeadReachedLog {
+  id        String               @id @default(cuid())
+  leadId    String               @unique
+  baId      String
+  source    CrmLeadReachedSource
+  reachedAt DateTime             @default(now())
+  remarks   String?
+  createdAt DateTime             @default(now())
+
+  lead CrmLead @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  ba   CrmUser @relation(fields: [baId], references: [id])
+
+  @@index([baId])
+  @@index([source])
 }
 
 model CrmFollowUp {
@@ -691,35 +714,35 @@ model CrmRequirement {
 }
 
 model CrmQuotation {
-  id                  String             @id @default(cuid())
-  requirementId       String
-  partnerId           String
-  baId                String
-  customerPrice       Float?
-  partnerPrice        Float
-  retailPrice         Float?
-  itinerary           Json?
-  wanderKashmirMargin Float
-  version             Int                @default(1)
-  totalCost           Float              @default(0)
-  totalSellingPrice   Float              @default(0)
-  discount            Float              @default(0)
-  discountType        String             @default("FIXED")
-  grossMargin         Float              @default(0)
-  netMargin           Float              @default(0)
-  status              CrmQuotationStatus   @default(DRAFT)
-  validUntil          DateTime?
-  terms               String?              @db.Text
-  cancellationPolicy  String?              @db.Text
+  id                   String             @id @default(cuid())
+  requirementId        String
+  partnerId            String
+  baId                 String
+  customerPrice        Float?
+  partnerPrice         Float
+  retailPrice          Float?
+  itinerary            Json?
+  wanderKashmirMargin  Float
+  version              Int                @default(1)
+  totalCost            Float              @default(0)
+  totalSellingPrice    Float              @default(0)
+  discount             Float              @default(0)
+  discountType         String             @default("FIXED")
+  grossMargin          Float              @default(0)
+  netMargin            Float              @default(0)
+  status               CrmQuotationStatus @default(DRAFT)
+  validUntil           DateTime?
+  terms                String?            @db.Text
+  cancellationPolicy   String?            @db.Text
   confirmationProofUrl String?
   confirmedAt          DateTime?
   confirmedById        String?
-  createdAt           DateTime             @default(now())
-  updatedAt           DateTime             @updatedAt
-  bookings            CrmBooking[]
-  partner             CrmPartner         @relation(fields: [partnerId], references: [id])
-  requirement         CrmRequirement     @relation(fields: [requirementId], references: [id])
-  items               CrmQuotationItem[]
+  createdAt            DateTime           @default(now())
+  updatedAt            DateTime           @updatedAt
+  bookings             CrmBooking[]
+  partner              CrmPartner         @relation(fields: [partnerId], references: [id])
+  requirement          CrmRequirement     @relation(fields: [requirementId], references: [id])
+  items                CrmQuotationItem[]
 }
 
 model CrmQuotationItem {
@@ -881,6 +904,7 @@ enum CrmLeadStatus {
   NOT_CONNECTED
   INTERESTED
   NOT_INTERESTED
+  WRONG_NUMBER
   WHATSAPP_SENT
   PARTNER_REGISTERED
   REQUIREMENT_RECEIVED
