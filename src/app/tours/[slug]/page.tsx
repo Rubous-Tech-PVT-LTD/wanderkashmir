@@ -96,6 +96,29 @@ export default async function TourPage({ params }: { params: Promise<{ slug: str
     "@context": "https://schema.org",
     "@graph": [
       {
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+          {
+            "@type": "ListItem",
+            "position": 1,
+            "name": "Home",
+            "item": baseUrl
+          },
+          {
+            "@type": "ListItem",
+            "position": 2,
+            "name": "Tours",
+            "item": `${baseUrl}/tours`
+          },
+          {
+            "@type": "ListItem",
+            "position": 3,
+            "name": tour.title,
+            "item": `${baseUrl}/tours/${slug}`
+          }
+        ]
+      },
+      {
         "@type": ["Product", "TouristTrip"],
         "name": tour.title,
         "description": tour.overview || `Experience ${tour.title} with WanderKashmir.`,

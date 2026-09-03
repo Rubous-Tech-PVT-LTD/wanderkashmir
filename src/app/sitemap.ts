@@ -30,6 +30,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   try {
     const tours = await prisma.tour.findMany({
+      where: { isLive: true },
       select: { slug: true, updatedAt: true },
       take: 5000
     })

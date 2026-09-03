@@ -2,6 +2,7 @@ import prisma from "@/lib/prisma";
 import ToursClient from "./ToursClient";
 import { Metadata } from "next";
 import { Suspense } from "react";
+import Link from "next/link";
 
 export const metadata: Metadata = {
   title: "Best Kashmir Tour Packages (2026/2027) | Family, Honeymoon & Adventure Itineraries",
@@ -87,6 +88,29 @@ export default async function ToursPage() {
       <Suspense fallback={<div className="min-h-screen pt-20 flex items-center justify-center"><div className="w-8 h-8 border-4 border-orange-500 border-t-transparent rounded-full animate-spin"></div></div>}>
         <ToursClient initialTours={tours} dbCategories={dbCategories} />
       </Suspense>
+      
+      {/* Crawlable Tour Directory for SEO */}
+      <div className="bg-slate-50 border-t border-slate-100">
+        <div className="container-custom py-12">
+          <div className="max-w-7xl mx-auto">
+            <h2 className="text-xl font-bold mb-6 text-slate-800">Complete Kashmir Tour Directory</h2>
+            <nav aria-label="Tour Directory">
+              <ul className="flex flex-wrap gap-x-6 gap-y-3">
+                {tours.map(tour => tour.isLive && (
+                  <li key={tour.id}>
+                    <Link 
+                      href={`/tours/${tour.slug}`} 
+                      className="text-sm text-slate-600 hover:text-orange-500 underline decoration-slate-200 underline-offset-4 transition-colors"
+                    >
+                      {tour.title}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </nav>
+          </div>
+        </div>
+      </div>
     </>
   );
 }
