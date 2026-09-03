@@ -10,6 +10,7 @@ import { getValidImageUrl } from "@/lib/imageUtils";
 import { Suspense } from "react";
 import GoogleReviewsWrapper from "@/components/GoogleReviewsWrapper";
 import PromoWrapper from "@/components/PromoWrapper";
+import { getGooglePlaceReviews } from "@/actions/google-reviews";
 
 import PopularSeoRoutes from "@/components/PopularSeoRoutes";
 import Link from "next/link";

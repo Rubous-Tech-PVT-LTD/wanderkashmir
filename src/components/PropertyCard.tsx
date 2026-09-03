@@ -61,7 +61,7 @@ export default function PropertyCard({
           <h3 className="font-semibold text-slate-900 text-base leading-snug mb-1 line-clamp-1 group-hover:text-[var(--primary)] transition-colors">
             {name}
           </h3>
-          <p className="text-xs text-slate-500 mb-3">{location}</p>
+          <p className="text-xs text-slate-500 mb-3">{type} • {location}</p>
 
           <div className="mt-auto flex items-end justify-between">
             <div className="flex items-center gap-1 text-sm text-slate-500">
