@@ -347,7 +347,7 @@ export default function PrivacyPolicyPage() {
                 <div>
                   <div className="text-xs uppercase tracking-wider text-slate-400 font-semibold mb-1">Registered Office</div>
                   <p className="text-slate-300 text-sm">
-                    Devlok Block Majra, Dehradun, Uttarakhand, India
+                    Hati Gam, Anantnag, Jammu and Kashmir, 192401
                   </p>
                 </div>
               </div>

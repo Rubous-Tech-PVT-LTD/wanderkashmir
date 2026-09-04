@@ -130,7 +130,7 @@ export default function Footer() {
               </a>
               <div className="flex items-center gap-2.5 text-sm">
                 <MapPin className="w-4 h-4 text-[var(--primary)] flex-shrink-0" />
-                Devlok Block Majra Dehradhun Uttrakhand
+                Hati Gam, Anantnag, Jammu and Kashmir, 192401
               </div>
             </div>
             {/* Social */}
