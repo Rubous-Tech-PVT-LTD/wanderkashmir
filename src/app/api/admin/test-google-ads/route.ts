@@ -70,9 +70,9 @@ export async function GET(request: Request) {
     diagnosticInfo.authenticationSuccess = true;
 
     // 3. Call KeywordPlanIdeaService
-    // Using v17 as an example, but standard for Ads API
+    // Using v25 as specified
     const formattedCustomerId = customerId.replace(/-/g, '');
-    const apiUrl = `https://googleads.googleapis.com/v17/customers/${formattedCustomerId}:generateKeywordIdeas`;
+    const apiUrl = `https://googleads.googleapis.com/v25/customers/${formattedCustomerId}:generateKeywordIdeas`;
     
     const headers: Record<string, string> = {
       'Authorization': `Bearer ${token}`,
@@ -85,10 +85,16 @@ export async function GET(request: Request) {
     }
 
     const body = {
+      // The API requires the customerId in the payload or URL depending on version. We'll pass it in URL.
+      // 1000 is English
+      language: "languageConstants/1000",
+      // 2356 is India
+      geoTargetConstants: ["geoTargetConstants/2356"],
+      keywordPlanNetwork: "GOOGLE_SEARCH",
       keywordSeed: {
         keywords: ['kashmir tour package']
       },
-      pageSize: 5 // Minimal results
+      pageSize: 5
     };
 
     const response = await fetch(apiUrl, {
@@ -97,17 +103,24 @@ export async function GET(request: Request) {
       body: JSON.stringify(body)
     });
 
-    const data = await response.json();
+    const contentType = response.headers.get("content-type") || "";
+    const bodyText = await response.text();
+
+    diagnosticInfo.error = null; // Clear initial errors
 
     if (!response.ok) {
-      // Redact sensitive values from error if any, though usually Google doesn't return them in response
       diagnosticInfo.error = {
         status: response.status,
-        statusText: response.statusText,
-        details: data.error
+        contentType: contentType,
+        url: apiUrl,
+        bodyPreview: bodyText.slice(0, 500)
       };
       return NextResponse.json(diagnosticInfo);
     }
+
+    const data = contentType.includes("application/json")
+      ? JSON.parse(bodyText)
+      : { rawResponse: bodyText.slice(0, 500) };
 
     diagnosticInfo.keywordPlanIdeaServiceSuccess = true;
     
@@ -115,10 +128,12 @@ export async function GET(request: Request) {
       diagnosticInfo.keywordIdeasCount = data.results.length;
       diagnosticInfo.exampleKeywords = data.results.map((r: any) => {
         return {
-          text: r.keywordIdeaMetrics?.text || r.text, // Depends on exact response structure, usually r.text
+          text: r.keywordIdeaMetrics?.text || r.text, 
           avgMonthlySearches: r.keywordIdeaMetrics?.avgMonthlySearches
         };
       });
+    } else {
+       diagnosticInfo.exampleKeywords = data.rawResponse ? [data.rawResponse] : [];
     }
 
     return NextResponse.json(diagnosticInfo);
