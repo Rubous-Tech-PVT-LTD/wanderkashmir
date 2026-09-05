@@ -157,8 +157,10 @@ export default function ToursClient({ initialTours, dbCategories = [] }: { initi
       <div className="pt-20 min-h-screen">
         {/* Header */}
         <div
-          className="relative py-16 overflow-hidden bg-gradient-to-br from-orange-500 to-orange-600"
+          className="relative py-24 overflow-hidden bg-cover bg-center"
+          style={{ backgroundImage: "url('https://res.cloudinary.com/dcmoseix9/image/upload/v1787721372/winterimg_zeyr7g.jpg')" }}
         >
+          <div className="absolute inset-0 bg-gradient-to-br from-black/70 via-black/40 to-black/60 z-0"></div>
           <div className="container-custom text-center text-white relative z-10">
             <p className="text-sm font-semibold uppercase tracking-wider text-orange-100 mb-3">
               Curated Experiences
