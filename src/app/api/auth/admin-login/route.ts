@@ -48,6 +48,7 @@ export async function POST(request: Request) {
       value: sessionToken,
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
+      domain: process.env.NODE_ENV === "production" ? ".wanderkashmir.com" : undefined,
       maxAge: 60 * 60 * 24, // 24 hours
       path: "/",
     });
