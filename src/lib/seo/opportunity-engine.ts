@@ -6,20 +6,35 @@ import { ContentOpportunity } from "./types";
 const LOCATIONS = ['gulmarg', 'pahalgam', 'srinagar', 'sonmarg', 'kashmir', 'vergan', 'doodhpathri', 'yousmarg'];
 const INTENTS = ['cafe', 'taxi', 'cab', 'hotel', 'resort', 'homestay', 'tour', 'package', 'places', 'itinerary', 'guide', 'weather', 'distance', 'fare'];
 
-function getEntities(query: string) {
-  const words = query.toLowerCase().split(/[^a-z0-9]+/);
+const PLURALS: Record<string, string> = { hotels: 'hotel', resorts: 'resort', homestays: 'homestay', tours: 'tour', packages: 'package', taxis: 'taxi', cabs: 'cab' };
+
+export function getEntities(query: string) {
+  const words = query.toLowerCase().split(/[^a-z0-9]+/).map(w => PLURALS[w] || w);
   const locs = words.filter(w => LOCATIONS.includes(w));
   const ints = words.filter(w => INTENTS.includes(w));
   return { locs, ints, words: words.filter(w => w.length > 3 && !LOCATIONS.includes(w) && !INTENTS.includes(w)) };
 }
 
-function inferIntent(query: string, ints: string[]): ContentOpportunity['intent'] {
+export function inferIntent(query: string, ints: string[]): ContentOpportunity['intent'] {
   const q = query.toLowerCase();
+  
+  // 1. Transactional/Booking intent (highest precedence)
   if (q.includes('book') || q.includes('price') || q.includes('cost') || q.includes('fare')) return 'TRANSACTIONAL';
-  if (ints.some(i => ['taxi', 'cab'].includes(i)) || q.includes('to')) return 'LOCAL'; // Transport
-  if (q.includes('best') || q.includes('top') || q.includes('review')) return 'COMMERCIAL';
-  if (q.includes('how') || q.includes('what') || q.includes('guide') || q.includes('weather')) return 'INFORMATIONAL';
+  
+  // 2. Local/Transport
+  const isRoute = LOCATIONS.some(l1 => LOCATIONS.some(l2 => l1 !== l2 && q.includes(`${l1} to ${l2}`)));
+  if (ints.some(i => ['taxi', 'cab'].includes(i)) || q.includes('transfer') || q.includes('transport') || isRoute) return 'LOCAL'; // Transport
+  
+  // 3. Informational Modifiers (explicitly overrides generic entity words)
+  const infoWords = ['itinerary', 'details', 'inclusion', 'exclusion', 'review', 'guide', 'information', 'info', 'how', 'what', 'why', 'things to do', 'places to visit', 'attractions', 'tips', 'rooms', 'weather'];
+  if (infoWords.some(w => q.includes(w))) return 'INFORMATIONAL';
+  
+  // 4. Commercial Modifiers (comparison/intent to buy)
+  if (q.includes('best') || q.includes('top')) return 'COMMERCIAL';
+  
+  // 5. Generic Entity words
   if (ints.some(i => ['hotel', 'resort', 'homestay', 'tour', 'package'].includes(i))) return 'COMMERCIAL';
+  
   return 'UNKNOWN';
 }
 
@@ -89,6 +104,7 @@ export async function detectOpportunities(saveToDb = false): Promise<ContentOppo
     // 3. Existing Page Check
     const existingSeoPages: { id?: string; type: string; slug: string; title: string }[] = await prisma.seoLandingPage.findMany({ select: { id: true, slug: true, title: true, type: true }});
     const existingProperties = await prisma.property.findMany({ select: { id: true, name: true }});
+    const existingTours = await prisma.tour.findMany({ where: { isLive: true }, select: { id: true, title: true, slug: true, category: true }});
 
     for (const cluster of clusters) {
        const primaryQuery = cluster.queries[0]; // The highest impression query in the cluster
@@ -112,9 +128,24 @@ export async function detectOpportunities(saveToDb = false): Promise<ContentOppo
            topRankingGscUrl = pagesArray[0]; // Take the first ranking page reported by GSC
        }
        
-       // Match properties
-       const matchedProp = existingProperties.find(p => p.name.toLowerCase().includes(ents.words.join(' ')) && ents.words.length > 0 || p.name.toLowerCase() === primaryQuery);
-       if (matchedProp) {
+       // Match properties and tours (intent-aware)
+       const isCommercialQuery = intent === 'COMMERCIAL' || intent === 'TRANSACTIONAL';
+       
+       const matchedProp = existingProperties.find(p => 
+         p.name.toLowerCase() === primaryQuery || 
+         (isCommercialQuery && primaryQuery.includes(p.name.toLowerCase())) ||
+         (isCommercialQuery && p.name.toLowerCase().includes(ents.words.join(' ')) && ents.words.length > 0)
+       );
+       
+       const matchedTour = existingTours.find(t => 
+         t.title.toLowerCase() === primaryQuery || 
+         (isCommercialQuery && primaryQuery.includes(t.title.toLowerCase())) ||
+         (isCommercialQuery && t.title.toLowerCase().includes(ents.words.join(' ')) && ents.words.length > 0)
+       );
+       
+       if (matchedTour) {
+         existingPage = { id: matchedTour.id, url: `/tours/${matchedTour.slug}`, title: matchedTour.title, type: 'TOUR' };
+       } else if (matchedProp) {
          existingPage = { id: matchedProp.id, url: `/stays/${matchedProp.id}`, title: matchedProp.name, type: 'PROPERTY' };
        } else if (topRankingGscUrl) {
          // If GSC tells us what page ranks, use it! It's a real existing page.
@@ -139,6 +170,7 @@ export async function detectOpportunities(saveToDb = false): Promise<ContentOppo
        // Check for cannibalization (multiple pages matching)
        let matchCount = 0;
        if (matchedProp) matchCount++;
+       if (matchedTour) matchCount++;
        existingSeoPages.forEach(p => {
           if (querySlugified.includes(p.slug) || p.slug.includes(querySlugified) || p.title.toLowerCase().includes(primaryQuery)) matchCount++;
        });

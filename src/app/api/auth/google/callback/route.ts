@@ -7,6 +7,9 @@ import { encryptString } from "@/lib/encryption";
 
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
 const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
+const GOOGLE_ADS_CLIENT_ID = process.env.GOOGLE_ADS_CLIENT_ID;
+const GOOGLE_ADS_CLIENT_SECRET = process.env.GOOGLE_ADS_CLIENT_SECRET;
+
 const GOOGLE_REDIRECT_URI = process.env.NODE_ENV === "production" 
   ? "https://www.wanderkashmir.com/api/auth/google/callback" 
   : process.env.GOOGLE_REDIRECT_URI;
@@ -16,10 +19,6 @@ export async function GET(request: Request) {
   
   if (!session || session.role !== "ADMIN") {
     return new NextResponse("Unauthorized", { status: 401 });
-  }
-
-  if (!GOOGLE_CLIENT_ID || !GOOGLE_CLIENT_SECRET || !GOOGLE_REDIRECT_URI) {
-    return new NextResponse("Google OAuth configuration missing", { status: 500 });
   }
 
   const { searchParams } = new URL(request.url);
@@ -47,10 +46,26 @@ export async function GET(request: Request) {
   // Clear state cookie
   cookieStore.delete("google_oauth_state");
 
+  // Determine provider from state prefix
+  const isAds = state.startsWith("ADS_");
+  const isGsc = state.startsWith("GSC_");
+
+  // Fallback to GSC if neither (for backward compatibility if a flow was in progress)
+  const provider = isAds ? "ADS" : "GSC";
+
+  const clientId = provider === "ADS" ? GOOGLE_ADS_CLIENT_ID : GOOGLE_CLIENT_ID;
+  const clientSecret = provider === "ADS" ? GOOGLE_ADS_CLIENT_SECRET : GOOGLE_CLIENT_SECRET;
+  const dbKey = provider === "ADS" ? "GOOGLE_ADS_REFRESH_TOKEN" : "GSC_REFRESH_TOKEN";
+  const successParam = provider === "ADS" ? "google_ads_connected" : "gsc_connected";
+
+  if (!clientId || !clientSecret || !GOOGLE_REDIRECT_URI) {
+    return new NextResponse(`Google OAuth configuration missing for ${provider}`, { status: 500 });
+  }
+
   try {
     const oauth2Client = new google.auth.OAuth2(
-      GOOGLE_CLIENT_ID,
-      GOOGLE_CLIENT_SECRET,
+      clientId,
+      clientSecret,
       GOOGLE_REDIRECT_URI
     );
 
@@ -66,14 +81,14 @@ export async function GET(request: Request) {
 
     // Save to SystemConfig
     await prisma.systemConfig.upsert({
-      where: { key: "GSC_REFRESH_TOKEN" },
+      where: { key: dbKey },
       update: { value: encryptedToken },
-      create: { key: "GSC_REFRESH_TOKEN", value: encryptedToken },
+      create: { key: dbKey, value: encryptedToken },
     });
 
-    return NextResponse.redirect(new URL("/wander-admin?success=gsc_connected", request.url));
+    return NextResponse.redirect(new URL(`/wander-admin?success=${successParam}`, request.url));
   } catch (err) {
-    console.error("Failed to exchange Google OAuth code:", err);
+    console.error(`Failed to exchange Google OAuth code for ${provider}:`, err);
     return new NextResponse("Authentication failed", { status: 500 });
   }
 }

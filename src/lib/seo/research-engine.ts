@@ -3,6 +3,7 @@ import { getGscAnalytics, getGscSiteUrl } from "@/lib/gsc-client";
 import { SeoResearch } from "./types";
 import { keywordProvider, serpProvider, googleTrendsProvider, keywordPlannerProvider } from "./research/providers";
 import { generateManualReviewRecommendation } from "./manual-review-engine";
+import { inferIntent, getEntities } from "./opportunity-engine";
 
 export async function runSeoResearch(target: string, type: string, targetUrl?: string, historicalBaseline?: any): Promise<SeoResearch> {
   const isExistingPage = !!targetUrl;
@@ -105,6 +106,10 @@ export async function runSeoResearch(target: string, type: string, targetUrl?: s
     const existingProperties = await prisma.property.findMany({
       select: { id: true, name: true, location: true }
     });
+    const existingTours = await prisma.tour.findMany({
+      where: { isLive: true },
+      select: { id: true, title: true, slug: true }
+    });
 
     const stopWords = new Set(['to', 'the', 'in', 'for', 'and', 'of', 'with', 'a', 'an', 'is', 'called', 'what', 'fare', 'cost', 'guide', 'places', 'unique', 'hidden', 'best', 'top', '2026', '2025', '2024']);
     const targetWords = target.toLowerCase().split(/[^a-z0-9]+/).filter(w => w.length > 2 && !stopWords.has(w));
@@ -132,8 +137,21 @@ export async function runSeoResearch(target: string, type: string, targetUrl?: s
       ...p,
       entityType: 'SEO_LANDING_PAGE' as const
     }));
+    
+    const tourCandidates = existingTours.map(t => ({
+      id: t.id,
+      title: t.title,
+      slug: t.slug,
+      type: 'TOUR',
+      entityType: 'TOUR' as const
+    }));
 
-    const allCandidates = [...seoPageCandidates, ...propertyCandidates];
+    const allCandidates = [...seoPageCandidates, ...propertyCandidates, ...tourCandidates];
+    
+    const ents = getEntities(target);
+    const queryIntent = inferIntent(target, ents.ints);
+    const isCommercialQuery = queryIntent === 'COMMERCIAL' || queryIntent === 'TRANSACTIONAL';
+    const isInformationalQuery = queryIntent === 'INFORMATIONAL';
 
     const competing = allCandidates.filter(p => {
       const slugClean = p.slug.toLowerCase();
@@ -150,19 +168,38 @@ export async function runSeoResearch(target: string, type: string, targetUrl?: s
       for (const w of targetWords) {
         if (titleWords.includes(w) || slugClean.includes(w)) matches++;
       }
-      return hasEntityMatch && matches >= Math.min(2, targetWords.length) && targetWords.length > 0;
+      
+      const hasStringMatch = hasEntityMatch && matches >= Math.min(2, targetWords.length) && targetWords.length > 0;
+      if (!hasStringMatch) return false;
+      
+      // Phase 2: Intent-based filtering
+      if (p.entityType === 'TOUR' || p.entityType === 'PROPERTY') {
+         return isCommercialQuery || titleWords === target.toLowerCase();
+      }
+      if (p.entityType === 'SEO_LANDING_PAGE' && p.type === 'BLOG') {
+         return isInformationalQuery || titleWords === target.toLowerCase();
+      }
+      return true;
     });
 
     if (competing.length > 0) {
       cannibalizationRisk = {
         status: competing.length > 1 ? 'HIGH_RISK' : 'MEDIUM_RISK',
-        competingPages: competing.map(c => ({ 
-          id: c.id, 
-          url: c.entityType === 'PROPERTY' ? `/stays/${c.id}` : `/${c.type.toLowerCase()}s/${c.slug}`, 
-          title: c.title, 
-          type: c.type,
-          entityType: c.entityType
-        })),
+        competingPages: competing.map(c => {
+          let intentAlignment = 'LOW';
+          if ((c.entityType === 'TOUR' || c.entityType === 'PROPERTY') && isCommercialQuery) intentAlignment = 'HIGH';
+          if (c.type === 'BLOG' && isInformationalQuery) intentAlignment = 'HIGH';
+          if (c.title.toLowerCase() === target.toLowerCase()) intentAlignment = 'HIGH';
+          
+          return { 
+            id: c.id, 
+            url: c.entityType === 'PROPERTY' ? `/stays/${c.id}` : (c.entityType === 'TOUR' ? `/tours/${c.slug}` : `/${c.type.toLowerCase()}s/${c.slug}`), 
+            title: c.title, 
+            type: c.type,
+            entityType: c.entityType,
+            intentAlignment
+          };
+        }),
         recommendation: 'MANUAL_REVIEW',
         reason: `Found ${competing.length} competing pages. Requires manual review of search intent before consolidating.`
       };

@@ -63,7 +63,7 @@ export interface SeoResearch {
   
   cannibalizationRisk: {
     status?: 'SAFE' | 'MEDIUM_RISK' | 'HIGH_RISK';
-    competingPages: { id?: string; url: string; title: string; type: string; entityType?: 'PROPERTY' | 'SEO_LANDING_PAGE' }[];
+    competingPages: { id?: string; url: string; title: string; type: string; entityType?: 'PROPERTY' | 'SEO_LANDING_PAGE' | 'TOUR' }[];
     recommendation: 'CREATE_NEW' | 'KEEP_SEPARATE' | 'OPTIMIZE_EXISTING' | 'CONSOLIDATE' | 'REDIRECT' | 'REWRITE_FOR_DIFFERENT_INTENT' | 'MANUAL_REVIEW';
     reason?: string;
   };
@@ -81,7 +81,7 @@ export interface CompetingPageCandidate {
   url: string;
   title: string;
   type: string;
-  entityType?: 'PROPERTY' | 'SEO_LANDING_PAGE';
+  entityType?: 'PROPERTY' | 'SEO_LANDING_PAGE' | 'TOUR';
   role: 'PRIMARY_CANDIDATE' | 'SUPPORTING_INFORMATIONAL' | 'SUPPORTING_TRANSPORT' | 'SUPPORTING_COMMERCIAL' | 'POTENTIAL_DUPLICATE';
   intent?: string;
   intentAlignment: string;
@@ -96,7 +96,7 @@ export interface ManualReviewRecommendation {
     url: string;
     title: string;
     pageType: string;
-    entityType?: 'PROPERTY' | 'SEO_LANDING_PAGE';
+    entityType?: 'PROPERTY' | 'SEO_LANDING_PAGE' | 'TOUR';
     role?: string;
     score?: number;
     reasons?: string[];
