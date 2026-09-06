@@ -25,7 +25,8 @@ const InstagramIcon = ({ className }: { className?: string }) => (
     <line x1="17.5" x2="17.51" y1="6.5" y2="6.5" />
   </svg>
 );
-import CustomizeTourModal from "@/components/CustomizeTourModal";
+import dynamic from "next/dynamic";
+const CustomizeTourModal = dynamic(() => import("@/components/CustomizeTourModal"));
 
 const MONTHS = [
   "January", "February", "March", "April", "May", "June", 
@@ -162,7 +163,6 @@ export default function ToursClient({ initialTours, dbCategories = [] }: { initi
             alt="Tour Packages in Kashmir"
             fill
             priority
-            unoptimized
             className="object-cover z-0"
           />
           <div className="absolute inset-0 bg-gradient-to-br from-black/40 via-black/20 to-black/40 z-0"></div>
@@ -273,7 +273,6 @@ export default function ToursClient({ initialTours, dbCategories = [] }: { initi
                       src={tour.images[0] || "https://i.ibb.co/DfbJP98Q/OIP.webp"} 
                       alt={tour.title} 
                       fill 
-                      unoptimized
                       priority={index < 4}
                       className="object-cover transition-transform duration-500 hover:scale-105" 
                       sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
