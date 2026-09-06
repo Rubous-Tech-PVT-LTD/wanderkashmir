@@ -156,10 +156,15 @@ export default function ToursClient({ initialTours, dbCategories = [] }: { initi
       <Navbar />
       <div className="pt-20 min-h-screen">
         {/* Header */}
-        <div
-          className="relative py-24 overflow-hidden bg-cover bg-center"
-          style={{ backgroundImage: "url('https://res.cloudinary.com/dcmoseix9/image/upload/f_auto,q_auto/v1788713063/IMG_E0814_ascrcw.heic')" }}
-        >
+        <div className="relative py-24 overflow-hidden">
+          <Image
+            src="https://res.cloudinary.com/dcmoseix9/image/upload/f_auto,q_auto/v1788713063/IMG_E0814_ascrcw.heic"
+            alt="Tour Packages in Kashmir"
+            fill
+            priority
+            unoptimized
+            className="object-cover z-0"
+          />
           <div className="absolute inset-0 bg-gradient-to-br from-black/40 via-black/20 to-black/40 z-0"></div>
           <div className="container-custom text-center text-white relative z-10">
             <p className="text-sm font-semibold uppercase tracking-wider text-orange-100 mb-3">
