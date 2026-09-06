@@ -3,6 +3,7 @@ import ToursClient from "./ToursClient";
 import { Metadata } from "next";
 import { Suspense } from "react";
 import Link from "next/link";
+import { unstable_cache } from "next/cache";
 
 export const metadata: Metadata = {
   title: "Best Kashmir Tour Packages (2026/2027) | Family, Honeymoon & Adventure Itineraries",
@@ -36,32 +37,48 @@ export const metadata: Metadata = {
 export const revalidate = 60;
 
 export default async function ToursPage() {
-  const dbCategories = await prisma.tourCategory.findMany({
-    orderBy: { name: 'asc' }
-  });
-
-  const tours = await prisma.tour.findMany({
-    orderBy: {
-      createdAt: 'desc'
+  const getCachedCategories = unstable_cache(
+    async () => {
+      return await prisma.tourCategory.findMany({
+        orderBy: { name: 'asc' }
+      });
     },
-    take: 100,
-    select: {
-      id: true,
-      slug: true,
-      isLive: true,
-      title: true,
-      images: true,
-      badge: true,
-      category: true,
-      categoryId: true,
-      duration: true,
-      destinations: true,
-      inclusions: true,
-      originalPrice: true,
-      price: true,
-      createdAt: true
-    }
-  });
+    ['tour-categories'],
+    { revalidate: 60, tags: ['tour-categories'] }
+  );
+  
+  const dbCategories = await getCachedCategories();
+
+  const getCachedTours = unstable_cache(
+    async () => {
+      return await prisma.tour.findMany({
+        orderBy: {
+          createdAt: 'desc'
+        },
+        take: 100,
+        select: {
+          id: true,
+          slug: true,
+          isLive: true,
+          title: true,
+          images: true,
+          badge: true,
+          category: true,
+          categoryId: true,
+          duration: true,
+          destinations: true,
+          inclusions: true,
+          originalPrice: true,
+          price: true,
+          createdAt: true
+        }
+      });
+    },
+    ['tours-list'],
+    { revalidate: 60, tags: ['tours'] }
+  );
+
+  const tours = await getCachedTours();
 
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.wanderkashmir.com';
   const jsonLd = {
