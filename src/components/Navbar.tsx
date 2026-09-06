@@ -100,12 +100,11 @@ export default function Navbar() {
           <Link href="/" className="flex items-center gap-2 group">
             <div className="flex items-center justify-center transition-transform group-hover:-rotate-12">
               <Image
-                src="/brand-icon.jpg"
+                src="/brand-icon.webp"
                 alt="WanderKashmir logo"
                 width={36}
                 height={36}
                 className="rounded-md object-cover shadow-sm"
-                priority
               />
             </div>
             <div className="flex flex-col">
@@ -200,7 +199,7 @@ export default function Navbar() {
             <Link href="/" className="flex items-center gap-2.5" onClick={() => setMobileOpen(false)}>
               <div className="flex items-center justify-center">
                 <Image
-                  src="/brand-icon.jpg"
+                  src="/brand-icon.webp"
                   alt="WanderKashmir logo"
                   width={36}
                   height={36}
