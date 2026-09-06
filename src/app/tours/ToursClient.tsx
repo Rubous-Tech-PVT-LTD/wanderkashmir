@@ -158,7 +158,7 @@ export default function ToursClient({ initialTours, dbCategories = [] }: { initi
         {/* Header */}
         <div
           className="relative py-24 overflow-hidden bg-cover bg-center"
-          style={{ backgroundImage: "url('https://res.cloudinary.com/dcmoseix9/image/upload/v1787721372/winterimg_zeyr7g.jpg')" }}
+          style={{ backgroundImage: "url('https://res.cloudinary.com/dcmoseix9/image/upload/f_auto,q_auto/v1788713063/IMG_E0814_ascrcw.heic')" }}
         >
           <div className="absolute inset-0 bg-gradient-to-br from-black/70 via-black/40 to-black/60 z-0"></div>
           <div className="container-custom text-center text-white relative z-10">
