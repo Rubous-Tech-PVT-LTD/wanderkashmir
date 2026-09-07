@@ -3,7 +3,13 @@ import ToursClient from "./ToursClient";
 import { Metadata } from "next";
 import { Suspense } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { unstable_cache } from "next/cache";
+import dynamic from "next/dynamic";
+import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
+
+const CustomizeTourModal = dynamic(() => import("@/components/CustomizeTourModal"));
 
 export const metadata: Metadata = {
   title: "Best Kashmir Tour Packages (2026/2027) | Family, Honeymoon & Adventure Itineraries",
@@ -35,6 +41,11 @@ export const metadata: Metadata = {
 };
 
 export const revalidate = 60;
+
+const MONTHS = [
+  "January", "February", "March", "April", "May", "June", 
+  "July", "August", "September", "October", "November", "December"
+];
 
 export default async function ToursPage() {
   const getCachedCategories = unstable_cache(
@@ -96,38 +107,111 @@ export default async function ToursPage() {
     }))
   };
 
+  // Move Filter Option Generation to the Server
+  const usedCategories = new Set<string>();
+  const usedMonths = new Set<string>();
+  const usedDestinations = new Set<string>();
+  
+  tours.forEach((tour: any) => {
+    if (tour.category) {
+      tour.category.split(',').forEach((c: string) => {
+        const trimmed = c.trim();
+        if (trimmed) {
+          if (MONTHS.includes(trimmed)) {
+            usedMonths.add(trimmed);
+          } else {
+            usedCategories.add(trimmed);
+          }
+        }
+      });
+    }
+    if (tour.destinations && Array.isArray(tour.destinations)) {
+      tour.destinations.forEach((d: string) => {
+        const trimmed = d.trim();
+        if (trimmed) usedDestinations.add(trimmed);
+      });
+    }
+  });
+
+  const baseCategories = dbCategories.length > 0 
+    ? dbCategories.map(c => c.name).filter(c => !MONTHS.includes(c))
+    : ["Upcoming", "Honeymoon", "Family", "Adventure", "Pilgrimage", "Culture"];
+  
+  const precomputedCategories = ["All Packages", ...Array.from(new Set([...baseCategories, ...Array.from(usedCategories)]))];
+  const sortedUsedMonths = Array.from(usedMonths).sort((a, b) => MONTHS.indexOf(a) - MONTHS.indexOf(b));
+  const precomputedMonths = ["All Months", ...sortedUsedMonths];
+  const precomputedDestinations = ["All Destinations", ...Array.from(usedDestinations).sort()];
+
   return (
     <>
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      <Suspense fallback={<div className="min-h-screen pt-20 flex items-center justify-center"><div className="w-8 h-8 border-4 border-orange-500 border-t-transparent rounded-full animate-spin"></div></div>}>
-        <ToursClient initialTours={tours} dbCategories={dbCategories} />
-      </Suspense>
-      
-      {/* Crawlable Tour Directory for SEO */}
-      <div className="bg-slate-50 border-t border-slate-100">
-        <div className="container-custom py-12">
-          <div className="max-w-7xl mx-auto">
-            <h2 className="text-xl font-bold mb-6 text-slate-800">Complete Kashmir Tour Directory</h2>
-            <nav aria-label="Tour Directory">
-              <ul className="flex flex-wrap gap-x-6 gap-y-3">
-                {tours.map(tour => tour.isLive && (
-                  <li key={tour.id}>
-                    <Link 
-                      href={`/tours/${tour.slug}`} 
-                      className="text-sm text-slate-600 hover:text-orange-500 underline decoration-slate-200 underline-offset-4 transition-colors"
-                    >
-                      {tour.title}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </nav>
+      <main>
+        <Navbar />
+        <div className="pt-20 min-h-screen">
+          {/* Header */}
+          <div className="relative py-24 overflow-hidden">
+            <Image
+              src="https://res.cloudinary.com/dcmoseix9/image/upload/f_auto,q_auto/v1788713063/IMG_E0814_ascrcw.heic"
+              alt="Tour Packages in Kashmir"
+              fill
+              priority
+              fetchPriority="high"
+              className="object-cover z-0"
+            />
+            <div className="absolute inset-0 bg-gradient-to-br from-black/40 via-black/20 to-black/40 z-0"></div>
+            <div className="container-custom text-center text-white relative z-10">
+              <p className="text-sm font-semibold uppercase tracking-wider text-orange-100 mb-3">
+                Curated Experiences
+              </p>
+              <h1 className="font-display text-4xl md:text-5xl font-bold mb-3 text-white">
+                Tour Packages in Kashmir
+              </h1>
+              <p className="text-orange-50 text-base max-w-xl mx-auto mb-6">
+                Hand-crafted itineraries by local experts. Everything included — stays, meals, transfers & guides.
+              </p>
+              <div className="flex justify-center">
+                <CustomizeTourModal />
+              </div>
+            </div>
+          </div>
+
+          <Suspense fallback={<div className="container-custom py-8 flex items-center justify-center"><div className="w-8 h-8 border-4 border-orange-500 border-t-transparent rounded-full animate-spin"></div></div>}>
+            <ToursClient 
+              initialTours={tours} 
+              precomputedCategories={precomputedCategories} 
+              precomputedMonths={precomputedMonths} 
+              precomputedDestinations={precomputedDestinations} 
+            />
+          </Suspense>
+        </div>
+        
+        {/* Crawlable Tour Directory for SEO */}
+        <div className="bg-slate-50 border-t border-slate-100">
+          <div className="container-custom py-12">
+            <div className="max-w-7xl mx-auto">
+              <h2 className="text-xl font-bold mb-6 text-slate-800">Complete Kashmir Tour Directory</h2>
+              <nav aria-label="Tour Directory">
+                <ul className="flex flex-wrap gap-x-6 gap-y-3">
+                  {tours.map((tour: any) => tour.isLive && (
+                    <li key={tour.id}>
+                      <Link 
+                        href={`/tours/${tour.slug}`} 
+                        className="text-sm text-slate-600 hover:text-orange-500 underline decoration-slate-200 underline-offset-4 transition-colors"
+                      >
+                        {tour.title}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </nav>
+            </div>
           </div>
         </div>
-      </div>
+        <Footer />
+      </main>
     </>
   );
 }
