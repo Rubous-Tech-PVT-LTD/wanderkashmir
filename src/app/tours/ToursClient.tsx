@@ -203,7 +203,7 @@ export default function ToursClient({
               {/* Image Container */}
               <div className="relative h-52 overflow-hidden flex-shrink-0">
                 <Image 
-                  src={tour.images[0] || "https://i.ibb.co/DfbJP98Q/OIP.webp"} 
+                  src={tour.image || "https://i.ibb.co/DfbJP98Q/OIP.webp"} 
                   alt={tour.title} 
                   fill 
                   className="object-cover transition-transform duration-500 hover:scale-105" 
