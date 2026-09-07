@@ -1,5 +1,5 @@
 import prisma from "@/lib/prisma";
-import ToursClient from "./ToursClient";
+import TourFilters, { TourPagination } from "./TourFilters";
 import TourCard from "@/components/TourCard";
 import { Metadata } from "next";
 import { Suspense } from "react";
@@ -48,7 +48,11 @@ const MONTHS = [
   "July", "August", "September", "October", "November", "December"
 ];
 
-export default async function ToursPage() {
+export default async function ToursPage({ 
+  searchParams 
+}: { 
+  searchParams: { [key: string]: string | string[] | undefined } 
+}) {
   const getCachedCategories = unstable_cache(
     async () => {
       return await prisma.tourCategory.findMany({
@@ -156,6 +160,29 @@ export default async function ToursPage() {
   const precomputedMonths = ["All Months", ...sortedUsedMonths];
   const precomputedDestinations = ["All Destinations", ...Array.from(usedDestinations).sort()];
 
+  const selectedCat = (searchParams.category as string) || "All Packages";
+  const selectedMonth = (searchParams.month as string) || "All Months";
+  const selectedDest = (searchParams.destination as string) || "All Destinations";
+  const currentPage = parseInt((searchParams.page as string) || "1", 10);
+
+  const filteredTours = tours.filter((t: any) => {
+    const matchCat = selectedCat === "All Packages" || selectedCat === "All" || (t.category && t.category.toLowerCase().includes(selectedCat.toLowerCase()));
+    const matchMonth = selectedMonth === "All Months" || selectedMonth === "All" || (t.category && t.category.includes(selectedMonth));
+    
+    let matchDest = true;
+    if (selectedDest !== "All Destinations" && selectedDest !== "All") {
+      const targetSlug = selectedDest.toLowerCase().replace(/\s+/g, '-');
+      matchDest = t.destinations && t.destinations.some((d: string) => d.toLowerCase().replace(/\s+/g, '-') === targetSlug);
+    }
+    
+    return matchCat && matchMonth && matchDest;
+  });
+
+  const itemsPerPage = 6;
+  const totalPages = Math.ceil(filteredTours.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const paginatedTours = filteredTours.slice(startIndex, startIndex + itemsPerPage);
+
   return (
     <>
       <script
@@ -191,14 +218,31 @@ export default async function ToursPage() {
               </div>
             </div>
           </div>
-
-          <ToursClient 
-            metadata={tours.map((t: any) => ({ id: t.id, category: t.category, destinations: t.destinations }))}
-            cards={tours.map((t: any) => ({ id: t.id, node: <TourCard key={t.id} tour={t} /> }))}
-            precomputedCategories={precomputedCategories} 
-            precomputedMonths={precomputedMonths} 
-            precomputedDestinations={precomputedDestinations} 
-          />
+          <div className="container-custom py-8">
+            <TourFilters 
+              precomputedCategories={precomputedCategories} 
+              precomputedMonths={precomputedMonths} 
+              precomputedDestinations={precomputedDestinations} 
+            />
+            {paginatedTours.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {paginatedTours.map((tour: any) => (
+                  <TourCard key={tour.id} tour={tour} />
+                ))}
+              </div>
+            ) : (
+              <div className="py-20 text-center bg-white rounded-3xl border border-slate-100 shadow-sm col-span-full">
+                <h3 className="text-2xl font-bold text-slate-800 mb-2">No Packages Found</h3>
+                <p className="text-slate-500 max-w-md mx-auto mb-6">
+                  No tour packages are currently available for this destination or category combination.
+                </p>
+                <Link href="/tours" className="inline-block px-8 py-3 bg-gradient-to-r from-slate-800 to-slate-900 text-white font-semibold rounded-xl hover:shadow-lg transition-all transform hover:-translate-y-0.5">
+                  View All Tours
+                </Link>
+              </div>
+            )}
+            <TourPagination totalPages={totalPages} currentPage={currentPage} />
+          </div>
         </div>
         
         {/* Crawlable Tour Directory for SEO */}
