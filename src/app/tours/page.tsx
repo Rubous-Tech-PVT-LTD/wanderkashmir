@@ -1,5 +1,6 @@
 import prisma from "@/lib/prisma";
 import ToursClient from "./ToursClient";
+import TourCard from "@/components/TourCard";
 import { Metadata } from "next";
 import { Suspense } from "react";
 import Link from "next/link";
@@ -192,7 +193,8 @@ export default async function ToursPage() {
           </div>
 
           <ToursClient 
-            initialTours={tours} 
+            metadata={tours.map((t: any) => ({ id: t.id, category: t.category, destinations: t.destinations }))}
+            cards={tours.map((t: any) => ({ id: t.id, node: <TourCard key={t.id} tour={t} /> }))}
             precomputedCategories={precomputedCategories} 
             precomputedMonths={precomputedMonths} 
             precomputedDestinations={precomputedDestinations} 
