@@ -154,7 +154,7 @@ export default async function ToursPage() {
           {/* Header */}
           <div className="relative py-24 overflow-hidden">
             <Image
-              src="https://res.cloudinary.com/dcmoseix9/image/upload/f_auto,q_auto/v1788713063/IMG_E0814_ascrcw.heic"
+              src="/tours-hero.webp"
               alt="Tour Packages in Kashmir"
               fill
               priority
