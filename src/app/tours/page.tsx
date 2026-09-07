@@ -191,14 +191,12 @@ export default async function ToursPage() {
             </div>
           </div>
 
-          <Suspense fallback={<div className="container-custom py-8 flex items-center justify-center"><div className="w-8 h-8 border-4 border-orange-500 border-t-transparent rounded-full animate-spin"></div></div>}>
-            <ToursClient 
-              initialTours={tours} 
-              precomputedCategories={precomputedCategories} 
-              precomputedMonths={precomputedMonths} 
-              precomputedDestinations={precomputedDestinations} 
-            />
-          </Suspense>
+          <ToursClient 
+            initialTours={tours} 
+            precomputedCategories={precomputedCategories} 
+            precomputedMonths={precomputedMonths} 
+            precomputedDestinations={precomputedDestinations} 
+          />
         </div>
         
         {/* Crawlable Tour Directory for SEO */}

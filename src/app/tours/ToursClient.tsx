@@ -1,8 +1,8 @@
 "use client";
 import Link from "next/link";
 import Image from "next/image";
-import { useState, useEffect, useMemo } from "react";
-import { useSearchParams, useRouter } from "next/navigation";
+import { useState, useEffect, useMemo, useCallback, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Star, Clock, Users, MapPin, CheckCircle2, Heart, Filter } from "lucide-react";
 
 const InstagramIcon = ({ className }: { className?: string }) => (
@@ -24,6 +24,24 @@ const InstagramIcon = ({ className }: { className?: string }) => (
   </svg>
 );
 
+function TourParamsHydrator({ 
+  onParamsLoad 
+}: { 
+  onParamsLoad: (cat: string | null, month: string | null, dest: string | null) => void 
+}) {
+  const searchParams = useSearchParams();
+  
+  useEffect(() => {
+    onParamsLoad(
+      searchParams.get("category"),
+      searchParams.get("month"),
+      searchParams.get("destination")
+    );
+  }, [searchParams, onParamsLoad]);
+  
+  return null;
+}
+
 export default function ToursClient({ 
   initialTours, 
   precomputedCategories,
@@ -35,22 +53,17 @@ export default function ToursClient({
   precomputedMonths: string[],
   precomputedDestinations: string[]
 }) {
-  const searchParams = useSearchParams();
   const router = useRouter();
   
-  const categoryParam = searchParams.get("category");
-  const monthParam = searchParams.get("month");
-  const destinationParam = searchParams.get("destination");
+  const [selectedCat, setSelectedCat] = useState("All Packages");
+  const [selectedMonth, setSelectedMonth] = useState("All Months");
+  const [selectedDest, setSelectedDest] = useState("All Destinations");
 
-  const [selectedCat, setSelectedCat] = useState(categoryParam || "All Packages");
-  const [selectedMonth, setSelectedMonth] = useState(monthParam || "All Months");
-  const [selectedDest, setSelectedDest] = useState(destinationParam || "All Destinations");
-
-  useEffect(() => {
-    if (categoryParam) setSelectedCat(categoryParam);
-    if (monthParam) setSelectedMonth(monthParam);
-    if (destinationParam) setSelectedDest(destinationParam);
-  }, [categoryParam, monthParam, destinationParam]);
+  const handleParamsLoad = useCallback((cat: string | null, month: string | null, dest: string | null) => {
+    setSelectedCat(cat || "All Packages");
+    setSelectedMonth(month || "All Months");
+    setSelectedDest(dest || "All Destinations");
+  }, []);
 
   const categories = precomputedCategories;
   const months = precomputedMonths;
@@ -90,7 +103,7 @@ export default function ToursClient({
   const handleCatChange = (cat: string) => {
     setSelectedCat(cat);
     setCurrentPage(1);
-    const params = new URLSearchParams(searchParams.toString());
+    const params = new URLSearchParams(typeof window !== 'undefined' ? window.location.search : "");
     if (cat === "All Packages") params.delete("category");
     else params.set("category", cat);
     router.push(`?${params.toString()}`, { scroll: false });
@@ -99,7 +112,7 @@ export default function ToursClient({
   const handleMonthChange = (month: string) => {
     setSelectedMonth(month);
     setCurrentPage(1);
-    const params = new URLSearchParams(searchParams.toString());
+    const params = new URLSearchParams(typeof window !== 'undefined' ? window.location.search : "");
     if (month === "All Months") params.delete("month");
     else params.set("month", month);
     router.push(`?${params.toString()}`, { scroll: false });
@@ -108,7 +121,7 @@ export default function ToursClient({
   const handleDestChange = (dest: string) => {
     setSelectedDest(dest);
     setCurrentPage(1);
-    const params = new URLSearchParams(searchParams.toString());
+    const params = new URLSearchParams(typeof window !== 'undefined' ? window.location.search : "");
     if (dest === "All Destinations") params.delete("destination");
     else params.set("destination", dest);
     router.push(`?${params.toString()}`, { scroll: false });
@@ -116,6 +129,9 @@ export default function ToursClient({
 
   return (
     <div className="container-custom py-8">
+      <Suspense fallback={null}>
+        <TourParamsHydrator onParamsLoad={handleParamsLoad} />
+      </Suspense>
       {/* Filter bar */}
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-8">
         <div className="flex flex-col md:flex-row gap-3 w-full md:w-auto flex-wrap">
