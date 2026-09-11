@@ -60,21 +60,22 @@ export async function generateStaticParams() {
 }
 
 export default async function BlogArticlePage({ params }: { params: Promise<{ slug: string }> }) {
-  try {
-    const resolvedParams = await params;
-    const page = await prisma.seoLandingPage.findUnique({
-      where: { slug: resolvedParams.slug },
-      include: {
-        comments: {
-          where: { isApproved: true },
-          orderBy: { createdAt: 'desc' }
-        }
+  const resolvedParams = await params;
+  const page = await prisma.seoLandingPage.findUnique({
+    where: { slug: resolvedParams.slug },
+    include: {
+      comments: {
+        where: { isApproved: true },
+        orderBy: { createdAt: 'desc' }
       }
-    });
-
-    if (!page || page.type !== "BLOG") {
-      notFound();
     }
+  });
+
+  if (!page || page.type !== "BLOG") {
+    notFound();
+  }
+
+  try {
 
     const publishDate = new Date(page.createdAt).toLocaleDateString("en-US", { 
       month: "long", 
@@ -370,6 +371,9 @@ export default async function BlogArticlePage({ params }: { params: Promise<{ sl
     </main>
   );
   } catch (error: any) {
+    if (error?.digest === "NEXT_NOT_FOUND" || error?.message?.includes("NEXT_HTTP_ERROR_FALLBACK")) {
+      throw error;
+    }
     return (
       <main className="min-h-screen flex items-center justify-center p-8 text-center flex-col">
         <h1 className="text-3xl text-red-600 font-bold mb-4">Error Loading Blog</h1>
