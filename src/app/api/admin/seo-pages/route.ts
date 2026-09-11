@@ -45,6 +45,10 @@ export async function POST(req: Request) {
 
     const action = adminDecision?.action || seoStrategy?.adminDecision;
 
+    // Fetch opportunity if provided for metrics & resolution
+    const opp = opportunityId ? await prisma.seoOpportunity.findUnique({ where: { id: opportunityId } }) : null;
+    const initialMetrics = body.gscInitialMetrics || (opp?.gscSignals as any) || seoResearch?.gsc?.pageMetrics || null;
+
     // Handle USE_EXISTING_PRIMARY or CONSOLIDATE_EXISTING (Update)
     if (action === "USE_EXISTING_PRIMARY" || action === "CONSOLIDATE_EXISTING" || action === "USE_EXISTING" || action === "CONSOLIDATE") {
       const primaryPageId = adminDecision?.primaryPageId;
@@ -55,33 +59,37 @@ export async function POST(req: Request) {
 
       let updatedPage = null;
 
-      if (primaryEntityType === 'PROPERTY') {
-        // DO NOT modify Property records
+      if (primaryEntityType === 'PROPERTY' || primaryEntityType === 'TOUR' || primaryEntityType === 'TOUR_CATEGORY') {
+        // DO NOT modify Property, Tour, or TourCategory core product/hub records
       } else {
         const existingPage = await prisma.seoLandingPage.findUnique({ where: { id: primaryPageId } });
         if (!existingPage) {
           return NextResponse.json({ error: "Selected primary page not found." }, { status: 400 });
         }
+
+        // Preserve existing baseline metrics if already set, else capture initial baseline
+        const baselineMetrics = existingPage.gscInitialMetrics || initialMetrics;
+
         updatedPage = await prisma.seoLandingPage.update({
-        where: { id: primaryPageId },
-        data: {
-          title,
-          description,
-          h1Heading,
-          content,
-          faqs,
-          ...(imageUrl && { imageUrl }),
-          workflowState,
-          seoResearch,
-          seoStrategy,
-          validationReport,
-        },
-      });
+          where: { id: primaryPageId },
+          data: {
+            title,
+            description,
+            h1Heading,
+            content,
+            faqs,
+            ...(imageUrl && { imageUrl }),
+            workflowState,
+            seoResearch,
+            seoStrategy,
+            validationReport,
+            ...(baselineMetrics && { gscInitialMetrics: baselineMetrics }),
+          },
+        });
       }
 
-      if (opportunityId) {
-        const opp = await prisma.seoOpportunity.findUnique({ where: { id: opportunityId } });
-        const mrd = (opp?.manualReviewDecision as any) || {};
+      if (opportunityId && opp) {
+        const mrd = (opp.manualReviewDecision as any) || {};
         mrd.primaryPageId = primaryPageId;
         mrd.primaryEntityType = primaryEntityType;
 
@@ -123,12 +131,12 @@ export async function POST(req: Request) {
           seoResearch,
           seoStrategy,
           validationReport,
+          ...(initialMetrics && { gscInitialMetrics: initialMetrics }),
         },
       });
 
-      if (opportunityId) {
-        const opp = await prisma.seoOpportunity.findUnique({ where: { id: opportunityId } });
-        const mrd = (opp?.manualReviewDecision as any) || {};
+      if (opportunityId && opp) {
+        const mrd = (opp.manualReviewDecision as any) || {};
         if (adminDecision?.primaryPageId) {
           mrd.primaryPageId = adminDecision.primaryPageId;
           mrd.primaryEntityType = adminDecision.primaryEntityType || 'SEO_LANDING_PAGE';

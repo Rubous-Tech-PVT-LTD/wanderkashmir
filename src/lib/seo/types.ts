@@ -38,7 +38,7 @@ export interface SeoResearch {
   pageType: string;
   isExistingPage: boolean;
   pageUrl?: string;
-  
+
   gsc: {
     hasPageLevelHistory: boolean;
     pageMetrics?: {
@@ -51,19 +51,19 @@ export interface SeoResearch {
     relatedQueries: any[];
     opportunities: any[];
   };
-  
+
   keywordResearch: KeywordResearchData;
   serpResearch: SerpResearchData;
   googleTrends: GoogleTrendsData;
   keywordPlanner: KeywordPlannerData;
-  
+
   searchIntent: string;
-  
+
   contentGaps: string[];
-  
+
   cannibalizationRisk: {
     status?: 'SAFE' | 'MEDIUM_RISK' | 'HIGH_RISK';
-    competingPages: { id?: string; url: string; title: string; type: string; entityType?: 'PROPERTY' | 'SEO_LANDING_PAGE' | 'TOUR' }[];
+    competingPages: { id?: string; url: string; title: string; type: string; entityType?: 'PROPERTY' | 'SEO_LANDING_PAGE' | 'TOUR' | 'TOUR_CATEGORY' }[];
     recommendation: 'CREATE_NEW' | 'KEEP_SEPARATE' | 'OPTIMIZE_EXISTING' | 'CONSOLIDATE' | 'REDIRECT' | 'REWRITE_FOR_DIFFERENT_INTENT' | 'MANUAL_REVIEW';
     reason?: string;
   };
@@ -81,7 +81,7 @@ export interface CompetingPageCandidate {
   url: string;
   title: string;
   type: string;
-  entityType?: 'PROPERTY' | 'SEO_LANDING_PAGE' | 'TOUR';
+  entityType?: 'PROPERTY' | 'SEO_LANDING_PAGE' | 'TOUR' | 'TOUR_CATEGORY';
   role: 'PRIMARY_CANDIDATE' | 'SUPPORTING_INFORMATIONAL' | 'SUPPORTING_TRANSPORT' | 'SUPPORTING_COMMERCIAL' | 'POTENTIAL_DUPLICATE';
   intent?: string;
   intentAlignment: string;
@@ -96,7 +96,7 @@ export interface ManualReviewRecommendation {
     url: string;
     title: string;
     pageType: string;
-    entityType?: 'PROPERTY' | 'SEO_LANDING_PAGE' | 'TOUR';
+    entityType?: 'PROPERTY' | 'SEO_LANDING_PAGE' | 'TOUR' | 'TOUR_CATEGORY';
     role?: string;
     score?: number;
     reasons?: string[];
@@ -181,4 +181,47 @@ export interface ContentOpportunity {
 export interface SeoValidationResult {
   status: 'PASS' | 'FIX' | 'REJECT';
   issues: string[];
+}
+
+export type FeedbackSignalType = 
+  | 'HIGH_IMPRESSIONS_LOW_CTR'   // Snippet/meta deficiency
+  | 'STRIKING_DISTANCE'          // Position 4–15 with search demand
+  | 'PERFORMANCE_DECLINE'        // Significant drop in rank & impressions
+  | 'HEALTHY_GROWTH'             // Strong top 3 performance or growing reach with healthy CTR
+  | 'STRONG_MOMENTUM'            // Clicks & position improving
+  | 'INSUFFICIENT_DATA'          // Too few impressions to determine trend
+  | 'STABLE';                    // Performing near baseline
+
+export interface PagePerformanceFeedback {
+  pageId: string;
+  slug: string;
+  pageType: string;
+  pageUrl: string;
+  title: string;
+  canonicalTopic: string;
+  primaryQuery: string;
+  baseline: {
+    clicks: number;
+    impressions: number;
+    ctr: number;
+    position: number;
+  };
+  current: {
+    clicks: number;
+    impressions: number;
+    ctr: number;
+    position: number;
+  };
+  delta: {
+    clicks: number;
+    impressions: number;
+    ctr: number;
+    position: number; // positive = position improved (e.g. baseline 10 -> current 4 = +6)
+  };
+  signal: FeedbackSignalType;
+  recommendedAction: 'OPTIMIZE' | 'MONITOR' | 'MANUAL_REVIEW' | 'IGNORE';
+  opportunityScore: number;
+  reason: string;
+  evidence: string;
+  topQueries: Array<{ query: string; clicks: number; impressions: number; ctr: number; position: number }>;
 }

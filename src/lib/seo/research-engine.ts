@@ -111,6 +111,11 @@ export async function runSeoResearch(target: string, type: string, targetUrl?: s
       select: { id: true, title: true, slug: true }
     });
 
+    // Phase 4: TourCategory awareness for cannibalization detection
+    const existingCategories = await prisma.tourCategory.findMany({
+      select: { id: true, name: true, slug: true }
+    });
+
     const stopWords = new Set(['to', 'the', 'in', 'for', 'and', 'of', 'with', 'a', 'an', 'is', 'called', 'what', 'fare', 'cost', 'guide', 'places', 'unique', 'hidden', 'best', 'top', '2026', '2025', '2024']);
     const targetWords = target.toLowerCase().split(/[^a-z0-9]+/).filter(w => w.length > 2 && !stopWords.has(w));
     const genericKeywords = new Set([
@@ -146,7 +151,16 @@ export async function runSeoResearch(target: string, type: string, targetUrl?: s
       entityType: 'TOUR' as const
     }));
 
-    const allCandidates = [...seoPageCandidates, ...propertyCandidates, ...tourCandidates];
+    // Phase 4: TourCategory candidates for cannibalization
+    const categoryCandidates = existingCategories.map(c => ({
+      id: c.id,
+      title: c.name,
+      slug: c.slug,
+      type: 'TOUR_CATEGORY',
+      entityType: 'TOUR_CATEGORY' as const
+    }));
+
+    const allCandidates = [...seoPageCandidates, ...propertyCandidates, ...tourCandidates, ...categoryCandidates];
     
     const ents = getEntities(target);
     const queryIntent = inferIntent(target, ents.ints);
@@ -176,6 +190,10 @@ export async function runSeoResearch(target: string, type: string, targetUrl?: s
       if (p.entityType === 'TOUR' || p.entityType === 'PROPERTY') {
          return isCommercialQuery || titleWords === target.toLowerCase();
       }
+      // Phase 4: TourCategory hub pages compete for commercial/category-level queries
+      if (p.entityType === 'TOUR_CATEGORY') {
+         return isCommercialQuery || titleWords === target.toLowerCase();
+      }
       if (p.entityType === 'SEO_LANDING_PAGE' && p.type === 'BLOG') {
          return isInformationalQuery || titleWords === target.toLowerCase();
       }
@@ -193,7 +211,10 @@ export async function runSeoResearch(target: string, type: string, targetUrl?: s
           
           return { 
             id: c.id, 
-            url: c.entityType === 'PROPERTY' ? `/stays/${c.id}` : (c.entityType === 'TOUR' ? `/tours/${c.slug}` : `/${c.type.toLowerCase()}s/${c.slug}`), 
+            url: c.entityType === 'TOUR_CATEGORY' ? `/tours?category=${c.slug}`
+               : c.entityType === 'PROPERTY' ? `/stays/${c.id}` 
+               : (c.entityType === 'TOUR' ? `/tours/${c.slug}` 
+               : (c.type.toUpperCase() === 'BLOG' ? `/blog/${c.slug}` : `/${c.type.toLowerCase()}s/${c.slug}`)), 
             title: c.title, 
             type: c.type,
             entityType: c.entityType,

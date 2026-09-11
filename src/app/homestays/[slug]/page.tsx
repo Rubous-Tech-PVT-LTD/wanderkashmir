@@ -22,9 +22,21 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     return { title: "Homestay not found" };
   }
 
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.wanderkashmir.com';
+  const url = `${baseUrl}/homestays/${resolvedParams.slug}`;
+
   return {
     title: page.title,
     description: page.description?.replace(/^Meta\s*Description:\s*/i, ""),
+    alternates: {
+      canonical: url,
+    },
+    openGraph: {
+      title: page.title,
+      description: page.description?.replace(/^Meta\s*Description:\s*/i, "") || "",
+      url,
+      images: page.imageUrl ? [page.imageUrl] : [],
+    }
   };
 }
 

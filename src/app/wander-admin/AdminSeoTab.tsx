@@ -346,7 +346,21 @@ function OpportunitiesView({ onResearch }: { onResearch: (topic: string, url?: s
                     </span>
                   </td>
                   <td className="p-4 font-bold text-slate-700">{op.opportunityScore}</td>
-                  <td className="p-4 font-medium text-slate-800">{op.topic}</td>
+                  <td className="p-4 font-medium text-slate-800">
+                    <div className="flex flex-col gap-1">
+                      <span>{op.topic}</span>
+                      {op.gscSignals?.feedbackSignal && (
+                        <span className={`self-start px-2 py-0.5 text-[10px] font-bold uppercase rounded-md tracking-wider ${
+                          op.gscSignals.feedbackSignal === 'HIGH_IMPRESSIONS_LOW_CTR' ? 'bg-amber-100 text-amber-800 border border-amber-200' :
+                          op.gscSignals.feedbackSignal === 'STRIKING_DISTANCE' ? 'bg-indigo-100 text-indigo-800 border border-indigo-200' :
+                          op.gscSignals.feedbackSignal === 'PERFORMANCE_DECLINE' ? 'bg-rose-100 text-rose-800 border border-rose-200' :
+                          'bg-emerald-100 text-emerald-800 border border-emerald-200'
+                        }`}>
+                          Feedback: {op.gscSignals.feedbackSignal.replace(/_/g, ' ')}
+                        </span>
+                      )}
+                    </div>
+                  </td>
                   <td className="p-4 text-center text-slate-600 text-xs">{op.googleTrends || 'UNAVAILABLE'}</td>
                   <td className="p-4 text-center text-slate-600 text-xs">{op.keywordPlanner || 'UNAVAILABLE'}</td>
                   <td className="p-4 text-right text-slate-600">{op.gscSignals?.impressions ?? '-'}</td>
@@ -364,6 +378,36 @@ function OpportunitiesView({ onResearch }: { onResearch: (topic: string, url?: s
                   <tr className="bg-slate-50/30">
                      <td colSpan={10} className="p-6">
                        <h4 className="font-bold text-slate-800 mb-2">WHY THIS OPPORTUNITY?</h4>
+                       {op.gscSignals?.baseline && (
+                         <div className="mb-4 p-3 bg-indigo-50/60 border border-indigo-100 rounded-xl">
+                           <div className="text-xs font-bold text-indigo-900 uppercase tracking-wider mb-2 flex items-center justify-between">
+                             <span>Post-Publication Feedback Analysis</span>
+                             <span className="font-mono text-indigo-700 font-semibold">Signal: {op.gscSignals.feedbackSignal}</span>
+                           </div>
+                           <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
+                             <div className="bg-white p-2.5 rounded-lg border border-indigo-100">
+                               <span className="text-slate-400 block font-semibold mb-0.5">Historical Baseline</span>
+                               <span className="text-slate-800 font-medium">
+                                 {op.gscSignals.baseline.position > 0 ? Number(op.gscSignals.baseline.position).toFixed(1) : 'N/A'} pos · {op.gscSignals.baseline.impressions} impr · {op.gscSignals.baseline.clicks} clicks ({((op.gscSignals.baseline.ctr || 0) * 100).toFixed(1)}% CTR)
+                               </span>
+                             </div>
+                             <div className="bg-white p-2.5 rounded-lg border border-indigo-100">
+                               <span className="text-slate-400 block font-semibold mb-0.5">Current Performance</span>
+                               <span className="text-slate-800 font-medium">
+                                 {Number(op.gscSignals.position).toFixed(1)} pos · {op.gscSignals.impressions} impr · {op.gscSignals.clicks} clicks ({((op.gscSignals.ctr || 0) * 100).toFixed(1)}% CTR)
+                               </span>
+                             </div>
+                             <div className="bg-white p-2.5 rounded-lg border border-indigo-100">
+                               <span className="text-slate-400 block font-semibold mb-0.5">Performance Delta</span>
+                               <span className={`font-medium ${op.gscSignals.delta?.position >= 0 ? 'text-emerald-700' : 'text-rose-700'}`}>
+                                 {op.gscSignals.delta?.position >= 0 ? '+' : ''}{op.gscSignals.delta?.position != null ? Number(op.gscSignals.delta.position).toFixed(1) : '0.0'} ranks · 
+                                 {op.gscSignals.delta?.impressions >= 0 ? '+' : ''}{op.gscSignals.delta?.impressions || 0} impr · 
+                                 {op.gscSignals.delta?.clicks >= 0 ? '+' : ''}{op.gscSignals.delta?.clicks || 0} clicks
+                               </span>
+                             </div>
+                           </div>
+                         </div>
+                       )}
                        <div className="grid grid-cols-2 gap-4 text-sm text-slate-700">
                           <div>
                             <strong>GSC Evidence:</strong><br/>
@@ -568,6 +612,7 @@ function SeoResearchWizard({ initialTarget }: { initialTarget?: { topic: string,
         faqs: generatedContent.faqs,
         imageUrl: generatedContent.imageUrl,
         workflowState: 'PUBLISHED',
+        gscInitialMetrics: researchData?.gsc?.pageMetrics || null,
         seoResearch: researchData,
         seoStrategy: strategyData,
         validationReport: validationReport,

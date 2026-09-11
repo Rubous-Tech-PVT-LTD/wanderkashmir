@@ -1,4 +1,5 @@
 import { KeywordResearchData, SerpResearchData, GoogleTrendsData, KeywordPlannerData } from '../types';
+import { fetchKeywordIdeas } from '@/lib/google-ads/client';
 
 export interface KeywordResearchProvider {
   getKeywordMetrics(topic: string, location?: string): Promise<KeywordResearchData>;
@@ -68,14 +69,35 @@ class DefaultGoogleTrendsProvider implements GoogleTrendsProvider {
   }
 }
 
-class DefaultKeywordPlannerProvider implements KeywordPlannerProvider {
+class GoogleAdsKeywordPlannerProvider implements KeywordPlannerProvider {
   async getPlannerData(target: string): Promise<KeywordPlannerData> {
     const cacheKey = `planner:${target}`;
     if (researchCache.has(cacheKey)) return researchCache.get(cacheKey);
 
+    try {
+      const ideas = await fetchKeywordIdeas([target]);
+      
+      if (ideas && ideas.length > 0) {
+        // Try to match the exact target, else default to the first one (closest match)
+        const primaryIdea = ideas.find(i => i.text.toLowerCase() === target.toLowerCase()) || ideas[0];
+        
+        const data: KeywordPlannerData = {
+          status: 'AVAILABLE',
+          source: 'Google Keyword Planner',
+          searchVolume: primaryIdea.searchVolume !== null ? primaryIdea.searchVolume : 'N/A',
+          competition: (primaryIdea.competition as any) || 'N/A',
+          relatedKeywords: ideas.filter(i => i.text !== primaryIdea.text).map(i => i.text)
+        };
+        researchCache.set(cacheKey, data);
+        return data;
+      }
+    } catch (err) {
+      console.warn("Keyword Planner API failed:", err);
+    }
+
     const data: KeywordPlannerData = {
       status: 'UNAVAILABLE',
-      source: 'Keyword Planner unavailable',
+      source: 'Keyword Planner unavailable (Fallback)',
       searchVolume: 'N/A',
       competition: 'N/A',
       relatedKeywords: []
@@ -87,4 +109,4 @@ class DefaultKeywordPlannerProvider implements KeywordPlannerProvider {
 }
 
 export const googleTrendsProvider: GoogleTrendsProvider = new DefaultGoogleTrendsProvider();
-export const keywordPlannerProvider: KeywordPlannerProvider = new DefaultKeywordPlannerProvider();
+export const keywordPlannerProvider: KeywordPlannerProvider = new GoogleAdsKeywordPlannerProvider();

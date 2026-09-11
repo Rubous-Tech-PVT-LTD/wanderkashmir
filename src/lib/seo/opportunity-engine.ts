@@ -105,6 +105,7 @@ export async function detectOpportunities(saveToDb = false): Promise<ContentOppo
     const existingSeoPages: { id?: string; type: string; slug: string; title: string }[] = await prisma.seoLandingPage.findMany({ select: { id: true, slug: true, title: true, type: true }});
     const existingProperties = await prisma.property.findMany({ select: { id: true, name: true }});
     const existingTours = await prisma.tour.findMany({ where: { isLive: true }, select: { id: true, title: true, slug: true, category: true }});
+    const existingCategories = await prisma.tourCategory.findMany({ select: { id: true, name: true, slug: true }});
 
     for (const cluster of clusters) {
        const primaryQuery = cluster.queries[0]; // The highest impression query in the cluster
@@ -128,7 +129,7 @@ export async function detectOpportunities(saveToDb = false): Promise<ContentOppo
            topRankingGscUrl = pagesArray[0]; // Take the first ranking page reported by GSC
        }
        
-       // Match properties and tours (intent-aware)
+       // Match properties, tours, and categories (intent-aware)
        const isCommercialQuery = intent === 'COMMERCIAL' || intent === 'TRANSACTIONAL';
        
        const matchedProp = existingProperties.find(p => 
@@ -142,8 +143,17 @@ export async function detectOpportunities(saveToDb = false): Promise<ContentOppo
          (isCommercialQuery && primaryQuery.includes(t.title.toLowerCase())) ||
          (isCommercialQuery && t.title.toLowerCase().includes(ents.words.join(' ')) && ents.words.length > 0)
        );
+
+       // Phase 4: TourCategory hub page detection
+       const matchedCategory = existingCategories.find(c =>
+         primaryQuery.includes(c.name.toLowerCase()) ||
+         (c.name.toLowerCase().includes(ents.words.join(' ')) && ents.words.length > 0)
+       );
        
-       if (matchedTour) {
+       if (matchedCategory) {
+         // Category hub is the broadest match — checked first for category-level queries
+         existingPage = { id: matchedCategory.id, url: `/tours?category=${matchedCategory.slug}`, title: matchedCategory.name, type: 'TOUR_CATEGORY' };
+       } else if (matchedTour) {
          existingPage = { id: matchedTour.id, url: `/tours/${matchedTour.slug}`, title: matchedTour.title, type: 'TOUR' };
        } else if (matchedProp) {
          existingPage = { id: matchedProp.id, url: `/stays/${matchedProp.id}`, title: matchedProp.name, type: 'PROPERTY' };
@@ -163,12 +173,14 @@ export async function detectOpportunities(saveToDb = false): Promise<ContentOppo
          // Fallback to strict DB matching if GSC didn't report a page
          const matchedSeo = existingSeoPages.find(p => querySlugified.includes(p.slug) || p.slug.includes(querySlugified) || p.title.toLowerCase().includes(primaryQuery));
          if (matchedSeo) {
-           existingPage = { id: matchedSeo.id, url: `/${matchedSeo.type.toLowerCase()}s/${matchedSeo.slug}`, title: matchedSeo.title, type: matchedSeo.type };
+           const pageRoute = matchedSeo.type.toUpperCase() === 'BLOG' ? `/blog/${matchedSeo.slug}` : `/${matchedSeo.type.toLowerCase()}s/${matchedSeo.slug}`;
+           existingPage = { id: matchedSeo.id, url: pageRoute, title: matchedSeo.title, type: matchedSeo.type };
          }
        }
        
        // Check for cannibalization (multiple pages matching)
        let matchCount = 0;
+       if (matchedCategory) matchCount++;  // Phase 4: TourCategory in cannibalization
        if (matchedProp) matchCount++;
        if (matchedTour) matchCount++;
        existingSeoPages.forEach(p => {

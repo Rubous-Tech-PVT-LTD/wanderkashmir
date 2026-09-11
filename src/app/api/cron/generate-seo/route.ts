@@ -17,6 +17,7 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     let requestedTopic = searchParams.get('topic');
     let opportunityId = null;
+    let initialSignals: any = null;
 
     if (!requestedTopic) {
         // Fetch top non-blog opportunity
@@ -29,6 +30,15 @@ export async function GET(request: Request) {
         }
         requestedTopic = op.topic;
         opportunityId = op.id;
+        initialSignals = op.gscSignals;
+    } else {
+        const op = await prisma.seoOpportunity.findFirst({
+            where: { topic: { equals: requestedTopic, mode: 'insensitive' } }
+        });
+        if (op) {
+            opportunityId = op.id;
+            initialSignals = op.gscSignals;
+        }
     }
 
     // Determine Page Type based on Prioritized Intent Rules
@@ -99,6 +109,7 @@ export async function GET(request: Request) {
         faqs: generatedContent.faqs,
         imageUrl: `https://image.pollinations.ai/prompt/${encodeURIComponent(requestedTopic as string)}?width=800&height=400&nologo=true`,
         workflowState: "VALIDATED",
+        gscInitialMetrics: initialSignals || (research as any)?.gsc?.pageMetrics || null,
         seoResearch: research as any,
         seoStrategy: strategy as any,
         validationReport: validation as any

@@ -30,6 +30,7 @@ export async function detectNetNewOpportunities(saveToDb = false): Promise<Conte
     const existingSeoPages = await prisma.seoLandingPage.findMany({ select: { id: true, slug: true, title: true, type: true }});
     const existingProperties = await prisma.property.findMany({ select: { id: true, name: true }});
     const existingTours = await prisma.tour.findMany({ where: { isLive: true }, select: { id: true, title: true, slug: true, category: true }});
+    const existingCategories = await prisma.tourCategory.findMany({ select: { id: true, name: true, slug: true }});
 
     // 3. Process each discovered keyword
     for (const keyword of Array.from(discoveredKeywords)) {
@@ -54,6 +55,11 @@ export async function detectNetNewOpportunities(saveToDb = false): Promise<Conte
         (isCommercialQuery && t.title.toLowerCase().includes(ents.words.join(' ')) && ents.words.length > 0)
       );
 
+      const matchedCategory = existingCategories.find(c =>
+        keyword.includes(c.name.toLowerCase()) ||
+        (c.name.toLowerCase().includes(ents.words.join(' ')) && ents.words.length > 0)
+      );
+
       const matchedSeo = existingSeoPages.find(p => 
         querySlugified.includes(p.slug) || 
         p.slug.includes(querySlugified) || 
@@ -71,14 +77,17 @@ export async function detectNetNewOpportunities(saveToDb = false): Promise<Conte
       }
 
       // Check if existing entity serves EXACT intent
-      if (matchedTour && isCommercialQuery) {
+      if (matchedCategory && isCommercialQuery) {
+        existingPage = { id: matchedCategory.id, url: `/tours?category=${matchedCategory.slug}`, title: matchedCategory.name, type: 'TOUR_CATEGORY' };
+      } else if (matchedTour && isCommercialQuery) {
         existingPage = { id: matchedTour.id, url: `/tours/${matchedTour.slug}`, title: matchedTour.title, type: 'TOUR' };
       } else if (matchedProp && isCommercialQuery) {
         existingPage = { id: matchedProp.id, url: `/stays/${matchedProp.id}`, title: matchedProp.name, type: 'PROPERTY' };
       } else if (matchedSeo) {
         // If informational query and informational page exists, it matches.
         // Or if the SEO page is exactly targeting this.
-        existingPage = { id: matchedSeo.id, url: `/${matchedSeo.type.toLowerCase()}s/${matchedSeo.slug}`, title: matchedSeo.title, type: matchedSeo.type };
+        const pageRoute = matchedSeo.type.toUpperCase() === 'BLOG' ? `/blog/${matchedSeo.slug}` : `/${matchedSeo.type.toLowerCase()}s/${matchedSeo.slug}`;
+        existingPage = { id: matchedSeo.id, url: pageRoute, title: matchedSeo.title, type: matchedSeo.type };
       }
 
       // NET-NEW GATE

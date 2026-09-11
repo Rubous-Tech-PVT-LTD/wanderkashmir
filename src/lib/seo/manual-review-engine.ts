@@ -8,7 +8,7 @@ import { CompetingPageCandidate, ManualReviewRecommendation } from './types';
 export function generateManualReviewRecommendation(
   targetTopic: string,
   searchIntent: string,
-  competingPages: Array<{ id?: string; url: string; title: string; type: string; entityType?: 'PROPERTY' | 'SEO_LANDING_PAGE' }>,
+  competingPages: Array<{ id?: string; url: string; title: string; type: string; entityType?: 'PROPERTY' | 'SEO_LANDING_PAGE' | 'TOUR' | 'TOUR_CATEGORY' }>,
   gscQueries: any[] = []
 ): ManualReviewRecommendation {
   if (!competingPages || competingPages.length === 0) {
@@ -31,10 +31,17 @@ export function generateManualReviewRecommendation(
   const intentLower = (searchIntent || 'unknown').toLowerCase();
   const topicWords = topicLower.split(/[^a-z0-9]+/).filter(w => w.length > 2);
 
+  const isTourIntent = 
+    ((intentLower === 'commercial' || intentLower === 'transactional') &&
+     topicWords.some(w => ['tour', 'tours', 'package', 'packages', 'itinerary', 'trip', 'trips', 'holiday', 'holidays', 'honeymoon', 'adventure', 'circuit', 'safari', 'expedition'].includes(w))) ||
+    topicWords.some(w => ['package', 'packages', 'itinerary', 'tour', 'tours'].includes(w));
+
   const isAccommodationIntent = 
-    intentLower === 'commercial' || 
-    intentLower === 'transactional' || 
-    topicWords.some(w => ['hotel', 'resort', 'homestay', 'stay', 'room', 'lodge'].includes(w));
+    !isTourIntent && (
+      intentLower === 'commercial' || 
+      intentLower === 'transactional' || 
+      topicWords.some(w => ['hotel', 'resort', 'homestay', 'stay', 'room', 'lodge'].includes(w))
+    );
 
   const isTransportIntent = 
     intentLower === 'local' || 
@@ -55,7 +62,36 @@ export function generateManualReviewRecommendation(
     const reasons: string[] = [];
 
     // Intent & Type Matrix
-    if (isAccommodationIntent) {
+    if (isTourIntent) {
+      if (pageType === 'TOUR') {
+        score = 95;
+        role = 'PRIMARY_CANDIDATE';
+        intentAlignment = 'Direct bookable tour package match';
+        reasons.push('Existing live tour package directly satisfies tour/package commercial intent.');
+        reasons.push('Serves bookable itinerary demand rather than generic exploration.');
+      } else if (pageType === 'TOUR_CATEGORY') {
+        score = 90;
+        role = 'PRIMARY_CANDIDATE';
+        intentAlignment = 'Direct tour category hub match';
+        reasons.push('Existing tour category hub page aggregates relevant tour packages for this intent.');
+        reasons.push('Functions as canonical classification hub for tour queries.');
+      } else if (pageType === 'DESTINATION') {
+        score = 60;
+        role = 'SUPPORTING_INFORMATIONAL';
+        intentAlignment = 'Supporting destination guide';
+        reasons.push('Provides destination background for the tour route.');
+      } else if (pageType === 'BLOG') {
+        score = 50;
+        role = 'SUPPORTING_INFORMATIONAL';
+        intentAlignment = 'Supporting editorial content';
+        reasons.push('Provides narrative travel inspiration supporting the tour.');
+      } else {
+        score = 40;
+        role = 'SUPPORTING_COMMERCIAL';
+        intentAlignment = 'Supporting commercial entity';
+        reasons.push('Related commercial listing.');
+      }
+    } else if (isAccommodationIntent) {
       if (pageType === 'HOMESTAY' || pageType === 'PROPERTY') {
         score = 90;
         role = 'PRIMARY_CANDIDATE';
@@ -78,6 +114,11 @@ export function generateManualReviewRecommendation(
         role = 'SUPPORTING_INFORMATIONAL';
         intentAlignment = 'Destination overview intent';
         reasons.push('Broad destination guide providing regional context.');
+      } else {
+        score = 45;
+        role = 'SUPPORTING_COMMERCIAL';
+        intentAlignment = 'Supporting commercial entity';
+        reasons.push('Related commercial offering.');
       }
     } else if (isTransportIntent) {
       if (pageType === 'TAXI') {
@@ -110,7 +151,17 @@ export function generateManualReviewRecommendation(
       }
     } else {
       // General entity match
-      if (pageType === 'HOMESTAY' || pageType === 'PROPERTY') {
+      if (pageType === 'TOUR') {
+        score = 85;
+        role = 'PRIMARY_CANDIDATE';
+        intentAlignment = 'Primary bookable tour package';
+        reasons.push('Primary live tour package.');
+      } else if (pageType === 'TOUR_CATEGORY') {
+        score = 80;
+        role = 'PRIMARY_CANDIDATE';
+        intentAlignment = 'Primary tour category hub';
+        reasons.push('Primary category hub listing.');
+      } else if (pageType === 'HOMESTAY' || pageType === 'PROPERTY') {
         score = 75;
         role = 'PRIMARY_CANDIDATE';
         intentAlignment = 'Primary commercial entity listing';
@@ -186,6 +237,7 @@ export function generateManualReviewRecommendation(
       id: topCandidate.id,
       url: topCandidate.url,
       pageType: topCandidate.type,
+      entityType: topCandidate.entityType,
       title: topCandidate.title,
       role: topCandidate.role,
       score: topCandidate.score,

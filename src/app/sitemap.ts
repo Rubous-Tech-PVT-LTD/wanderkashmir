@@ -83,6 +83,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   try {
     const seoPages = await prisma.seoLandingPage.findMany({
+      where: { workflowState: 'PUBLISHED' },
       select: { slug: true, type: true, updatedAt: true },
       take: 5000
     })

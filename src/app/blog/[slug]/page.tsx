@@ -28,12 +28,19 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 
   if (!page || page.type !== "BLOG") return { title: "Blog Not Found" };
 
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.wanderkashmir.com';
+  const url = `${baseUrl}/blog/${resolvedParams.slug}`;
+
   return {
     title: page.title,
     description: page.description?.replace(/^Meta\s*Description:\s*/i, ""),
+    alternates: {
+      canonical: url,
+    },
     openGraph: {
       title: page.title,
       description: page.description?.replace(/^Meta\s*Description:\s*/i, "") || "",
+      url,
       images: page.imageUrl ? [page.imageUrl] : [],
     }
   };

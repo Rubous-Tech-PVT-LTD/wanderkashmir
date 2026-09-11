@@ -78,9 +78,10 @@ export async function getGscAnalytics(
   siteUrl: string, 
   startDate: string, 
   endDate: string, 
-  dimensions: string[] = ['page', 'query', 'country', 'device']
+  dimensions: string[] = ['page', 'query', 'country', 'device'],
+  rowLimit: number = 5000
 ) {
-  const cacheKey = `analytics:${siteUrl}:${startDate}:${endDate}:${dimensions.join(',')}`;
+  const cacheKey = `analytics:${siteUrl}:${startDate}:${endDate}:${dimensions.join(',')}:${rowLimit}`;
   const cached = gscCache.get(cacheKey);
   if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
     return cached.data;
@@ -96,6 +97,7 @@ export async function getGscAnalytics(
         startDate,
         endDate,
         dimensions,
+        rowLimit,
       }
     });
 

@@ -42,6 +42,36 @@ export async function generateSeoContent(
     console.warn("Failed to fetch verified entity context:", e);
   }
 
+  // Phase 4: Fetch verified Tour entity context (same pattern as Property above)
+  let tourEntityContext = "";
+  try {
+    const tour = await prisma.tour.findFirst({
+      where: {
+        OR: [
+          { title: { contains: research.target, mode: "insensitive" } },
+          { slug: { contains: research.target.toLowerCase().replace(/\s+/g, '-') } }
+        ],
+        isLive: true
+      },
+      select: {
+        title: true,
+        duration: true,
+        destinations: true,
+        price: true,
+        originalPrice: true,
+        inclusions: true,
+        highlights: true,
+        overview: true,
+        itinerary: true,
+      }
+    });
+    if (tour) {
+      tourEntityContext = `\nVERIFIED TOUR FACTS (Use this real data instead of inventing):\n${JSON.stringify(tour, null, 2)}\n`;
+    }
+  } catch (e) {
+    console.warn("Failed to fetch verified tour entity context:", e);
+  }
+
   const prompt = `
 You are a world-class SEO copywriter and local travel expert for "WanderKashmir".
 Your task is to generate high-converting SEO content strictly following the provided SEO Strategy.
@@ -54,7 +84,7 @@ Is Existing Page: ${research.isExistingPage}
 SEO STRATEGY:
 ${JSON.stringify(strategy, null, 2)}
 
-${existingContent ? `EXISTING CONTENT:\n${JSON.stringify(existingContent, null, 2)}\n` : ''}${verifiedEntityContext}
+${existingContent ? `EXISTING CONTENT:\n${JSON.stringify(existingContent, null, 2)}\n` : ''}${verifiedEntityContext}${tourEntityContext}
 RULES:
 1. STRICTLY follow the component-level actions from the strategy (PROTECT, OPTIMIZE, EXPAND, ADD).
 2. If a component (e.g., title, h1Heading, metaDescription) has action "PROTECT", you MUST output exactly "[RETAIN EXISTING]" for that field. Do not rewrite it.
