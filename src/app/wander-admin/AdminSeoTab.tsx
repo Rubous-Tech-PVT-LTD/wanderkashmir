@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import { Plus, Edit2, Trash2, Globe, Search, Link as LinkIcon, Wand2, RefreshCw, PenTool, ArrowLeft, BarChart2, Lightbulb, FileText, Activity } from "lucide-react";
+import React, { useState, useEffect, useMemo } from "react";
+import { Plus, Edit2, Trash2, Globe, Search, Link as LinkIcon, Wand2, RefreshCw, PenTool, ArrowLeft, BarChart2, Lightbulb, FileText, Activity, ExternalLink, CheckCircle2, Clock } from "lucide-react";
 import Link from "next/link";
 import { triggerSeoGeneration, triggerBlogGeneration } from "@/actions/admin-seo";
 import ContentDistributionModal from "./ContentDistributionModal";
@@ -500,12 +500,186 @@ function SeoResearchWizard({ initialTarget }: { initialTarget?: { topic: string,
   const [generatedContent, setGeneratedContent] = useState<any>(null);
   const [validationReport, setValidationReport] = useState<any>(null);
 
+  // Google Trends Manual Evidence State
+  const [trendDirection, setTrendDirection] = useState<'RISING' | 'STABLE' | 'DECLINING' | 'UNCLEAR'>('RISING');
+  const [trendStrength, setTrendStrength] = useState<'STRONG' | 'MODERATE' | 'WEAK' | 'UNCLEAR'>('STRONG');
+  const [seasonality, setSeasonality] = useState<'YES' | 'NO' | 'UNCLEAR'>('YES');
+  const [peakPeriod, setPeakPeriod] = useState<string>('');
+  const [lowestPeriod, setLowestPeriod] = useState<string>('');
+  const [risingQuery, setRisingQuery] = useState<string>('');
+  const [risingTopic, setRisingTopic] = useState<string>('');
+  const [comparisonObservation, setComparisonObservation] = useState<string>('');
+  const [trendNotes, setTrendNotes] = useState<string>('');
+  const [checkedDate, setCheckedDate] = useState<string>(() => new Date().toISOString().split('T')[0]);
+  const [isSavingTrend, setIsSavingTrend] = useState(false);
+  const [trendSaveMessage, setTrendSaveMessage] = useState<string | null>(null);
+
+  // Google Keyword Planner Manual Data State
+  const [isEditingPlanner, setIsEditingPlanner] = useState(false);
+  const [plannerSearchVolume, setPlannerSearchVolume] = useState<string>('');
+  const [plannerCompetition, setPlannerCompetition] = useState<string>('LOW');
+  const [plannerRelatedKeywords, setPlannerRelatedKeywords] = useState<string>('');
+  const [plannerSaveMessage, setPlannerSaveMessage] = useState<string | null>(null);
+
+  // Sync state when researchData changes
+  useEffect(() => {
+    if (researchData?.manualTrendEvidence) {
+      const ev = researchData.manualTrendEvidence;
+      setTrendDirection(ev.trendDirection || 'RISING');
+      setTrendStrength(ev.trendStrength || 'STRONG');
+      setSeasonality(ev.seasonality || 'YES');
+      setPeakPeriod(ev.peakPeriod || '');
+      setLowestPeriod(ev.lowestPeriod || '');
+      setRisingQuery(ev.risingQuery || '');
+      setRisingTopic(ev.risingTopic || '');
+      setComparisonObservation(ev.comparisonObservation || '');
+      setTrendNotes(ev.notes || '');
+      setCheckedDate(ev.checkedDate || new Date().toISOString().split('T')[0]);
+      setTrendSaveMessage(`✓ Manual Trend Evidence Saved (Checked: ${ev.checkedDate})`);
+    } else {
+      setTrendSaveMessage(null);
+    }
+
+    if (researchData?.keywordPlanner) {
+      setPlannerSearchVolume(
+        researchData.keywordPlanner.searchVolume !== 'N/A' && researchData.keywordPlanner.searchVolume !== undefined
+          ? String(researchData.keywordPlanner.searchVolume)
+          : ''
+      );
+      setPlannerCompetition(
+        researchData.keywordPlanner.competition && researchData.keywordPlanner.competition !== 'N/A'
+          ? researchData.keywordPlanner.competition
+          : 'LOW'
+      );
+      setPlannerRelatedKeywords(
+        (researchData.keywordPlanner.relatedKeywords || []).join(', ')
+      );
+    }
+  }, [researchData]);
+
+  const handleSavePlannerData = () => {
+    if (!researchData) return;
+    const vol = plannerSearchVolume.trim() === '' ? 'N/A' : (isNaN(Number(plannerSearchVolume)) ? plannerSearchVolume : Number(plannerSearchVolume));
+    const related = plannerRelatedKeywords
+      .split(',')
+      .map(s => s.trim())
+      .filter(Boolean);
+
+    setResearchData({
+      ...researchData,
+      keywordPlanner: {
+        status: 'AVAILABLE',
+        source: 'Google Keyword Planner (Manual Admin Entry)',
+        searchVolume: vol,
+        competition: plannerCompetition as any,
+        relatedKeywords: related
+      }
+    });
+    setIsEditingPlanner(false);
+    setPlannerSaveMessage('✓ Keyword Planner updated');
+    setTimeout(() => setPlannerSaveMessage(null), 3500);
+  };
+
+  // Topic-specific comparison keywords derived from current research
+  const comparisonKeywords = useMemo(() => {
+    if (!researchData) return [];
+    const primary = (researchData.target || '').toLowerCase().trim();
+    const candidates: string[] = [];
+
+    if (Array.isArray(researchData.gsc?.topQueries)) {
+      for (const q of researchData.gsc.topQueries) {
+        if (q.query && q.query.toLowerCase().trim() !== primary) {
+          candidates.push(q.query.trim());
+        }
+      }
+    }
+    if (Array.isArray(researchData.gsc?.relatedQueries)) {
+      for (const q of researchData.gsc.relatedQueries) {
+        if (q.query && q.query.toLowerCase().trim() !== primary) {
+          candidates.push(q.query.trim());
+        }
+      }
+    }
+    if (Array.isArray(researchData.keywordPlanner?.relatedKeywords)) {
+      for (const k of researchData.keywordPlanner.relatedKeywords) {
+        if (k && k.toLowerCase().trim() !== primary) {
+          candidates.push(k.trim());
+        }
+      }
+    }
+
+    const primaryWords = primary.split(/\s+/).filter((w: string) => w.length > 2);
+    const matched = candidates.filter((c: string) => {
+      const cLower = c.toLowerCase();
+      return primaryWords.some((w: string) => cLower.includes(w));
+    });
+
+    const unique = Array.from(new Set(matched.length > 0 ? matched : candidates)).slice(0, 3);
+    return unique;
+  }, [researchData]);
+
+  // Official Google Trends URL
+  const googleTrendsExploreUrl = useMemo(() => {
+    if (!researchData?.target) return 'https://trends.google.com/trends/explore?geo=IN';
+    const primary = researchData.target.trim();
+    const queries = [primary, ...comparisonKeywords.slice(0, 2)];
+    return `https://trends.google.com/trends/explore?geo=IN&q=${encodeURIComponent(queries.join(','))}`;
+  }, [researchData, comparisonKeywords]);
+
+  const handleSaveTrendEvidence = async () => {
+    if (!researchData?.target) return;
+    setIsSavingTrend(true);
+    try {
+      const payload = {
+        opportunityId,
+        targetTopic: researchData.target,
+        primaryKeyword: researchData.target,
+        relatedKeywordsUsed: comparisonKeywords,
+        trendDirection,
+        trendStrength,
+        seasonality,
+        peakPeriod,
+        lowestPeriod,
+        risingQuery,
+        risingTopic,
+        comparisonObservation,
+        notes: trendNotes,
+        checkedDate,
+      };
+      const res = await fetch('/api/admin/seo-intelligence/trends-evidence', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setResearchData((prev: any) => ({
+          ...prev,
+          manualTrendEvidence: data.data,
+          googleTrends: {
+            status: 'AVAILABLE',
+            source: 'Manual Evidence — Google Trends',
+            trendSignal: data.data.trendDirection,
+          },
+        }));
+        setTrendSaveMessage(`✓ Manual Trend Evidence Saved (Checked: ${data.data.checkedDate})`);
+      } else {
+        alert(data.error || 'Failed to save trend evidence');
+      }
+    } catch (err) {
+      console.error('Save trend evidence error:', err);
+      alert('Network error saving trend evidence');
+    } finally {
+      setIsSavingTrend(false);
+    }
+  };
+
   const runResearch = async () => {
     setIsLoading(true);
     setAdminDecision(null);
     setSelectedPrimaryPageUrl("");
     try {
-      const payload: any = { target: topic, type, url: url || undefined };
+      const payload: any = { target: topic, type, url: url || undefined, opportunityId };
       if (url && url.includes('vergan')) {
           payload.historicalBaseline = historicalPayload;
       }
@@ -682,12 +856,22 @@ function SeoResearchWizard({ initialTarget }: { initialTarget?: { topic: string,
 
       {step === 2 && researchData && (
         <div className="space-y-6 animate-in fade-in">
-          <div className="flex gap-4 mb-2 text-xs font-semibold flex-wrap">
-             <div className="px-3 py-1 bg-green-100 text-green-800 rounded border border-green-200">GSC: CONNECTED ✓</div>
-             <div className={`px-3 py-1 rounded border ${researchData.googleTrends?.status === 'AVAILABLE' ? 'bg-green-100 text-green-800 border-green-200' : 'bg-slate-100 text-slate-600 border-slate-200'}`}>Google Trends: {researchData.googleTrends?.status || 'UNAVAILABLE'}</div>
-             <div className={`px-3 py-1 rounded border ${researchData.keywordPlanner?.status === 'AVAILABLE' ? 'bg-green-100 text-green-800 border-green-200' : 'bg-slate-100 text-slate-600 border-slate-200'}`}>Google Keyword Planner: {researchData.keywordPlanner?.status || 'UNAVAILABLE'}</div>
-             <div className="px-3 py-1 bg-red-50 text-red-600 rounded border border-red-200">Paid Keyword Provider: DISABLED</div>
-             <div className="px-3 py-1 bg-red-50 text-red-600 rounded border border-red-200">Paid SERP Provider: DISABLED</div>
+          <div className="flex gap-3 mb-2 text-xs font-semibold flex-wrap">
+             <div className="px-3 py-1 bg-green-100 text-green-800 rounded border border-green-200 flex items-center gap-1.5">
+               <span>✓</span> GSC: CONNECTED
+             </div>
+             <div className={`px-3 py-1 rounded border flex items-center gap-1.5 ${researchData.manualTrendEvidence ? 'bg-emerald-100 text-emerald-800 border-emerald-200' : 'bg-amber-50 text-amber-800 border-amber-200'}`}>
+               <Clock className="w-3.5 h-3.5" />
+               Google Trends: {researchData.manualTrendEvidence ? `Manual Evidence Saved ✓ (${researchData.manualTrendEvidence.checkedDate})` : 'Manual Check Pending'}
+             </div>
+             <div className={`px-3 py-1 rounded border flex items-center gap-1.5 ${researchData.keywordPlanner?.status === 'AVAILABLE' ? 'bg-green-100 text-green-800 border-green-200' : 'bg-slate-100 text-slate-700 border-slate-200'}`}>
+               <span>{researchData.keywordPlanner?.status === 'AVAILABLE' ? '✓' : '•'}</span>
+               Google Keyword Planner: {researchData.keywordPlanner?.status === 'AVAILABLE' ? 'AVAILABLE' : (researchData.keywordPlanner?.searchVolume !== 'N/A' && researchData.keywordPlanner?.searchVolume !== undefined ? 'UPDATED' : 'UNAVAILABLE')}
+             </div>
+             <div className="px-3 py-1 bg-amber-50 text-amber-800 rounded border border-amber-200 flex items-center gap-1.5">
+               <Clock className="w-3.5 h-3.5 text-amber-600" />
+               SERP Intelligence: Pending (Optional)
+             </div>
           </div>
         
           <div className="bg-white border rounded-xl overflow-hidden shadow-sm">
@@ -716,20 +900,95 @@ function SeoResearchWizard({ initialTarget }: { initialTarget?: { topic: string,
                </div>
                
                <div>
-                 <h4 className="font-bold mb-2">Google Keyword Planner</h4>
-                 <div className="space-y-1 bg-slate-50 p-3 rounded-lg border">
-                    <div><strong>Search Volume:</strong> {researchData.keywordPlanner?.searchVolume || 'N/A'}</div>
-                    <div><strong>Competition:</strong> {researchData.keywordPlanner?.competition || 'N/A'}</div>
-                    <div className="mt-2"><strong>Related:</strong></div>
-                    <div className="text-xs text-slate-500">{researchData.keywordPlanner?.relatedKeywords?.join(', ') || 'N/A'}</div>
+                 <div className="flex items-center justify-between mb-2">
+                   <h4 className="font-bold flex items-center gap-2">
+                     <span>Google Keyword Planner</span>
+                     {plannerSaveMessage && (
+                       <span className="text-[10px] text-emerald-700 font-normal bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+                         {plannerSaveMessage}
+                       </span>
+                     )}
+                   </h4>
+                   <button
+                     type="button"
+                     onClick={() => setIsEditingPlanner(!isEditingPlanner)}
+                     className="text-[11px] text-indigo-600 hover:text-indigo-800 font-semibold flex items-center gap-1 hover:underline"
+                   >
+                     <Edit2 className="w-3 h-3" /> {isEditingPlanner ? 'Cancel' : 'Edit / Manual Entry'}
+                   </button>
                  </div>
-                 <div className="text-xs text-slate-400 mt-2 italic">Source: {researchData.keywordPlanner?.source || 'Keyword Planner unavailable'}</div>
 
-                 <h4 className="font-bold mb-2 mt-4">Google Trends</h4>
-                 <div className="space-y-1 bg-slate-50 p-3 rounded-lg border">
-                    <div><strong>Trend Signal:</strong> <span className="font-bold text-indigo-600">{researchData.googleTrends?.trendSignal || 'N/A'}</span></div>
+                 {isEditingPlanner ? (
+                   <div className="space-y-3 bg-indigo-50/50 p-3.5 rounded-lg border border-indigo-100 text-xs mb-3">
+                     <div>
+                       <label className="block font-semibold text-slate-700 mb-1">Monthly Search Volume</label>
+                       <input
+                         type="text"
+                         value={plannerSearchVolume}
+                         onChange={(e) => setPlannerSearchVolume(e.target.value)}
+                         placeholder="e.g. 1200 or 500"
+                         className="w-full p-2 border rounded bg-white text-slate-800"
+                       />
+                     </div>
+                     <div>
+                       <label className="block font-semibold text-slate-700 mb-1">Competition Level</label>
+                       <select
+                         value={plannerCompetition}
+                         onChange={(e) => setPlannerCompetition(e.target.value)}
+                         className="w-full p-2 border rounded bg-white text-slate-800"
+                       >
+                         <option value="LOW">LOW</option>
+                         <option value="MEDIUM">MEDIUM</option>
+                         <option value="HIGH">HIGH</option>
+                         <option value="N/A">N/A</option>
+                       </select>
+                     </div>
+                     <div>
+                       <label className="block font-semibold text-slate-700 mb-1">Related Keywords (comma separated)</label>
+                       <input
+                         type="text"
+                         value={plannerRelatedKeywords}
+                         onChange={(e) => setPlannerRelatedKeywords(e.target.value)}
+                         placeholder="e.g. srinagar taxi rates, gulmarg cab fare"
+                         className="w-full p-2 border rounded bg-white text-slate-800"
+                       />
+                     </div>
+                     <button
+                       type="button"
+                       onClick={handleSavePlannerData}
+                       className="w-full py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded font-semibold transition-colors text-xs"
+                     >
+                       Save Keyword Data
+                     </button>
+                   </div>
+                 ) : (
+                   <div className="space-y-1 bg-slate-50 p-3 rounded-lg border text-xs">
+                      <div><strong>Search Volume:</strong> {researchData.keywordPlanner?.searchVolume !== 'N/A' && researchData.keywordPlanner?.searchVolume !== undefined ? researchData.keywordPlanner.searchVolume : 'N/A'}</div>
+                      <div><strong>Competition:</strong> {researchData.keywordPlanner?.competition || 'N/A'}</div>
+                      <div className="mt-2"><strong>Related:</strong></div>
+                      <div className="text-xs text-slate-500">{researchData.keywordPlanner?.relatedKeywords?.join(', ') || 'N/A'}</div>
+                   </div>
+                 )}
+                 <div className="text-xs text-slate-400 mt-2 italic">Source: {researchData.keywordPlanner?.source || 'Google Keyword Planner'}</div>
+
+                 <h4 className="font-bold mb-2 mt-4 flex items-center justify-between">
+                   <span>Google Trends</span>
+                   <span className={`text-[10px] px-2 py-0.5 rounded font-semibold uppercase tracking-wider ${researchData.manualTrendEvidence ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}`}>
+                     {researchData.manualTrendEvidence ? 'Manual Evidence' : 'Check Pending'}
+                   </span>
+                 </h4>
+                 <div className="space-y-1 bg-slate-50 p-3 rounded-lg border text-xs">
+                    <div><strong>Trend Direction:</strong> <span className="font-bold text-indigo-600">{researchData.manualTrendEvidence?.trendDirection || researchData.googleTrends?.trendSignal || 'UNAVAILABLE'}</span></div>
+                    <div><strong>Trend Strength:</strong> <span className="text-slate-700">{researchData.manualTrendEvidence?.trendStrength || 'N/A'}</span></div>
+                    <div><strong>Seasonality:</strong> <span className="text-slate-700">{researchData.manualTrendEvidence?.seasonality || 'N/A'}</span></div>
+                    {researchData.manualTrendEvidence?.peakPeriod && (
+                      <div><strong>Peak Period:</strong> <span className="text-slate-700">{researchData.manualTrendEvidence.peakPeriod}</span></div>
+                    )}
+                    {researchData.manualTrendEvidence?.risingQuery && (
+                      <div><strong>Rising Query:</strong> <span className="text-indigo-700 font-semibold">{researchData.manualTrendEvidence.risingQuery}</span></div>
+                    )}
                  </div>
-                 <div className="text-xs text-slate-400 mt-2 italic">Source: {researchData.googleTrends?.source || 'Google Trends unavailable'}</div>
+                 <div className="text-xs text-slate-400 mt-2 italic">Source: {researchData.manualTrendEvidence ? researchData.manualTrendEvidence.source : (researchData.googleTrends?.source || 'Google Trends — Manual Check Pending')}</div>
                </div>
                
                <div className="col-span-2 border-t border-slate-100 pt-4">
@@ -747,14 +1006,290 @@ function SeoResearchWizard({ initialTarget }: { initialTarget?: { topic: string,
                </div>
                
                <div className="col-span-2 border-t border-slate-100 pt-4">
-                  <h4 className="font-bold mb-3 text-slate-400">Paid Providers (DISABLED)</h4>
-                  <div className="text-slate-500 text-sm bg-red-50 p-4 rounded-lg border border-red-100 flex items-center justify-center">
-                     All Paid Keyword and SERP API calls have been strictly disabled per configuration.
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-2">
+                      <h4 className="font-bold text-slate-800">SERP Intelligence</h4>
+                      <span className="text-[10px] px-2 py-0.5 rounded font-semibold uppercase tracking-wider bg-amber-100 text-amber-800 border border-amber-200">
+                        Pending Integration (Non-blocking)
+                      </span>
+                    </div>
+                    <a
+                      href={`https://www.google.com/search?q=${encodeURIComponent(researchData.target)}&gl=in`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-xs text-indigo-600 hover:text-indigo-800 font-semibold flex items-center gap-1.5 hover:underline"
+                    >
+                      <ExternalLink className="w-3.5 h-3.5" /> Inspect Live SERP on Google (India)
+                    </a>
+                  </div>
+                  <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 text-xs text-slate-600 space-y-1.5">
+                    <p className="font-medium text-slate-700">
+                      Live SERP API provider is currently pending. The SEO intelligence engine proceeds safely using Google Search Console intent signals, Keyword Planner volume, and verified Google Trends evidence.
+                    </p>
+                    <div className="text-slate-500 text-[11px] flex flex-wrap items-center justify-between pt-1 gap-2 border-t border-slate-200/60 mt-2">
+                      <span className="italic">Data Grounding: GSC + Keyword Planner + Trends Manual Evidence</span>
+                      <span className="text-slate-400 font-mono">Target: {researchData.target} (geo: India)</span>
+                    </div>
                   </div>
                </div>
             </div>
           </div>
-          <div className="flex justify-end pt-2">
+
+          {/* GOOGLE TRENDS — MANUAL CHECK SECTION */}
+          <div className="bg-slate-50 border-2 border-indigo-200 rounded-2xl p-6 shadow-sm space-y-6">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-indigo-100 pb-4">
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="px-2.5 py-0.5 bg-indigo-600 text-white rounded text-[11px] font-bold uppercase tracking-wider">Manual Verification</span>
+                  <h3 className="text-lg font-bold text-slate-900">GOOGLE TRENDS — MANUAL CHECK</h3>
+                </div>
+                <p className="text-xs text-slate-600 mt-1">
+                  Google Trends data is not fetched automatically. Check Google Trends manually using the instructions below and enter the observed evidence.
+                </p>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <a
+                  href={googleTrendsExploreUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-4 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded-lg text-xs font-semibold flex items-center gap-2 transition-colors shadow-2xs"
+                >
+                  <ExternalLink className="w-3.5 h-3.5" /> Open Google Trends
+                </a>
+              </div>
+            </div>
+
+            {/* Topic-Specific Instructions Card */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+              <div className="bg-white p-4 rounded-xl border border-slate-200 space-y-3">
+                <h4 className="font-bold text-slate-800 text-sm border-b pb-1.5">What to Search & Compare</h4>
+                <div>
+                  <span className="text-slate-500 block font-medium mb-1">Target Topic / Primary Keyword:</span>
+                  <div className="p-2 bg-slate-100 rounded-md font-mono text-slate-900 font-semibold select-all">
+                    {researchData.target}
+                  </div>
+                </div>
+
+                <div>
+                  <span className="text-slate-500 block font-medium mb-1">Optional Comparison Keywords:</span>
+                  {comparisonKeywords.length > 0 ? (
+                    <ul className="list-disc pl-5 space-y-1 text-slate-700 font-medium font-mono">
+                      {comparisonKeywords.map((ck: string) => (
+                        <li key={ck} className="select-all">{ck}</li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <div className="text-slate-400 italic bg-slate-50 p-2 rounded border border-dashed">
+                      No verified comparison keyword available.
+                    </div>
+                  )}
+                </div>
+
+                <div className="pt-2 border-t text-[11px] text-slate-500">
+                  Note: Do not invent unsupported search volume numbers from Google Trends. Only observe relative trend dynamics.
+                </div>
+              </div>
+
+              <div className="bg-white p-4 rounded-xl border border-slate-200 space-y-3">
+                <h4 className="font-bold text-slate-800 text-sm border-b pb-1.5">Google Trends Settings & Checklist</h4>
+                <div className="grid grid-cols-2 gap-2 text-slate-700">
+                  <div className="bg-slate-50 p-2 rounded border">
+                    <span className="text-slate-400 block font-semibold text-[10px] uppercase">Country</span>
+                    <span className="font-medium">India</span>
+                  </div>
+                  <div className="bg-slate-50 p-2 rounded border">
+                    <span className="text-slate-400 block font-semibold text-[10px] uppercase">Search Type</span>
+                    <span className="font-medium">Web Search</span>
+                  </div>
+                  <div className="bg-slate-50 p-2 rounded border">
+                    <span className="text-slate-400 block font-semibold text-[10px] uppercase">Time Range</span>
+                    <span className="font-medium">Past 12 months</span>
+                  </div>
+                  <div className="bg-slate-50 p-2 rounded border">
+                    <span className="text-slate-400 block font-semibold text-[10px] uppercase">Category</span>
+                    <span className="font-medium">Travel (when relevant)</span>
+                  </div>
+                </div>
+
+                <div>
+                  <span className="text-slate-500 block font-semibold mb-1">Check These Points:</span>
+                  <div className="grid grid-cols-2 gap-1 text-[11px] text-slate-600">
+                    <div className="flex items-center gap-1.5">☑ Interest over time</div>
+                    <div className="flex items-center gap-1.5">☑ Rising / stable / declining</div>
+                    <div className="flex items-center gap-1.5">☑ Relative strength</div>
+                    <div className="flex items-center gap-1.5">☑ Seasonal pattern</div>
+                    <div className="flex items-center gap-1.5">☑ Peak period / months</div>
+                    <div className="flex items-center gap-1.5">☑ Lowest period / months</div>
+                    <div className="flex items-center gap-1.5">☑ Related rising queries</div>
+                    <div className="flex items-center gap-1.5">☑ Related rising topics</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Admin Input Form */}
+            <div className="bg-white p-5 rounded-xl border border-slate-200 space-y-4">
+              <h4 className="font-bold text-slate-800 text-sm border-b pb-2 flex items-center justify-between">
+                <span>Enter Observed Trend Evidence</span>
+                <span className="text-xs font-normal text-slate-500">Source: <strong className="text-slate-700">Google Trends — Manual Admin Check</strong></span>
+              </h4>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+                <div>
+                  <label className="block font-semibold text-slate-700 mb-1">Trend Direction *</label>
+                  <select
+                    value={trendDirection}
+                    onChange={(e: any) => setTrendDirection(e.target.value)}
+                    className="w-full p-2.5 border rounded-lg bg-white text-slate-800 font-medium"
+                  >
+                    <option value="RISING">RISING</option>
+                    <option value="STABLE">STABLE</option>
+                    <option value="DECLINING">DECLINING</option>
+                    <option value="UNCLEAR">UNCLEAR</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block font-semibold text-slate-700 mb-1">Trend Strength *</label>
+                  <select
+                    value={trendStrength}
+                    onChange={(e: any) => setTrendStrength(e.target.value)}
+                    className="w-full p-2.5 border rounded-lg bg-white text-slate-800 font-medium"
+                  >
+                    <option value="STRONG">STRONG</option>
+                    <option value="MODERATE">MODERATE</option>
+                    <option value="WEAK">WEAK</option>
+                    <option value="UNCLEAR">UNCLEAR</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block font-semibold text-slate-700 mb-1">Seasonality *</label>
+                  <select
+                    value={seasonality}
+                    onChange={(e: any) => setSeasonality(e.target.value)}
+                    className="w-full p-2.5 border rounded-lg bg-white text-slate-800 font-medium"
+                  >
+                    <option value="YES">YES</option>
+                    <option value="NO">NO</option>
+                    <option value="UNCLEAR">UNCLEAR</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block font-semibold text-slate-700 mb-1">Peak Period (Months/Range)</label>
+                  <input
+                    type="text"
+                    value={peakPeriod}
+                    onChange={(e: any) => setPeakPeriod(e.target.value)}
+                    placeholder="e.g. December–January or May–June"
+                    className="w-full p-2.5 border rounded-lg text-slate-800"
+                  />
+                </div>
+
+                <div>
+                  <label className="block font-semibold text-slate-700 mb-1">Lowest Period</label>
+                  <input
+                    type="text"
+                    value={lowestPeriod}
+                    onChange={(e: any) => setLowestPeriod(e.target.value)}
+                    placeholder="e.g. July–August or Monsoon"
+                    className="w-full p-2.5 border rounded-lg text-slate-800"
+                  />
+                </div>
+
+                <div>
+                  <label className="block font-semibold text-slate-700 mb-1">Checked Date</label>
+                  <input
+                    type="date"
+                    value={checkedDate}
+                    onChange={(e: any) => setCheckedDate(e.target.value)}
+                    className="w-full p-2.5 border rounded-lg text-slate-800"
+                  />
+                </div>
+
+                <div>
+                  <label className="block font-semibold text-slate-700 mb-1">Related Rising Query</label>
+                  <input
+                    type="text"
+                    value={risingQuery}
+                    onChange={(e: any) => setRisingQuery(e.target.value)}
+                    placeholder="e.g. kashmir snowfall live"
+                    className="w-full p-2.5 border rounded-lg text-slate-800"
+                  />
+                </div>
+
+                <div>
+                  <label className="block font-semibold text-slate-700 mb-1">Related Rising Topic</label>
+                  <input
+                    type="text"
+                    value={risingTopic}
+                    onChange={(e: any) => setRisingTopic(e.target.value)}
+                    placeholder="e.g. Winter tourism in Kashmir"
+                    className="w-full p-2.5 border rounded-lg text-slate-800"
+                  />
+                </div>
+
+                <div>
+                  <label className="block font-semibold text-slate-700 mb-1">Comparison Observation</label>
+                  <input
+                    type="text"
+                    value={comparisonObservation}
+                    onChange={(e: any) => setComparisonObservation(e.target.value)}
+                    placeholder="e.g. Primary keyword has 3x higher search interest"
+                    className="w-full p-2.5 border rounded-lg text-slate-800"
+                  />
+                </div>
+
+                <div className="col-span-1 md:col-span-3">
+                  <label className="block font-semibold text-slate-700 mb-1">Admin Notes</label>
+                  <textarea
+                    rows={2}
+                    value={trendNotes}
+                    onChange={(e: any) => setTrendNotes(e.target.value)}
+                    placeholder="Add any specific context, breakout queries, or seasonal observations..."
+                    className="w-full p-2.5 border rounded-lg text-slate-800 resize-none"
+                  />
+                </div>
+              </div>
+
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-3 border-t">
+                <div>
+                  {trendSaveMessage ? (
+                    <div className="text-xs text-emerald-700 font-semibold flex items-center gap-1.5 bg-emerald-50 px-3 py-1.5 rounded-lg border border-emerald-200">
+                      <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                      {trendSaveMessage}
+                    </div>
+                  ) : (
+                    <div className="text-xs text-slate-400 italic">
+                      Google Trends manual evidence: Pending
+                    </div>
+                  )}
+                </div>
+
+                <button
+                  type="button"
+                  onClick={handleSaveTrendEvidence}
+                  disabled={isSavingTrend}
+                  className="px-5 py-2.5 bg-slate-900 hover:bg-slate-800 text-white rounded-lg text-xs font-semibold flex items-center gap-2 transition-colors disabled:opacity-50"
+                >
+                  {isSavingTrend ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <CheckCircle2 className="w-3.5 h-3.5" />}
+                  Save Trend Evidence
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between pt-2 border-t border-slate-100">
+            <div className="text-xs text-slate-500">
+              {researchData.manualTrendEvidence ? (
+                <span className="text-emerald-700 font-medium">✓ Google Trends manual evidence: Saved ({researchData.manualTrendEvidence.checkedDate})</span>
+              ) : (
+                <span className="text-slate-500">Google Trends manual evidence: <strong className="text-amber-700">Pending</strong> (Optional — not a blocker for AI Strategy)</span>
+              )}
+            </div>
+
             <button onClick={runStrategy} disabled={isLoading} className="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 transition-colors text-white rounded-lg flex items-center gap-2 shadow-sm font-medium">
               {isLoading ? <RefreshCw className="animate-spin w-4 h-4" /> : <Wand2 className="w-4 h-4" />} Generate AI Strategy
             </button>
@@ -1001,9 +1536,9 @@ function SeoResearchWizard({ initialTarget }: { initialTarget?: { topic: string,
                     {(rec?.evidence || [
                       `Target Intent: ${researchData?.searchIntent?.toUpperCase() || 'COMMERCIAL'}`,
                       `Competing Pages in DB: ${competingPages.length}`,
-                      `Google Trends: UNAVAILABLE`,
-                      `Keyword Planner: UNAVAILABLE`,
-                      `Paid Providers: UNAVAILABLE (Disabled)`
+                      `Google Trends: ${researchData?.manualTrendEvidence ? `Manual Evidence (${researchData.manualTrendEvidence.trendDirection})` : 'Check Pending'}`,
+                      `Google Keyword Planner: ${researchData?.keywordPlanner?.status === 'AVAILABLE' ? 'AVAILABLE' : (researchData?.keywordPlanner?.searchVolume !== 'N/A' && researchData?.keywordPlanner?.searchVolume !== undefined ? 'UPDATED' : 'UNAVAILABLE')}`,
+                      `SERP Intelligence: Pending Integration (Non-blocking)`
                     ]).map((ev: string, i: number) => (
                       <li key={i}>{ev}</li>
                     ))}

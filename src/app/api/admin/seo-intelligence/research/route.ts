@@ -11,12 +11,12 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { target, type, url, historicalBaseline } = await request.json();
+    const { target, type, url, historicalBaseline, opportunityId } = await request.json();
     if (!target || !type) {
       return NextResponse.json({ success: false, error: "Target and type are required" }, { status: 400 });
     }
 
-    const research = await runSeoResearch(target, type, url, historicalBaseline);
+    const research = await runSeoResearch(target, type, url, historicalBaseline, opportunityId);
     return NextResponse.json({ success: true, data: research });
   } catch (error: any) {
     console.error("Research API Error:", error);

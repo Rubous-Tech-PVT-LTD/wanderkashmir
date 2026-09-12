@@ -1,11 +1,11 @@
 import prisma from "@/lib/prisma";
 import { getGscAnalytics, getGscSiteUrl } from "@/lib/gsc-client";
-import { SeoResearch } from "./types";
+import { SeoResearch, ManualTrendEvidence } from "./types";
 import { keywordProvider, serpProvider, googleTrendsProvider, keywordPlannerProvider } from "./research/providers";
 import { generateManualReviewRecommendation } from "./manual-review-engine";
-import { inferIntent, getEntities } from "./opportunity-engine";
+import { inferIntent, getEntities, toCanonicalTopic } from "./opportunity-engine";
 
-export async function runSeoResearch(target: string, type: string, targetUrl?: string, historicalBaseline?: any): Promise<SeoResearch> {
+export async function runSeoResearch(target: string, type: string, targetUrl?: string, historicalBaseline?: any, opportunityId?: string): Promise<SeoResearch> {
   const isExistingPage = !!targetUrl;
   
   let pageMetrics;
@@ -18,27 +18,61 @@ export async function runSeoResearch(target: string, type: string, targetUrl?: s
 
   let keywordData = { status: 'UNAVAILABLE' as const, source: 'Not Configured', searchVolume: 'N/A' as const, difficulty: 'N/A' as const, intent: 'N/A' as const, relatedKeywords: [] };
   let serpData = { status: 'UNAVAILABLE' as const, source: 'Not Configured', results: [], commonTopics: [] };
-  let trendsData = { status: 'UNAVAILABLE' as const, source: 'Google Trends unavailable', trendSignal: 'UNAVAILABLE' as const };
+  let trendsData = { status: 'UNAVAILABLE' as const, source: 'Google Trends — Manual Check Pending', trendSignal: 'UNAVAILABLE' as const };
   let plannerData = { status: 'UNAVAILABLE' as const, source: 'Keyword Planner unavailable', searchVolume: 'N/A' as const, competition: 'N/A' as const, relatedKeywords: [] };
+  let manualTrendEvidence: ManualTrendEvidence | null = null;
 
   try {
     const siteUrl = await getGscSiteUrl();
     const endDate = new Date().toISOString().split('T')[0];
     const startDate = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
 
+    // Check for saved Manual Google Trends Evidence
+    const canonicalTopic = toCanonicalTopic(target);
+    try {
+      const savedConfig = await prisma.systemConfig.findUnique({
+        where: { key: `seo_trend_evidence:${canonicalTopic}` }
+      });
+      if (savedConfig?.value) {
+        manualTrendEvidence = JSON.parse(savedConfig.value);
+      } else if (opportunityId) {
+        const opp = await prisma.seoOpportunity.findUnique({ where: { id: opportunityId } });
+        if (opp?.manualReviewDecision && typeof opp.manualReviewDecision === 'object') {
+          const dec = opp.manualReviewDecision as any;
+          if (dec.manualTrendEvidence) {
+            manualTrendEvidence = dec.manualTrendEvidence;
+          }
+        }
+      }
+    } catch (err) {
+      console.warn("Failed to check saved manual trend evidence:", err);
+    }
+
     // Define promises for concurrent execution
     const gscPromise = getGscAnalytics(siteUrl, startDate, endDate, isExistingPage ? ['query', 'page'] : ['query']);
     const keywordPromise = keywordProvider.getKeywordMetrics(target);
     const serpPromise = serpProvider.getSerpResults(target);
-    const trendsPromise = googleTrendsProvider.getTrends(target);
     const plannerPromise = keywordPlannerProvider.getPlannerData(target);
 
     // Wait for all providers
-    const [analytics, kwRes, serpRes, trendsRes, plannerRes] = await Promise.all([gscPromise, keywordPromise, serpPromise, trendsPromise, plannerPromise]);
+    const [analytics, kwRes, serpRes, plannerRes] = await Promise.all([gscPromise, keywordPromise, serpPromise, plannerPromise]);
     keywordData = kwRes as any;
     serpData = serpRes as any;
-    trendsData = trendsRes as any;
     plannerData = plannerRes as any;
+
+    if (manualTrendEvidence) {
+      trendsData = {
+        status: 'AVAILABLE',
+        source: 'Manual Evidence — Google Trends',
+        trendSignal: manualTrendEvidence.trendDirection
+      };
+    } else {
+      trendsData = {
+        status: 'UNAVAILABLE',
+        source: 'Google Trends — Manual Check Pending',
+        trendSignal: 'UNAVAILABLE'
+      };
+    }
 
     if (isExistingPage && targetUrl) {
       const exactPageRows = analytics.filter((row: any) => {
@@ -282,6 +316,7 @@ export async function runSeoResearch(target: string, type: string, targetUrl?: s
       opportunities
     },
     googleTrends: trendsData,
+    manualTrendEvidence,
     keywordPlanner: plannerData,
     keywordResearch: keywordData,
     serpResearch: serpData,

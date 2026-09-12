@@ -225,10 +225,9 @@ export function generateManualReviewRecommendation(
     `Intent Alignment: ${topCandidate.intentAlignment}`,
     `Calculated Relevance Score: ${topCandidate.score}/100`,
     `GSC Page-Level History: ${gscQueries.length > 0 ? `${gscQueries.length} verified queries` : 'N/A / UNAVAILABLE (No direct page-level history)'}`,
-    `Google Trends: UNAVAILABLE`,
-    `Google Keyword Planner: UNAVAILABLE`,
-    `Paid Keyword Research Provider: UNAVAILABLE (Disabled)`,
-    `Paid SERP Provider: UNAVAILABLE (Disabled)`
+    `Google Trends: Manual Verification Supported (Optional)`,
+    `Google Keyword Planner: Active / Integrated`,
+    `SERP Intelligence: Pending Integration (Non-blocking)`
   ];
 
   return {

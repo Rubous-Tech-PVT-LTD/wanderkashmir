@@ -22,7 +22,27 @@ export interface SerpResearchData {
 export interface GoogleTrendsData {
   status: 'AVAILABLE' | 'UNAVAILABLE';
   source: string;
-  trendSignal: 'RISING' | 'STABLE' | 'DECLINING' | 'SEASONAL' | 'UNAVAILABLE';
+  trendSignal: 'RISING' | 'STABLE' | 'DECLINING' | 'SEASONAL' | 'UNCLEAR' | 'UNAVAILABLE';
+}
+
+export interface ManualTrendEvidence {
+  opportunityId?: string;
+  targetTopic: string;
+  primaryKeyword: string;
+  relatedKeywordsUsed: string[];
+  trendDirection: 'RISING' | 'STABLE' | 'DECLINING' | 'UNCLEAR';
+  trendStrength: 'STRONG' | 'MODERATE' | 'WEAK' | 'UNCLEAR';
+  seasonality: 'YES' | 'NO' | 'UNCLEAR';
+  peakPeriod?: string;
+  lowestPeriod?: string;
+  risingQuery?: string;
+  risingTopic?: string;
+  comparisonObservation?: string;
+  notes?: string;
+  checkedDate: string;
+  source: 'Google Trends — Manual Admin Check';
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface KeywordPlannerData {
@@ -55,6 +75,7 @@ export interface SeoResearch {
   keywordResearch: KeywordResearchData;
   serpResearch: SerpResearchData;
   googleTrends: GoogleTrendsData;
+  manualTrendEvidence?: ManualTrendEvidence | null;
   keywordPlanner: KeywordPlannerData;
 
   searchIntent: string;

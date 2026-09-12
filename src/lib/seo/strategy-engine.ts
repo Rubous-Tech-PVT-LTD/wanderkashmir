@@ -15,6 +15,26 @@ export async function generateSeoStrategy(
 
   const isHighCannibalization = research.cannibalizationRisk.status === 'HIGH_RISK' || research.cannibalizationRisk.recommendation === 'MANUAL_REVIEW';
 
+  const trendsContext = research.manualTrendEvidence ? `
+GOOGLE TRENDS (MANUAL ADMIN EVIDENCE):
+- Source: ${research.manualTrendEvidence.source}
+- Status: Saved (Checked: ${research.manualTrendEvidence.checkedDate})
+- Primary Keyword: ${research.manualTrendEvidence.primaryKeyword}
+- Trend Direction: ${research.manualTrendEvidence.trendDirection}
+- Trend Strength: ${research.manualTrendEvidence.trendStrength}
+- Seasonality: ${research.manualTrendEvidence.seasonality}
+- Peak Period: ${research.manualTrendEvidence.peakPeriod || 'N/A'}
+- Lowest Period: ${research.manualTrendEvidence.lowestPeriod || 'N/A'}
+- Related Rising Query: ${research.manualTrendEvidence.risingQuery || 'None reported'}
+- Related Rising Topic: ${research.manualTrendEvidence.risingTopic || 'None reported'}
+- Comparison Observation: ${research.manualTrendEvidence.comparisonObservation || 'None reported'}
+- Admin Notes: ${research.manualTrendEvidence.notes || 'None'}
+` : `
+GOOGLE TRENDS: MANUAL CHECK PENDING
+- Status: Pending / Unavailable
+- Instruction: No manual Google Trends evidence was provided. Strategy MUST NOT assume rising, declining, seasonal, or strong demand. Treat Trends as unavailable/pending.
+`;
+
   const prompt = `You are an expert SEO strategist and Content Director for WanderKashmir.
 Your task is to analyze real Google Search Console data, Keyword Research, and SERP Analysis to generate a highly targeted SEO Strategy.
 
@@ -27,7 +47,7 @@ COMPETING EXISTING PAGES: ${JSON.stringify(research.cannibalizationRisk.competin
 
 === RESEARCH DATA ===
 GSC PERFORMANCE: ${JSON.stringify(research.gsc)}
-GOOGLE TRENDS (FREE): ${JSON.stringify(research.googleTrends)}
+${trendsContext}
 KEYWORD PLANNER (FREE): ${JSON.stringify(research.keywordPlanner)}
 KEYWORD RESEARCH (PAID): ${JSON.stringify(research.keywordResearch)}
 SERP RESEARCH (PAID): ${JSON.stringify(research.serpResearch)}
@@ -50,6 +70,7 @@ CRITICAL INSTRUCTIONS:
 4. If Keyword Research or SERP Research is 'UNAVAILABLE', base your strategy solely on GSC data and Intent analysis. Do NOT fabricate missing metrics.
 5. For SERP Analysis: Look for common topics and content types. Use these to recommend new sections (EXPAND) or FAQ additions (ADD), but DO NOT copy competitors exactly.
 6. For Keyword Research: Use related keywords to suggest semantic variations for headings, but do NOT recommend keyword stuffing.
+7. GOOGLE TRENDS MANUAL EVIDENCE RULES: If Google Trends Manual Evidence is provided, you may use it to inform content timing (e.g. peak seasonal timing), highlight related rising queries in FAQ or subheadings, and align content urgency. DO NOT invent unverified search volumes. If Google Trends is 'MANUAL CHECK PENDING', DO NOT assume seasonal demand or rising trends—base demand solely on GSC data.
 
 OUTPUT JSON FORMAT ONLY. Do not include markdown blocks.
 {
