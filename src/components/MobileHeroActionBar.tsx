@@ -80,15 +80,15 @@ export default function MobileHeroActionBar({ rating, totalReviews }: MobileHero
 
             {/* Bottom Action Row: Customize Tour Package (Reduced Opacity) + Call Button */}
             <div className="w-full flex items-center gap-1.5">
-              {/* Customize Your Tour Package Button */}
+              {/* Customize Your Tour Package Button (Balanced left & right spacing) */}
               <button
                 type="button"
                 onClick={openModal}
-                className="flex-1 bg-wander-gradient-soft hover:bg-wander-gradient text-white font-bold py-2 px-2.5 rounded-lg border border-orange-400/40 shadow-2xs flex items-center justify-center gap-1.5 cursor-pointer transition-all active:scale-98 text-center backdrop-blur-xs"
+                className="flex-1 bg-wander-gradient-soft hover:bg-wander-gradient text-white font-bold py-2 px-3 rounded-lg border border-orange-400/40 shadow-2xs flex items-center justify-center gap-2 cursor-pointer transition-all active:scale-98 text-center backdrop-blur-xs"
               >
-                <Sparkles className="w-3 h-3 text-amber-200 animate-pulse shrink-0" />
-                <span className="font-black whitespace-nowrap text-[10.5px] sm:text-xs tracking-tight">Customize Your Tour Packages</span>
-                <ArrowRight className="w-2.5 h-2.5 text-orange-100 shrink-0" />
+                <Sparkles className="w-3.5 h-3.5 text-amber-200 animate-pulse shrink-0" />
+                <span className="font-black whitespace-nowrap text-[11px] sm:text-xs tracking-tight text-center">Customize Your Tour Packages</span>
+                <ArrowRight className="w-3.5 h-3.5 text-orange-100 shrink-0" />
               </button>
 
               {/* Dedicated Instant Call Button (Dialer Blue - universally recognized phone call color) */}
