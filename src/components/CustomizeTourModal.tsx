@@ -169,20 +169,43 @@ export default function CustomizeTourModal({
                 <X className="w-5 h-5" />
               </button>
 
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-orange-500/20 border border-orange-500/30 text-orange-400 text-xs font-bold uppercase tracking-wider mb-2 sm:mb-3">
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-orange-500/20 border border-orange-500/30 text-orange-400 text-xs font-bold uppercase tracking-wider mb-2 sm:mb-3">
                 <Sparkles className="w-3.5 h-3.5" /> 100% Tailor-Made Kashmir Trips
               </div>
               <h3 className="text-xl sm:text-2xl md:text-3xl font-extrabold tracking-tight">
-                Craft Your Dream Kashmir Package
+                Customize Your Kashmir Tour Package
               </h3>
               <p className="text-slate-300 text-xs sm:text-sm mt-1.5 max-w-xl">
-                Tell us your preferences! Our local Kashmir specialists will design a custom itinerary with private cabs, verified hotels & guaranteed lowest rates.
+                Tell us your preferences! Our local Kashmir specialists will design a custom itinerary with private cabs, verified hotels &amp; guaranteed best rates.
               </p>
             </div>
 
             {/* Modal Body - Scrollable Area */}
             {step === "form" ? (
               <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-5 sm:p-7 space-y-6 custom-scrollbar">
+                
+                {/* Instant Call Option */}
+                <div className="bg-gradient-to-r from-amber-50 to-orange-50 border border-orange-200/80 rounded-2xl p-3 sm:p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-xs">
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-xl bg-orange-500 text-white flex items-center justify-center shrink-0 shadow-sm">
+                      <Phone className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <h4 className="font-bold text-xs sm:text-sm text-slate-900">Prefer to Speak Directly?</h4>
+                        <span className="bg-emerald-100 text-emerald-700 text-[10px] font-extrabold px-2 py-0.5 rounded-full uppercase">Instant Call</span>
+                      </div>
+                      <p className="text-[11px] text-slate-600 mt-0.5">Skip the form &amp; speak with our Kashmir tour specialist right now.</p>
+                    </div>
+                  </div>
+                  <a
+                    href="tel:+916005888754"
+                    className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-bold text-xs px-4 py-2 rounded-xl shadow-xs transition-all active:scale-95 shrink-0"
+                  >
+                    <Phone className="w-3.5 h-3.5" />
+                    <span>Call +91 6005888754</span>
+                  </a>
+                </div>
                 
                 {/* 1. Travelers & Dates */}
                 <div>
@@ -373,17 +396,17 @@ export default function CustomizeTourModal({
                   <button
                     type="submit"
                     disabled={isSubmitting}
-                    className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 bg-gradient-to-r from-orange-500 to-amber-500 text-white px-7 py-3 rounded-full font-bold text-xs sm:text-sm hover:from-orange-600 hover:to-amber-600 transition-all shadow-lg shadow-orange-500/30 disabled:opacity-70 disabled:cursor-not-allowed transform hover:-translate-y-0.5 cursor-pointer"
+                    className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 bg-gradient-to-r from-orange-500 via-amber-500 to-orange-600 text-white px-7 py-3 rounded-full font-bold text-xs sm:text-sm hover:from-orange-600 hover:to-amber-600 transition-all shadow-lg shadow-orange-500/30 disabled:opacity-70 disabled:cursor-not-allowed transform hover:-translate-y-0.5 cursor-pointer"
                   >
                     {isSubmitting ? (
                       <>
                         <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                        <span>Sending Request...</span>
+                        <span>Submitting Request...</span>
                       </>
                     ) : (
                       <>
                         <Sparkles className="w-4 h-4" />
-                        <span>Get Free Quote on WhatsApp</span>
+                        <span>Customize Tour Package</span>
                       </>
                     )}
                   </button>
