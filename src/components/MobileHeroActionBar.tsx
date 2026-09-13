@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { Sparkles, ArrowRight, ShieldCheck, PhoneCall } from "lucide-react";
+import { Sparkles, ArrowRight } from "lucide-react";
 import CustomizeTourModal from "@/components/CustomizeTourModal";
 
 export default function MobileHeroActionBar() {
@@ -10,22 +10,25 @@ export default function MobileHeroActionBar() {
       <CustomizeTourModal
         renderTrigger={(openModal) => (
           <div className="container-custom flex flex-col items-center gap-2.5">
-            {/* 3 Clickable Action Cards: 1. Customization (+ Call) | 2. Instagram | 3. Review (Exact screenshot) */}
+            {/* 3 Clickable Action Cards: 1. Call Us | 2. Instagram | 3. Review (Exact screenshot) */}
             <div className="w-full grid grid-cols-3 gap-2">
-              {/* 1. Customization & Call */}
-              <button
-                type="button"
-                onClick={openModal}
-                className="flex items-center justify-center gap-1.5 py-2 px-1.5 rounded-xl bg-white border border-orange-200/80 shadow-xs hover:bg-orange-50/50 active:scale-95 transition-all text-left cursor-pointer"
+              {/* 1. WhatsApp Card */}
+              <a
+                href="https://wa.me/916005888754?text=Hi%20WanderKashmir%2C%20I%20want%20to%20plan%20a%20trip%20to%20Kashmir."
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center justify-center gap-1.5 py-2 px-1.5 rounded-xl bg-white border border-orange-200/80 shadow-xs hover:bg-emerald-50/50 active:scale-95 transition-all text-left"
               >
-                <div className="w-6 h-6 rounded-lg bg-orange-100 text-orange-600 flex items-center justify-center shrink-0 shadow-2xs">
-                  <Sparkles className="w-3.5 h-3.5 text-orange-600" />
+                <div className="w-6 h-6 rounded-lg bg-[#25D366] text-white flex items-center justify-center shrink-0 shadow-2xs">
+                  <svg className="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24">
+                    <path d="M12.042 21.848h-.008a9.837 9.837 0 0 1-5.01-1.378l-.359-.214-3.725.976.994-3.633-.235-.374a9.86 9.86 0 0 1-1.512-5.26c.003-5.446 4.436-9.878 9.886-9.878 2.64 0 5.12 1.028 6.985 2.894a9.827 9.827 0 0 1 2.89 6.986c-.003 5.447-4.436 9.88-9.911 9.88zM20.52 3.483A11.93 11.93 0 0 0 12.04 0C5.402 0 .01 5.393 0 12.032a11.98 11.98 0 0 0 1.63 6.02L0 24l6.102-1.602a11.93 11.93 0 0 0 5.938 1.57h.005c6.634 0 12.03-5.393 12.033-12.032a11.906 11.906 0 0 0-3.556-8.453z" />
+                  </svg>
                 </div>
                 <div className="flex flex-col text-left leading-tight">
-                  <span className="text-[11px] font-extrabold text-slate-900">Customise</span>
-                  <span className="text-[9px] text-orange-600 font-semibold">&amp; Call</span>
+                  <span className="text-[11px] font-extrabold text-slate-900">WhatsApp</span>
+                  <span className="text-[9px] text-emerald-600 font-bold">Chat</span>
                 </div>
-              </button>
+              </a>
 
               {/* 2. Instagram Link */}
               <a
@@ -67,30 +70,16 @@ export default function MobileHeroActionBar() {
               </a>
             </div>
 
-              {/* Action Bar: Customize Your Tour Package + Call Now */}
-              <div className="w-full flex items-center gap-2">
-                {/* Customize Tour Package Button */}
-                <button
-                  type="button"
-                  onClick={openModal}
-                  className="flex-1 bg-gradient-to-r from-orange-500 via-amber-500 to-orange-600 hover:from-orange-600 hover:to-amber-600 text-white font-bold py-3 px-4 rounded-xl shadow-md shadow-orange-500/20 flex items-center justify-center gap-2 cursor-pointer transition-all active:scale-98 text-center"
-                >
-                  <Sparkles className="w-4 h-4 text-amber-200 animate-pulse" />
-                  <span className="text-xs sm:text-sm font-extrabold tracking-tight">Customize Your Tour Package</span>
-                  <ArrowRight className="w-3.5 h-3.5" />
-                </button>
-
-              {/* Instant Call Action */}
-              <a
-                href="tel:+916005888754"
-                className="shrink-0 flex flex-col items-center justify-center bg-white border border-orange-200 py-1.5 px-3 rounded-xl shadow-xs hover:bg-orange-50 active:scale-95 transition-all text-slate-800 text-center"
-              >
-                <div className="w-6 h-6 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mb-0.5">
-                  <PhoneCall className="w-3.5 h-3.5" />
-                </div>
-                <span className="text-[10px] font-black text-slate-800 leading-none">Call Now</span>
-              </a>
-            </div>
+            {/* Full-width Customize Your Tour Package Button with soft/gentle saffron */}
+            <button
+              type="button"
+              onClick={openModal}
+              className="w-full bg-gradient-to-r from-[#f97316] via-[#fb923c] to-[#f97316] hover:from-[#ea580c] hover:to-[#ea580c] text-white font-extrabold text-xs sm:text-sm py-2.5 px-4 rounded-xl shadow-xs shadow-orange-500/20 flex items-center justify-center gap-2 cursor-pointer transition-all active:scale-98 text-center"
+            >
+              <Sparkles className="w-4 h-4 text-amber-100 animate-pulse" />
+              <span>Customize Your Tour Package</span>
+              <ArrowRight className="w-3.5 h-3.5 text-orange-100" />
+            </button>
           </div>
         )}
       />
