@@ -62,5 +62,37 @@
     "link": "/tours?destination=Ladakh",
     "order": 8,
     "isActive": true
+  },
+  {
+    "id": "yusmarg",
+    "name": "Yusmarg",
+    "image": "https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&q=80&w=400",
+    "link": "/tours?destination=Yusmarg",
+    "order": 9,
+    "isActive": true
+  },
+  {
+    "id": "aru-valley",
+    "name": "Aru Valley",
+    "image": "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&q=80&w=400",
+    "link": "/tours?destination=Aru",
+    "order": 10,
+    "isActive": true
+  },
+  {
+    "id": "betaab-valley",
+    "name": "Betaab Valley",
+    "image": "https://images.unsplash.com/photo-1519681393784-d120267933ba?auto=format&fit=crop&q=80&w=400",
+    "link": "/tours?destination=Betaab",
+    "order": 11,
+    "isActive": true
+  },
+  {
+    "id": "kupwara",
+    "name": "Kupwara",
+    "image": "https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?auto=format&fit=crop&q=80&w=400",
+    "link": "/tours?destination=Kupwara",
+    "order": 12,
+    "isActive": true
   }
 ]

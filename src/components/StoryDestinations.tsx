@@ -16,6 +16,40 @@ export default function StoryDestinations({ destinations }: StoryDestinationsPro
     return null;
   }
 
+  // Split destinations into 2 balanced rows
+  const half = Math.ceil(destinations.length / 2);
+  const row1 = destinations.slice(0, half);
+  const row2 = destinations.slice(half);
+
+  const renderDestinationItem = (item: DestinationItem) => (
+    <Link
+      key={item.id}
+      href={item.link || `/tours?destination=${encodeURIComponent(item.name)}`}
+      className="group flex flex-col items-center justify-center select-none cursor-pointer focus:outline-none shrink-0 w-[58px] sm:w-[64px]"
+    >
+      {/* Story Circle with Saffron Ring */}
+      <div className="relative p-[2px] rounded-full bg-gradient-to-tr from-amber-400 via-[#f97316] to-rose-500 shadow-sm transition-all duration-200 group-hover:scale-105 group-active:scale-95">
+        <div className="w-[54px] h-[54px] sm:w-[60px] sm:h-[60px] rounded-full p-[1.5px] bg-white">
+          <div className="w-full h-full rounded-full overflow-hidden relative bg-slate-100">
+            <Image
+              src={item.image}
+              alt={item.name}
+              fill
+              sizes="60px"
+              className="object-cover object-center transition-transform duration-300 group-hover:scale-110"
+              unoptimized={item.image.includes("unsplash.com") || item.image.includes("cloudinary.com")}
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Destination Name */}
+      <span className="mt-1 text-[11px] font-semibold text-slate-800 text-center tracking-tight truncate w-full group-hover:text-[#f97316] transition-colors">
+        {item.name}
+      </span>
+    </Link>
+  );
+
   return (
     <section className="w-full bg-white pt-3.5 pb-2.5 border-b border-slate-100 relative md:hidden">
       <div className="px-3">
@@ -28,44 +62,27 @@ export default function StoryDestinations({ destinations }: StoryDestinationsPro
             </h2>
           </div>
           <span className="text-[11px] font-semibold text-slate-400">
-            Swipe for more →
+            Swipe left →
           </span>
         </div>
 
-        {/* 1-Row Horizontal Story Scroller (5 rings visible on landing, swipe left for more) */}
+        {/* 2-Row Horizontal Story Scroller (5 rings visible on landing, swipe left for more) */}
         <div
           ref={scrollRef}
           className="overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden py-1 px-0.5 -mx-1 scroll-smooth"
         >
-          <div className="flex items-start gap-2.5 sm:gap-3.5 w-max">
-            {destinations.map((item) => (
-              <Link
-                key={item.id}
-                href={item.link || `/tours?destination=${encodeURIComponent(item.name)}`}
-                className="group flex flex-col items-center justify-center select-none cursor-pointer focus:outline-none shrink-0 w-[58px] sm:w-[64px]"
-              >
-                {/* Story Highlight Circle with Saffron Ring */}
-                <div className="relative p-[2px] rounded-full bg-gradient-to-tr from-amber-400 via-[#f97316] to-rose-500 shadow-sm transition-all duration-200 group-hover:scale-105 group-active:scale-95">
-                  <div className="w-[54px] h-[54px] sm:w-[60px] sm:h-[60px] rounded-full p-[1.5px] bg-white">
-                    <div className="w-full h-full rounded-full overflow-hidden relative bg-slate-100">
-                      <Image
-                        src={item.image}
-                        alt={item.name}
-                        fill
-                        sizes="60px"
-                        className="object-cover object-center transition-transform duration-300 group-hover:scale-110"
-                        unoptimized={item.image.includes("unsplash.com") || item.image.includes("cloudinary.com")}
-                      />
-                    </div>
-                  </div>
-                </div>
+          <div className="flex w-max flex-col gap-2.5">
+            {/* Top Row */}
+            <div className="flex items-start gap-2.5 sm:gap-3.5">
+              {row1.map(renderDestinationItem)}
+            </div>
 
-                {/* Destination Name */}
-                <span className="mt-1 text-[11px] font-semibold text-slate-800 text-center tracking-tight truncate w-full group-hover:text-[#f97316] transition-colors">
-                  {item.name}
-                </span>
-              </Link>
-            ))}
+            {/* Bottom Row */}
+            {row2.length > 0 && (
+              <div className="flex items-start gap-2.5 sm:gap-3.5">
+                {row2.map(renderDestinationItem)}
+              </div>
+            )}
           </div>
         </div>
       </div>
