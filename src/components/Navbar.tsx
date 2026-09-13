@@ -67,6 +67,7 @@ export default function Navbar() {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [showWhatsapp, setShowWhatsapp] = useState(false);
   const [categories, setCategories] = useState<string[]>([]);
 
   useEffect(() => {
@@ -83,7 +84,11 @@ export default function Navbar() {
   }, []);
 
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 10);
+    const onScroll = () => {
+      setScrolled(window.scrollY > 10);
+      // Show WhatsApp button only after scrolling ~1.5 screen heights on mobile
+      setShowWhatsapp(window.scrollY > (window.innerHeight * 1.5));
+    };
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
@@ -264,7 +269,11 @@ export default function Navbar() {
         target="_blank"
         rel="noopener noreferrer"
         aria-label="Chat with us on WhatsApp"
-        className="fixed bottom-6 left-6 z-50 flex items-center gap-2.5 bg-[#25D366] hover:bg-[#20ba5a] text-white font-semibold px-4 py-3 sm:px-5 sm:py-3.5 rounded-full shadow-xl shadow-green-600/30 hover:shadow-2xl hover:scale-105 transition-all duration-300 group"
+        className={`fixed bottom-6 left-6 z-50 flex items-center gap-2.5 bg-[#25D366] hover:bg-[#20ba5a] text-white font-semibold px-4 py-3 sm:px-5 sm:py-3.5 rounded-full shadow-xl shadow-green-600/30 hover:shadow-2xl hover:scale-105 transition-all duration-500 ease-out group ${
+          showWhatsapp
+            ? "translate-y-0 opacity-100 scale-100 pointer-events-auto"
+            : "translate-y-16 opacity-0 scale-75 pointer-events-none"
+        }`}
       >
         <svg
           className="w-6 h-6 fill-current shrink-0"

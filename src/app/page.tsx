@@ -540,7 +540,7 @@ export default async function Home() {
 
         {/* ─── MOBILE ONLY: Hero Content (Video + H1 + Typewriter) ─── */}
         <div className="flex md:hidden relative z-10 container-custom text-center flex-col items-center justify-center px-4">
-          <h1 className="text-white font-extrabold text-3xl sm:text-4xl tracking-tight drop-shadow-xl max-w-4xl leading-tight">
+          <h1 className="text-white font-extrabold text-[1.05rem] sm:text-2xl tracking-tight drop-shadow-xl whitespace-nowrap leading-none">
             Kashmir&apos;s Largest Community of Travelers
           </h1>
           <HeroTypewriter />
@@ -567,48 +567,80 @@ export default async function Home() {
         */}
       </section>
 
-      {/* ─── MOBILE ONLY: ACTION SECTION (Below Hero - Height Auto) ─────────── */}
-      <section className="block md:hidden h-auto bg-white border-y border-slate-100 py-4 sm:py-5 shadow-xs relative z-20">
-        <div className="container-custom flex flex-col items-center justify-between gap-4">
-          {/* 3 Value Actions: Get Free Quote | Customization | Call */}
-          <div className="flex flex-wrap items-center justify-center gap-3.5 text-xs sm:text-sm font-semibold text-slate-800">
-            {/* 1. Get Free Quote */}
-            <div className="flex items-center gap-1.5">
-              <div className="w-7 h-7 rounded-full bg-orange-100 text-[#f97316] flex items-center justify-center shadow-xs">
-                <Sparkles className="w-3.5 h-3.5" />
+      {/* ─── MOBILE ONLY: ACTION SECTION (Below Hero - Height Auto, Soft Saffron, Clickable & Workable) ─── */}
+      <section className="block md:hidden h-auto bg-[#fff8f2] border-y border-[#fed7aa]/60 py-3 px-3.5 shadow-xs relative z-20">
+        <CustomizeTourModal
+          renderTrigger={(openModal) => (
+            <div className="container-custom flex flex-col items-center gap-2.5">
+              {/* 3 Clickable Action Cards: Google Reviews | Instagram | Call */}
+              <div className="w-full grid grid-cols-3 gap-2">
+                {/* 1. Google Reviews Badge (Exact screenshot design) */}
+                <a
+                  href="#reviews"
+                  className="flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-xl bg-white/95 border border-orange-200/60 shadow-xs hover:bg-white active:scale-95 transition-all"
+                >
+                  {/* Google Multicolor G Logo */}
+                  <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24">
+                    <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17z"/>
+                    <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.25v3.15C3.26 21.36 7.33 24 12 24z"/>
+                    <path fill="#FBBC05" d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.25C.45 8.18 0 9.99 0 12s.45 3.82 1.25 5.42l4.03-3.15z"/>
+                    <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.33 0 3.26 2.64 1.25 6.58l4.03 3.15c.95-2.83 3.6-4.98 6.72-4.98z"/>
+                  </svg>
+                  <div className="flex flex-col text-left leading-none">
+                    <div className="flex items-center gap-0.5">
+                      <span className="text-amber-500 text-[11px] font-bold">★</span>
+                      <span className="text-[11px] font-extrabold text-slate-800">4.9</span>
+                    </div>
+                    <span className="text-[9px] text-slate-500 font-medium mt-0.5">Reviews</span>
+                  </div>
+                </a>
+
+                {/* 2. Instagram Link */}
+                <a
+                  href="https://www.instagram.com/wander____kashmir/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-xl bg-white/95 border border-orange-200/60 shadow-xs hover:bg-white active:scale-95 transition-all"
+                >
+                  <div className="w-4 h-4 rounded-[4px] bg-gradient-to-tr from-yellow-400 via-pink-500 to-purple-600 flex items-center justify-center text-white shrink-0">
+                    <svg className="w-2.5 h-2.5 fill-current" viewBox="0 0 24 24">
+                      <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
+                    </svg>
+                  </div>
+                  <div className="flex flex-col text-left leading-none">
+                    <span className="text-[11px] font-bold text-slate-800">Instagram</span>
+                    <span className="text-[9px] text-slate-500 mt-0.5">@wander</span>
+                  </div>
+                </a>
+
+                {/* 3. Call Us */}
+                <a
+                  href="tel:+916005888754"
+                  className="flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-xl bg-white/95 border border-orange-200/60 shadow-xs hover:bg-white active:scale-95 transition-all"
+                >
+                  <div className="w-4 h-4 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0">
+                    <PhoneCall className="w-2.5 h-2.5" />
+                  </div>
+                  <div className="flex flex-col text-left leading-none">
+                    <span className="text-[11px] font-bold text-slate-800">Call Us</span>
+                    <span className="text-[9px] text-emerald-600 font-semibold mt-0.5">Instant</span>
+                  </div>
+                </a>
               </div>
-              <span>Get Free Quote</span>
+
+              {/* Customization & Tailor-Made Trips Button */}
+              <button
+                type="button"
+                onClick={openModal}
+                className="w-full bg-gradient-to-r from-orange-500 via-amber-500 to-orange-600 hover:from-orange-600 hover:to-amber-600 text-white font-bold text-xs sm:text-sm py-2.5 px-4 rounded-full shadow-md shadow-orange-500/20 flex items-center justify-center gap-2 cursor-pointer transition-all active:scale-98"
+              >
+                <Sparkles className="w-3.5 h-3.5 text-amber-200 animate-pulse" />
+                <span>Customization &amp; Tailor-Made Trips</span>
+                <ArrowRight className="w-3.5 h-3.5" />
+              </button>
             </div>
-
-            <div className="w-px h-3.5 bg-slate-200" />
-
-            {/* 2. Customization */}
-            <div className="flex items-center gap-1.5">
-              <div className="w-7 h-7 rounded-full bg-orange-100 text-[#f97316] flex items-center justify-center shadow-xs">
-                <Sliders className="w-3.5 h-3.5" />
-              </div>
-              <span>Customization</span>
-            </div>
-
-            <div className="w-px h-3.5 bg-slate-200" />
-
-            {/* 3. Call */}
-            <a
-              href="tel:+916005888754"
-              className="flex items-center gap-1.5 hover:text-[#f97316] transition-colors group cursor-pointer"
-            >
-              <div className="w-7 h-7 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center shadow-xs group-hover:scale-105 transition-transform">
-                <PhoneCall className="w-3.5 h-3.5" />
-              </div>
-              <span>Call</span>
-            </a>
-          </div>
-
-          {/* Customize Your Tour Package Button */}
-          <div className="shrink-0 w-full flex justify-center">
-            <CustomizeTourModal />
-          </div>
-        </div>
+          )}
+        />
       </section>
 
       {/* Spacing for floating search bar (Hidden while search bar is hidden) */}

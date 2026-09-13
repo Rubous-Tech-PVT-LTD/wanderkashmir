@@ -32,7 +32,17 @@ const CAB_TYPES = [
   { id: "No Cab Needed", label: "No Cab Needed", desc: "We have our own vehicle / Self-drive" },
 ];
 
-export default function CustomizeTourModal() {
+interface CustomizeTourModalProps {
+  renderTrigger?: (openModal: () => void) => React.ReactNode;
+  triggerText?: string;
+  triggerClassName?: string;
+}
+
+export default function CustomizeTourModal({
+  renderTrigger,
+  triggerText,
+  triggerClassName,
+}: CustomizeTourModalProps = {}) {
   const [isOpen, setIsOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [step, setStep] = useState<"form" | "success">("form");
@@ -124,16 +134,20 @@ export default function CustomizeTourModal() {
 
   return (
     <>
-      {/* Trigger Button */}
-      <button
-        type="button"
-        onClick={() => setIsOpen(true)}
-        className="inline-flex items-center gap-2 bg-gradient-to-r from-orange-500 via-amber-500 to-orange-600 text-white px-6 py-3 rounded-full font-bold hover:from-orange-600 hover:to-amber-600 transition-all shadow-lg shadow-orange-500/30 transform hover:-translate-y-0.5 border border-orange-400/30 group cursor-pointer relative z-30"
-      >
-        <Sparkles className="w-5 h-5 animate-pulse text-amber-200" />
-        <span>Customize Your Tour Package</span>
-        <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
-      </button>
+      {/* Trigger Button or Custom Trigger */}
+      {renderTrigger ? (
+        renderTrigger(() => setIsOpen(true))
+      ) : (
+        <button
+          type="button"
+          onClick={() => setIsOpen(true)}
+          className={triggerClassName || "inline-flex items-center gap-2 bg-gradient-to-r from-orange-500 via-amber-500 to-orange-600 text-white px-6 py-3 rounded-full font-bold hover:from-orange-600 hover:to-amber-600 transition-all shadow-lg shadow-orange-500/30 transform hover:-translate-y-0.5 border border-orange-400/30 group cursor-pointer relative z-30"}
+        >
+          <Sparkles className="w-5 h-5 animate-pulse text-amber-200" />
+          <span>{triggerText || "Customize Your Tour Package"}</span>
+          <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+        </button>
+      )}
 
       {/* Modal Overlay via React Portal to escape parent CSS stacking contexts (z-index bugs) */}
       {isOpen && mounted && createPortal(

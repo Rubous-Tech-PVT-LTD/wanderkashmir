@@ -9,56 +9,78 @@ const phrases = [
 ];
 
 export default function HeroTypewriter() {
-  const [phraseIndex, setPhraseIndex] = useState(0);
-  const [displayedText, setDisplayedText] = useState("");
+  const [phraseIdx, setPhraseIdx] = useState(0);
+  const [charIdx, setCharIdx] = useState(phrases[0].length);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isPaused, setIsPaused] = useState(true);
 
+  // Initial display: keep first phrase visible for 2 seconds before starting backspace
   useEffect(() => {
-    const currentPhrase = phrases[phraseIndex];
-    let timer: NodeJS.Timeout;
+    const initialTimer = setTimeout(() => {
+      setIsPaused(false);
+      setIsDeleting(true);
+    }, 2000);
+    return () => clearTimeout(initialTimer);
+  }, []);
+
+  // Infinite Typewriter Loop (Non-stop cycle)
+  useEffect(() => {
+    if (isPaused) return;
+
+    const currentPhrase = phrases[phraseIdx];
 
     if (!isDeleting) {
-      // Typing phase
-      if (displayedText.length < currentPhrase.length) {
-        timer = setTimeout(() => {
-          setDisplayedText(currentPhrase.slice(0, displayedText.length + 1));
+      // 1. Typing forward character-by-character
+      if (charIdx < currentPhrase.length) {
+        const timer = setTimeout(() => {
+          setCharIdx((prev) => prev + 1);
         }, 80);
+        return () => clearTimeout(timer);
       } else {
-        // Finished typing full phrase, pause before deleting
-        timer = setTimeout(() => {
+        // 2. Phrase complete — pause for 1.8s so user can read
+        setIsPaused(true);
+        const timer = setTimeout(() => {
+          setIsPaused(false);
           setIsDeleting(true);
         }, 1800);
+        return () => clearTimeout(timer);
       }
     } else {
-      // Deleting phase
-      if (displayedText.length > 0) {
-        timer = setTimeout(() => {
-          setDisplayedText(currentPhrase.slice(0, displayedText.length - 1));
+      // 3. Deleting backward character-by-character
+      if (charIdx > 0) {
+        const timer = setTimeout(() => {
+          setCharIdx((prev) => prev - 1);
         }, 40);
+        return () => clearTimeout(timer);
       } else {
-        // Finished deleting, move to next phrase
-        setIsDeleting(false);
-        setPhraseIndex((prev) => (prev + 1) % phrases.length);
+        // 4. Switch to next phrase in infinite loop (0 -> 1 -> 2 -> 0 -> 1 ...)
+        setIsPaused(true);
+        const timer = setTimeout(() => {
+          setIsDeleting(false);
+          setPhraseIdx((prev) => (prev + 1) % phrases.length);
+          setIsPaused(false);
+        }, 300);
+        return () => clearTimeout(timer);
       }
     }
+  }, [charIdx, isDeleting, isPaused, phraseIdx]);
 
-    return () => clearTimeout(timer);
-  }, [displayedText, isDeleting, phraseIndex]);
+  const currentText = phrases[phraseIdx].substring(0, charIdx);
 
   return (
-    <div className="flex items-center justify-center min-h-[2rem] sm:min-h-[2.5rem] mt-3 mb-6">
-      {/* Hidden for search engine bots to index all phrases */}
+    <div className="flex items-center justify-center min-h-[1.75rem] sm:min-h-[2.25rem] mt-1.5 mb-3">
+      {/* Hidden for SEO crawlers to index all terms */}
       <span className="sr-only">
         Authentic Village Stays, Local Culture, Hidden Experiences in Kashmir
       </span>
 
-      {/* Visual Typewriter Text with WanderKashmir Primary Orange Color & Blinking Cursor */}
+      {/* Visual Typewriter Text with WanderKashmir Saffron Color & Blinking Cursor */}
       <span
         aria-hidden="true"
-        className="inline-flex items-center text-lg sm:text-2xl md:text-3xl font-bold tracking-wide text-[#f97316] drop-shadow-md"
+        className="inline-flex items-center text-sm sm:text-lg md:text-xl font-bold tracking-wide text-[#f97316] drop-shadow-md"
       >
-        <span>{displayedText}</span>
-        <span className="ml-1 inline-block w-[2px] sm:w-[3px] h-5 sm:h-7 bg-[#f97316] animate-pulse" />
+        <span>{currentText}</span>
+        <span className="ml-1 inline-block w-[2px] h-4 sm:h-5 bg-[#f97316] animate-pulse" />
       </span>
     </div>
   );
