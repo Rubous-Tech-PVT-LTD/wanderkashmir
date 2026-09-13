@@ -59,70 +59,41 @@ const images = [
  */
 
 export default function HeroCarousel() {
-  const common = { fill: true, sizes: "100vw", className: "object-cover" };
-  
   return (
     <div className="absolute inset-0 z-0 bg-black" aria-hidden="true">
-      {images.map((img, index) => {
-        // Only use getImageProps for the first (priority) slide to avoid double-downloading on mobile
-        let PictureElement = null;
-        
-        if (index === 0 && img.mobileSrc) {
-          const { getImageProps } = require("next/image");
-          const { props: { srcSet: desktop } } = getImageProps({
-            ...common,
-            src: img.src,
-            alt: img.alt,
-            priority: true,
-          });
-          const { props: { srcSet: mobile, ...rest } } = getImageProps({
-            ...common,
-            src: img.mobileSrc,
-            alt: img.alt,
-            priority: true,
-          });
-          
-          PictureElement = (
-            <picture>
-              <source media="(min-width: 768px)" srcSet={desktop} />
-              <source media="(max-width: 767px)" srcSet={mobile} />
-              <img {...rest} className={`object-cover w-full h-full max-w-full ${img.position || "object-center"}`} />
-            </picture>
-          );
-        }
+      {/* ─── MOBILE: Hero Video (SEO, LCP & Bandwidth Optimized) ─── */}
+      <div className="block md:hidden absolute inset-0 z-0 overflow-hidden">
+        <video
+          autoPlay
+          loop
+          muted
+          playsInline
+          preload="auto"
+          poster="https://res.cloudinary.com/dcmoseix9/video/upload/so_0,f_auto,q_auto/v1789298475/Hereovideomobile_gdy2nn.jpg"
+          title="Discover Kashmir - WanderKashmir Travel"
+          aria-label="WanderKashmir scenic travel video"
+          className="w-full h-full object-cover"
+        >
+          <source
+            src="https://res.cloudinary.com/dcmoseix9/video/upload/f_auto,q_auto/v1789298475/Hereovideomobile_gdy2nn.mp4"
+            type="video/mp4"
+          />
+        </video>
+      </div>
 
-        return (
-          <div
-            key={img.src}
-            className="hero-slide absolute inset-0"
-            style={{
-              opacity: index === 0 ? 1 : 0,
-              animation: index === 0 ? "none" : `${img.keyframe} 25s ease-in-out infinite`,
-              zIndex: index === 0 ? 0 : 1,
-            }}
-          >
-            {PictureElement ? (
-              PictureElement
-            ) : img.mobileSrc ? (
-              <>
-                <Image
-                  src={img.src}
-                  alt={img.alt}
-                  fill
-                  loading="lazy"
-                  sizes="100vw"
-                  className={`hidden md:block object-cover ${img.position || "object-center"}`}
-                />
-                <Image
-                  src={img.mobileSrc}
-                  alt={img.alt}
-                  fill
-                  loading="lazy"
-                  sizes="100vw"
-                  className={`block md:hidden object-cover w-full h-full max-w-full ${img.position || "object-center"}`}
-                />
-              </>
-            ) : (
+      {/* ─── DESKTOP: Existing Image Carousel (Preserved 100%) ─── */}
+      <div className="hidden md:block absolute inset-0">
+        {images.map((img, index) => {
+          return (
+            <div
+              key={img.src}
+              className="hero-slide absolute inset-0"
+              style={{
+                opacity: index === 0 ? 1 : 0,
+                animation: index === 0 ? "none" : `${img.keyframe} 25s ease-in-out infinite`,
+                zIndex: index === 0 ? 0 : 1,
+              }}
+            >
               <Image
                 src={img.src}
                 alt={img.alt}
@@ -133,13 +104,13 @@ export default function HeroCarousel() {
                 sizes="100vw"
                 className={`object-cover ${img.position || "object-center"}`}
               />
-            )}
-          </div>
-        );
-      })}
+            </div>
+          );
+        })}
+      </div>
 
       {/* Gradient overlay for text legibility */}
-      <div className="absolute inset-0 z-10 bg-gradient-to-b from-black/50 via-black/30 to-black/60" />
+      <div className="absolute inset-0 z-10 bg-gradient-to-b from-black/50 via-black/30 to-black/60 pointer-events-none" />
     </div>
   );
 }

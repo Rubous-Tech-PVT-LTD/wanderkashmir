@@ -497,23 +497,34 @@ export default async function Home() {
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
-          __html: JSON.stringify({
-            "@context": "https://schema.org",
-            "@type": "TravelAgency",
-            "name": "WanderKashmir",
-            "image": "https://www.wanderkashmir.com/icon.jpg",
-            "@id": "https://www.wanderkashmir.com",
-            "url": "https://www.wanderkashmir.com",
-            "telephone": "+91-9999999999",
-            "priceRange": "$$",
-            "address": {
-              "@type": "PostalAddress",
-              "addressLocality": "Srinagar",
-              "addressRegion": "JK",
-              "addressCountry": "IN"
+          __html: JSON.stringify([
+            {
+              "@context": "https://schema.org",
+              "@type": "TravelAgency",
+              "name": "WanderKashmir",
+              "image": "https://www.wanderkashmir.com/icon.jpg",
+              "@id": "https://www.wanderkashmir.com",
+              "url": "https://www.wanderkashmir.com",
+              "telephone": "+91-6005888754",
+              "priceRange": "$$",
+              "address": {
+                "@type": "PostalAddress",
+                "addressLocality": "Srinagar",
+                "addressRegion": "JK",
+                "addressCountry": "IN"
+              },
+              "description": "Book verified hotels, homestays, houseboats, taxi services and tour packages across Jammu & Kashmir."
             },
-            "description": "Book verified hotels, homestays, houseboats, taxi services and tour packages across Jammu & Kashmir."
-          })
+            {
+              "@context": "https://schema.org",
+              "@type": "VideoObject",
+              "name": "Discover Kashmir - WanderKashmir Travel",
+              "description": "Experience authentic Kashmir tours, village stays, local culture, and hidden travel experiences with WanderKashmir.",
+              "thumbnailUrl": "https://res.cloudinary.com/dcmoseix9/video/upload/so_0,f_auto,q_auto/v1789298475/Hereovideomobile_gdy2nn.jpg",
+              "uploadDate": "2026-09-13T00:00:00Z",
+              "contentUrl": "https://res.cloudinary.com/dcmoseix9/video/upload/f_auto,q_auto/v1789298475/Hereovideomobile_gdy2nn.mp4"
+            }
+          ])
         }}
       />
       <Navbar />
