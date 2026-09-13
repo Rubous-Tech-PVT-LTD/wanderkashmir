@@ -113,8 +113,8 @@ export default function Navbar() {
               />
             </div>
             <div className="flex flex-col">
-              <span className="font-display font-bold text-[1.4rem] tracking-tight leading-none mt-1 drop-shadow-xs">
-                <span className="text-[#f97316]">Wander</span>
+              <span className="font-display font-bold text-[1.4rem] tracking-tight leading-none mt-1">
+                <span className="max-lg:text-white lg:text-[#f97316] transition-colors">Wander</span>
                 <span className="text-black font-extrabold">Kashmir</span>
               </span>
             </div>
