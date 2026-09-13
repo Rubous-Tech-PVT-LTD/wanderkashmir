@@ -12,7 +12,7 @@ import GoogleReviewsWrapper from "@/components/GoogleReviewsWrapper";
 import PromoWrapper from "@/components/PromoWrapper";
 import { getGooglePlaceReviews } from "@/actions/google-reviews";
 
-import PopularSeoRoutes from "@/components/PopularSeoRoutes";
+// import PopularSeoRoutes from "@/components/PopularSeoRoutes";
 import Link from "next/link";
 import Image from "next/image";
 import {
@@ -872,7 +872,8 @@ export default async function Home() {
         <GoogleReviewsWrapper placeId={wanderkashmirPlaceId} />
       </Suspense>
 
-      <PopularSeoRoutes />
+      {/* Popular Routes & Destinations (Hidden per request - code preserved) */}
+      {/* <PopularSeoRoutes /> */}
 
       <Suspense fallback={null}>
         <PromoWrapper />
