@@ -455,11 +455,12 @@ const whyUs = [
 
 export default async function Home() {
   const wanderkashmirPlaceId = "ChIJUZCKLqkR4jgRN3yVZt9_LYE";
-  const [featuredProperties, locationCounts, featuredGuides, featuredTaxis] = await Promise.all([
+  const [featuredProperties, locationCounts, featuredGuides, featuredTaxis, googleReviewsData] = await Promise.all([
     getFeaturedProperties(),
     getDestinationCounts(),
     getFeaturedGuides(),
-    getFeaturedTaxis()
+    getFeaturedTaxis(),
+    getGooglePlaceReviews(wanderkashmirPlaceId)
   ]);
 
   // Fetch tours from DB
@@ -541,8 +542,8 @@ export default async function Home() {
 
         {/* ─── MOBILE ONLY: Hero Content (Video + H1 + Typewriter) ─── */}
         <div className="flex md:hidden relative z-10 container-custom text-center flex-col items-center justify-center px-4 max-md:gap-[10px] max-md:[text-shadow:2px_4px_15px_rgba(0,0,0,0.8)]">
-          <h1 className="text-[#F2F2F2] font-bold text-[22px] tracking-tight whitespace-nowrap leading-tight m-0 max-w-[349px] mx-auto">
-            Kashmir&apos;s Largest Community of Travelers
+          <h1 className="text-[#F2F2F2] font-bold text-[20px] sm:text-[22px] tracking-tight leading-snug m-0 max-w-[340px] mx-auto px-1">
+            Kashmir&apos;s Largest Travel Community
           </h1>
           <HeroTypewriter />
         </div>
@@ -569,7 +570,10 @@ export default async function Home() {
       </section>
 
       {/* ─── MOBILE ONLY: ACTION SECTION (Below Hero - Height Auto, Soft Saffron, Clickable & Workable) ─── */}
-      <MobileHeroActionBar />
+      <MobileHeroActionBar 
+        rating={googleReviewsData?.rating} 
+        totalReviews={googleReviewsData?.userRatingsTotal} 
+      />
 
       {/* Spacing for floating search bar (Hidden while search bar is hidden) */}
       {/* <div className="h-32"></div> */}

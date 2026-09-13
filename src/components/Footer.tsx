@@ -136,7 +136,7 @@ export default function Footer() {
             {/* Social */}
             <div className="flex gap-3">
               {[
-                { Icon: InstagramIcon, href: "https://www.instagram.com/wander____kashmir/", label: "Instagram" },
+                { Icon: InstagramIcon, href: "https://www.instagram.com/wanderkashmir__/", label: "Instagram" },
                 { Icon: FacebookIcon, href: "https://facebook.com/wanderkashmir", label: "Facebook" },
                 { Icon: YoutubeIcon, href: "https://youtube.com/@wanderkashmir", label: "YouTube" },
                 { Icon: XIcon, href: "https://x.com/Wanderkashmir", label: "Twitter" },

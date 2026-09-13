@@ -148,7 +148,7 @@ export default async function RootLayout({
                   },
                   "sameAs": [
                     "https://www.facebook.com/wanderkashmir",
-                    "https://www.instagram.com/wander____kashmir/",
+                    "https://www.instagram.com/wanderkashmir__/",
                     "https://x.com/Wanderkashmir",
                     "https://www.linkedin.com/company/india-hiles/?viewAsMember=true"
                   ]
