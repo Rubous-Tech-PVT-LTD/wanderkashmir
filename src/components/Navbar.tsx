@@ -91,8 +91,8 @@ export default function Navbar() {
   return (
     <>
       <nav
-        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 bg-white ${
-          scrolled ? "shadow-sm py-3" : "py-4 border-b border-slate-100"
+        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 bg-white/95 backdrop-blur-md ${
+          scrolled ? "shadow-sm py-2.5 sm:py-3" : "py-3 sm:py-4 border-b border-slate-100"
         }`}
       >
         <div className="container-custom flex items-center justify-between">
@@ -258,29 +258,23 @@ export default function Navbar() {
         </div>
       )}
 
-      {/* Floating Become a Partner Button (homepage only) */}
-      {pathname === "/" && (
-        <Link
-          href="/partner/register"
-          className="fixed bottom-6 right-6 z-50 flex items-center gap-2 bg-gradient-to-r from-orange-500 to-indigo-600 text-white font-bold px-6 py-3.5 rounded-full shadow-xl shadow-orange-500/30 hover:scale-105 hover:shadow-2xl hover:shadow-orange-500/40 transition-all duration-300 group animate-bounce-slow"
+      {/* Floating WhatsApp Button (bottom left) */}
+      <a
+        href="https://wa.me/916005888754?text=Hi%20WanderKashmir%2C%20I%20want%20to%20plan%20a%20trip%20to%20Kashmir."
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label="Chat with us on WhatsApp"
+        className="fixed bottom-6 left-6 z-50 flex items-center gap-2.5 bg-[#25D366] hover:bg-[#20ba5a] text-white font-semibold px-4 py-3 sm:px-5 sm:py-3.5 rounded-full shadow-xl shadow-green-600/30 hover:shadow-2xl hover:scale-105 transition-all duration-300 group"
+      >
+        <svg
+          className="w-6 h-6 fill-current shrink-0"
+          viewBox="0 0 24 24"
+          xmlns="http://www.w3.org/2000/svg"
         >
-          <span>Become a Partner</span>
-          <svg
-            className="w-5 h-5 group-hover:translate-x-1 transition-transform"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-            aria-hidden="true"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M14 5l7 7m0 0l-7 7m7-7H3"
-            />
-          </svg>
-        </Link>
-      )}
+          <path d="M17.472 14.382c-.301-.15-1.78-.877-2.056-.976-.277-.1-.478-.15-.679.15-.202.3-.78 1-.955 1.202-.176.202-.351.226-.653.076-.301-.151-1.272-.469-2.424-1.496-.897-.798-1.503-1.784-1.68-2.085-.175-.302-.019-.465.132-.616.136-.135.301-.351.452-.527.151-.176.201-.301.302-.502.101-.202.05-.377-.025-.528-.076-.151-.679-1.637-.93-2.241-.244-.589-.493-.509-.679-.519-.176-.01-.377-.01-.578-.01-.201 0-.528.075-.804.377-.276.301-1.055 1.03-1.055 2.513 0 1.482 1.08 2.914 1.231 3.115.151.201 2.126 3.245 5.15 4.551.719.311 1.281.497 1.719.636.723.23 1.381.197 1.901.12.579-.087 1.78-.728 2.03-1.431.252-.704.252-1.307.176-1.432-.075-.125-.276-.2-.577-.35zM12.042 21.848h-.008a9.837 9.837 0 0 1-5.01-1.378l-.359-.214-3.725.976.994-3.633-.235-.374a9.86 9.86 0 0 1-1.512-5.26c.003-5.446 4.436-9.878 9.886-9.878 2.64 0 5.12 1.028 6.985 2.894a9.827 9.827 0 0 1 2.89 6.986c-.003 5.447-4.436 9.88-9.911 9.88zM20.52 3.483A11.93 11.93 0 0 0 12.04 0C5.402 0 .01 5.393 0 12.032a11.98 11.98 0 0 0 1.63 6.02L0 24l6.102-1.602a11.93 11.93 0 0 0 5.938 1.57h.005c6.634 0 12.03-5.393 12.033-12.032a11.906 11.906 0 0 0-3.556-8.453z" />
+        </svg>
+        <span className="hidden sm:inline text-sm">WhatsApp</span>
+      </a>
     </>
   );
 }

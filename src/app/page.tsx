@@ -6,6 +6,7 @@ import PropertyCard from "@/components/PropertyCard";
 import HeroCarousel from "@/components/HeroCarousel";
 import ComingSoonButton from "@/components/ComingSoonButton";
 import CustomizeTourModal from "@/components/CustomizeTourModal";
+import HeroTypewriter from "@/components/HeroTypewriter";
 import { getValidImageUrl } from "@/lib/imageUtils";
 import { Suspense } from "react";
 import GoogleReviewsWrapper from "@/components/GoogleReviewsWrapper";
@@ -29,6 +30,9 @@ import {
   Package,
   ChevronRight,
   Play,
+  Sparkles,
+  Sliders,
+  PhoneCall,
 } from "lucide-react";
 
 const InstagramIcon = ({ className }: { className?: string }) => (
@@ -534,8 +538,16 @@ export default async function Home() {
         {/* Background Image Carousel */}
         <HeroCarousel />
 
-        {/* Hero Content */}
-        <div className="relative z-10 container-custom mb-32 md:mb-0 pt-32 md:pt-0 mt-24 md:mt-48 text-center flex flex-col items-center">
+        {/* ─── MOBILE ONLY: Hero Content (Video + H1 + Typewriter) ─── */}
+        <div className="flex md:hidden relative z-10 container-custom text-center flex-col items-center justify-center px-4">
+          <h1 className="text-white font-extrabold text-3xl sm:text-4xl tracking-tight drop-shadow-xl max-w-4xl leading-tight">
+            Kashmir&apos;s Largest Community of Travelers
+          </h1>
+          <HeroTypewriter />
+        </div>
+
+        {/* ─── DESKTOP ONLY: Original Hero Layout (Preserved 100%) ─── */}
+        <div className="hidden md:flex relative z-10 container-custom text-center flex-col items-center justify-center pt-24 mt-12">
           <h1 className="sr-only">Discover the Real INDIA</h1>
           <p className="text-white text-base md:text-lg font-medium drop-shadow-lg max-w-2xl tracking-wide mt-4 mb-6">
             Authentic Village Stays • Local Culture • Hidden Experiences
@@ -553,6 +565,50 @@ export default async function Home() {
           </div>
         </div>
         */}
+      </section>
+
+      {/* ─── MOBILE ONLY: ACTION SECTION (Below Hero - Height Auto) ─────────── */}
+      <section className="block md:hidden h-auto bg-white border-y border-slate-100 py-4 sm:py-5 shadow-xs relative z-20">
+        <div className="container-custom flex flex-col items-center justify-between gap-4">
+          {/* 3 Value Actions: Get Free Quote | Customization | Call */}
+          <div className="flex flex-wrap items-center justify-center gap-3.5 text-xs sm:text-sm font-semibold text-slate-800">
+            {/* 1. Get Free Quote */}
+            <div className="flex items-center gap-1.5">
+              <div className="w-7 h-7 rounded-full bg-orange-100 text-[#f97316] flex items-center justify-center shadow-xs">
+                <Sparkles className="w-3.5 h-3.5" />
+              </div>
+              <span>Get Free Quote</span>
+            </div>
+
+            <div className="w-px h-3.5 bg-slate-200" />
+
+            {/* 2. Customization */}
+            <div className="flex items-center gap-1.5">
+              <div className="w-7 h-7 rounded-full bg-orange-100 text-[#f97316] flex items-center justify-center shadow-xs">
+                <Sliders className="w-3.5 h-3.5" />
+              </div>
+              <span>Customization</span>
+            </div>
+
+            <div className="w-px h-3.5 bg-slate-200" />
+
+            {/* 3. Call */}
+            <a
+              href="tel:+916005888754"
+              className="flex items-center gap-1.5 hover:text-[#f97316] transition-colors group cursor-pointer"
+            >
+              <div className="w-7 h-7 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center shadow-xs group-hover:scale-105 transition-transform">
+                <PhoneCall className="w-3.5 h-3.5" />
+              </div>
+              <span>Call</span>
+            </a>
+          </div>
+
+          {/* Customize Your Tour Package Button */}
+          <div className="shrink-0 w-full flex justify-center">
+            <CustomizeTourModal />
+          </div>
+        </div>
       </section>
 
       {/* Spacing for floating search bar (Hidden while search bar is hidden) */}
