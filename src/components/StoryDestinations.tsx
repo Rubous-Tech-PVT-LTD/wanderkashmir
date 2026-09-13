@@ -25,7 +25,7 @@ export default function StoryDestinations({ destinations }: StoryDestinationsPro
   };
 
   return (
-    <section className="w-full bg-white pt-5 pb-4 border-b border-slate-100 relative">
+    <section className="w-full bg-white pt-4 pb-3 border-b border-slate-100 relative md:hidden">
       <div className="container-custom max-w-6xl mx-auto px-4">
         {/* Section Header */}
         <div className="flex items-center justify-between mb-3.5">
