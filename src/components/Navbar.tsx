@@ -96,8 +96,8 @@ export default function Navbar() {
   return (
     <>
       <nav
-        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 bg-white/95 backdrop-blur-md ${
-          scrolled ? "shadow-sm py-2.5 sm:py-3" : "py-3 sm:py-4 border-b border-slate-100"
+        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 max-lg:bg-gradient-to-r max-lg:from-orange-500 max-lg:via-amber-500 max-lg:to-orange-500 lg:bg-white/95 lg:backdrop-blur-md ${
+          scrolled ? "shadow-md py-2.5 sm:py-3" : "py-3 sm:py-4 border-b max-lg:border-orange-600/30 lg:border-slate-100"
         }`}
       >
         <div className="container-custom flex items-center justify-between">
@@ -109,12 +109,12 @@ export default function Navbar() {
                 alt="WanderKashmir logo"
                 width={36}
                 height={36}
-                className="rounded-md object-cover shadow-sm"
+                className="rounded-md object-cover shadow-sm max-lg:ring-2 max-lg:ring-white/40"
               />
             </div>
             <div className="flex flex-col">
-              <span className="font-display font-bold text-[1.35rem] tracking-tight text-slate-900 leading-none mt-1">
-                <span className="text-[#f97316]">Wander</span>Kashmir
+              <span className="font-display font-bold text-[1.35rem] tracking-tight max-lg:text-white lg:text-slate-900 leading-none mt-1">
+                <span className="max-lg:text-amber-200 lg:text-[#f97316]">Wander</span>Kashmir
               </span>
             </div>
           </Link>
@@ -184,9 +184,9 @@ export default function Navbar() {
             aria-label="Open navigation menu"
             aria-expanded={mobileOpen}
             aria-controls="mobile-menu"
-            className="lg:hidden p-2 text-slate-800 hover:bg-slate-100 rounded-lg transition-colors shrink-0 relative z-10"
+            className="lg:hidden p-2 max-lg:text-white max-lg:hover:bg-white/15 lg:text-slate-800 lg:hover:bg-slate-100 rounded-lg transition-colors shrink-0 relative z-10"
           >
-            <Menu className="w-6 h-6 text-slate-800" aria-hidden="true" />
+            <Menu className="w-6 h-6 max-lg:text-white lg:text-slate-800" aria-hidden="true" />
           </button>
         </div>
       </nav>
