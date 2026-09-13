@@ -535,8 +535,8 @@ export default async function Home() {
       />
       <Navbar />
 
-      {/* ─── HERO ─────────────────────────────────────────── */}
-      <section className="relative h-[54vh] md:h-[95vh] flex flex-col justify-center overflow-visible">
+      {/* ─── HERO (Fixed container height: locked against future video aspect changes) ─── */}
+      <section className="relative w-full h-[54dvh] min-h-[360px] max-h-[480px] md:h-[95vh] md:min-h-0 md:max-h-none flex flex-col justify-center overflow-hidden">
         {/* Background Image Carousel */}
         <HeroCarousel />
 

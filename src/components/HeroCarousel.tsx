@@ -61,8 +61,8 @@ const images = [
 export default function HeroCarousel() {
   return (
     <div className="absolute inset-0 z-0 bg-black" aria-hidden="true">
-      {/* ─── MOBILE: Hero Video (SEO, LCP & Bandwidth Optimized) ─── */}
-      <div className="block md:hidden absolute inset-0 z-0 overflow-hidden">
+      {/* ─── MOBILE: Hero Video (Locked container: any video will fit without shifting layout) ─── */}
+      <div className="block md:hidden absolute inset-0 z-0 overflow-hidden w-full h-full pointer-events-none">
         <video
           autoPlay
           loop
@@ -72,7 +72,7 @@ export default function HeroCarousel() {
           poster="https://res.cloudinary.com/dcmoseix9/video/upload/so_0,f_auto,q_auto/v1789298475/Hereovideomobile_gdy2nn.jpg"
           title="Discover Kashmir - WanderKashmir Travel"
           aria-label="WanderKashmir scenic travel video"
-          className="w-full h-full object-cover"
+          className="absolute inset-0 w-full h-full object-cover object-center"
         >
           <source
             src="https://res.cloudinary.com/dcmoseix9/video/upload/f_auto,q_auto/v1789298475/Hereovideomobile_gdy2nn.mp4"
