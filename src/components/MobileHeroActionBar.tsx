@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { Sparkles, ArrowRight } from "lucide-react";
+import { Sparkles, ArrowRight, PhoneCall } from "lucide-react";
 import CustomizeTourModal from "@/components/CustomizeTourModal";
 
 export default function MobileHeroActionBar() {
@@ -70,16 +70,28 @@ export default function MobileHeroActionBar() {
               </a>
             </div>
 
-            {/* Full-width Customize Your Tour Package Button with soft/gentle saffron */}
-            <button
-              type="button"
-              onClick={openModal}
-              className="w-full bg-gradient-to-r from-[#f97316] via-[#fb923c] to-[#f97316] hover:from-[#ea580c] hover:to-[#ea580c] text-white font-extrabold text-xs sm:text-sm py-2.5 px-4 rounded-xl shadow-xs shadow-orange-500/20 flex items-center justify-center gap-2 cursor-pointer transition-all active:scale-98 text-center"
-            >
-              <Sparkles className="w-4 h-4 text-amber-100 animate-pulse" />
-              <span>Customize Your Tour Package</span>
-              <ArrowRight className="w-3.5 h-3.5 text-orange-100" />
-            </button>
+            {/* Bottom Action Row: Customize Tour Package (Reduced Opacity) + Call Button */}
+            <div className="w-full flex items-center gap-2">
+              {/* Customize Your Tour Package Button with reduced opacity */}
+              <button
+                type="button"
+                onClick={openModal}
+                className="flex-1 bg-gradient-to-r from-orange-500/80 via-amber-500/75 to-orange-500/80 hover:from-orange-500 hover:to-amber-500 text-white font-bold py-2.5 px-3 rounded-xl border border-orange-400/40 shadow-2xs flex items-center justify-center gap-1.5 cursor-pointer transition-all active:scale-98 text-center backdrop-blur-xs"
+              >
+                <Sparkles className="w-3.5 h-3.5 text-amber-200 animate-pulse shrink-0" />
+                <span className="font-black whitespace-nowrap text-[11px] sm:text-xs tracking-tight">Customize Your Tour Packages</span>
+                <ArrowRight className="w-3 h-3 text-orange-100 shrink-0" />
+              </button>
+
+              {/* Dedicated Instant Call Button */}
+              <a
+                href="tel:+916005888754"
+                className="shrink-0 flex items-center justify-center gap-1.5 bg-emerald-600/90 hover:bg-emerald-600 text-white font-bold text-xs sm:text-sm py-2.5 px-3.5 rounded-xl border border-emerald-500/40 shadow-2xs active:scale-95 transition-all text-center"
+              >
+                <PhoneCall className="w-3.5 h-3.5 shrink-0" />
+                <span>Call</span>
+              </a>
+            </div>
           </div>
         )}
       />

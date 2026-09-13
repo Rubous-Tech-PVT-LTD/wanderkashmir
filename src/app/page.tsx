@@ -535,13 +535,13 @@ export default async function Home() {
       <Navbar />
 
       {/* ─── HERO ─────────────────────────────────────────── */}
-      <section className="relative h-[68vh] md:h-[95vh] flex flex-col justify-center overflow-visible">
+      <section className="relative h-[54vh] md:h-[95vh] flex flex-col justify-center overflow-visible">
         {/* Background Image Carousel */}
         <HeroCarousel />
 
         {/* ─── MOBILE ONLY: Hero Content (Video + H1 + Typewriter) ─── */}
-        <div className="flex md:hidden relative z-10 container-custom text-center flex-col items-center justify-center px-4">
-          <h1 className="text-white font-black text-[1.05rem] sm:text-2xl tracking-tight drop-shadow-[0_3px_12px_rgba(0,0,0,0.85)] whitespace-nowrap leading-none">
+        <div className="flex md:hidden relative z-10 container-custom text-center flex-col items-center justify-center px-4 max-md:gap-[10px] max-md:[text-shadow:2px_4px_15px_rgba(0,0,0,0.8)]">
+          <h1 className="text-[#F2F2F2] font-bold text-[22px] tracking-tight whitespace-nowrap leading-tight m-0 max-w-[349px] mx-auto">
             Kashmir&apos;s Largest Community of Travelers
           </h1>
           <HeroTypewriter />

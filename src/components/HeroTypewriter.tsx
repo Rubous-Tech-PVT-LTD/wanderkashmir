@@ -52,7 +52,7 @@ export default function HeroTypewriter() {
   }, [text, isDeleting, phraseIdx]);
 
   return (
-    <div className="flex items-center justify-center min-h-[1.75rem] sm:min-h-[2.25rem] mt-1.5 mb-3">
+    <div className="m-0 min-h-5 flex items-center justify-center">
       {/* Hidden for SEO crawlers to index all terms */}
       <span className="sr-only">
         Authentic Village Stays, Local Culture, Hidden Experiences in Kashmir
@@ -61,10 +61,10 @@ export default function HeroTypewriter() {
       {/* Visual Typewriter Text with WanderKashmir Saffron Color & Blinking Cursor */}
       <span
         aria-hidden="true"
-        className="inline-flex items-center text-sm sm:text-lg md:text-xl font-bold tracking-wide text-[#f97316] drop-shadow-md"
+        className="inline-flex items-center text-[18px] sm:text-[20px] font-bold tracking-tight text-[#f97316] drop-shadow-md leading-tight"
       >
         <span>{text}</span>
-        <span className="ml-1 inline-block w-[2px] h-4 sm:h-5 bg-[#f97316] animate-pulse" />
+        <span className="ml-1 inline-block w-[2px] h-[18px] sm:h-[20px] bg-[#f97316] animate-pulse" />
       </span>
     </div>
   );
