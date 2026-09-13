@@ -10,62 +10,46 @@ const phrases = [
 
 export default function HeroTypewriter() {
   const [phraseIdx, setPhraseIdx] = useState(0);
-  const [charIdx, setCharIdx] = useState(phrases[0].length);
+  const [text, setText] = useState(phrases[0]);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [isPaused, setIsPaused] = useState(true);
 
-  // Initial display: keep first phrase visible for 2 seconds before starting backspace
   useEffect(() => {
-    const initialTimer = setTimeout(() => {
-      setIsPaused(false);
-      setIsDeleting(true);
-    }, 2000);
-    return () => clearTimeout(initialTimer);
-  }, []);
-
-  // Infinite Typewriter Loop (Non-stop cycle)
-  useEffect(() => {
-    if (isPaused) return;
-
     const currentPhrase = phrases[phraseIdx];
+    
+    // Determine dynamic delay based on state
+    let delay = 90; // standard typing speed
 
-    if (!isDeleting) {
-      // 1. Typing forward character-by-character
-      if (charIdx < currentPhrase.length) {
-        const timer = setTimeout(() => {
-          setCharIdx((prev) => prev + 1);
-        }, 80);
-        return () => clearTimeout(timer);
-      } else {
-        // 2. Phrase complete — pause for 1.8s so user can read
-        setIsPaused(true);
-        const timer = setTimeout(() => {
-          setIsPaused(false);
+    if (isDeleting) {
+      delay = 45; // fast backspace
+    }
+
+    if (!isDeleting && text === currentPhrase) {
+      // Finished typing phrase: pause so user can read
+      delay = 1800;
+    } else if (isDeleting && text === "") {
+      // Finished deleting: pause briefly before typing next phrase
+      delay = 350;
+    }
+
+    const timer = setTimeout(() => {
+      if (!isDeleting) {
+        if (text === currentPhrase) {
           setIsDeleting(true);
-        }, 1800);
-        return () => clearTimeout(timer);
-      }
-    } else {
-      // 3. Deleting backward character-by-character
-      if (charIdx > 0) {
-        const timer = setTimeout(() => {
-          setCharIdx((prev) => prev - 1);
-        }, 40);
-        return () => clearTimeout(timer);
+        } else {
+          setText(currentPhrase.slice(0, text.length + 1));
+        }
       } else {
-        // 4. Switch to next phrase in infinite loop (0 -> 1 -> 2 -> 0 -> 1 ...)
-        setIsPaused(true);
-        const timer = setTimeout(() => {
+        if (text === "") {
           setIsDeleting(false);
           setPhraseIdx((prev) => (prev + 1) % phrases.length);
-          setIsPaused(false);
-        }, 300);
-        return () => clearTimeout(timer);
+        } else {
+          setText(currentPhrase.slice(0, text.length - 1));
+        }
       }
-    }
-  }, [charIdx, isDeleting, isPaused, phraseIdx]);
+    }, delay);
 
-  const currentText = phrases[phraseIdx].substring(0, charIdx);
+    return () => clearTimeout(timer);
+  }, [text, isDeleting, phraseIdx]);
 
   return (
     <div className="flex items-center justify-center min-h-[1.75rem] sm:min-h-[2.25rem] mt-1.5 mb-3">
@@ -79,7 +63,7 @@ export default function HeroTypewriter() {
         aria-hidden="true"
         className="inline-flex items-center text-sm sm:text-lg md:text-xl font-bold tracking-wide text-[#f97316] drop-shadow-md"
       >
-        <span>{currentText}</span>
+        <span>{text}</span>
         <span className="ml-1 inline-block w-[2px] h-4 sm:h-5 bg-[#f97316] animate-pulse" />
       </span>
     </div>
