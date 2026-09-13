@@ -91,10 +91,10 @@ export default function MobileHeroActionBar({ rating, totalReviews }: MobileHero
                 <ArrowRight className="w-3 h-3 text-orange-100 shrink-0" />
               </button>
 
-              {/* Dedicated Instant Call Button */}
+              {/* Dedicated Instant Call Button (Dialer Blue - universally recognized phone call color) */}
               <a
                 href="tel:+916005888754"
-                className="shrink-0 flex items-center justify-center gap-1.5 bg-emerald-600/90 hover:bg-emerald-600 text-white font-bold text-xs sm:text-sm py-2.5 px-3.5 rounded-xl border border-emerald-500/40 shadow-2xs active:scale-95 transition-all text-center"
+                className="shrink-0 flex items-center justify-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs sm:text-sm py-2.5 px-3.5 rounded-xl border border-blue-500/40 shadow-xs active:scale-95 transition-all text-center"
               >
                 <PhoneCall className="w-3.5 h-3.5 shrink-0" />
                 <span>Call</span>

@@ -102,7 +102,7 @@ export default function Navbar() {
       >
         <div className="container-custom flex items-center justify-between">
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-2 group">
+          <Link href="/" className="flex items-center gap-2 group shrink-0">
             <div className="flex items-center justify-center transition-transform group-hover:-rotate-12">
               <Image
                 src="/brand-icon.webp"
@@ -184,9 +184,9 @@ export default function Navbar() {
             aria-label="Open navigation menu"
             aria-expanded={mobileOpen}
             aria-controls="mobile-menu"
-            className="lg:hidden p-2 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
+            className="lg:hidden p-2 text-slate-800 hover:bg-slate-100 rounded-lg transition-colors shrink-0 relative z-10"
           >
-            <Menu className="w-6 h-6" aria-hidden="true" />
+            <Menu className="w-6 h-6 text-slate-800" aria-hidden="true" />
           </button>
         </div>
       </nav>
