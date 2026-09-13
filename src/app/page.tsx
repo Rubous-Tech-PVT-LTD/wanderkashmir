@@ -1,7 +1,7 @@
 import prisma from "@/lib/prisma";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import SearchBar from "@/components/SearchBar";
+// import SearchBar from "@/components/SearchBar";
 import PropertyCard from "@/components/PropertyCard";
 import HeroCarousel from "@/components/HeroCarousel";
 import ComingSoonButton from "@/components/ComingSoonButton";
@@ -534,16 +534,18 @@ export default async function Home() {
           </div>
         </div>
 
-        {/* Floating Search Bar Overlap */}
+        {/* Floating Search Bar Overlap (Hidden per request - code preserved) */}
+        {/*
         <div className="absolute -bottom-20 left-0 right-0 z-20 container-custom">
           <div className="max-w-5xl mx-auto">
             <SearchBar />
           </div>
         </div>
+        */}
       </section>
 
-      {/* Spacing for floating search bar */}
-      <div className="h-32"></div>
+      {/* Spacing for floating search bar (Hidden while search bar is hidden) */}
+      {/* <div className="h-32"></div> */}
 
       {/* ─── TRENDING ON INSTAGRAM ────────────────────────────── */}
       {instagramTours.length > 0 && (
