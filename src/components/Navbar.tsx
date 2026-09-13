@@ -96,25 +96,26 @@ export default function Navbar() {
   return (
     <>
       <nav
-        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 max-lg:bg-gradient-to-r max-lg:from-orange-500 max-lg:via-amber-500 max-lg:to-orange-500 lg:bg-white/95 lg:backdrop-blur-md ${
+        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 max-lg:bg-wander-gradient lg:bg-white/95 lg:backdrop-blur-md ${
           scrolled ? "shadow-md py-2.5 sm:py-3" : "py-3 sm:py-4 border-b max-lg:border-orange-600/30 lg:border-slate-100"
         }`}
       >
         <div className="container-custom flex items-center justify-between">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2 group shrink-0">
-            <div className="flex items-center justify-center transition-transform group-hover:-rotate-12">
+            <div className="w-9 h-9 rounded-full overflow-hidden border-2 border-white/90 shadow-sm flex items-center justify-center transition-transform group-hover:-rotate-12 shrink-0 bg-white">
               <Image
                 src="/brand-icon.webp"
                 alt="WanderKashmir logo"
                 width={36}
                 height={36}
-                className="rounded-md object-cover shadow-sm max-lg:ring-2 max-lg:ring-white/40"
+                className="w-full h-full rounded-full object-cover"
               />
             </div>
             <div className="flex flex-col">
-              <span className="font-display font-bold text-[1.35rem] tracking-tight max-lg:text-white lg:text-slate-900 leading-none mt-1">
-                <span className="max-lg:text-amber-200 lg:text-[#f97316]">Wander</span>Kashmir
+              <span className="font-display font-bold text-[1.35rem] tracking-tight leading-none mt-1">
+                <span className="max-lg:text-white lg:text-[#f97316]">Wander</span>
+                <span className="text-black font-extrabold">Kashmir</span>
               </span>
             </div>
           </Link>

@@ -84,7 +84,7 @@ export default function MobileHeroActionBar({ rating, totalReviews }: MobileHero
               <button
                 type="button"
                 onClick={openModal}
-                className="flex-1 bg-gradient-to-r from-orange-500/80 via-amber-500/75 to-orange-500/80 hover:from-orange-500 hover:to-amber-500 text-white font-bold py-2 px-2.5 rounded-lg border border-orange-400/40 shadow-2xs flex items-center justify-center gap-1.5 cursor-pointer transition-all active:scale-98 text-center backdrop-blur-xs"
+                className="flex-1 bg-wander-gradient-soft hover:bg-wander-gradient text-white font-bold py-2 px-2.5 rounded-lg border border-orange-400/40 shadow-2xs flex items-center justify-center gap-1.5 cursor-pointer transition-all active:scale-98 text-center backdrop-blur-xs"
               >
                 <Sparkles className="w-3 h-3 text-amber-200 animate-pulse shrink-0" />
                 <span className="font-black whitespace-nowrap text-[10.5px] sm:text-xs tracking-tight">Customize Your Tour Packages</span>
