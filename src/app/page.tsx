@@ -526,9 +526,9 @@ export default async function Home() {
               "@type": "VideoObject",
               "name": "Discover Kashmir - WanderKashmir Travel",
               "description": "Experience authentic Kashmir tours, village stays, local culture, and hidden travel experiences with WanderKashmir.",
-              "thumbnailUrl": "https://res.cloudinary.com/dcmoseix9/video/upload/so_0,f_auto,q_auto/v1789298475/Hereovideomobile_gdy2nn.jpg",
+              "thumbnailUrl": "https://res.cloudinary.com/dcmoseix9/video/upload/so_0,f_auto,q_auto/v1789317861/Final_Video_rdc5nd.jpg",
               "uploadDate": "2026-09-13T00:00:00Z",
-              "contentUrl": "https://res.cloudinary.com/dcmoseix9/video/upload/f_auto,q_auto/v1789298475/Hereovideomobile_gdy2nn.mp4"
+              "contentUrl": "https://res.cloudinary.com/dcmoseix9/video/upload/f_auto,q_auto/v1789317861/Final_Video_rdc5nd.mp4"
             }
           ])
         }}

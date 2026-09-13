@@ -69,13 +69,13 @@ export default function HeroCarousel() {
           muted
           playsInline
           preload="auto"
-          poster="https://res.cloudinary.com/dcmoseix9/video/upload/so_0,f_auto,q_auto/v1789298475/Hereovideomobile_gdy2nn.jpg"
+          poster="https://res.cloudinary.com/dcmoseix9/video/upload/so_0,f_auto,q_auto/v1789317861/Final_Video_rdc5nd.jpg"
           title="Discover Kashmir - WanderKashmir Travel"
           aria-label="WanderKashmir scenic travel video"
           className="absolute inset-0 w-full h-full object-cover object-center"
         >
           <source
-            src="https://res.cloudinary.com/dcmoseix9/video/upload/f_auto,q_auto/v1789298475/Hereovideomobile_gdy2nn.mp4"
+            src="https://res.cloudinary.com/dcmoseix9/video/upload/f_auto,q_auto/v1789317861/Final_Video_rdc5nd.mp4"
             type="video/mp4"
           />
         </video>
