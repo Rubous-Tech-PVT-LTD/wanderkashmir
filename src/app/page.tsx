@@ -13,6 +13,8 @@ import GoogleReviewsWrapper from "@/components/GoogleReviewsWrapper";
 import PromoWrapper from "@/components/PromoWrapper";
 import { getGooglePlaceReviews } from "@/actions/google-reviews";
 import MobileHeroActionBar from "@/components/MobileHeroActionBar";
+import StoryDestinations from "@/components/StoryDestinations";
+import { getDestinations as getStoryDestinations } from "@/actions/destinations";
 
 // import PopularSeoRoutes from "@/components/PopularSeoRoutes";
 import Link from "next/link";
@@ -455,12 +457,13 @@ const whyUs = [
 
 export default async function Home() {
   const wanderkashmirPlaceId = "ChIJUZCKLqkR4jgRN3yVZt9_LYE";
-  const [featuredProperties, locationCounts, featuredGuides, featuredTaxis, googleReviewsData] = await Promise.all([
+  const [featuredProperties, locationCounts, featuredGuides, featuredTaxis, googleReviewsData, storyDestinations] = await Promise.all([
     getFeaturedProperties(),
     getDestinationCounts(),
     getFeaturedGuides(),
     getFeaturedTaxis(),
-    getGooglePlaceReviews(wanderkashmirPlaceId)
+    getGooglePlaceReviews(wanderkashmirPlaceId),
+    getStoryDestinations(true)
   ]);
 
   // Fetch tours from DB
@@ -574,6 +577,9 @@ export default async function Home() {
         rating={googleReviewsData?.rating} 
         totalReviews={googleReviewsData?.userRatingsTotal} 
       />
+
+      {/* ─── STORY DESTINATIONS (Circular story highlight scroller) ─── */}
+      <StoryDestinations destinations={storyDestinations} />
 
       {/* Spacing for floating search bar (Hidden while search bar is hidden) */}
       {/* <div className="h-32"></div> */}

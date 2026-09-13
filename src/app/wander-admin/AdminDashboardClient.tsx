@@ -31,6 +31,7 @@ const AdminPopupsTab = dynamic(() => import("./AdminPopupsTab"), { ssr: false })
 const AdminCustomToursTab = dynamic(() => import("./AdminCustomToursTab"), { ssr: false });
 const AdminTourCategoriesTab = dynamic(() => import("./AdminTourCategoriesTab"), { ssr: false });
 const AdminSeoCommentsTab = dynamic(() => import("./AdminSeoCommentsTab"), { ssr: false });
+const AdminDestinationsTab = dynamic(() => import("./AdminDestinationsTab"), { ssr: false });
 const ImageUpload = dynamic(() => import("@/components/ImageUpload"), { ssr: false });
 
 function PropertyImagesAdmin({ property, onSaved }: { property: any, onSaved: (newImages: string[]) => void }) {
@@ -663,6 +664,7 @@ export default function AdminDashboardClient({
         <nav className="flex-1 space-y-2">
           {[
             { id: "dashboard", icon: LayoutDashboard, label: "Overview" },
+            { id: "destinations", icon: MapPin, label: "Destinations (Stories)" },
             { id: "map_view", icon: MapPin, label: "Map View" },
             { id: "manifest", icon: FileText, label: "Daily Operations" },
             { id: "approvals", icon: CheckCircle2, label: "Vendor Approvals" },
@@ -781,6 +783,7 @@ export default function AdminDashboardClient({
             }}
           />
         )}
+        {activeTab === "destinations" && <AdminDestinationsTab />}
         {activeTab === "custom_tours" && <AdminCustomToursTab />}
         {activeTab === "taxis" && <AdminTaxisTab />}
         { activeTab === "seo_pages" && <AdminSeoTab /> }

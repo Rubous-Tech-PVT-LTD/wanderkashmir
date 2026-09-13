@@ -1,0 +1,66 @@
+[
+  {
+    "id": "srinagar",
+    "name": "Srinagar",
+    "image": "https://images.unsplash.com/photo-1595815771614-ade9d652a65d?auto=format&fit=crop&q=80&w=400",
+    "link": "/tours?destination=Srinagar",
+    "order": 1,
+    "isActive": true
+  },
+  {
+    "id": "gulmarg",
+    "name": "Gulmarg",
+    "image": "https://images.unsplash.com/photo-1588714477688-cf28a50e94f7?auto=format&fit=crop&q=80&w=400",
+    "link": "/tours?destination=Gulmarg",
+    "order": 2,
+    "isActive": true
+  },
+  {
+    "id": "pahalgam",
+    "name": "Pahalgam",
+    "image": "https://images.unsplash.com/photo-1598091383021-15ddea10925d?auto=format&fit=crop&q=80&w=400",
+    "link": "/tours?destination=Pahalgam",
+    "order": 3,
+    "isActive": true
+  },
+  {
+    "id": "sonamarg",
+    "name": "Sonamarg",
+    "image": "https://images.unsplash.com/photo-1566837945700-30057527ade0?auto=format&fit=crop&q=80&w=400",
+    "link": "/tours?destination=Sonamarg",
+    "order": 4,
+    "isActive": true
+  },
+  {
+    "id": "gurez",
+    "name": "Gurez Valley",
+    "image": "https://images.unsplash.com/photo-1542718610-a1d656d1884c?auto=format&fit=crop&q=80&w=400",
+    "link": "/tours?destination=Gurez",
+    "order": 5,
+    "isActive": true
+  },
+  {
+    "id": "doodhpathri",
+    "name": "Doodhpathri",
+    "image": "https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&q=80&w=400",
+    "link": "/tours?destination=Doodhpathri",
+    "order": 6,
+    "isActive": true
+  },
+  {
+    "id": "dal-lake",
+    "name": "Dal Lake",
+    "image": "https://images.unsplash.com/photo-1605537964076-2cb0caf302d9?auto=format&fit=crop&q=80&w=400",
+    "link": "/stays?type=houseboat",
+    "order": 7,
+    "isActive": true
+  },
+  {
+    "id": "leh-ladakh",
+    "name": "Leh Ladakh",
+    "image": "https://images.unsplash.com/photo-1581793745862-99fde7fa73d2?auto=format&fit=crop&q=80&w=400",
+    "link": "/tours?destination=Ladakh",
+    "order": 8,
+    "isActive": true
+  }
+]
