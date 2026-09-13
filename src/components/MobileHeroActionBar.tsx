@@ -14,10 +14,10 @@ export default function MobileHeroActionBar({ rating, totalReviews }: MobileHero
   const displayReviews = totalReviews ? `(${totalReviews.toLocaleString()} reviews)` : "(1,280+ reviews)";
 
   return (
-    <section className="block md:hidden h-auto bg-[#fff8f2] border-y border-[#fed7aa]/60 py-2 px-2.5 shadow-xs relative z-20">
+    <section className="block md:hidden h-auto bg-[#fff8f2] border-y border-[#fed7aa]/60 py-2 px-2 shadow-xs relative z-20">
       <CustomizeTourModal
         renderTrigger={(openModal) => (
-          <div className="container-custom flex flex-col items-center gap-1.5">
+          <div className="w-full max-w-lg mx-auto flex flex-col items-center gap-1.5 px-0.5">
             {/* 3 Clickable Action Cards: 1. WhatsApp | 2. Instagram | 3. Review */}
             <div className="w-full grid grid-cols-3 gap-1.5">
               {/* 1. WhatsApp Card */}

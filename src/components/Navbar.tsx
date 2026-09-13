@@ -96,25 +96,25 @@ export default function Navbar() {
   return (
     <>
       <nav
-        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 max-lg:bg-wander-gradient lg:bg-white/95 lg:backdrop-blur-md ${
-          scrolled ? "shadow-md py-2.5 sm:py-3" : "py-3 sm:py-4 border-b max-lg:border-orange-600/30 lg:border-slate-100"
+        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 mobile-nav-gradient lg:bg-white/95 lg:backdrop-blur-md ${
+          scrolled ? "shadow-md py-2 sm:py-3" : "py-2.5 sm:py-4 border-b max-lg:border-orange-600/30 lg:border-slate-100"
         }`}
       >
         <div className="container-custom flex items-center justify-between">
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-2 group shrink-0">
-            <div className="w-9 h-9 rounded-full overflow-hidden border-2 border-white/90 shadow-sm flex items-center justify-center transition-transform group-hover:-rotate-12 shrink-0 bg-white">
+          <Link href="/" className="flex items-center gap-2.5 group shrink-0">
+            <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-full overflow-hidden border-2 border-white/95 shadow-md flex items-center justify-center transition-transform group-hover:-rotate-12 shrink-0 bg-white p-0.5">
               <Image
                 src="/brand-icon.webp"
                 alt="WanderKashmir logo"
-                width={36}
-                height={36}
+                width={48}
+                height={48}
                 className="w-full h-full rounded-full object-cover"
               />
             </div>
             <div className="flex flex-col">
-              <span className="font-display font-bold text-[1.35rem] tracking-tight leading-none mt-1">
-                <span className="max-lg:text-white lg:text-[#f97316]">Wander</span>
+              <span className="font-display font-bold text-[1.4rem] tracking-tight leading-none mt-1 drop-shadow-xs">
+                <span className="text-[#f97316]">Wander</span>
                 <span className="text-black font-extrabold">Kashmir</span>
               </span>
             </div>
