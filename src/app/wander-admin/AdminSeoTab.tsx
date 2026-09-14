@@ -66,27 +66,67 @@ function GscOverviewView() {
   const [data, setData] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [errorStatus, setErrorStatus] = useState<string | null>(null);
+  const [siteUrl, setSiteUrl] = useState<string>("sc-domain:wanderkashmir.com");
+  const [isTestingConnection, setIsTestingConnection] = useState(false);
+  const [diagnosticResult, setDiagnosticResult] = useState<any>(null);
+  const [showDiagnosticModal, setShowDiagnosticModal] = useState(false);
+
+  const fetchOverview = async () => {
+    setIsLoading(true);
+    setError(null);
+    setErrorStatus(null);
+    try {
+      const res = await fetch('/api/admin/seo-intelligence/overview');
+      const json = await res.json();
+      
+      if (!res.ok || !json.success) {
+        setError(json.error || 'Failed to fetch GSC overview');
+        setErrorStatus(json.status || (res.status === 403 ? 'PERMISSION_ERROR' : 'API_ERROR'));
+        if (json.siteUrl) setSiteUrl(json.siteUrl);
+      } else {
+        setData(json.data);
+      }
+    } catch (err: any) {
+      setError('Network error connecting to GSC overview');
+      setErrorStatus('NETWORK_ERROR');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchOverview = async () => {
-      try {
-        const res = await fetch('/api/admin/seo-intelligence/overview');
-        const json = await res.json();
-        
-        if (!res.ok) {
-          setError(json.error || 'Failed to fetch GSC overview');
-        } else {
-          setData(json.data);
-        }
-      } catch (err: any) {
-        setError('Network error connecting to GSC overview');
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
     fetchOverview();
   }, []);
+
+  const runConnectionTest = async () => {
+    setIsTestingConnection(true);
+    try {
+      const res = await fetch('/api/admin/test-gsc');
+      const json = await res.json();
+      setDiagnosticResult(json);
+      setShowDiagnosticModal(true);
+    } catch (err: any) {
+      setDiagnosticResult({
+        success: false,
+        status: "NETWORK_ERROR",
+        message: "Failed to reach test-gsc endpoint.",
+        matrix: {
+          googleOAuth: "FAIL",
+          refreshToken: "FAIL",
+          searchConsoleScope: "FAIL",
+          authenticatedAccount: "Unknown",
+          property: siteUrl,
+          propertyAccess: "FAIL",
+          searchAnalyticsApi: "FAIL",
+          rowsReturned: 0,
+        }
+      });
+      setShowDiagnosticModal(true);
+    } finally {
+      setIsTestingConnection(false);
+    }
+  };
 
   if (isLoading) {
     return (
@@ -97,72 +137,319 @@ function GscOverviewView() {
     );
   }
 
-  if (error) {
-    if (error === 'GSC not connected') {
-      return (
-        <div className="bg-white p-12 text-center rounded-2xl border border-red-100 shadow-sm">
-          <Activity className="w-12 h-12 text-red-400 mx-auto mb-4" />
-          <h3 className="text-xl font-bold text-slate-800 mb-2">GSC Not Connected</h3>
-          <p className="text-slate-500 max-w-md mx-auto">
-            Google Search Console is not currently connected. Please go to Settings to connect your account and enable SEO Intelligence.
-          </p>
-        </div>
-      );
-    }
-
+  // 1. PERMISSION ERROR (403: siteUnverifiedUser or insufficient permission)
+  if (errorStatus === 'PERMISSION_ERROR') {
     return (
-      <div className="bg-white p-12 text-center rounded-2xl border border-red-100 shadow-sm">
-        <h3 className="text-xl font-bold text-red-600 mb-2">Error Loading GSC Data</h3>
-        <p className="text-slate-500">{error}</p>
+      <div className="space-y-6">
+        <div className="bg-amber-50 border border-amber-200 rounded-2xl p-8 text-left shadow-sm">
+          <div className="flex items-start gap-4">
+            <div className="p-3 bg-amber-100 rounded-xl text-amber-700">
+              <Activity className="w-8 h-8" />
+            </div>
+            <div className="flex-1">
+              <div className="flex items-center gap-2">
+                <h3 className="text-xl font-bold text-slate-900">Google Search Console Permission Error</h3>
+                <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-200 text-amber-900">
+                  HTTP 403 Forbidden
+                </span>
+              </div>
+              <p className="text-slate-700 mt-2 font-medium">
+                The authenticated Google account does not have verified owner or full user permissions for property:
+                <code className="ml-1.5 px-2 py-0.5 bg-amber-100/80 rounded font-mono text-xs text-amber-900">
+                  {siteUrl}
+                </code>
+              </p>
+              <div className="mt-4 p-4 bg-white/80 rounded-xl border border-amber-200/80 text-sm text-slate-600 space-y-2">
+                <div className="flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-amber-500"></span>
+                  <span><strong>Reported Permission:</strong> <code className="font-mono text-xs text-amber-800">siteUnverifiedUser</code></span>
+                </div>
+                <p>
+                  To resolve this, ensure the account is verified as an Owner or User in Google Search Console, or reconnect using the Google account that has permission for <span className="font-semibold">{siteUrl}</span>.
+                </p>
+              </div>
+              
+              <div className="mt-6 flex flex-wrap items-center gap-3">
+                <a
+                  href="/api/auth/google"
+                  className="inline-flex items-center gap-2 px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-xl shadow-sm transition-colors"
+                >
+                  <RefreshCw className="w-4 h-4" />
+                  Reconnect Google Account
+                </a>
+                <button
+                  onClick={runConnectionTest}
+                  disabled={isTestingConnection}
+                  className="inline-flex items-center gap-2 px-5 py-2.5 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 text-sm font-semibold rounded-xl shadow-sm transition-colors disabled:opacity-50"
+                >
+                  {isTestingConnection ? <RefreshCw className="w-4 h-4 animate-spin" /> : <BarChart2 className="w-4 h-4 text-slate-500" />}
+                  Run Connection Diagnostics
+                </button>
+                <a
+                  href="https://search.google.com/search-console"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 px-4 py-2.5 text-slate-500 hover:text-slate-700 text-sm font-medium transition-colors"
+                >
+                  <ExternalLink className="w-4 h-4" />
+                  Open Search Console
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {showDiagnosticModal && diagnosticResult && (
+          <GscDiagnosticMatrixModal 
+            diagnostics={diagnosticResult} 
+            onClose={() => setShowDiagnosticModal(false)} 
+          />
+        )}
       </div>
     );
   }
 
+  // 2. NOT CONNECTED
+  if (errorStatus === 'NOT_CONNECTED' || error === 'GSC not connected') {
+    return (
+      <div className="bg-white p-12 text-center rounded-2xl border border-slate-100 shadow-sm space-y-4">
+        <Activity className="w-12 h-12 text-slate-400 mx-auto" />
+        <h3 className="text-xl font-bold text-slate-800">Google Search Console Not Connected</h3>
+        <p className="text-slate-500 max-w-md mx-auto text-sm">
+          Connect your Google account to enable live Search Console metrics, search performance tracking, and automated SEO discovery.
+        </p>
+        <div className="pt-2">
+          <a
+            href="/api/auth/google"
+            className="inline-flex items-center gap-2 px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-xl shadow-sm transition-colors"
+          >
+            <Globe className="w-4 h-4" />
+            Connect Google Search Console
+          </a>
+        </div>
+      </div>
+    );
+  }
+
+  // 3. OTHER ERROR
+  if (error) {
+    return (
+      <div className="bg-white p-8 rounded-2xl border border-red-100 shadow-sm space-y-4">
+        <div className="flex items-center justify-between">
+          <h3 className="text-lg font-bold text-red-600">Error Loading GSC Data</h3>
+          <button
+            onClick={fetchOverview}
+            className="px-3 py-1.5 text-xs font-semibold bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg"
+          >
+            Retry
+          </button>
+        </div>
+        <p className="text-slate-600 text-sm">{error}</p>
+        <div className="flex items-center gap-3 pt-2">
+          <a
+            href="/api/auth/google"
+            className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-lg shadow-sm"
+          >
+            <RefreshCw className="w-3.5 h-3.5" />
+            Reconnect Account
+          </a>
+          <button
+            onClick={runConnectionTest}
+            disabled={isTestingConnection}
+            className="inline-flex items-center gap-2 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-lg"
+          >
+            Run Diagnostics
+          </button>
+        </div>
+
+        {showDiagnosticModal && diagnosticResult && (
+          <GscDiagnosticMatrixModal 
+            diagnostics={diagnosticResult} 
+            onClose={() => setShowDiagnosticModal(false)} 
+          />
+        )}
+      </div>
+    );
+  }
+
+  // 4. GENUINE EMPTY DATA (HTTP 200 with 0 rows)
   if (data && !data.hasData) {
     return (
-      <div className="bg-white p-12 text-center rounded-2xl border border-slate-100 shadow-sm">
-        <BarChart2 className="w-12 h-12 text-slate-300 mx-auto mb-4" />
-        <h3 className="text-xl font-bold text-slate-800 mb-2">No GSC data available for this period</h3>
-        <p className="text-slate-500">Google Search Console is connected, but returned no metrics for the last 30 days.</p>
+      <div className="space-y-6">
+        <div className="bg-white p-12 text-center rounded-2xl border border-slate-100 shadow-sm space-y-4">
+          <BarChart2 className="w-12 h-12 text-slate-300 mx-auto" />
+          <h3 className="text-xl font-bold text-slate-800">No Search Performance Data Recorded</h3>
+          <p className="text-slate-500 max-w-md mx-auto text-sm">
+            Google Search Console is successfully connected to <code className="px-1.5 py-0.5 bg-slate-100 rounded text-xs">{data.siteUrl}</code>, but no search queries or impressions were recorded for the last 30 days ({data.startDate} to {data.endDate}).
+          </p>
+          <div className="flex justify-center items-center gap-3 pt-2">
+            <button
+              onClick={runConnectionTest}
+              disabled={isTestingConnection}
+              className="inline-flex items-center gap-2 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-lg"
+            >
+              Run Connection Diagnostics
+            </button>
+            <a
+              href="/api/auth/google"
+              className="inline-flex items-center gap-2 px-4 py-2 text-slate-500 hover:text-slate-700 text-xs font-medium"
+            >
+              Switch Google Account
+            </a>
+          </div>
+        </div>
+
+        {showDiagnosticModal && diagnosticResult && (
+          <GscDiagnosticMatrixModal 
+            diagnostics={diagnosticResult} 
+            onClose={() => setShowDiagnosticModal(false)} 
+          />
+        )}
       </div>
     );
   }
 
+  // 5. SUCCESS WITH DATA
   return (
-    <div className="bg-white p-8 rounded-2xl border border-slate-100 shadow-sm space-y-6">
-      <div className="flex justify-between items-center border-b border-slate-100 pb-4">
-        <div>
-          <h3 className="text-xl font-bold text-slate-800 flex items-center gap-2">
-            <BarChart2 className="w-5 h-5 text-indigo-600" />
-            GSC Overview
-          </h3>
-          <p className="text-sm text-slate-500 mt-1">
-            Site-wide metrics for {data.siteUrl} ({data.startDate} to {data.endDate})
-          </p>
+    <div className="space-y-6">
+      <div className="bg-white p-8 rounded-2xl border border-slate-100 shadow-sm space-y-6">
+        <div className="flex justify-between items-center border-b border-slate-100 pb-4">
+          <div>
+            <h3 className="text-xl font-bold text-slate-800 flex items-center gap-2">
+              <BarChart2 className="w-5 h-5 text-indigo-600" />
+              GSC Overview
+            </h3>
+            <p className="text-sm text-slate-500 mt-1">
+              Site-wide metrics for {data.siteUrl} ({data.startDate} to {data.endDate})
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={runConnectionTest}
+              disabled={isTestingConnection}
+              className="px-3 py-1.5 text-xs font-semibold bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg flex items-center gap-1.5 transition-colors"
+            >
+              {isTestingConnection ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Activity className="w-3.5 h-3.5 text-slate-500" />}
+              Test Connection
+            </button>
+            <a
+              href="/api/auth/google"
+              className="px-3 py-1.5 text-xs font-semibold bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg flex items-center gap-1.5 transition-colors"
+            >
+              <RefreshCw className="w-3.5 h-3.5 text-slate-500" />
+              Reconnect
+            </a>
+            <div className="px-3 py-1 bg-green-50 text-green-700 border border-green-200 rounded-full text-xs font-bold flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+              CONNECTED
+            </div>
+          </div>
         </div>
-        <div className="px-3 py-1 bg-green-50 text-green-700 border border-green-200 rounded-full text-xs font-bold flex items-center gap-1.5">
-          <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
-          CONNECTED
+
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="bg-slate-50 p-6 rounded-xl border border-slate-100">
+            <div className="text-sm font-semibold text-slate-500 mb-1">Total Clicks</div>
+            <div className="text-3xl font-black text-slate-800">{data.metrics.clicks.toLocaleString()}</div>
+          </div>
+          <div className="bg-slate-50 p-6 rounded-xl border border-slate-100">
+            <div className="text-sm font-semibold text-slate-500 mb-1">Total Impressions</div>
+            <div className="text-3xl font-black text-slate-800">{data.metrics.impressions.toLocaleString()}</div>
+          </div>
+          <div className="bg-slate-50 p-6 rounded-xl border border-slate-100">
+            <div className="text-sm font-semibold text-slate-500 mb-1">Average CTR</div>
+            <div className="text-3xl font-black text-slate-800">{(data.metrics.ctr * 100).toFixed(2)}%</div>
+          </div>
+          <div className="bg-slate-50 p-6 rounded-xl border border-slate-100">
+            <div className="text-sm font-semibold text-slate-500 mb-1">Average Position</div>
+            <div className="text-3xl font-black text-slate-800">{data.metrics.position.toFixed(1)}</div>
+          </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="bg-slate-50 p-6 rounded-xl border border-slate-100">
-          <div className="text-sm font-semibold text-slate-500 mb-1">Total Clicks</div>
-          <div className="text-3xl font-black text-slate-800">{data.metrics.clicks.toLocaleString()}</div>
+      {showDiagnosticModal && diagnosticResult && (
+        <GscDiagnosticMatrixModal 
+          diagnostics={diagnosticResult} 
+          onClose={() => setShowDiagnosticModal(false)} 
+        />
+      )}
+    </div>
+  );
+}
+
+function GscDiagnosticMatrixModal({ diagnostics, onClose }: { diagnostics: any; onClose: () => void }) {
+  const m = diagnostics.matrix || {};
+
+  const renderBadge = (val: string) => {
+    if (val === 'PASS') {
+      return <span className="px-2 py-0.5 bg-green-100 text-green-800 font-bold text-xs rounded-full">PASS</span>;
+    }
+    return <span className="px-2 py-0.5 bg-red-100 text-red-800 font-bold text-xs rounded-full">FAIL</span>;
+  };
+
+  return (
+    <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-md space-y-4">
+      <div className="flex items-center justify-between border-b pb-3">
+        <h4 className="font-bold text-slate-900 flex items-center gap-2">
+          <Activity className="w-5 h-5 text-indigo-600" />
+          Google Search Console Diagnostic Health Matrix
+        </h4>
+        <button
+          onClick={onClose}
+          className="text-slate-400 hover:text-slate-600 text-sm font-medium"
+        >
+          Close
+        </button>
+      </div>
+
+      <div className="p-3 bg-slate-50 rounded-xl text-xs text-slate-700">
+        <strong>Diagnostic Summary:</strong> {diagnostics.message}
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+        <div className="flex justify-between items-center p-3 bg-white border border-slate-100 rounded-xl">
+          <span className="text-slate-600 font-medium">Google OAuth Config</span>
+          {renderBadge(m.googleOAuth)}
         </div>
-        <div className="bg-slate-50 p-6 rounded-xl border border-slate-100">
-          <div className="text-sm font-semibold text-slate-500 mb-1">Total Impressions</div>
-          <div className="text-3xl font-black text-slate-800">{data.metrics.impressions.toLocaleString()}</div>
+        <div className="flex justify-between items-center p-3 bg-white border border-slate-100 rounded-xl">
+          <span className="text-slate-600 font-medium">Refresh Token Status</span>
+          {renderBadge(m.refreshToken)}
         </div>
-        <div className="bg-slate-50 p-6 rounded-xl border border-slate-100">
-          <div className="text-sm font-semibold text-slate-500 mb-1">Average CTR</div>
-          <div className="text-3xl font-black text-slate-800">{(data.metrics.ctr * 100).toFixed(2)}%</div>
+        <div className="flex justify-between items-center p-3 bg-white border border-slate-100 rounded-xl">
+          <span className="text-slate-600 font-medium">Search Console Scope</span>
+          {renderBadge(m.searchConsoleScope)}
         </div>
-        <div className="bg-slate-50 p-6 rounded-xl border border-slate-100">
-          <div className="text-sm font-semibold text-slate-500 mb-1">Average Position</div>
-          <div className="text-3xl font-black text-slate-800">{data.metrics.position.toFixed(1)}</div>
+        <div className="flex justify-between items-center p-3 bg-white border border-slate-100 rounded-xl">
+          <span className="text-slate-600 font-medium">Property Access</span>
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-slate-500 font-mono">({m.propertyPermissionLevel || 'none'})</span>
+            {renderBadge(m.propertyAccess)}
+          </div>
         </div>
+        <div className="flex justify-between items-center p-3 bg-white border border-slate-100 rounded-xl">
+          <span className="text-slate-600 font-medium">Search Analytics API</span>
+          {renderBadge(m.searchAnalyticsApi)}
+        </div>
+        <div className="flex justify-between items-center p-3 bg-white border border-slate-100 rounded-xl">
+          <span className="text-slate-600 font-medium">Rows Returned</span>
+          <span className="font-mono font-bold text-slate-800">{m.rowsReturned ?? 0}</span>
+        </div>
+        <div className="flex justify-between items-center p-3 bg-white border border-slate-100 rounded-xl col-span-1 md:col-span-2">
+          <span className="text-slate-600 font-medium">Authenticated Account</span>
+          <span className="font-mono text-xs font-bold text-slate-800">{m.authenticatedAccount}</span>
+        </div>
+        <div className="flex justify-between items-center p-3 bg-white border border-slate-100 rounded-xl col-span-1 md:col-span-2">
+          <span className="text-slate-600 font-medium">Target Property</span>
+          <span className="font-mono text-xs text-slate-800">{m.property}</span>
+        </div>
+      </div>
+
+      <div className="pt-2 flex justify-end gap-3">
+        <a
+          href="/api/auth/google"
+          className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-xl"
+        >
+          Reconnect Account
+        </a>
       </div>
     </div>
   );

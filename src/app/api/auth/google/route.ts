@@ -34,9 +34,18 @@ export async function GET() {
   authUrl.searchParams.append("client_id", GOOGLE_CLIENT_ID);
   authUrl.searchParams.append("redirect_uri", GOOGLE_REDIRECT_URI);
   authUrl.searchParams.append("response_type", "code");
-  authUrl.searchParams.append("scope", "https://www.googleapis.com/auth/webmasters.readonly");
+  
+  // Include identity scopes alongside Search Console scope so we know which Google account is connected
+  const scopes = [
+    "openid",
+    "https://www.googleapis.com/auth/userinfo.email",
+    "https://www.googleapis.com/auth/webmasters.readonly"
+  ].join(" ");
+  authUrl.searchParams.append("scope", scopes);
+
   authUrl.searchParams.append("access_type", "offline");
-  authUrl.searchParams.append("prompt", "consent");
+  // Force consent and account selection to prevent silently picking a cached/wrong Google account
+  authUrl.searchParams.append("prompt", "consent select_account");
   authUrl.searchParams.append("state", state);
 
   return NextResponse.redirect(authUrl.toString());

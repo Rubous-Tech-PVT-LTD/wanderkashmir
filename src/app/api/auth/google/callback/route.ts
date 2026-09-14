@@ -76,15 +76,37 @@ export async function GET(request: Request) {
       return NextResponse.redirect(new URL("/wander-admin?error=no_refresh_token", request.url));
     }
 
+    // Attempt to discover authenticated account email via token introspection
+    let authenticatedEmail = "";
+    if (tokens.access_token) {
+      try {
+        const tokenInfo = await oauth2Client.getTokenInfo(tokens.access_token);
+        if (tokenInfo.email) {
+          authenticatedEmail = tokenInfo.email;
+        }
+      } catch (e) {
+        console.warn("Could not introspect token email during callback:", e);
+      }
+    }
+
     // Encrypt the refresh token before storing it
     const encryptedToken = encryptString(tokens.refresh_token);
 
-    // Save to SystemConfig
+    // Save refresh token to SystemConfig
     await prisma.systemConfig.upsert({
       where: { key: dbKey },
       update: { value: encryptedToken },
       create: { key: dbKey, value: encryptedToken },
     });
+
+    // Save authenticated email if present for identity tracking
+    if (authenticatedEmail && provider === "GSC") {
+      await prisma.systemConfig.upsert({
+        where: { key: "GSC_ACCOUNT_EMAIL" },
+        update: { value: authenticatedEmail },
+        create: { key: "GSC_ACCOUNT_EMAIL", value: authenticatedEmail },
+      });
+    }
 
     return NextResponse.redirect(new URL(`/wander-admin?success=${successParam}`, request.url));
   } catch (err) {
