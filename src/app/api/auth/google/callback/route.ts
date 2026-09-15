@@ -37,14 +37,26 @@ export async function GET(request: Request) {
 
   // Validate state
   const cookieStore = await cookies();
-  const savedState = cookieStore.get("google_oauth_state")?.value;
+  const allStateCookies = cookieStore.getAll("google_oauth_state");
+  const isValidState = allStateCookies.length > 0 && allStateCookies.some(c => c.value === state);
 
-  if (!savedState || state !== savedState) {
+  if (!isValidState) {
     return new NextResponse("Invalid state parameter (CSRF)", { status: 403 });
   }
 
-  // Clear state cookie
+  const cookieDomain = process.env.NODE_ENV === "production" ? ".wanderkashmir.com" : undefined;
+
+  // Clear both host-only and parent-domain cookies safely
   cookieStore.delete("google_oauth_state");
+  if (cookieDomain) {
+    cookieStore.set({
+      name: "google_oauth_state",
+      value: "",
+      domain: cookieDomain,
+      path: "/",
+      maxAge: 0,
+    });
+  }
 
   // Determine provider from state prefix
   const isAds = state.startsWith("ADS_");
@@ -108,7 +120,26 @@ export async function GET(request: Request) {
       });
     }
 
-    return NextResponse.redirect(new URL(`/wander-admin?success=${successParam}`, request.url));
+    const response = NextResponse.redirect(new URL(`/wander-admin?success=${successParam}`, request.url));
+    if (cookieDomain) {
+      response.cookies.set("google_oauth_state", "", {
+        domain: cookieDomain,
+        path: "/",
+        maxAge: 0,
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax",
+      });
+    }
+    response.cookies.set("google_oauth_state", "", {
+      path: "/",
+      maxAge: 0,
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+    });
+
+    return response;
   } catch (err) {
     console.error(`Failed to exchange Google OAuth code for ${provider}:`, err);
     return new NextResponse("Authentication failed", { status: 500 });

@@ -22,13 +22,18 @@ export async function GET() {
   // Generate a random state for CSRF protection and append provider prefix
   const state = "GSC_" + crypto.randomBytes(32).toString("hex");
 
-  const cookieStore = await cookies();
-  cookieStore.set("google_oauth_state", state, {
+  const cookieDomain = process.env.NODE_ENV === "production" ? ".wanderkashmir.com" : undefined;
+  const cookieOptions = {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
+    sameSite: "lax" as const,
+    domain: cookieDomain,
     path: "/",
     maxAge: 60 * 10, // 10 minutes
-  });
+  };
+
+  const cookieStore = await cookies();
+  cookieStore.set("google_oauth_state", state, cookieOptions);
 
   const authUrl = new URL("https://accounts.google.com/o/oauth2/v2/auth");
   authUrl.searchParams.append("client_id", GOOGLE_CLIENT_ID);
@@ -48,5 +53,8 @@ export async function GET() {
   authUrl.searchParams.append("prompt", "consent select_account");
   authUrl.searchParams.append("state", state);
 
-  return NextResponse.redirect(authUrl.toString());
+  const response = NextResponse.redirect(authUrl.toString());
+  response.cookies.set("google_oauth_state", state, cookieOptions);
+
+  return response;
 }
