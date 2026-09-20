@@ -1,16 +1,16 @@
 import { useEffect, useState } from "react";
-import { Edit2, Trash2, Plus, ArrowLeft } from "lucide-react";
+import { Edit2, Trash2, Plus, ArrowLeft, ArrowUp, ArrowDown, AlertTriangle, CheckCircle2 } from "lucide-react";
 import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
-import { getPaginatedTours } from "@/actions/admin-data";
+import { getPaginatedTours, getApprovedPropertiesForSelect } from "@/actions/admin-data";
 import Pagination from "@/components/Pagination";
 
 export default function AdminToursTab({ initialEditTour, initialCategory, onInitialPropsConsumed, onExitEdit }: { initialEditTour?: any, initialCategory?: string | null, onInitialPropsConsumed?: () => void, onExitEdit?: () => void }) {
   const TOUR_CATEGORIES = [
-    "Upcoming", "Instagram", "Honeymoon", "Family", "Adventure", "Pilgrimage", "Nature",
-    "Culture", "Skiing", "Trekking", "Wildlife", "Luxury", "Budget", "Group",
-    "Weekend Getaway", "Offbeat", "Photography", "Backpacking", "Corporate", "Senior Citizen",
-    "January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"
+    "General",
+    "Family",
+    "Short Kashmir Trips",
+    "Weekend Escape"
   ];
 
   const [tours, setTours] = useState<any[]>([]);
@@ -20,8 +20,14 @@ export default function AdminToursTab({ initialEditTour, initialCategory, onInit
   const [isEditing, setIsEditing] = useState<any>(null);
   const [isAdding, setIsAdding] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [customCategories, setCustomCategories] = useState<string[]>([]);
+  const [approvedProperties, setApprovedProperties] = useState<any[]>([]);
   const router = useRouter();
+
+  useEffect(() => {
+    getApprovedPropertiesForSelect()
+      .then((props) => setApprovedProperties(props || []))
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     const fetchTours = async () => {
@@ -66,6 +72,14 @@ export default function AdminToursTab({ initialEditTour, initialCategory, onInit
     inclusions: "",
     exclusions: "",
     itinerary: [] as { day: number, title: string, description: string }[],
+    stays: [] as {
+      id?: string;
+      destination: string;
+      nights: number;
+      stayType: string;
+      propertyId: string | null;
+      displayOrder: number;
+    }[],
     isLive: true,
   });
 
@@ -86,12 +100,22 @@ export default function AdminToursTab({ initialEditTour, initialCategory, onInit
       inclusions: tour.inclusions?.join(", ") || "",
       exclusions: tour.exclusions?.join(", ") || "",
       itinerary: tour.itinerary && Array.isArray(tour.itinerary) ? tour.itinerary : [],
+      stays: Array.isArray(tour.stays)
+        ? tour.stays.map((s: any, idx: number) => ({
+            id: s.id,
+            destination: s.destination || "Srinagar",
+            nights: Number(s.nights) || 1,
+            stayType: s.stayType || "Hotel",
+            propertyId: s.propertyId || null,
+            displayOrder: s.displayOrder || idx + 1,
+          }))
+        : [],
       isLive: tour.isLive ?? true,
     });
     setIsAdding(true);
   };
 
-  const handleAddNew = (defaultCategory: string = "") => {
+  const handleAddNew = (defaultCategory: string = "General") => {
     setIsEditing(null);
     setFormData({
       title: "",
@@ -100,7 +124,7 @@ export default function AdminToursTab({ initialEditTour, initialCategory, onInit
       destinations: "",
       price: "",
       originalPrice: "",
-      category: defaultCategory,
+      category: defaultCategory || "General",
       maxPersons: "2",
       images: "",
       overview: "",
@@ -108,6 +132,7 @@ export default function AdminToursTab({ initialEditTour, initialCategory, onInit
       inclusions: "",
       exclusions: "",
       itinerary: [],
+      stays: [],
       isLive: true,
     });
     setIsAdding(true);
@@ -129,10 +154,44 @@ export default function AdminToursTab({ initialEditTour, initialCategory, onInit
     }
   };
 
+  const parseTourNights = (durationStr: string): number => {
+    if (!durationStr) return 0;
+    const nightMatch = durationStr.match(/(\d+)\s*(?:Nights?|N\b)/i);
+    if (nightMatch) return parseInt(nightMatch[1], 10);
+    const dayMatch = durationStr.match(/(\d+)\s*(?:Days?|D\b)/i);
+    if (dayMatch) return Math.max(0, parseInt(dayMatch[1], 10) - 1);
+    const num = parseInt(durationStr, 10);
+    return isNaN(num) ? 0 : Math.max(0, num - 1);
+  };
+
+  const getMatchingProperties = (destination: string) => {
+    if (!destination || !destination.trim()) return approvedProperties;
+    const destLower = destination.trim().toLowerCase();
+    return approvedProperties.filter((p) => {
+      const locLower = (p.location || "").toLowerCase();
+      const nameLower = (p.name || "").toLowerCase();
+      if (locLower.includes(destLower) || destLower.includes(locLower)) return true;
+      if (destLower.includes("srinagar") && (locLower.includes("srinagar") || locLower.includes("dal lake") || locLower.includes("nigeen"))) return true;
+      if (destLower.includes("gulmarg") && (locLower.includes("gulmarg") || nameLower.includes("gulmarg"))) return true;
+      if (destLower.includes("pahalgam") && (locLower.includes("pahalgam") || nameLower.includes("pahalgam"))) return true;
+      if (destLower.includes("sonamarg") && (locLower.includes("sonamarg") || nameLower.includes("sonamarg"))) return true;
+      return false;
+    });
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     try {
+      const totalStayNights = formData.stays.reduce((sum, s) => sum + (Number(s.nights) || 0), 0);
+      const expectedNights = parseTourNights(formData.duration);
+
+      if (formData.stays.length > 0 && expectedNights > 0 && totalStayNights !== expectedNights) {
+        toast.error(`Accommodation nights (${totalStayNights}) do not match the tour's ${expectedNights} nights. Please adjust accommodation rows.`);
+        setLoading(false);
+        return;
+      }
+
       const payload = {
         ...formData,
         destinations: formData.destinations.split(",").map(s => s.trim()).filter(Boolean),
@@ -141,6 +200,7 @@ export default function AdminToursTab({ initialEditTour, initialCategory, onInit
         inclusions: formData.inclusions.split(",").map(s => s.trim()).filter(Boolean),
         exclusions: formData.exclusions.split(",").map(s => s.trim()).filter(Boolean),
         itinerary: formData.itinerary,
+        stays: formData.stays,
         isLive: formData.isLive,
       };
 
@@ -171,17 +231,18 @@ export default function AdminToursTab({ initialEditTour, initialCategory, onInit
         if (onExitEdit) onExitEdit();
         router.refresh();
       } else {
-        toast.error("Failed to save tour");
+        const errData = await res.json().catch(() => ({}));
+        toast.error(errData.error || "Failed to save tour");
       }
-    } catch (e) {
-      toast.error("Error saving tour");
+    } catch (e: any) {
+      toast.error(e?.message || "Error saving tour");
     } finally {
       setLoading(false);
     }
   };
 
   const addItineraryDay = () => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
       itinerary: [...prev.itinerary, { day: prev.itinerary.length + 1, title: "", description: "" }]
     }));
@@ -196,6 +257,46 @@ export default function AdminToursTab({ initialEditTour, initialCategory, onInit
   const removeItineraryDay = (index: number) => {
     const newItin = formData.itinerary.filter((_, i) => i !== index).map((day, i) => ({ ...day, day: i + 1 }));
     setFormData({ ...formData, itinerary: newItin });
+  };
+
+  const addStay = () => {
+    const defaultDest = formData.destinations.split(",")[0]?.trim() || "Srinagar";
+    setFormData((prev) => ({
+      ...prev,
+      stays: [
+        ...prev.stays,
+        {
+          destination: defaultDest,
+          nights: 1,
+          stayType: "Hotel",
+          propertyId: null,
+          displayOrder: prev.stays.length + 1,
+        },
+      ],
+    }));
+  };
+
+  const updateStay = (index: number, field: string, value: any) => {
+    const newStays = [...formData.stays];
+    newStays[index] = { ...newStays[index], [field]: value };
+    setFormData({ ...formData, stays: newStays });
+  };
+
+  const removeStay = (index: number) => {
+    const newStays = formData.stays
+      .filter((_, i) => i !== index)
+      .map((s, i) => ({ ...s, displayOrder: i + 1 }));
+    setFormData({ ...formData, stays: newStays });
+  };
+
+  const moveStay = (index: number, direction: "up" | "down") => {
+    const newIndex = direction === "up" ? index - 1 : index + 1;
+    if (newIndex < 0 || newIndex >= formData.stays.length) return;
+    const newStays = [...formData.stays];
+    const [removed] = newStays.splice(index, 1);
+    newStays.splice(newIndex, 0, removed);
+    const reindexed = newStays.map((s, idx) => ({ ...s, displayOrder: idx + 1 }));
+    setFormData({ ...formData, stays: reindexed });
   };
 
   if (isAdding) {
@@ -233,13 +334,50 @@ export default function AdminToursTab({ initialEditTour, initialCategory, onInit
             <input required type="text" className="w-full border rounded-lg p-2" value={formData.slug} onChange={e => setFormData({ ...formData, slug: e.target.value })} />
           </div>
           <div>
+            <label className="block text-sm font-semibold mb-1">Duration</label>
+            <input required type="text" className="w-full border rounded-lg p-2" placeholder="e.g. 5 Days / 4 Nights" value={formData.duration} onChange={e => setFormData({ ...formData, duration: e.target.value })} />
+          </div>
+          <div>
+            <label className="block text-sm font-semibold mb-1">Tour Category</label>
+            <select
+              required
+              className="w-full border rounded-lg p-2 bg-white text-slate-800 font-medium focus:ring-2 focus:ring-orange-500 focus:outline-none"
+              value={formData.category}
+              onChange={e => setFormData({ ...formData, category: e.target.value })}
+            >
+              <option value="" disabled>Select Tour Category</option>
+              {TOUR_CATEGORIES.map(cat => (
+                <option key={cat} value={cat}>{cat}</option>
+              ))}
+              {formData.category && !TOUR_CATEGORIES.includes(formData.category) && (
+                <option value={formData.category}>{formData.category} (Current / Legacy)</option>
+              )}
+            </select>
+            <div className="flex flex-wrap gap-1.5 mt-2">
+              {TOUR_CATEGORIES.map(cat => (
+                <button
+                  key={cat}
+                  type="button"
+                  onClick={() => setFormData({ ...formData, category: cat })}
+                  className={`px-2.5 py-1 rounded-md text-xs font-semibold transition-all ${
+                    formData.category === cat
+                      ? "bg-orange-500 text-white shadow-xs"
+                      : "bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200"
+                  }`}
+                >
+                  {cat}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div className="md:col-span-2">
             <label className="block text-sm font-semibold mb-1">Tour Status</label>
             <div className="flex items-center gap-6 mt-2">
               <label className="flex items-center gap-2 cursor-pointer">
                 <input 
                   type="radio" 
                   name="tourStatus" 
-                  className="w-5 h-5 accent-orange- border-slate-300" 
+                  className="w-5 h-5 accent-orange-500 border-slate-300" 
                   checked={formData.isLive === true} 
                   onChange={() => setFormData({ ...formData, isLive: true })} 
                 />
@@ -249,118 +387,12 @@ export default function AdminToursTab({ initialEditTour, initialCategory, onInit
                 <input 
                   type="radio" 
                   name="tourStatus" 
-                  className="w-5 h-5 accent-orange- border-slate-300" 
+                  className="w-5 h-5 accent-orange-500 border-slate-300" 
                   checked={formData.isLive === false} 
                   onChange={() => setFormData({ ...formData, isLive: false })} 
                 />
                 <span className="font-medium text-slate-700">Coming Soon</span>
               </label>
-            </div>
-          </div>
-          <div>
-            <label className="block text-sm font-semibold mb-1">Duration</label>
-            <input required type="text" className="w-full border rounded-lg p-2" placeholder="e.g. 5 Days / 4 Nights" value={formData.duration} onChange={e => setFormData({ ...formData, duration: e.target.value })} />
-          </div>
-          <div className="md:col-span-2">
-            <label className="block text-sm font-semibold mb-2">Category (Select multiple)</label>
-            <div className="flex flex-wrap gap-3 mb-3">
-              {Array.from(new Set([...TOUR_CATEGORIES, ...customCategories, ...formData.category.split(',').map(c => c.trim()).filter(Boolean)])).map(cat => {
-                const isSelected = formData.category.split(',').map(c => c.trim()).includes(cat);
-                return (
-                  <label key={cat} className="flex items-center gap-2 bg-slate-50 border border-slate-200 px-3 py-2 rounded-lg cursor-pointer hover:bg-slate-100 transition-colors">
-                    <input 
-                      type="checkbox" 
-                      className="rounded border-slate-300 text-orange-500 focus:ring-orange-500 w-4 h-4 cursor-pointer"
-                      checked={isSelected}
-                      onChange={(e) => {
-                        const currentCats = formData.category.split(',').map(c => c.trim()).filter(Boolean);
-                        let newCats;
-                        if (e.target.checked) {
-                          newCats = [...currentCats, cat];
-                        } else {
-                          newCats = currentCats.filter(c => c !== cat);
-                        }
-                        setFormData({ ...formData, category: newCats.join(', ') });
-                      }}
-                    />
-                    <span className="text-sm font-medium text-slate-700 select-none">{cat}</span>
-                    {!TOUR_CATEGORIES.includes(cat) && (
-                      <div className="flex items-center gap-1.5 ml-1" onClick={e => { e.preventDefault(); e.stopPropagation(); }}>
-                        <button 
-                          type="button"
-                          onClick={() => {
-                            const newName = prompt("Modify custom category name:", cat);
-                            if (newName && newName.trim() && newName.trim() !== cat) {
-                              const trimmed = newName.trim();
-                              setCustomCategories(prev => prev.map(c => c === cat ? trimmed : c));
-                              const currentCats = formData.category.split(',').map(c => c.trim()).filter(Boolean);
-                              setFormData({ ...formData, category: currentCats.map(c => c === cat ? trimmed : c).join(', ') });
-                            }
-                          }}
-                          className="text-slate-400 hover:text-orange-500"
-                          title="Edit Category"
-                        >
-                          <Edit2 className="w-3 h-3" />
-                        </button>
-                        <button 
-                          type="button"
-                          onClick={() => {
-                            if (confirm(`Delete custom category "${cat}"?`)) {
-                              setCustomCategories(prev => prev.filter(c => c !== cat));
-                              const currentCats = formData.category.split(',').map(c => c.trim()).filter(Boolean);
-                              setFormData({ ...formData, category: currentCats.filter(c => c !== cat).join(', ') });
-                            }
-                          }}
-                          className="text-slate-400 hover:text-red-500"
-                          title="Delete Category"
-                        >
-                          <Trash2 className="w-3 h-3" />
-                        </button>
-                      </div>
-                    )}
-                  </label>
-                )
-              })}
-            </div>
-            <div className="flex items-center gap-2">
-              <input 
-                type="text" 
-                id="customCategoryInput"
-                placeholder="Add custom category..." 
-                className="border border-slate-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:border-orange-500"
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    e.preventDefault();
-                    const val = e.currentTarget.value.trim();
-                    if (val) {
-                      const currentCats = formData.category.split(',').map(c => c.trim()).filter(Boolean);
-                      setCustomCategories(prev => Array.from(new Set([...prev, val])));
-                      if (!currentCats.includes(val)) {
-                        setFormData({ ...formData, category: [...currentCats, val].join(', ') });
-                      }
-                      e.currentTarget.value = "";
-                    }
-                  }
-                }}
-              />
-              <button 
-                type="button"
-                className="bg-orange-500 text-white px-3 py-1.5 rounded-lg text-sm font-semibold hover:bg-orange-500 transition-colors border border-orange-500"
-                onClick={(e) => {
-                  const input = document.getElementById('customCategoryInput') as HTMLInputElement;
-                  const val = input.value.trim();
-                  if (val) {
-                    const currentCats = formData.category.split(',').map(c => c.trim()).filter(Boolean);
-                    setCustomCategories(prev => Array.from(new Set([...prev, val])));
-                    if (!currentCats.includes(val)) {
-                      setFormData({ ...formData, category: [...currentCats, val].join(', ') });
-                    }
-                    input.value = "";
-                  }
-                }}
-              >
-                Add
-              </button>
             </div>
           </div>
           <div>
@@ -446,6 +478,211 @@ export default function AdminToursTab({ initialEditTour, initialCategory, onInit
               ))}
             </div>
           </div>
+
+          {/* Dedicated Accommodation Section */}
+          <div className="md:col-span-2 border-t border-slate-200 pt-6 mt-4">
+            {(() => {
+              const totalStayNights = formData.stays.reduce((sum, s) => sum + (Number(s.nights) || 0), 0);
+              const expectedTourNights = parseTourNights(formData.duration);
+              const isNightsMismatch = expectedTourNights > 0 && totalStayNights !== expectedTourNights;
+
+              return (
+                <>
+                  <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-4">
+                    <div>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <h4 className="text-lg font-bold text-slate-900">Accommodation</h4>
+                        <span
+                          className={`px-3 py-0.5 rounded-full text-xs font-bold border ${
+                            expectedTourNights > 0 && !isNightsMismatch
+                              ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                              : "bg-amber-50 text-amber-800 border-amber-300"
+                          }`}
+                        >
+                          Total Accommodation Nights: {totalStayNights} {expectedTourNights > 0 ? `/ ${expectedTourNights}` : ""}
+                        </span>
+                      </div>
+                      <p className="text-xs text-slate-500 mt-0.5">
+                        Define destination, number of nights, and assign verified properties for each accommodation segment.
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={addStay}
+                      className="flex items-center gap-1 bg-emerald-600 text-white px-3 py-1.5 rounded-lg text-sm font-semibold hover:bg-emerald-700 transition-colors cursor-pointer self-start sm:self-auto"
+                    >
+                      <Plus className="w-4 h-4" /> Add Accommodation
+                    </button>
+                  </div>
+
+                  {isNightsMismatch && formData.stays.length > 0 && (
+                    <div className="mb-4 p-3.5 bg-amber-50 border border-amber-200 rounded-xl text-amber-900 text-xs flex items-center gap-2.5 font-medium">
+                      <AlertTriangle className="w-4 h-4 shrink-0 text-amber-600" />
+                      <span>
+                        <strong>Warning:</strong> Accommodation nights do not match the tour&apos;s {expectedTourNights} nights ({totalStayNights} / {expectedTourNights}).
+                      </span>
+                    </div>
+                  )}
+
+                  {formData.stays.length === 0 && (
+                    <div className="text-center p-6 bg-slate-50 border border-dashed border-slate-300 rounded-xl text-slate-500 text-sm">
+                      No accommodations assigned yet. Click &quot;Add Accommodation&quot; to configure destination nights and properties.
+                    </div>
+                  )}
+
+                  <datalist id="admin-tour-destinations">
+                    <option value="Srinagar" />
+                    <option value="Gulmarg" />
+                    <option value="Pahalgam" />
+                    <option value="Sonamarg" />
+                    <option value="Doodhpathri" />
+                    <option value="Yusmarg" />
+                    <option value="Gurez" />
+                  </datalist>
+
+                  <div className="space-y-3">
+                    {formData.stays.map((stay, index) => {
+                      const matchingProps = getMatchingProperties(stay.destination);
+                      const currentSelectedProp = stay.propertyId
+                        ? approvedProperties.find((p) => p.id === stay.propertyId)
+                        : null;
+                      const isOrphanedSelection =
+                        stay.propertyId && !matchingProps.some((p) => p.id === stay.propertyId);
+
+                      return (
+                        <div
+                          key={index}
+                          className="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-3 transition-all"
+                        >
+                          <div className="flex justify-between items-center">
+                            <div className="flex items-center gap-2">
+                              <span className="font-bold text-slate-800 bg-white px-3 py-1 rounded-md shadow-xs text-xs border border-slate-200">
+                                Segment #{index + 1}
+                              </span>
+                              <div className="flex items-center gap-1">
+                                <button
+                                  type="button"
+                                  disabled={index === 0}
+                                  onClick={() => moveStay(index, "up")}
+                                  className="p-1 bg-white hover:bg-slate-100 border border-slate-200 rounded text-slate-600 disabled:opacity-30 cursor-pointer disabled:cursor-not-allowed"
+                                  title="Move Up"
+                                >
+                                  <ArrowUp className="w-3.5 h-3.5" />
+                                </button>
+                                <button
+                                  type="button"
+                                  disabled={index === formData.stays.length - 1}
+                                  onClick={() => moveStay(index, "down")}
+                                  className="p-1 bg-white hover:bg-slate-100 border border-slate-200 rounded text-slate-600 disabled:opacity-30 cursor-pointer disabled:cursor-not-allowed"
+                                  title="Move Down"
+                                >
+                                  <ArrowDown className="w-3.5 h-3.5" />
+                                </button>
+                              </div>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => removeStay(index)}
+                              className="text-red-500 hover:text-red-700 p-1 bg-red-50 rounded-md cursor-pointer"
+                              title="Remove Accommodation Segment"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
+
+                          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
+                            <div>
+                              <label className="block text-xs font-semibold text-slate-700 mb-1">
+                                Destination
+                              </label>
+                              <input
+                                type="text"
+                                list="admin-tour-destinations"
+                                required
+                                placeholder="e.g. Srinagar, Gulmarg, Pahalgam"
+                                className="w-full border border-slate-300 rounded-lg p-2 text-sm bg-white"
+                                value={stay.destination}
+                                onChange={(e) => updateStay(index, "destination", e.target.value)}
+                              />
+                            </div>
+
+                            <div>
+                              <label className="block text-xs font-semibold text-slate-700 mb-1">
+                                Nights
+                              </label>
+                              <input
+                                type="number"
+                                min="1"
+                                required
+                                className="w-full border border-slate-300 rounded-lg p-2 text-sm bg-white"
+                                value={stay.nights}
+                                onChange={(e) =>
+                                  updateStay(index, "nights", Math.max(1, Number(e.target.value) || 1))
+                                }
+                              />
+                            </div>
+
+                            <div>
+                              <label className="block text-xs font-semibold text-slate-700 mb-1">
+                                Stay Type
+                              </label>
+                              <select
+                                className="w-full border border-slate-300 rounded-lg p-2 text-sm bg-white"
+                                value={stay.stayType}
+                                onChange={(e) => updateStay(index, "stayType", e.target.value)}
+                              >
+                                <option value="Hotel">Hotel</option>
+                                <option value="Houseboat">Houseboat</option>
+                                <option value="Homestay">Homestay</option>
+                                <option value="Resort">Resort</option>
+                              </select>
+                            </div>
+
+                            <div>
+                              <label className="block text-xs font-semibold text-slate-700 mb-1">
+                                Property Assignment
+                              </label>
+                              <select
+                                className={`w-full border rounded-lg p-2 text-sm bg-white ${
+                                  isOrphanedSelection ? "border-amber-400 bg-amber-50/50" : "border-slate-300"
+                                }`}
+                                value={stay.propertyId || ""}
+                                onChange={(e) => updateStay(index, "propertyId", e.target.value || null)}
+                              >
+                                <option value="">To be assigned</option>
+                                {matchingProps.length === 0 ? (
+                                  <option value="" disabled>
+                                    No property available yet — accommodation can remain unassigned
+                                  </option>
+                                ) : (
+                                  matchingProps.map((p) => (
+                                    <option key={p.id} value={p.id}>
+                                      {p.name} ({p.type || "HOTEL"} - {p.location})
+                                    </option>
+                                  ))
+                                )}
+                                {isOrphanedSelection && currentSelectedProp && (
+                                  <option value={currentSelectedProp.id}>
+                                    {currentSelectedProp.name} ({currentSelectedProp.location}) [Location Warning]
+                                  </option>
+                                )}
+                              </select>
+                            </div>
+                          </div>
+
+                          {isOrphanedSelection && currentSelectedProp && (
+                            <p className="text-[11px] text-amber-700 font-medium">
+                              ⚠️ Warning: Property &quot;{currentSelectedProp.name}&quot; ({currentSelectedProp.location}) does not match destination &quot;{stay.destination}&quot;. Server validation will reject this assignment.
+                            </p>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </>
+              );
+            })()}
+          </div>
           
           <div className="md:col-span-2 flex justify-end gap-3 mt-4">
             <button type="button" onClick={() => { setIsAdding(false); if (onExitEdit) onExitEdit(); }} className="px-6 py-2 border rounded-lg text-slate-600 hover:bg-slate-50">Cancel</button>
@@ -475,6 +712,7 @@ export default function AdminToursTab({ initialEditTour, initialCategory, onInit
           <thead>
             <tr className="bg-slate-50 border-b border-slate-100">
               <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase">Tour Name</th>
+              <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase">Category</th>
               <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase">Duration</th>
               <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase">Price</th>
               <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase">Actions</th>
@@ -497,6 +735,11 @@ export default function AdminToursTab({ initialEditTour, initialCategory, onInit
                     </div>
                   </div>
                 </td>
+                <td className="px-6 py-4 text-sm font-medium">
+                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-orange-50 text-orange-700 border border-orange-200">
+                    {tour.category || "Unassigned"}
+                  </span>
+                </td>
                 <td className="px-6 py-4 text-sm font-medium">{tour.duration}</td>
                 <td className="px-6 py-4 text-sm font-bold text-emerald-600">₹{tour.price.toLocaleString('en-IN')}</td>
                 <td className="px-6 py-4">
@@ -513,7 +756,7 @@ export default function AdminToursTab({ initialEditTour, initialCategory, onInit
             ))}
             {tours.length === 0 && (
               <tr>
-                <td colSpan={4} className="px-6 py-12 text-center text-slate-500">
+                <td colSpan={5} className="px-6 py-12 text-center text-slate-500">
                   No tour packages found. Click "Add Tour" to create one.
                 </td>
               </tr>

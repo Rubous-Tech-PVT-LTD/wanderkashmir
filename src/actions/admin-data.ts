@@ -261,6 +261,16 @@ export async function getPaginatedTours(params: {
   const [data, totalCount] = await Promise.all([
     prisma.tour.findMany({
       where,
+      include: {
+        stays: {
+          include: {
+            property: {
+              select: { id: true, name: true, location: true },
+            },
+          },
+          orderBy: { displayOrder: "asc" },
+        },
+      },
       orderBy: { createdAt: "desc" },
       skip: (page - 1) * limit,
       take: limit,
@@ -273,6 +283,30 @@ export async function getPaginatedTours(params: {
     totalCount,
     totalPages: Math.ceil(totalCount / limit),
   };
+}
+
+export async function getApprovedPropertiesForSelect() {
+  await checkAdmin();
+  const properties = await prisma.property.findMany({
+    where: { isApproved: true, status: "APPROVED" },
+    select: {
+      id: true,
+      name: true,
+      location: true,
+      vendorProfile: {
+        select: {
+          type: true,
+        },
+      },
+    },
+    orderBy: { name: "asc" },
+  });
+  return properties.map((p) => ({
+    id: p.id,
+    name: p.name,
+    location: p.location,
+    type: p.vendorProfile?.type || "HOTEL",
+  }));
 }
 
 export async function getPaginatedTaxis(params: {

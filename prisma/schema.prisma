@@ -143,6 +143,7 @@ model Property {
   vendorProfile     VendorProfile @relation(fields: [vendorProfileId], references: [id], onDelete: Cascade)
   reviews           Review[]
   roomTypes         RoomType[]
+  tourStays         TourStay[]
 
   @@index([status, isApproved])
   @@index([location])
@@ -366,6 +367,24 @@ model Tour {
   promoCodes    PromoCode[]
   reviews       Review[]
   tourCategory  TourCategory? @relation(fields: [categoryId], references: [id])
+  stays         TourStay[]
+}
+
+model TourStay {
+  id           String    @id @default(cuid())
+  tourId       String
+  destination  String
+  stayType     String?
+  propertyId   String?
+  nights       Int       @default(1)
+  displayOrder Int       @default(0)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  property     Property? @relation(fields: [propertyId], references: [id], onDelete: SetNull)
+  tour         Tour      @relation(fields: [tourId], references: [id], onDelete: Cascade)
+
+  @@index([tourId, displayOrder])
+  @@index([propertyId])
 }
 
 model TourCategory {

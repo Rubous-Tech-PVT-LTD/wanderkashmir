@@ -180,7 +180,7 @@ export default function AdminTourCategoriesTab({ onEditTour, onAddTour }: { onEd
             {categories.length === 0 && (
               <tr>
                 <td colSpan={3} className="px-6 py-8 text-center text-slate-500">
-                  No categories found. Create "Cultural packages" and "Offbeat" to get started.
+                  No categories found. Create "Tour packages" and "Offbeat" to get started.
                 </td>
               </tr>
             )}
@@ -201,7 +201,7 @@ export default function AdminTourCategoriesTab({ onEditTour, onAddTour }: { onEd
                   value={formData.name}
                   onChange={e => setFormData({...formData, name: e.target.value})}
                   className="w-full border border-slate-200 rounded-lg px-3 py-2"
-                  placeholder="e.g. Cultural packages"
+                  placeholder="e.g. Tour packages"
                 />
               </div>
               <div>
