@@ -206,6 +206,7 @@ model Vehicle {
   bookings               Booking[]
   PromoCode              PromoCode[]
   reviews                Review[]
+  tourTransports         TourTransport[]
   vendorProfile          VendorProfile @relation(fields: [vendorProfileId], references: [id], onDelete: Cascade)
 }
 
@@ -219,6 +220,7 @@ model Driver {
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
   bookings        Booking[]
+  tourTransports  TourTransport[]
   vendorProfile   VendorProfile @relation(fields: [vendorProfileId], references: [id], onDelete: Cascade)
 }
 
@@ -368,6 +370,9 @@ model Tour {
   reviews       Review[]
   tourCategory  TourCategory? @relation(fields: [categoryId], references: [id])
   stays         TourStay[]
+  transports    TourTransport[]
+  experiences   TourExperience[]
+  travelGuides  TourTravelGuide[]
 }
 
 model TourStay {
@@ -416,6 +421,7 @@ model SeoLandingPage {
   workflowState     SeoWorkflowState @default(PUBLISHED)
   contentAssets     ContentAsset[]
   comments          SeoPageComment[]
+  tourGuides        TourTravelGuide[]
 
   @@index([type])
 }
@@ -874,6 +880,85 @@ model CrmNotification {
   userId    String?
   isRead    Boolean  @default(false)
   createdAt DateTime @default(now())
+}
+
+model Experience {
+  id            String   @id @default(cuid())
+  slug          String   @unique
+  title         String
+  description   String?  @db.Text
+  destination   String
+  duration      String?
+  basePrice     Float?
+  status        String   @default("ACTIVE")
+  images        String[] @default([])
+  
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  tourExperiences TourExperience[]
+}
+
+model TourExperience {
+  id            String     @id @default(cuid())
+  tourId        String
+  tour          Tour       @relation(fields: [tourId], references: [id], onDelete: Cascade)
+  
+  experienceId  String
+  experience    Experience @relation(fields: [experienceId], references: [id], onDelete: Restrict)
+  
+  isOptional    Boolean    @default(false)
+  dayNumber     Int?
+  displayOrder  Int        @default(0)
+  
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+
+  @@index([tourId])
+  @@index([experienceId])
+  @@unique([tourId, experienceId])
+}
+
+model TourTransport {
+  id            String   @id @default(cuid())
+  tourId        String
+  tour          Tour     @relation(fields: [tourId], references: [id], onDelete: Cascade)
+  
+  origin        String
+  destination   String
+  purpose       String
+  
+  vehicleId     String?
+  vehicle       Vehicle? @relation(fields: [vehicleId], references: [id], onDelete: SetNull)
+  
+  driverId      String?
+  driver        Driver?  @relation(fields: [driverId], references: [id], onDelete: SetNull)
+  
+  displayOrder  Int      @default(0)
+  status        String   @default("ACTIVE")
+  
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([tourId])
+  @@index([vehicleId])
+  @@index([driverId])
+}
+
+model TourTravelGuide {
+  id           String         @id @default(cuid())
+  tourId       String
+  guideId      String
+  displayOrder Int            @default(0)
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+
+  tour         Tour           @relation(fields: [tourId], references: [id], onDelete: Cascade)
+  guide        SeoLandingPage @relation(fields: [guideId], references: [id], onDelete: Cascade)
+
+  @@unique([tourId, guideId])
+  @@index([tourId, displayOrder])
+  @@index([guideId])
 }
 
 enum SeoWorkflowState {

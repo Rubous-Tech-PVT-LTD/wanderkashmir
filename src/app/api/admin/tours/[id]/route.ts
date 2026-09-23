@@ -60,6 +60,53 @@ export async function PUT(
       }
     }
 
+    // Validate transport segments if provided
+    if (Array.isArray(data.transports) && data.transports.length > 0) {
+      for (const t of data.transports) {
+        if (t.vehicleId && typeof t.vehicleId === "string" && t.vehicleId.trim() !== "") {
+          const vehicle = await prisma.vehicle.findUnique({
+            where: { id: t.vehicleId },
+            select: { id: true, make: true, model: true, isApproved: true, status: true },
+          });
+
+          if (!vehicle) {
+            return NextResponse.json(
+              { error: `Selected vehicle (${t.vehicleId}) was not found.` },
+              { status: 400 }
+            );
+          }
+
+          if (!vehicle.isApproved && vehicle.status !== "APPROVED" && vehicle.status !== "LIVE") {
+            return NextResponse.json(
+              { error: `Vehicle "${vehicle.model}" is not currently approved/live.` },
+              { status: 400 }
+            );
+          }
+        }
+
+        if (t.driverId && typeof t.driverId === "string" && t.driverId.trim() !== "") {
+          const driver = await prisma.driver.findUnique({
+            where: { id: t.driverId },
+            select: { id: true, name: true, status: true },
+          });
+
+          if (!driver) {
+            return NextResponse.json(
+              { error: `Selected driver (${t.driverId}) was not found.` },
+              { status: 400 }
+            );
+          }
+
+          if (driver.status !== "ACTIVE") {
+            return NextResponse.json(
+              { error: `Driver "${driver.name}" is not currently active.` },
+              { status: 400 }
+            );
+          }
+        }
+      }
+    }
+
     // Sync with TourCategory if matching record exists
     let categoryId: string | null | undefined = undefined;
     if (data.category && typeof data.category === "string") {
@@ -152,12 +199,117 @@ export async function PUT(
       }
     }
 
+    if (Array.isArray(data.transports)) {
+      await prisma.tourTransport.deleteMany({ where: { tourId: id } });
+      if (data.transports.length > 0) {
+        await prisma.tourTransport.createMany({
+          data: data.transports.map((t: any, idx: number) => ({
+            tourId: id,
+            origin: (t.origin || "Srinagar").trim(),
+            destination: (t.destination || "Kashmir").trim(),
+            purpose: t.purpose || "Transfer",
+            vehicleId: t.vehicleId && t.vehicleId.trim() !== "" ? t.vehicleId : null,
+            driverId: t.driverId && t.driverId.trim() !== "" ? t.driverId : null,
+            displayOrder: t.displayOrder !== undefined ? Number(t.displayOrder) : idx + 1,
+            status: t.status || "ACTIVE",
+          })),
+        });
+      }
+    }
+
+    if (Array.isArray(data.experiences)) {
+      await prisma.tourExperience.deleteMany({ where: { tourId: id } });
+      if (data.experiences.length > 0) {
+        await prisma.tourExperience.createMany({
+          data: data.experiences.map((exp: any, idx: number) => ({
+            tourId: id,
+            experienceId: exp.experienceId,
+            isOptional: !!exp.isOptional,
+            dayNumber: exp.dayNumber ? Number(exp.dayNumber) : null,
+            displayOrder: exp.displayOrder !== undefined ? Number(exp.displayOrder) : idx + 1,
+          })),
+        });
+      }
+    }
+
+    // Validate and synchronize Travel Guides (must be SeoLandingPage with type = BLOG and PUBLISHED)
+    if (Array.isArray(data.travelGuides)) {
+      const submittedGuides = data.travelGuides.filter((g: any) => g && g.guideId);
+      const uniqueGuideIds = Array.from(new Set(submittedGuides.map((g: any) => g.guideId)));
+
+      if (uniqueGuideIds.length > 0) {
+        const validGuides = await prisma.seoLandingPage.findMany({
+          where: {
+            id: { in: uniqueGuideIds },
+            type: "BLOG",
+            workflowState: "PUBLISHED",
+          },
+          select: { id: true, title: true, type: true, workflowState: true },
+        });
+
+        const validGuideMap = new Map(validGuides.map((g) => [g.id, g]));
+
+        for (const gId of uniqueGuideIds) {
+          if (!validGuideMap.has(gId)) {
+            return NextResponse.json(
+              { error: `Selected travel guide (${gId}) is invalid, not of type BLOG, or not published.` },
+              { status: 400 }
+            );
+          }
+        }
+
+        await prisma.tourTravelGuide.deleteMany({ where: { tourId: id } });
+
+        await prisma.tourTravelGuide.createMany({
+          data: uniqueGuideIds.map((gId, idx) => {
+            const item = submittedGuides.find((g: any) => g.guideId === gId);
+            return {
+              tourId: id,
+              guideId: gId,
+              displayOrder: item && typeof item.displayOrder === "number" ? item.displayOrder : idx + 1,
+            };
+          }),
+        });
+      } else {
+        await prisma.tourTravelGuide.deleteMany({ where: { tourId: id } });
+      }
+    }
+
     const finalTour = await prisma.tour.findUnique({
       where: { id },
       include: {
         stays: {
           include: {
             property: { select: { id: true, name: true, location: true } },
+          },
+          orderBy: { displayOrder: "asc" },
+        },
+        transports: {
+          include: {
+            vehicle: { select: { id: true, make: true, model: true, type: true, capacity: true } },
+            driver: { select: { id: true, name: true, status: true } },
+          },
+          orderBy: { displayOrder: "asc" },
+        },
+        experiences: {
+          include: {
+            experience: true,
+          },
+          orderBy: { displayOrder: "asc" },
+        },
+        travelGuides: {
+          include: {
+            guide: {
+              select: {
+                id: true,
+                title: true,
+                slug: true,
+                imageUrl: true,
+                description: true,
+                type: true,
+                workflowState: true,
+              },
+            },
           },
           orderBy: { displayOrder: "asc" },
         },

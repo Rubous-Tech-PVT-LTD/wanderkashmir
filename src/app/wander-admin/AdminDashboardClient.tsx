@@ -20,6 +20,7 @@ import AdminTaxisTab from "./AdminTaxisTab";
 import AdminSeoTab from "./AdminSeoTab";
 import AdminCrmRequirementsTab from "./AdminCrmRequirementsTab";
 import AdminCrmQuotationsTab from "./AdminCrmQuotationsTab";
+import AdminExperiencesTab from "./AdminExperiencesTab";
 import { useEffect, useCallback } from "react";
 import dynamic from "next/dynamic";
 import Pagination from "@/components/Pagination";
@@ -678,6 +679,7 @@ export default function AdminDashboardClient({
             { id: "payouts", label: "Payouts", icon: IndianRupee },
             { id: "rejected", label: "Rejected Vendors", icon: XCircle },
             { id: "users", label: "Tourists", icon: Users },
+            { id: "experiences", label: "Experiences", icon: Sparkles },
             { id: "seo_pages", label: "SEO Pages", icon: Globe },
             { id: "seo_comments", label: "Page Comments", icon: Sparkles },
             { id: "bulk_emails", label: "Bulk Emails", icon: Mail },
@@ -793,6 +795,7 @@ export default function AdminDashboardClient({
         {activeTab === "site_popups" && <AdminPopupsTab />}
         {activeTab === "crm_requirements" && <AdminCrmRequirementsTab />}
         {activeTab === "crm_quotations" && <AdminCrmQuotationsTab />}
+        {activeTab === "experiences" && <AdminExperiencesTab />}
 
         {activeTab === "approvals" && (
           <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">

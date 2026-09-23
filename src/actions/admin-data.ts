@@ -270,6 +270,35 @@ export async function getPaginatedTours(params: {
           },
           orderBy: { displayOrder: "asc" },
         },
+        transports: {
+          include: {
+            vehicle: {
+              select: {
+                id: true,
+                make: true,
+                model: true,
+                type: true,
+                registrationNum: true,
+                capacity: true,
+                status: true,
+                vendorProfile: {
+                  select: { businessName: true },
+                },
+              },
+            },
+            driver: {
+              select: {
+                id: true,
+                name: true,
+                status: true,
+                vendorProfile: {
+                  select: { businessName: true },
+                },
+              },
+            },
+          },
+          orderBy: { displayOrder: "asc" },
+        },
       },
       orderBy: { createdAt: "desc" },
       skip: (page - 1) * limit,
@@ -306,6 +335,73 @@ export async function getApprovedPropertiesForSelect() {
     name: p.name,
     location: p.location,
     type: p.vendorProfile?.type || "HOTEL",
+  }));
+}
+
+export async function getApprovedVehiclesForSelect() {
+  await checkAdmin();
+  const vehicles = await prisma.vehicle.findMany({
+    where: {
+      OR: [
+        { isApproved: true },
+        { status: { in: ["APPROVED", "LIVE"] } },
+      ],
+      NOT: { status: "REJECTED" },
+    },
+    select: {
+      id: true,
+      make: true,
+      model: true,
+      type: true,
+      registrationNum: true,
+      capacity: true,
+      status: true,
+      vendorProfile: {
+        select: {
+          businessName: true,
+          user: {
+            select: { name: true },
+          },
+        },
+      },
+    },
+    orderBy: [{ make: "asc" }, { model: "asc" }],
+  });
+  return vehicles.map((v) => ({
+    id: v.id,
+    make: v.make === "Default" ? "" : v.make,
+    model: v.model,
+    type: v.type,
+    registrationNum: v.registrationNum,
+    capacity: v.capacity,
+    status: v.status,
+    vendorName: v.vendorProfile?.businessName || v.vendorProfile?.user?.name || "Verified Operator",
+  }));
+}
+
+export async function getActiveDriversForSelect() {
+  await checkAdmin();
+  const drivers = await prisma.driver.findMany({
+    where: {
+      status: "ACTIVE",
+    },
+    select: {
+      id: true,
+      name: true,
+      status: true,
+      vendorProfile: {
+        select: {
+          businessName: true,
+        },
+      },
+    },
+    orderBy: { name: "asc" },
+  });
+  return drivers.map((d) => ({
+    id: d.id,
+    name: d.name,
+    status: d.status,
+    vendorName: d.vendorProfile?.businessName || "Verified Partner",
   }));
 }
 
@@ -391,4 +487,18 @@ export async function getPaginatedTaxiRates({ page = 1, limit = 10, search = '' 
     console.error('Failed to fetch paginated taxi rates', error);
     throw new Error('Failed to fetch paginated taxi rates');
   }
+}
+
+export async function getApprovedExperiencesForSelect() {
+  await checkAdmin();
+  const experiences = await prisma.experience.findMany({
+    where: { status: "ACTIVE" },
+    select: {
+      id: true,
+      title: true,
+      destination: true,
+    },
+    orderBy: { title: "asc" },
+  });
+  return experiences;
 }

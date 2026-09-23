@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
-import { Edit2, Trash2, Plus, ArrowLeft, ArrowUp, ArrowDown, AlertTriangle, CheckCircle2 } from "lucide-react";
+import { Edit2, Trash2, Plus, ArrowLeft, ArrowUp, ArrowDown, AlertTriangle, CheckCircle2, ExternalLink } from "lucide-react";
 import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
-import { getPaginatedTours, getApprovedPropertiesForSelect } from "@/actions/admin-data";
+import { getPaginatedTours, getApprovedPropertiesForSelect, getApprovedVehiclesForSelect, getActiveDriversForSelect, getApprovedExperiencesForSelect } from "@/actions/admin-data";
+import { getDestinations, type DestinationItem } from "@/actions/destinations";
 import Pagination from "@/components/Pagination";
 
 export default function AdminToursTab({ initialEditTour, initialCategory, onInitialPropsConsumed, onExitEdit }: { initialEditTour?: any, initialCategory?: string | null, onInitialPropsConsumed?: () => void, onExitEdit?: () => void }) {
@@ -21,11 +22,28 @@ export default function AdminToursTab({ initialEditTour, initialCategory, onInit
   const [isAdding, setIsAdding] = useState(false);
   const [loading, setLoading] = useState(false);
   const [approvedProperties, setApprovedProperties] = useState<any[]>([]);
+  const [approvedVehicles, setApprovedVehicles] = useState<any[]>([]);
+  const [activeDrivers, setActiveDrivers] = useState<any[]>([]);
+  const [approvedExperiences, setApprovedExperiences] = useState<any[]>([]);
+  const [availableDestinations, setAvailableDestinations] = useState<DestinationItem[]>([]);
+  const [availableTravelGuides, setAvailableTravelGuides] = useState<any[]>([]);
+  const [destSearch, setDestSearch] = useState("");
+  const [guideSearch, setGuideSearch] = useState("");
   const router = useRouter();
 
   useEffect(() => {
-    getApprovedPropertiesForSelect()
-      .then((props) => setApprovedProperties(props || []))
+    getApprovedPropertiesForSelect().then((props) => setApprovedProperties(props || [])).catch(() => {});
+    getApprovedVehiclesForSelect().then((v) => setApprovedVehicles(v || [])).catch(() => {});
+    getActiveDriversForSelect().then((d) => setActiveDrivers(d || [])).catch(() => {});
+    getApprovedExperiencesForSelect().then((e) => setApprovedExperiences(e || [])).catch(() => {});
+    getDestinations(false).then((dests) => setAvailableDestinations(dests || [])).catch(() => {});
+    fetch("/api/admin/seo-pages?type=BLOG")
+      .then((res) => res.json())
+      .then((data) => {
+        if (Array.isArray(data)) {
+          setAvailableTravelGuides(data.filter((g: any) => g.type === "BLOG" && g.workflowState === "PUBLISHED"));
+        }
+      })
       .catch(() => {});
   }, []);
 
@@ -61,7 +79,8 @@ export default function AdminToursTab({ initialEditTour, initialCategory, onInit
     title: "",
     slug: "",
     duration: "",
-    destinations: "",
+    destinations: [] as string[],
+    travelGuides: [] as { guideId: string; title?: string; slug?: string; displayOrder: number }[],
     price: "",
     originalPrice: "",
     category: "",
@@ -72,6 +91,8 @@ export default function AdminToursTab({ initialEditTour, initialCategory, onInit
     inclusions: "",
     exclusions: "",
     itinerary: [] as { day: number, title: string, description: string }[],
+    transports: [] as any[],
+    experiences: [] as any[],
     stays: [] as {
       id?: string;
       destination: string;
@@ -89,7 +110,15 @@ export default function AdminToursTab({ initialEditTour, initialCategory, onInit
       title: tour.title,
       slug: tour.slug,
       duration: tour.duration,
-      destinations: tour.destinations.join(", "),
+      destinations: Array.isArray(tour.destinations) ? tour.destinations : [],
+      travelGuides: Array.isArray(tour.travelGuides)
+        ? tour.travelGuides.map((tg: any, idx: number) => ({
+            guideId: tg.guideId,
+            title: tg.guide?.title || tg.title || "",
+            slug: tg.guide?.slug || tg.slug || "",
+            displayOrder: tg.displayOrder ?? idx + 1,
+          }))
+        : [],
       price: String(tour.price),
       originalPrice: tour.originalPrice ? String(tour.originalPrice) : "",
       category: tour.category,
@@ -110,6 +139,8 @@ export default function AdminToursTab({ initialEditTour, initialCategory, onInit
             displayOrder: s.displayOrder || idx + 1,
           }))
         : [],
+      transports: tour.transports || [],
+      experiences: tour.experiences || [],
       isLive: tour.isLive ?? true,
     });
     setIsAdding(true);
@@ -121,7 +152,8 @@ export default function AdminToursTab({ initialEditTour, initialCategory, onInit
       title: "",
       slug: "",
       duration: "",
-      destinations: "",
+      destinations: [],
+      travelGuides: [],
       price: "",
       originalPrice: "",
       category: defaultCategory || "General",
@@ -132,6 +164,8 @@ export default function AdminToursTab({ initialEditTour, initialCategory, onInit
       inclusions: "",
       exclusions: "",
       itinerary: [],
+      transports: [],
+      experiences: [],
       stays: [],
       isLive: true,
     });
@@ -194,7 +228,15 @@ export default function AdminToursTab({ initialEditTour, initialCategory, onInit
 
       const payload = {
         ...formData,
-        destinations: formData.destinations.split(",").map(s => s.trim()).filter(Boolean),
+        destinations: Array.isArray(formData.destinations)
+          ? formData.destinations
+          : typeof formData.destinations === "string"
+          ? (formData.destinations as string).split(",").map(s => s.trim()).filter(Boolean)
+          : [],
+        travelGuides: formData.travelGuides.map((tg, idx) => ({
+          guideId: tg.guideId,
+          displayOrder: idx + 1,
+        })),
         images: formData.images.split(",").map(s => s.trim()).filter(Boolean),
         highlights: formData.highlights.split(",").map(s => s.trim()).filter(Boolean),
         inclusions: formData.inclusions.split(",").map(s => s.trim()).filter(Boolean),
@@ -260,7 +302,7 @@ export default function AdminToursTab({ initialEditTour, initialCategory, onInit
   };
 
   const addStay = () => {
-    const defaultDest = formData.destinations.split(",")[0]?.trim() || "Srinagar";
+    const defaultDest = (Array.isArray(formData.destinations) ? formData.destinations[0] : "") || "Srinagar";
     setFormData((prev) => ({
       ...prev,
       stays: [
@@ -297,6 +339,42 @@ export default function AdminToursTab({ initialEditTour, initialCategory, onInit
     newStays.splice(newIndex, 0, removed);
     const reindexed = newStays.map((s, idx) => ({ ...s, displayOrder: idx + 1 }));
     setFormData({ ...formData, stays: reindexed });
+  };
+
+  const addTransport = () => {
+    setFormData((prev) => ({
+      ...prev,
+      transports: [
+        ...prev.transports,
+        { origin: "Srinagar", destination: "", purpose: "Transfer", vehicleId: null, driverId: null, displayOrder: prev.transports.length + 1 }
+      ]
+    }));
+  };
+  const updateTransport = (index: number, field: string, value: any) => {
+    const newTransports = [...formData.transports];
+    newTransports[index] = { ...newTransports[index], [field]: value };
+    setFormData({ ...formData, transports: newTransports });
+  };
+  const removeTransport = (index: number) => {
+    setFormData({ ...formData, transports: formData.transports.filter((_, i) => i !== index) });
+  };
+
+  const addExperience = () => {
+    setFormData((prev) => ({
+      ...prev,
+      experiences: [
+        ...prev.experiences,
+        { experienceId: null, isOptional: false, dayNumber: null, displayOrder: prev.experiences.length + 1 }
+      ]
+    }));
+  };
+  const updateExperience = (index: number, field: string, value: any) => {
+    const newExps = [...formData.experiences];
+    newExps[index] = { ...newExps[index], [field]: value };
+    setFormData({ ...formData, experiences: newExps });
+  };
+  const removeExperience = (index: number) => {
+    setFormData({ ...formData, experiences: formData.experiences.filter((_, i) => i !== index) });
   };
 
   if (isAdding) {
@@ -395,10 +473,7 @@ export default function AdminToursTab({ initialEditTour, initialCategory, onInit
               </label>
             </div>
           </div>
-          <div>
-            <label className="block text-sm font-semibold mb-1">Destinations (comma separated)</label>
-            <input required type="text" className="w-full border rounded-lg p-2" placeholder="Srinagar, Gulmarg" value={formData.destinations} onChange={e => setFormData({ ...formData, destinations: e.target.value })} />
-          </div>
+
           <div>
             <label className="block text-sm font-semibold mb-1">Multiple Image URLs (comma separated)</label>
             <input required type="text" className="w-full border rounded-lg p-2" placeholder="url1.jpg, url2.jpg" value={formData.images} onChange={e => setFormData({ ...formData, images: e.target.value })} />
@@ -682,6 +757,380 @@ export default function AdminToursTab({ initialEditTour, initialCategory, onInit
                 </>
               );
             })()}
+          </div>
+
+          {/* Dedicated Transports Section */}
+          <div className="md:col-span-2 border-t border-slate-200 pt-6 mt-4">
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-4">
+              <div>
+                <h4 className="text-lg font-bold text-slate-900">Transport</h4>
+                <p className="text-xs text-slate-500 mt-0.5">Define route segments and assign vehicles/drivers.</p>
+              </div>
+              <button type="button" onClick={addTransport} className="flex items-center gap-1 bg-emerald-600 text-white px-3 py-1.5 rounded-lg text-sm font-semibold hover:bg-emerald-700">
+                <Plus className="w-4 h-4" /> Add Transport
+              </button>
+            </div>
+            
+            <div className="space-y-3">
+              {formData.transports.map((t: any, index: number) => (
+                <div key={index} className="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-3">
+                  <div className="flex justify-between items-center">
+                    <span className="font-bold text-slate-800 bg-white px-3 py-1 rounded-md text-xs border border-slate-200">Segment #{index + 1}</span>
+                    <button type="button" onClick={() => removeTransport(index)} className="text-red-500 hover:text-red-700 p-1 bg-red-50 rounded-md"><Trash2 className="w-4 h-4" /></button>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-3">
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-700 mb-1">Origin</label>
+                      <input type="text" className="w-full border rounded-lg p-2 text-sm bg-white" value={t.origin || ""} onChange={(e) => updateTransport(index, "origin", e.target.value)} placeholder="e.g. Srinagar" />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-700 mb-1">Destination</label>
+                      <input type="text" className="w-full border rounded-lg p-2 text-sm bg-white" value={t.destination || ""} onChange={(e) => updateTransport(index, "destination", e.target.value)} placeholder="e.g. Gulmarg" />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-700 mb-1">Purpose</label>
+                      <input type="text" className="w-full border rounded-lg p-2 text-sm bg-white" value={t.purpose || ""} onChange={(e) => updateTransport(index, "purpose", e.target.value)} placeholder="e.g. Transfer" />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-700 mb-1">Vehicle</label>
+                      <select className="w-full border rounded-lg p-2 text-sm bg-white" value={t.vehicleId || ""} onChange={(e) => updateTransport(index, "vehicleId", e.target.value || null)}>
+                        <option value="">To be assigned</option>
+                        {approvedVehicles.map(v => (
+                          <option key={v.id} value={v.id}>{v.make} {v.model} ({v.type}) - {v.capacity} pax</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-700 mb-1">Driver</label>
+                      <select className="w-full border rounded-lg p-2 text-sm bg-white" value={t.driverId || ""} onChange={(e) => updateTransport(index, "driverId", e.target.value || null)}>
+                        <option value="">To be assigned</option>
+                        {activeDrivers.map(d => (
+                          <option key={d.id} value={d.id}>{d.name} ({d.vendorName})</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Dedicated Experiences Section */}
+          <div className="md:col-span-2 border-t border-slate-200 pt-6 mt-4">
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-4">
+              <div>
+                <h4 className="text-lg font-bold text-slate-900">Experiences</h4>
+                <p className="text-xs text-slate-500 mt-0.5">Assign local experiences and activities to this tour.</p>
+              </div>
+              <button type="button" onClick={addExperience} className="flex items-center gap-1 bg-emerald-600 text-white px-3 py-1.5 rounded-lg text-sm font-semibold hover:bg-emerald-700">
+                <Plus className="w-4 h-4" /> Add Experience
+              </button>
+            </div>
+            
+            <div className="space-y-3">
+              {formData.experiences.map((exp: any, index: number) => (
+                <div key={index} className="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-3">
+                  <div className="flex justify-between items-center">
+                    <span className="font-bold text-slate-800 bg-white px-3 py-1 rounded-md text-xs border border-slate-200">Activity #{index + 1}</span>
+                    <button type="button" onClick={() => removeExperience(index)} className="text-red-500 hover:text-red-700 p-1 bg-red-50 rounded-md"><Trash2 className="w-4 h-4" /></button>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
+                    <div className="md:col-span-2">
+                      <label className="block text-xs font-semibold text-slate-700 mb-1">Experience</label>
+                      <select className="w-full border rounded-lg p-2 text-sm bg-white" value={exp.experienceId || ""} onChange={(e) => updateExperience(index, "experienceId", e.target.value || null)}>
+                        <option value="">Select Experience</option>
+                        {approvedExperiences.map(e => (
+                          <option key={e.id} value={e.id}>{e.title} ({e.destination})</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-700 mb-1">Inclusion Type</label>
+                      <select className="w-full border rounded-lg p-2 text-sm bg-white" value={exp.isOptional ? "true" : "false"} onChange={(e) => updateExperience(index, "isOptional", e.target.value === "true")}>
+                        <option value="false">Included in Base Price</option>
+                        <option value="true">Optional (Add-on)</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-700 mb-1">Day Number</label>
+                      <input type="number" min="1" className="w-full border rounded-lg p-2 text-sm bg-white" value={exp.dayNumber || ""} onChange={(e) => updateExperience(index, "dayNumber", e.target.value ? Number(e.target.value) : null)} placeholder="e.g. 2" />
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Destinations Management Area */}
+          <div className="md:col-span-2 border-t border-slate-200 pt-6 mt-2">
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 mb-3">
+              <div>
+                <label className="block text-sm font-bold text-slate-900">
+                  Destinations
+                </label>
+                <p className="text-xs text-slate-500">
+                  Select and order the destinations covered by this tour.
+                </p>
+              </div>
+              <a
+                href="#destinations"
+                onClick={(e) => {
+                  e.preventDefault();
+                  toast("Manage or add new destinations in the Destinations Tab in Admin.", { icon: "ℹ️" });
+                }}
+                className="text-xs font-semibold text-emerald-600 hover:text-emerald-700 flex items-center gap-1 cursor-pointer"
+              >
+                Manage / Create Destinations <ExternalLink className="w-3 h-3" />
+              </a>
+            </div>
+
+            {/* Destination Search & Select */}
+            <div className="flex flex-col sm:flex-row gap-2 mb-3">
+              <input
+                type="text"
+                placeholder="Search destination to add..."
+                className="flex-1 border rounded-lg p-2 text-sm bg-white"
+                value={destSearch}
+                onChange={(e) => setDestSearch(e.target.value)}
+              />
+              <select
+                className="border rounded-lg p-2 text-sm bg-white min-w-[200px]"
+                value=""
+                onChange={(e) => {
+                  const val = e.target.value;
+                  if (val && !formData.destinations.includes(val)) {
+                    setFormData((prev) => ({
+                      ...prev,
+                      destinations: [...prev.destinations, val],
+                    }));
+                  }
+                  setDestSearch("");
+                }}
+              >
+                <option value="">-- Choose to Add --</option>
+                {availableDestinations
+                  .filter((d) => !destSearch.trim() || d.name.toLowerCase().includes(destSearch.toLowerCase()))
+                  .map((d) => {
+                    const isSelected = formData.destinations.includes(d.name);
+                    return (
+                      <option key={d.id} value={d.name} disabled={isSelected}>
+                        {d.name} {isSelected ? "(Selected)" : ""}
+                      </option>
+                    );
+                  })}
+              </select>
+            </div>
+
+            {/* Selected Destinations Ordered List */}
+            {formData.destinations.length === 0 ? (
+              <div className="text-xs text-slate-400 italic p-3 border border-dashed rounded-lg bg-slate-50">
+                Yet to be assigned. Select at least one destination above.
+              </div>
+            ) : (
+              <div className="space-y-1.5">
+                {formData.destinations.map((destName, idx) => (
+                  <div
+                    key={destName}
+                    className="flex items-center justify-between p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm"
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <span className="w-5 h-5 rounded-full bg-emerald-100 text-emerald-800 text-xs font-bold flex items-center justify-center shrink-0">
+                        {idx + 1}
+                      </span>
+                      <span className="font-semibold text-slate-800">{destName}</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <button
+                        type="button"
+                        disabled={idx === 0}
+                        onClick={() => {
+                          const updated = [...formData.destinations];
+                          const [moved] = updated.splice(idx, 1);
+                          updated.splice(idx - 1, 0, moved);
+                          setFormData((prev) => ({ ...prev, destinations: updated }));
+                        }}
+                        className="p-1 text-slate-500 hover:text-slate-900 disabled:opacity-30 disabled:cursor-not-allowed"
+                        title="Move Up"
+                      >
+                        <ArrowUp className="w-4 h-4" />
+                      </button>
+                      <button
+                        type="button"
+                        disabled={idx === formData.destinations.length - 1}
+                        onClick={() => {
+                          const updated = [...formData.destinations];
+                          const [moved] = updated.splice(idx, 1);
+                          updated.splice(idx + 1, 0, moved);
+                          setFormData((prev) => ({ ...prev, destinations: updated }));
+                        }}
+                        className="p-1 text-slate-500 hover:text-slate-900 disabled:opacity-30 disabled:cursor-not-allowed"
+                        title="Move Down"
+                      >
+                        <ArrowDown className="w-4 h-4" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setFormData((prev) => ({
+                            ...prev,
+                            destinations: prev.destinations.filter((_, i) => i !== idx),
+                          }));
+                        }}
+                        className="p-1 text-red-500 hover:text-red-700 ml-1"
+                        title="Remove"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Travel Guides Management Area */}
+          <div className="md:col-span-2 border-t border-slate-200 pt-6 mt-4">
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 mb-3">
+              <div>
+                <h4 className="text-lg font-bold text-slate-900">
+                  Travel Guides
+                </h4>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  Link relevant published travel guides and articles to this tour.
+                </p>
+              </div>
+              <a
+                href="#seo"
+                onClick={(e) => {
+                  e.preventDefault();
+                  toast("Create and manage travel guides in the SEO/Blog Tab in Admin.", { icon: "ℹ️" });
+                }}
+                className="text-xs font-semibold text-emerald-600 hover:text-emerald-700 flex items-center gap-1 cursor-pointer"
+              >
+                Manage / Create Travel Guides <ExternalLink className="w-3 h-3" />
+              </a>
+            </div>
+
+            {/* Travel Guide Search & Select */}
+            <div className="flex flex-col sm:flex-row gap-2 mb-3">
+              <input
+                type="text"
+                placeholder="Search published travel guides..."
+                className="flex-1 border rounded-lg p-2 text-sm bg-white"
+                value={guideSearch}
+                onChange={(e) => setGuideSearch(e.target.value)}
+              />
+              <select
+                className="border rounded-lg p-2 text-sm bg-white max-w-xs"
+                value=""
+                onChange={(e) => {
+                  const selectedId = e.target.value;
+                  if (selectedId && !formData.travelGuides.some((g) => g.guideId === selectedId)) {
+                    const found = availableTravelGuides.find((g) => g.id === selectedId);
+                    if (found) {
+                      setFormData((prev) => ({
+                        ...prev,
+                        travelGuides: [
+                          ...prev.travelGuides,
+                          {
+                            guideId: found.id,
+                            title: found.title,
+                            slug: found.slug,
+                            displayOrder: prev.travelGuides.length + 1,
+                          },
+                        ],
+                      }));
+                    }
+                  }
+                  setGuideSearch("");
+                }}
+              >
+                <option value="">-- Choose Guide to Link --</option>
+                {availableTravelGuides
+                  .filter((g) => !guideSearch.trim() || g.title?.toLowerCase().includes(guideSearch.toLowerCase()))
+                  .map((g) => {
+                    const isSelected = formData.travelGuides.some((tg) => tg.guideId === g.id);
+                    return (
+                      <option key={g.id} value={g.id} disabled={isSelected}>
+                        {g.title} {isSelected ? "(Selected)" : ""}
+                      </option>
+                    );
+                  })}
+              </select>
+            </div>
+
+            {/* Selected Guides List */}
+            {formData.travelGuides.length === 0 ? (
+              <div className="text-xs text-slate-400 italic p-3 border border-dashed rounded-lg bg-slate-50">
+                Yet to be assigned
+              </div>
+            ) : (
+              <div className="space-y-1.5">
+                {formData.travelGuides.map((guide, idx) => (
+                  <div
+                    key={guide.guideId}
+                    className="flex items-center justify-between p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm"
+                  >
+                    <div className="flex items-center gap-2.5 min-w-0 pr-2">
+                      <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-800 text-xs font-bold flex items-center justify-center shrink-0">
+                        {idx + 1}
+                      </span>
+                      <span className="font-semibold text-slate-800 truncate">
+                        {guide.title || guide.guideId}
+                      </span>
+                      {guide.slug && (
+                        <span className="text-xs text-slate-400 hidden sm:inline truncate">
+                          (/blog/{guide.slug})
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-1 shrink-0">
+                      <button
+                        type="button"
+                        disabled={idx === 0}
+                        onClick={() => {
+                          const updated = [...formData.travelGuides];
+                          const [moved] = updated.splice(idx, 1);
+                          updated.splice(idx - 1, 0, moved);
+                          setFormData((prev) => ({ ...prev, travelGuides: updated }));
+                        }}
+                        className="p-1 text-slate-500 hover:text-slate-900 disabled:opacity-30 disabled:cursor-not-allowed"
+                        title="Move Up"
+                      >
+                        <ArrowUp className="w-4 h-4" />
+                      </button>
+                      <button
+                        type="button"
+                        disabled={idx === formData.travelGuides.length - 1}
+                        onClick={() => {
+                          const updated = [...formData.travelGuides];
+                          const [moved] = updated.splice(idx, 1);
+                          updated.splice(idx + 1, 0, moved);
+                          setFormData((prev) => ({ ...prev, travelGuides: updated }));
+                        }}
+                        className="p-1 text-slate-500 hover:text-slate-900 disabled:opacity-30 disabled:cursor-not-allowed"
+                        title="Move Down"
+                      >
+                        <ArrowDown className="w-4 h-4" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setFormData((prev) => ({
+                            ...prev,
+                            travelGuides: prev.travelGuides.filter((_, i) => i !== idx),
+                          }));
+                        }}
+                        className="p-1 text-red-500 hover:text-red-700 ml-1"
+                        title="Remove"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
           
           <div className="md:col-span-2 flex justify-end gap-3 mt-4">

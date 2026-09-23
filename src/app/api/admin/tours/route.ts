@@ -17,6 +17,52 @@ export async function GET(request: Request) {
           },
           orderBy: { displayOrder: "asc" },
         },
+        transports: {
+          include: {
+            vehicle: {
+              select: {
+                id: true,
+                make: true,
+                model: true,
+                type: true,
+                registrationNum: true,
+                capacity: true,
+                vendorProfile: { select: { businessName: true } },
+              },
+            },
+            driver: {
+              select: {
+                id: true,
+                name: true,
+                status: true,
+                vendorProfile: { select: { businessName: true } },
+              },
+            },
+          },
+          orderBy: { displayOrder: "asc" },
+        },
+        experiences: {
+          include: {
+            experience: true,
+          },
+          orderBy: { displayOrder: "asc" },
+        },
+        travelGuides: {
+          include: {
+            guide: {
+              select: {
+                id: true,
+                title: true,
+                slug: true,
+                imageUrl: true,
+                description: true,
+                type: true,
+                workflowState: true,
+              },
+            },
+          },
+          orderBy: { displayOrder: "asc" },
+        },
       },
       orderBy: { createdAt: "desc" },
       take: 1000,
@@ -103,6 +149,53 @@ export async function POST(request: Request) {
       }
     }
 
+    // Validate transport segments if provided
+    if (Array.isArray(body.transports) && body.transports.length > 0) {
+      for (const t of body.transports) {
+        if (t.vehicleId && typeof t.vehicleId === "string" && t.vehicleId.trim() !== "") {
+          const vehicle = await prisma.vehicle.findUnique({
+            where: { id: t.vehicleId },
+            select: { id: true, make: true, model: true, isApproved: true, status: true },
+          });
+
+          if (!vehicle) {
+            return NextResponse.json(
+              { error: `Selected vehicle (${t.vehicleId}) was not found.` },
+              { status: 400 }
+            );
+          }
+
+          if (!vehicle.isApproved && vehicle.status !== "APPROVED" && vehicle.status !== "LIVE") {
+            return NextResponse.json(
+              { error: `Vehicle "${vehicle.model}" is not currently approved/live.` },
+              { status: 400 }
+            );
+          }
+        }
+
+        if (t.driverId && typeof t.driverId === "string" && t.driverId.trim() !== "") {
+          const driver = await prisma.driver.findUnique({
+            where: { id: t.driverId },
+            select: { id: true, name: true, status: true },
+          });
+
+          if (!driver) {
+            return NextResponse.json(
+              { error: `Selected driver (${t.driverId}) was not found.` },
+              { status: 400 }
+            );
+          }
+
+          if (driver.status !== "ACTIVE") {
+            return NextResponse.json(
+              { error: `Driver "${driver.name}" is not currently active.` },
+              { status: 400 }
+            );
+          }
+        }
+      }
+    }
+
     // Sync with TourCategory if a matching record exists
     let categoryId: string | null = null;
     if (category && typeof category === "string") {
@@ -154,12 +247,117 @@ export async function POST(request: Request) {
       });
     }
 
+      if (Array.isArray(body.transports) && body.transports.length > 0) {
+      await prisma.tourTransport.createMany({
+        data: body.transports.map((t: any, idx: number) => ({
+          tourId: tour.id,
+          origin: (t.origin || "Srinagar").trim(),
+          destination: (t.destination || "Kashmir").trim(),
+          purpose: t.purpose || "Transfer",
+          vehicleId: t.vehicleId && t.vehicleId.trim() !== "" ? t.vehicleId : null,
+          driverId: t.driverId && t.driverId.trim() !== "" ? t.driverId : null,
+          displayOrder: t.displayOrder !== undefined ? Number(t.displayOrder) : idx + 1,
+          status: t.status || "ACTIVE",
+        })),
+      });
+    }
+
+    if (Array.isArray(body.experiences) && body.experiences.length > 0) {
+      await prisma.tourExperience.createMany({
+        data: body.experiences.map((e: any, idx: number) => ({
+          tourId: tour.id,
+          experienceId: e.experienceId,
+          isOptional: Boolean(e.isOptional),
+          dayNumber: e.dayNumber ? Number(e.dayNumber) : null,
+          displayOrder: e.displayOrder !== undefined ? Number(e.displayOrder) : idx + 1,
+        })),
+      });
+    }
+
+    if (Array.isArray(body.travelGuides) && body.travelGuides.length > 0) {
+      const submittedGuides = body.travelGuides.filter((g: any) => g && g.guideId);
+      const uniqueGuideIds = Array.from(new Set(submittedGuides.map((g: any) => g.guideId)));
+
+      if (uniqueGuideIds.length > 0) {
+        const validGuides = await prisma.seoLandingPage.findMany({
+          where: {
+            id: { in: uniqueGuideIds },
+            type: "BLOG",
+            workflowState: "PUBLISHED",
+          },
+          select: { id: true },
+        });
+
+        const validIdSet = new Set(validGuides.map((g) => g.id));
+        const filteredGuideIds = uniqueGuideIds.filter((id) => validIdSet.has(id));
+
+        if (filteredGuideIds.length > 0) {
+          await prisma.tourTravelGuide.createMany({
+            data: filteredGuideIds.map((gId, idx) => {
+              const item = submittedGuides.find((g: any) => g.guideId === gId);
+              return {
+                tourId: tour.id,
+                guideId: gId,
+                displayOrder: item && typeof item.displayOrder === "number" ? item.displayOrder : idx + 1,
+              };
+            }),
+          });
+        }
+      }
+    }
+
     const finalTour = await prisma.tour.findUnique({
       where: { id: tour.id },
       include: {
         stays: {
           include: {
             property: { select: { id: true, name: true, location: true } },
+          },
+          orderBy: { displayOrder: "asc" },
+        },
+        transports: {
+          include: {
+            vehicle: {
+              select: {
+                id: true,
+                make: true,
+                model: true,
+                type: true,
+                registrationNum: true,
+                capacity: true,
+                vendorProfile: { select: { businessName: true } },
+              },
+            },
+            driver: {
+              select: {
+                id: true,
+                name: true,
+                status: true,
+                vendorProfile: { select: { businessName: true } },
+              },
+            },
+          },
+          orderBy: { displayOrder: "asc" },
+        },
+        experiences: {
+          include: {
+            experience: true,
+          },
+          orderBy: { displayOrder: "asc" },
+        },
+        travelGuides: {
+          include: {
+            guide: {
+              select: {
+                id: true,
+                title: true,
+                slug: true,
+                imageUrl: true,
+                description: true,
+                type: true,
+                workflowState: true,
+              },
+            },
           },
           orderBy: { displayOrder: "asc" },
         },
