@@ -5,11 +5,11 @@ import { Users, FileText, Calendar, TrendingUp } from "lucide-react";
 export default async function BADashboard({ session }: { session: any }) {
   // Each model has a different field name for the BA relationship
   const [newLeadsCount, requirementsCount, quotationsCount, followUpsCount, reachedLeadsCount] = await Promise.all([
-    prisma.crmLead.count({ where: { assignedBaId: session.userId, status: "NEW" } }),
-    prisma.crmRequirement.count({ where: { partner: { assignedBaId: session.userId } } }),
-    prisma.crmQuotation.count({ where: { baId: session.userId } }),
-    prisma.crmFollowUp.count({ where: { baId: session.userId } }),
-    prisma.crmLeadReachedLog.count({ where: { baId: session.userId } }),
+    prisma.crmLead.count({ where: { assignedBaId: session.userId, status: "NEW" } }).catch(() => 0),
+    prisma.crmRequirement.count({ where: { partner: { assignedBaId: session.userId } } }).catch(() => 0),
+    prisma.crmQuotation.count({ where: { baId: session.userId } }).catch(() => 0),
+    prisma.crmFollowUp.count({ where: { baId: session.userId } }).catch(() => 0),
+    prisma.crmLeadReachedLog.count({ where: { baId: session.userId } }).catch(() => 0),
   ]);
 
   const kpis = [

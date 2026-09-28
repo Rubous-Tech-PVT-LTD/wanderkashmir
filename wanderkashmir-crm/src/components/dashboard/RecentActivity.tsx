@@ -6,7 +6,7 @@ export default async function RecentActivity() {
   const activities = await prisma.crmAuditLog.findMany({
     take: 8,
     orderBy: { createdAt: 'desc' }
-  });
+  }).catch(() => []);
 
   const getActivityIcon = (action: string, entity: string) => {
     if (action.includes('CREATE') && entity === 'CrmLead') return <User className="h-4 w-4 text-blue-500" />;

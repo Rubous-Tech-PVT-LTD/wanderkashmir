@@ -23,22 +23,22 @@ export default async function AdminDashboard({ session }: { session: any }) {
     requirementsAwaitingAction,
     reachedLeads,
   ] = await Promise.all([
-    prisma.crmLead.count(),
-    prisma.crmLead.count({ where: { status: "NEW" } }),
-    prisma.crmLead.count({ where: { assignedBaId: null } }),
+    prisma.crmLead.count().catch(() => 0),
+    prisma.crmLead.count({ where: { status: "NEW" } }).catch(() => 0),
+    prisma.crmLead.count({ where: { assignedBaId: null } }).catch(() => 0),
     
-    prisma.crmPartner.count({ where: { status: "ACTIVE" } }),
-    prisma.crmLead.count({ where: { status: "INTERESTED" } }), // Pending partners are leads waiting to be converted
+    prisma.crmPartner.count({ where: { status: "ACTIVE" } }).catch(() => 0),
+    prisma.crmLead.count({ where: { status: "INTERESTED" } }).catch(() => 0), // Pending partners are leads waiting to be converted
     
-    prisma.crmRequirement.count({ where: { status: { notIn: ["CONFIRMED", "CANCELLED", "CONVERTED_TO_BOOKING"] } } }),
-    prisma.crmQuotation.count({ where: { status: { in: ["DRAFT", "INTERNAL_REVIEW", "REVISED"] } } }),
-    prisma.crmBooking.count({ where: { status: { in: ["PENDING", "CONFIRMED", "IN_PROGRESS"] } } }),
+    prisma.crmRequirement.count({ where: { status: { notIn: ["CONFIRMED", "CANCELLED", "CONVERTED_TO_BOOKING"] } } }).catch(() => 0),
+    prisma.crmQuotation.count({ where: { status: { in: ["DRAFT", "INTERNAL_REVIEW", "REVISED"] } } }).catch(() => 0),
+    prisma.crmBooking.count({ where: { status: { in: ["PENDING", "CONFIRMED", "IN_PROGRESS"] } } }).catch(() => 0),
     
     // Action center
-    prisma.crmFollowUp.count({ where: { status: "PENDING", dueDate: { lt: new Date() } } }),
-    prisma.crmQuotation.count({ where: { status: "INTERNAL_REVIEW" } }),
-    prisma.crmRequirement.count({ where: { status: { in: ["NEW", "UNDER_REVIEW"] } } }),
-    prisma.crmLeadReachedLog.count(),
+    prisma.crmFollowUp.count({ where: { status: "PENDING", dueDate: { lt: new Date() } } }).catch(() => 0),
+    prisma.crmQuotation.count({ where: { status: "INTERNAL_REVIEW" } }).catch(() => 0),
+    prisma.crmRequirement.count({ where: { status: { in: ["NEW", "UNDER_REVIEW"] } } }).catch(() => 0),
+    prisma.crmLeadReachedLog.count().catch(() => 0),
   ]);
 
   const kpis = [

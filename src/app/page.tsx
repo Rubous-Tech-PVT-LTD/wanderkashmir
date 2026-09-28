@@ -466,31 +466,50 @@ export default async function Home() {
     getStoryDestinations(true)
   ]);
 
-  // Fetch tours from DB
-  let tours = await prisma.tour.findMany({
-    orderBy: { createdAt: 'desc' },
-    take: 3
-  });
+  // Fetch tours from DB safely with fallback
+  let tours: any[] = [];
+  try {
+    tours = await prisma.tour.findMany({
+      orderBy: { createdAt: 'desc' },
+      take: 3
+    });
+  } catch (error) {
+    console.error("Failed to fetch tours:", error);
+  }
 
-  // Fetch upcoming packages
-  const upcomingTours = await prisma.tour.findMany({
-    where: { 
-      isLive: true,
-      category: { contains: 'Upcoming', mode: 'insensitive' }
-    },
-    orderBy: { createdAt: 'desc' },
-    take: 4
-  });
+  if (!tours || tours.length === 0) {
+    tours = popularTours;
+  }
 
-  // Fetch Instagram packages
-  const instagramTours = await prisma.tour.findMany({
-    where: { 
-      isLive: true,
-      category: { contains: 'Instagram', mode: 'insensitive' }
-    },
-    orderBy: { createdAt: 'desc' },
-    take: 4
-  });
+  // Fetch upcoming packages safely
+  let upcomingTours: any[] = [];
+  try {
+    upcomingTours = await prisma.tour.findMany({
+      where: { 
+        isLive: true,
+        category: { contains: 'Upcoming', mode: 'insensitive' }
+      },
+      orderBy: { createdAt: 'desc' },
+      take: 4
+    });
+  } catch (error) {
+    console.error("Failed to fetch upcoming tours:", error);
+  }
+
+  // Fetch Instagram packages safely
+  let instagramTours: any[] = [];
+  try {
+    instagramTours = await prisma.tour.findMany({
+      where: { 
+        isLive: true,
+        category: { contains: 'Instagram', mode: 'insensitive' }
+      },
+      orderBy: { createdAt: 'desc' },
+      take: 4
+    });
+  } catch (error) {
+    console.error("Failed to fetch instagram tours:", error);
+  }
 
   // Merge dynamic counts into destinations
   const dynamicDestinations = destinations.map(dest => {
@@ -607,7 +626,7 @@ export default async function Home() {
                   <div className="absolute inset-0 border-2 border-transparent group-hover:border-pink-500/20 rounded-2xl z-10 pointer-events-none transition-colors" />
                   <div className="relative aspect-[4/3] w-full overflow-hidden bg-slate-100">
                     <Image 
-                      src={tour.images[0] || "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=500&q=80"} 
+                      src={(tour.images && tour.images[0]) || (tour as any).image || "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=500&q=80"} 
                       alt={tour.title} 
                       fill 
                       sizes="(max-width: 768px) 100vw, 25vw" 
@@ -627,7 +646,7 @@ export default async function Home() {
                   </div>
                   <div className="p-4">
                     <h3 className="font-bold text-slate-900 text-base leading-tight mb-1 line-clamp-1">{tour.title}</h3>
-                    <p className="text-sm text-slate-500 mb-2 truncate">{tour.destinations.join(" • ")}</p>
+                    <p className="text-sm text-slate-500 mb-2 truncate">{(Array.isArray(tour.destinations) ? tour.destinations : []).join(" • ")}</p>
                     <div className="flex items-center justify-between mt-4">
                       <div>
                         {tour.originalPrice && tour.originalPrice > tour.price && (
@@ -669,7 +688,7 @@ export default async function Home() {
                 <Link key={tour.id} href={`/tours/${tour.slug}`} className="group block bg-white rounded-2xl border border-slate-200 overflow-hidden hover:shadow-xl transition-all hover:-translate-y-1">
                   <div className="relative aspect-[4/3] w-full overflow-hidden bg-slate-100">
                     <Image 
-                      src={tour.images[0] || "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=500&q=80"} 
+                      src={(tour.images && tour.images[0]) || (tour as any).image || "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=500&q=80"} 
                       alt={tour.title} 
                       fill 
                       sizes="(max-width: 768px) 100vw, 25vw" 
@@ -694,7 +713,7 @@ export default async function Home() {
                   </div>
                   <div className="p-4">
                     <h3 className="font-bold text-slate-900 text-base leading-tight mb-1 line-clamp-1">{tour.title}</h3>
-                    <p className="text-sm text-slate-500 mb-2 truncate">{tour.destinations.join(" • ")}</p>
+                    <p className="text-sm text-slate-500 mb-2 truncate">{(Array.isArray(tour.destinations) ? tour.destinations : []).join(" • ")}</p>
                     <div className="flex items-center justify-between mt-4">
                       <div>
                         {tour.originalPrice && tour.originalPrice > tour.price && (
@@ -839,7 +858,7 @@ export default async function Home() {
                 {tours.map((tour) => (
                   <Link key={tour.id} href={`/tours/${tour.slug}`} className="group block relative h-72 overflow-hidden rounded-2xl shadow-sm hover:shadow-md transition-shadow">
                     <Image 
-                      src={tour.images[0] || "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=500&q=80"} 
+                      src={(tour.images && tour.images[0]) || (tour as any).image || "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=500&q=80"} 
                       alt={tour.title} 
                       fill 
                       className="object-cover transition-transform duration-500 group-hover:scale-105" 
@@ -858,7 +877,7 @@ export default async function Home() {
                     </div>
                     <div className="absolute bottom-0 left-0 p-4 w-full">
                       <h3 className="font-semibold text-white text-base leading-tight mb-1">{tour.title}</h3>
-                      <p className="text-white/80 text-xs truncate">{tour.destinations.join(" • ")}</p>
+                      <p className="text-white/80 text-xs truncate">{(Array.isArray(tour.destinations) ? tour.destinations : []).join(" • ")}</p>
                     </div>
                   </Link>
                 ))}
