@@ -241,6 +241,7 @@ export default async function ToursPage({
         <Navbar />
         <div className="pt-20 min-h-screen">
           {/* Header */}
+          <div className="relative py-24 overflow-hidden">
             <Image
               src="/tours-hero.webp"
               alt="Tour Packages in Kashmir"
@@ -264,7 +265,15 @@ export default async function ToursPage({
               </div>
             </div>
           </div>
+
           <div className="container-custom py-8">
+            <Suspense fallback={<div className="h-12 w-full animate-pulse bg-slate-100 rounded-xl mb-8" />}>
+              <TourFilters 
+                precomputedCategories={precomputedCategories} 
+                precomputedMonths={precomputedMonths} 
+                precomputedDestinations={precomputedDestinations} 
+              />
+            </Suspense>
             {paginatedTours.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {paginatedTours.map((tour: any) => (
@@ -282,6 +291,9 @@ export default async function ToursPage({
                 </Link>
               </div>
             )}
+            <Suspense fallback={null}>
+              <TourPagination totalPages={totalPages} currentPage={currentPage} />
+            </Suspense>
           </div>
         </div>
         
