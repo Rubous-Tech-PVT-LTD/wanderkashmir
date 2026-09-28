@@ -14,13 +14,13 @@ export default function TourFilters({
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  const selectedCat = searchParams.get("category") || "All Packages";
-  const selectedMonth = searchParams.get("month") || "All Months";
-  const selectedDest = searchParams.get("destination") || "All Destinations";
-  const sortBy = searchParams.get("sort") || "Recommended";
+  const selectedCat = searchParams?.get("category") || "All Packages";
+  const selectedMonth = searchParams?.get("month") || "All Months";
+  const selectedDest = searchParams?.get("destination") || "All Destinations";
+  const sortBy = searchParams?.get("sort") || "Recommended";
 
   const updateParam = (key: string, value: string, defaultVal: string) => {
-    const params = new URLSearchParams(searchParams.toString());
+    const params = new URLSearchParams(searchParams ? searchParams.toString() : "");
     if (value === defaultVal) {
       params.delete(key);
     } else {
@@ -106,7 +106,7 @@ export function TourPagination({ totalPages, currentPage }: { totalPages: number
   const searchParams = useSearchParams();
 
   const handlePageChange = (page: number) => {
-    const params = new URLSearchParams(searchParams.toString());
+    const params = new URLSearchParams(searchParams ? searchParams.toString() : "");
     params.set("page", page.toString());
     router.push(`?${params.toString()}`, { scroll: false });
     window.scrollTo({ top: 300, behavior: 'smooth' });

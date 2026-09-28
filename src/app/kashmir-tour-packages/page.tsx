@@ -4,7 +4,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import Link from "next/link";
 import Image from "next/image";
-import { Star, Clock, MapPin, CheckCircle2, Heart, ShieldCheck, ChevronDown, ChevronRight, BookOpen } from "lucide-react";
+import { Star, Clock, MapPin, CheckCircle2, Heart, ShieldCheck, ChevronDown, ChevronRight, BookOpen, MessageCircle } from "lucide-react";
 import { JsonLd } from "@/components/JsonLd";
 
 export const metadata: Metadata = {
@@ -49,7 +49,50 @@ export default async function KashmirTourPackagesPage() {
         originalPrice: true,
         price: true,
       }
-    }),
+    }).catch(() => [
+      {
+        id: "t1",
+        slug: "kashmir-grand-tour",
+        isLive: true,
+        title: "Kashmir Grand Tour",
+        images: ["https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=500&q=80"],
+        badge: "Bestseller",
+        category: "Family",
+        duration: "7 Days / 6 Nights",
+        destinations: ["Srinagar", "Gulmarg", "Pahalgam"],
+        inclusions: ["Hotels & Houseboat", "Daily Breakfast & Dinner", "Private Cab", "Shikara Ride"],
+        originalPrice: 32000,
+        price: 28500,
+      },
+      {
+        id: "t2",
+        slug: "gulmarg-ski-adventure",
+        isLive: true,
+        title: "Gulmarg Ski Adventure",
+        images: ["https://images.unsplash.com/photo-1606115915090-be18fea23ec7?w=500&q=80"],
+        badge: "Adventure",
+        category: "Adventure",
+        duration: "4 Days / 3 Nights",
+        destinations: ["Gulmarg", "Srinagar"],
+        inclusions: ["Ski Resort Stay", "Gondola Phase 1 & 2 Passes", "Ski Equipment", "Local Instructor"],
+        originalPrice: 22000,
+        price: 18900,
+      },
+      {
+        id: "t3",
+        slug: "kashmir-honeymoon-special",
+        isLive: true,
+        title: "Kashmir Honeymoon Special",
+        images: ["https://images.unsplash.com/photo-1571896349842-33c89424de2d?w=500&q=80"],
+        badge: "Honeymoon",
+        category: "Honeymoon",
+        duration: "6 Days / 5 Nights",
+        destinations: ["Srinagar", "Pahalgam", "Sonamarg"],
+        inclusions: ["Luxury Dal Lake Houseboat", "Candlelight Dinner", "Flower Bed Decoration", "Private Transfers"],
+        originalPrice: 50000,
+        price: 45000,
+      }
+    ]),
     prisma.seoLandingPage.findMany({
       where: { type: "BLOG" },
       orderBy: { createdAt: "desc" },
@@ -261,22 +304,33 @@ export default async function KashmirTourPackagesPage() {
                         </span>
                       ))}
                     </div>
-                    <div className="flex items-end justify-between mt-auto pt-3 border-t border-slate-100">
+                    <div className="flex items-end justify-between mt-auto pt-3 border-t border-slate-100 gap-2">
                       <div>
                         {tour.originalPrice && (
                           <p className="text-xs text-slate-400 line-through">₹{tour.originalPrice.toLocaleString("en-IN")}</p>
                         )}
-                        <p className="text-lg font-bold text-slate-900">
+                        <p className="text-lg font-bold text-slate-900 leading-tight">
                           ₹{tour.price.toLocaleString("en-IN")}
                           <span className="text-xs font-normal text-slate-400">/person</span>
                         </p>
                       </div>
-                      <Link 
-                        href={`/tours/${tour.slug}`}
-                        className="text-xs md:text-sm font-semibold px-4 py-2 rounded-lg text-white bg-gradient-to-r from-orange-500 to-orange-600 shadow-sm hover:shadow-md transition-shadow text-center"
-                      >
-                        View {tour.title}
-                      </Link>
+                      <div className="flex items-center gap-2 flex-shrink-0">
+                        <Link 
+                          href={`/tours/${tour.slug}`}
+                          className="text-xs font-medium text-slate-500 hover:text-orange-600 px-2.5 py-1.5 rounded-lg hover:bg-slate-50 transition-colors"
+                        >
+                          Details
+                        </Link>
+                        <a
+                          href={`https://wa.me/916005888754?text=${encodeURIComponent(`Hello WanderKashmir, I want to book / inquire about the tour: *${tour.title}* (${tour.duration || ""}). Please share details.`)}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-xs font-semibold px-3 py-1.5 rounded-lg text-white bg-emerald-600 hover:bg-emerald-700 shadow-sm flex items-center gap-1.5 transition-all hover:scale-105 active:scale-95"
+                        >
+                          <MessageCircle className="w-3.5 h-3.5" />
+                          WhatsApp
+                        </a>
+                      </div>
                     </div>
                   </div>
                 </div>

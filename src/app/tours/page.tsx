@@ -9,8 +9,7 @@ import { unstable_cache } from "next/cache";
 import dynamic from "next/dynamic";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-
-const CustomizeTourModal = dynamic(() => import("@/components/CustomizeTourModal"));
+import CustomizeTourModal from "@/components/CustomizeTourModal";
 
 export const metadata: Metadata = {
   title: "Best Kashmir Tour Packages (2026/2027) | Family, Honeymoon & Adventure Itineraries",
@@ -48,52 +47,92 @@ const MONTHS = [
   "July", "August", "September", "October", "November", "December"
 ];
 
-export default async function ToursPage({ 
-  searchParams 
-}: { 
-  searchParams: { [key: string]: string | string[] | undefined } 
-}) {
-  const getCachedCategories = unstable_cache(
-    async () => {
-      return await prisma.tourCategory.findMany({
-        orderBy: { name: 'asc' }
-      });
-    },
-    ['tour-categories'],
-    { revalidate: 60, tags: ['tour-categories'] }
-  );
-  
-  const dbCategories = await getCachedCategories();
+const fallbackTours = [
+  {
+    id: "t1",
+    slug: "kashmir-grand-tour",
+    isLive: true,
+    title: "Kashmir Grand Tour",
+    image: "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=800&q=80",
+    badge: "Bestseller",
+    category: "Family, Popular",
+    duration: "7 Days / 6 Nights",
+    destinations: ["Srinagar", "Gulmarg", "Pahalgam"],
+    inclusions: ["Hotels & Houseboat", "Daily Breakfast & Dinner", "Private Cab", "Shikara Ride"],
+    originalPrice: 32000,
+    price: 28500,
+  },
+  {
+    id: "t2",
+    slug: "gulmarg-ski-adventure",
+    isLive: true,
+    title: "Gulmarg Ski Adventure",
+    image: "https://images.unsplash.com/photo-1606115915090-be18fea23ec7?w=800&q=80",
+    badge: "Adventure",
+    category: "Adventure, Winter",
+    duration: "4 Days / 3 Nights",
+    destinations: ["Gulmarg", "Srinagar"],
+    inclusions: ["Ski Resort Stay", "Gondola Phase 1 & 2 Passes", "Ski Equipment", "Local Instructor"],
+    originalPrice: 22000,
+    price: 18900,
+  },
+  {
+    id: "t3",
+    slug: "kashmir-honeymoon-special",
+    isLive: true,
+    title: "Kashmir Honeymoon Special",
+    image: "https://images.unsplash.com/photo-1571896349842-33c89424de2d?w=800&q=80",
+    badge: "Honeymoon",
+    category: "Honeymoon, Romantic",
+    duration: "6 Days / 5 Nights",
+    destinations: ["Srinagar", "Pahalgam", "Sonamarg"],
+    inclusions: ["Luxury Dal Lake Houseboat", "Candlelight Dinner", "Flower Bed Decoration", "Private Transfers"],
+    originalPrice: 50000,
+    price: 45000,
+  }
+];
 
-  const getCachedTours = unstable_cache(
-    async () => {
-      const dbTours = await prisma.tour.findMany({
-        orderBy: {
-          createdAt: 'desc'
-        },
-        take: 100,
-        select: {
-          id: true,
-          slug: true,
-          isLive: true,
-          title: true,
-          images: true,
-          badge: true,
-          category: true,
-          duration: true,
-          destinations: true,
-          inclusions: true,
-          originalPrice: true,
-          price: true,
-        }
-      });
-      
+async function getCategories() {
+  try {
+    return await prisma.tourCategory.findMany({
+      orderBy: { name: 'asc' }
+    });
+  } catch (e) {
+    console.error("Failed to load tour categories:", e);
+    return [];
+  }
+}
+
+async function getTours() {
+  try {
+    const dbTours = await prisma.tour.findMany({
+      orderBy: {
+        createdAt: 'desc'
+      },
+      take: 100,
+      select: {
+        id: true,
+        slug: true,
+        isLive: true,
+        title: true,
+        images: true,
+        badge: true,
+        category: true,
+        duration: true,
+        destinations: true,
+        inclusions: true,
+        originalPrice: true,
+        price: true,
+      }
+    });
+    
+    if (dbTours && dbTours.length > 0) {
       return dbTours.map(t => ({
         id: t.id,
         slug: t.slug,
         isLive: t.isLive,
         title: t.title,
-        image: t.images[0] || null,
+        image: (t.images && t.images[0]) || null,
         badge: t.badge,
         category: t.category,
         duration: t.duration,
@@ -102,12 +141,21 @@ export default async function ToursPage({
         originalPrice: t.originalPrice,
         price: t.price,
       }));
-    },
-    ['tours-list'],
-    { revalidate: 60, tags: ['tours'] }
-  );
+    }
+  } catch (e) {
+    console.error("Failed to load tours:", e);
+  }
+  return fallbackTours;
+}
 
-  const tours = await getCachedTours();
+export default async function ToursPage({ 
+  searchParams 
+}: { 
+  searchParams?: Promise<{ [key: string]: string | string[] | undefined }> | { [key: string]: string | string[] | undefined }
+}) {
+  const resolvedSearchParams = searchParams ? await searchParams : {};
+  const dbCategories = await getCategories();
+  const tours = await getTours();
 
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.wanderkashmir.com';
   const jsonLd = {
@@ -160,10 +208,10 @@ export default async function ToursPage({
   const precomputedMonths = ["All Months", ...sortedUsedMonths];
   const precomputedDestinations = ["All Destinations", ...Array.from(usedDestinations).sort()];
 
-  const selectedCat = (searchParams.category as string) || "All Packages";
-  const selectedMonth = (searchParams.month as string) || "All Months";
-  const selectedDest = (searchParams.destination as string) || "All Destinations";
-  const currentPage = parseInt((searchParams.page as string) || "1", 10);
+  const selectedCat = (resolvedSearchParams.category as string) || "All Packages";
+  const selectedMonth = (resolvedSearchParams.month as string) || "All Months";
+  const selectedDest = (resolvedSearchParams.destination as string) || "All Destinations";
+  const currentPage = parseInt((resolvedSearchParams.page as string) || "1", 10);
 
   const filteredTours = tours.filter((t: any) => {
     const matchCat = selectedCat === "All Packages" || selectedCat === "All" || (t.category && t.category.toLowerCase().includes(selectedCat.toLowerCase()));
@@ -172,7 +220,7 @@ export default async function ToursPage({
     let matchDest = true;
     if (selectedDest !== "All Destinations" && selectedDest !== "All") {
       const targetSlug = selectedDest.toLowerCase().replace(/\s+/g, '-');
-      matchDest = t.destinations && t.destinations.some((d: string) => d.toLowerCase().replace(/\s+/g, '-') === targetSlug);
+      matchDest = Array.isArray(t.destinations) && t.destinations.some((d: any) => typeof d === 'string' && d.toLowerCase().replace(/\s+/g, '-') === targetSlug);
     }
     
     return matchCat && matchMonth && matchDest;
@@ -193,13 +241,11 @@ export default async function ToursPage({
         <Navbar />
         <div className="pt-20 min-h-screen">
           {/* Header */}
-          <div className="relative py-24 overflow-hidden">
             <Image
               src="/tours-hero.webp"
               alt="Tour Packages in Kashmir"
               fill
               priority
-              fetchPriority="high"
               className="object-cover z-0"
             />
             <div className="absolute inset-0 bg-gradient-to-br from-black/40 via-black/20 to-black/40 z-0"></div>
@@ -219,11 +265,6 @@ export default async function ToursPage({
             </div>
           </div>
           <div className="container-custom py-8">
-            <TourFilters 
-              precomputedCategories={precomputedCategories} 
-              precomputedMonths={precomputedMonths} 
-              precomputedDestinations={precomputedDestinations} 
-            />
             {paginatedTours.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {paginatedTours.map((tour: any) => (
@@ -241,7 +282,6 @@ export default async function ToursPage({
                 </Link>
               </div>
             )}
-            <TourPagination totalPages={totalPages} currentPage={currentPage} />
           </div>
         </div>
         
@@ -252,7 +292,7 @@ export default async function ToursPage({
               <h2 className="text-xl font-bold mb-6 text-slate-800">Complete Kashmir Tour Directory</h2>
               <nav aria-label="Tour Directory">
                 <ul className="flex flex-wrap gap-x-6 gap-y-3">
-                  {tours.map((tour: any) => tour.isLive && (
+                  {tours.filter((tour: any) => tour?.isLive && tour?.slug).map((tour: any) => (
                     <li key={tour.id}>
                       <Link 
                         href={`/tours/${tour.slug}`} 

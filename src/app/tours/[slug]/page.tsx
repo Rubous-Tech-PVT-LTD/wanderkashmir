@@ -3,9 +3,90 @@ import TourDetailClient from "./TourDetailClient";
 import { notFound } from "next/navigation";
 import { Metadata } from "next";
 
+const fallbackTourMap: Record<string, any> = {
+  "kashmir-grand-tour": {
+    id: "t1",
+    slug: "kashmir-grand-tour",
+    title: "Kashmir Grand Tour",
+    duration: "7 Days / 6 Nights",
+    destinations: ["Srinagar", "Gulmarg", "Pahalgam"],
+    price: 28500,
+    originalPrice: 32000,
+    category: "Family",
+    inclusions: ["Hotels & Houseboat", "Daily Breakfast & Dinner", "Private Cab", "Shikara Ride"],
+    maxPersons: 6,
+    badge: "Bestseller",
+    images: ["https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=1200&q=80"],
+    overview: "Experience the timeless beauty of Kashmir with our 7-day Grand Tour covering Srinagar, Gulmarg, and Pahalgam.",
+    highlights: ["Shikara ride on Dal Lake", "Gondola cable car ride in Gulmarg", "Aru and Betaab valleys in Pahalgam"],
+    exclusions: ["Airfare", "Personal expenses", "Tips"],
+    itinerary: [
+      { day: 1, title: "Arrival in Srinagar & Dal Lake Shikara Ride", description: "Arrive at Srinagar Airport, transfer to luxury houseboat, enjoy sunset shikara." },
+      { day: 2, title: "Srinagar to Gulmarg Day Trip", description: "Scenic drive to Gulmarg, take the Gondola ride to Apharwat Peak." },
+      { day: 3, title: "Srinagar to Pahalgam (Valley of Shepherds)", description: "Drive along saffron fields, visit Avantipur ruins, check-in at Pahalgam." },
+      { day: 4, title: "Explore Aru & Betaab Valleys", description: "Full day excursion to scenic Aru valley, Betaab valley, and Chandanwari." },
+      { day: 5, title: "Pahalgam to Srinagar & Mughal Gardens", description: "Return to Srinagar, visit Nishat Bagh, Shalimar Bagh, and Chashme Shahi." },
+      { day: 6, title: "Day Excursion to Sonamarg (Meadow of Gold)", description: "Visit Thajiwas glacier and Sind river in Sonamarg, return to Srinagar." },
+      { day: 7, title: "Departure from Srinagar Airport", description: "Breakfast, souvenir shopping at Lal Chowk, transfer to airport for onward journey." }
+    ],
+    reviews: []
+  },
+  "gulmarg-ski-adventure": {
+    id: "t2",
+    slug: "gulmarg-ski-adventure",
+    title: "Gulmarg Ski Adventure",
+    duration: "4 Days / 3 Nights",
+    destinations: ["Gulmarg", "Srinagar"],
+    price: 18900,
+    originalPrice: 22000,
+    category: "Adventure",
+    inclusions: ["Ski Resort Stay", "Gondola Phase 1 & 2 Passes", "Ski Equipment", "Local Instructor"],
+    maxPersons: 4,
+    badge: "Adventure",
+    images: ["https://images.unsplash.com/photo-1606115915090-be18fea23ec7?w=1200&q=80"],
+    overview: "Experience the powdery snow and world-class skiing slopes in Gulmarg with certified local instructors.",
+    highlights: ["Gondola Phase 2 to 13,780 ft", "Skiing and snowboarding lessons", "Stay amidst snow-covered pines"],
+    exclusions: ["Airfare", "Extreme sports insurance"],
+    itinerary: [
+      { day: 1, title: "Arrival & Transfer to Gulmarg", description: "Airport pickup and drive up to snowbound Gulmarg." },
+      { day: 2, title: "Ski Lessons & Gondola Phase 1", description: "Morning ski tutorial, afternoon freeride." },
+      { day: 3, title: "Gondola Phase 2 & Backcountry Skiing", description: "Summit Apharwat peak for panoramic Himalayan views." },
+      { day: 4, title: "Departure", description: "Morning scenic drive to Srinagar airport." }
+    ],
+    reviews: []
+  },
+  "kashmir-honeymoon-special": {
+    id: "t3",
+    slug: "kashmir-honeymoon-special",
+    title: "Kashmir Honeymoon Special",
+    duration: "6 Days / 5 Nights",
+    destinations: ["Srinagar", "Pahalgam", "Sonamarg"],
+    price: 45000,
+    originalPrice: 50000,
+    category: "Honeymoon",
+    inclusions: ["Luxury Dal Lake Houseboat", "Candlelight Dinner", "Flower Bed Decoration", "Private Transfers"],
+    maxPersons: 2,
+    badge: "Honeymoon",
+    images: ["https://images.unsplash.com/photo-1571896349842-33c89424de2d?w=1200&q=80"],
+    overview: "A romantic fairytale getaway with candlelit dinners on Dal Lake, scenic walks in Pahalgam, and breathtaking mountain vistas.",
+    highlights: ["Special honeymoon houseboat suite", "Candlelight dinner by the lake", "Private vehicle throughout"],
+    exclusions: ["Airfare", "Personal purchases"],
+    itinerary: [
+      { day: 1, title: "Arrival & Romantic Shikara Sunset", description: "Welcome to Srinagar with flower bouquet and private shikara ride." },
+      { day: 2, title: "Srinagar to Pahalgam Romance in Pines", description: "Private luxury cab to Pahalgam with stops at apple orchards." },
+      { day: 3, title: "Betaab Valley & Candlelight Dinner", description: "Visit scenic Bollywood locations and private candlelight dinner." },
+      { day: 4, title: "Sonamarg Glaciers", description: "Breathtaking landscapes of Sonamarg with pony ride to Thajiwas." },
+      { day: 5, title: "Srinagar Heritage & Mughal Romance", description: "Heritage walk in Old Srinagar and evening shopping." },
+      { day: 6, title: "Warm Farewell", description: "Drop at Srinagar Airport with sweet memories." }
+    ],
+    reviews: []
+  }
+};
+
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
-  const tour = await prisma.tour.findUnique({ where: { slug } });
+  let tour = await prisma.tour.findUnique({ where: { slug } }).catch(() => null);
+  if (!tour) tour = fallbackTourMap[slug];
   
   if (!tour) return { title: "Tour Not Found | WanderKashmir" };
   
@@ -18,9 +99,9 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     title: `${tour.title} (${tour.duration}) | Best Kashmir Tour Package`,
     description,
     keywords: [
-      ...tour.destinations,
+      ...(Array.isArray(tour.destinations) ? tour.destinations : []),
       "Kashmir Tour Package",
-      `${tour.category} Tour Kashmir`,
+      `${tour.category || 'Custom'} Tour Kashmir`,
       "WanderKashmir Tours",
       tour.title,
       "Kashmir Holiday Itinerary"
@@ -50,7 +131,7 @@ export const revalidate = 60;
 export default async function TourPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   
-  const tour = await prisma.tour.findUnique({
+  let tour: any = await prisma.tour.findUnique({
     where: { slug },
     include: {
       reviews: {
@@ -58,7 +139,11 @@ export default async function TourPage({ params }: { params: Promise<{ slug: str
         orderBy: { createdAt: 'desc' }
       }
     }
-  });
+  }).catch(() => null);
+
+  if (!tour) {
+    tour = fallbackTourMap[slug];
+  }
 
   if (!tour) {
     notFound();
