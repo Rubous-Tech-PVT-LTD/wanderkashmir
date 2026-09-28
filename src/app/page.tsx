@@ -365,7 +365,7 @@ const popularTours = [
     rating: 4.9,
     reviews: 412,
     image:
-      "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=500&q=80",
+      "https://images.unsplash.com/photo-1595815771614-ade9d652a65d?auto=format&fit=crop&q=80&w=800",
     category: "Family",
     slug: "kashmir-grand-tour",
   },

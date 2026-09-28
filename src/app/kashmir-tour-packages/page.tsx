@@ -55,7 +55,7 @@ export default async function KashmirTourPackagesPage() {
         slug: "kashmir-grand-tour",
         isLive: true,
         title: "Kashmir Grand Tour",
-        images: ["https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=500&q=80"],
+        images: ["https://images.unsplash.com/photo-1595815771614-ade9d652a65d?auto=format&fit=crop&q=80&w=800"],
         badge: "Bestseller",
         category: "Family",
         duration: "7 Days / 6 Nights",

@@ -53,7 +53,7 @@ const fallbackTours = [
     slug: "kashmir-grand-tour",
     isLive: true,
     title: "Kashmir Grand Tour",
-    image: "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=800&q=80",
+    image: "https://images.unsplash.com/photo-1595815771614-ade9d652a65d?auto=format&fit=crop&q=80&w=800",
     badge: "Bestseller",
     category: "Family, Popular",
     duration: "7 Days / 6 Nights",

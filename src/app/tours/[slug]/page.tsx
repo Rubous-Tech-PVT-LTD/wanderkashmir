@@ -16,7 +16,7 @@ const fallbackTourMap: Record<string, any> = {
     inclusions: ["Hotels & Houseboat", "Daily Breakfast & Dinner", "Private Cab", "Shikara Ride"],
     maxPersons: 6,
     badge: "Bestseller",
-    images: ["https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=1200&q=80"],
+    images: ["https://images.unsplash.com/photo-1595815771614-ade9d652a65d?auto=format&fit=crop&q=80&w=1200"],
     overview: "Experience the timeless beauty of Kashmir with our 7-day Grand Tour covering Srinagar, Gulmarg, and Pahalgam.",
     highlights: ["Shikara ride on Dal Lake", "Gondola cable car ride in Gulmarg", "Aru and Betaab valleys in Pahalgam"],
     exclusions: ["Airfare", "Personal expenses", "Tips"],
