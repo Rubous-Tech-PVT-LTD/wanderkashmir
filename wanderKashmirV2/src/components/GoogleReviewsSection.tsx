@@ -34,15 +34,19 @@ function GoogleGIcon({ className = "w-6 h-6" }: { className?: string }) {
 }
 
 export default function GoogleReviewsSection({ initialData }: GoogleReviewsSectionProps) {
+  // Only show real Google Reviews — never silently substitute curated fallback data as genuine reviews
   const reviewsList: GoogleReviewItem[] =
     initialData?.reviews && initialData.reviews.length > 0
       ? initialData.reviews
-      : FALLBACK_VERIFIED_REVIEWS;
+      : [];
 
-  const displayRating = initialData?.rating ? initialData.rating.toFixed(1) : "5.0";
+  const hasRealData = reviewsList.length > 0;
+
+  const displayRating = initialData?.rating ? initialData.rating.toFixed(1) : null;
+  // Only show real verified count — never show a hardcoded marketing number
   const displayTotalReviews = initialData?.userRatingsTotal
     ? `${initialData.userRatingsTotal.toLocaleString()}+ Google Reviews`
-    : "1,280+ Google Reviews";
+    : null;
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
@@ -170,18 +174,20 @@ export default function GoogleReviewsSection({ initialData }: GoogleReviewsSecti
             >
               <GoogleGIcon className="w-5 h-5 shrink-0" />
               <div className="flex flex-col text-left leading-tight">
-                <div className="flex items-center gap-1">
-                  <span className="font-display font-extrabold text-[#17211D] text-sm">
-                    {displayRating}
-                  </span>
-                  <div className="flex items-center gap-0.5" aria-hidden="true">
-                    {[...Array(5)].map((_, i) => (
-                      <Star key={i} className="w-3 h-3 fill-amber-400 text-amber-400" />
-                    ))}
+                {displayRating && (
+                  <div className="flex items-center gap-1">
+                    <span className="font-display font-extrabold text-[#17211D] text-sm">
+                      {displayRating}
+                    </span>
+                    <div className="flex items-center gap-0.5" aria-hidden="true">
+                      {[...Array(5)].map((_, i) => (
+                        <Star key={i} className="w-3 h-3 fill-amber-400 text-amber-400" />
+                      ))}
+                    </div>
                   </div>
-                </div>
+                )}
                 <span className="text-[10px] text-[#56635E] font-medium flex items-center gap-1">
-                  {displayTotalReviews}
+                  {displayTotalReviews ?? "Google Reviews"}
                   <ExternalLink className="w-2.5 h-2.5 text-slate-400" />
                 </span>
               </div>
@@ -216,152 +222,170 @@ export default function GoogleReviewsSection({ initialData }: GoogleReviewsSecti
           </div>
         </div>
 
-        {/* Reviews Carousel */}
-        <div
-          ref={scrollRef}
-          onScroll={checkScroll}
-          tabIndex={0}
-          onMouseEnter={() => (isHovered.current = true)}
-          onMouseLeave={() => (isHovered.current = false)}
-          onTouchStart={() => (isHovered.current = true)}
-          onTouchEnd={() => (isHovered.current = false)}
-          aria-label="Traveler reviews carousel"
-          className="flex overflow-x-auto scrollbar-none gap-4 sm:gap-5 pb-2 pt-1"
-          style={{
-            scrollPaddingLeft: "1rem",
-            scrollPaddingRight: "1rem",
-          }}
-        >
-          {reviewsList.map((rev) => (
-            <article
-              key={rev.id}
-              className="w-[85vw] max-w-[340px] sm:w-[360px] lg:w-[380px] shrink-0 rounded-2xl bg-white border p-5 sm:p-6 shadow-2xs hover:shadow-lg transition-all duration-300 flex flex-col justify-between group hover:-translate-y-1"
-              style={{
-                borderColor: "var(--season-border)",
-              }}
-            >
-              <div>
-                {/* Header: Author Avatar + Name + Rating */}
-                <div className="flex items-start justify-between gap-3 mb-3.5">
-                  <div className="flex items-center gap-3 min-w-0">
-                    <div className="relative w-11 h-11 rounded-full overflow-hidden shrink-0 border border-slate-200/80 shadow-2xs bg-slate-100 flex items-center justify-center text-slate-600 font-bold text-sm">
-                      {rev.profile_photo_url ? (
-                        <Image
-                          src={rev.profile_photo_url}
-                          alt={rev.author_name}
-                          fill
-                          sizes="44px"
-                          className="object-cover"
-                          unoptimized={rev.profile_photo_url.includes("googleusercontent.com")}
-                        />
-                      ) : (
-                        <span>{rev.author_name.charAt(0).toUpperCase()}</span>
-                      )}
-                    </div>
-                    <div className="min-w-0">
-                      {rev.author_url ? (
-                        <a
-                          href={rev.author_url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="font-display font-bold text-sm text-[#17211D] group-hover:text-[var(--season-primary)] transition-colors flex items-center gap-1 truncate"
-                        >
-                          <span className="truncate">{rev.author_name}</span>
-                          <ExternalLink className="w-3 h-3 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" />
-                        </a>
-                      ) : (
-                        <h3 className="font-display font-bold text-sm text-[#17211D] group-hover:text-[var(--season-primary)] transition-colors truncate">
-                          {rev.author_name}
-                        </h3>
-                      )}
-                      {rev.tripType && (
-                        <p className="text-[11px] font-medium text-[var(--season-primary)] truncate max-w-[170px] sm:max-w-[200px]">
-                          {rev.tripType}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Google Icon Badge */}
-                  <div
-                    className="p-1 rounded-md bg-slate-50 border shrink-0"
-                    style={{ borderColor: "var(--season-border)" }}
-                    title="Verified Google Review"
-                  >
-                    <GoogleGIcon className="w-4 h-4" />
-                  </div>
-                </div>
-
-                {/* Star Rating & Relative Time */}
-                <div className="flex items-center justify-between mb-3 pt-1 border-t border-slate-100">
-                  <div className="flex items-center gap-1" aria-label={`${rev.rating} out of 5 stars`}>
-                    {[...Array(rev.rating || 5)].map((_, i) => (
-                      <Star key={i} className="w-3.5 h-3.5 fill-amber-400 text-amber-400" aria-hidden="true" />
-                    ))}
-                  </div>
-                  <span className="text-[11px] text-[#56635E] font-medium">
-                    {rev.relative_time_description}
-                  </span>
-                </div>
-
-                {/* Review Text */}
-                <p className="font-sans text-xs sm:text-[13px] leading-relaxed text-[#17211D]/85 line-clamp-4">
-                  &ldquo;{rev.text}&rdquo;
-                </p>
-              </div>
-
-              {/* Bottom Verification Footer */}
-              <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-[11px] text-[#56635E]">
-                <span className="flex items-center gap-1 text-emerald-600 font-semibold">
-                  <CheckCircle2 className="w-3 h-3" aria-hidden="true" />
-                  <span>Verified Google Review</span>
-                </span>
-                {rev.author_url ? (
-                  <a
-                    href={rev.author_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-[10px] text-blue-600 hover:underline uppercase font-bold tracking-wider flex items-center gap-0.5"
-                  >
-                    Google Maps <ExternalLink className="w-2.5 h-2.5" />
-                  </a>
-                ) : (
-                  <span className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">
-                    Google Maps
-                  </span>
-                )}
-              </div>
-            </article>
-          ))}
-        </div>
-
-        {/* Mobile Swipe Cue & Interactive Pagination Dots */}
-        <div className="flex sm:hidden flex-col items-center gap-1.5 mt-4 select-none" aria-hidden="true">
-          <span className="text-[10.5px] font-medium text-[#56635E] tracking-wider uppercase">
-            ← swipe reviews →
-          </span>
+        {/* Reviews Carousel — only rendered when real Google data is available */}
+        {hasRealData ? (
           <div
-            className="flex items-center justify-center gap-1.5"
-            role="tablist"
-            aria-label="Google reviews pagination"
+            ref={scrollRef}
+            onScroll={checkScroll}
+            tabIndex={0}
+            onMouseEnter={() => (isHovered.current = true)}
+            onMouseLeave={() => (isHovered.current = false)}
+            onTouchStart={() => (isHovered.current = true)}
+            onTouchEnd={() => (isHovered.current = false)}
+            aria-label="Traveler reviews carousel"
+            className="flex overflow-x-auto scrollbar-none gap-4 sm:gap-5 pb-2 pt-1"
+            style={{
+              scrollPaddingLeft: "1rem",
+              scrollPaddingRight: "1rem",
+            }}
           >
-            {reviewsList.map((rev, i) => (
-              <button
+            {reviewsList.map((rev) => (
+              <article
                 key={rev.id}
-                type="button"
-                role="tab"
-                aria-selected={activeIndex === i}
-                aria-label={`Go to review by ${rev.author_name}`}
-                onClick={() => scrollToCard(i)}
-                className={`transition-all duration-200 rounded-full cursor-pointer ${
-                  activeIndex === i
-                    ? "w-6 h-2 bg-[var(--season-primary)]"
-                    : "w-2 h-2 bg-slate-300 hover:bg-slate-400"
-                }`}
-              />
+                className="w-[85vw] max-w-[340px] sm:w-[360px] lg:w-[380px] shrink-0 rounded-2xl bg-white border p-5 sm:p-6 shadow-2xs hover:shadow-lg transition-all duration-300 flex flex-col justify-between group hover:-translate-y-1"
+                style={{
+                  borderColor: "var(--season-border)",
+                }}
+              >
+                <div>
+                  {/* Header: Author Avatar + Name + Rating */}
+                  <div className="flex items-start justify-between gap-3 mb-3.5">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="relative w-11 h-11 rounded-full overflow-hidden shrink-0 border border-slate-200/80 shadow-2xs bg-slate-100 flex items-center justify-center text-slate-600 font-bold text-sm">
+                        {rev.profile_photo_url ? (
+                          <Image
+                            src={rev.profile_photo_url}
+                            alt={rev.author_name}
+                            fill
+                            sizes="44px"
+                            className="object-cover"
+                            unoptimized={rev.profile_photo_url.includes("googleusercontent.com")}
+                          />
+                        ) : (
+                          <span>{rev.author_name.charAt(0).toUpperCase()}</span>
+                        )}
+                      </div>
+                      <div className="min-w-0">
+                        {rev.author_url ? (
+                          <a
+                            href={rev.author_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="font-display font-bold text-sm text-[#17211D] group-hover:text-[var(--season-primary)] transition-colors flex items-center gap-1 truncate"
+                          >
+                            <span className="truncate">{rev.author_name}</span>
+                            <ExternalLink className="w-3 h-3 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" />
+                          </a>
+                        ) : (
+                          <h3 className="font-display font-bold text-sm text-[#17211D] group-hover:text-[var(--season-primary)] transition-colors truncate">
+                            {rev.author_name}
+                          </h3>
+                        )}
+                        {rev.tripType && (
+                          <p className="text-[11px] font-medium text-[var(--season-primary)] truncate max-w-[170px] sm:max-w-[200px]">
+                            {rev.tripType}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Google Icon Badge */}
+                    <div
+                      className="p-1 rounded-md bg-slate-50 border shrink-0"
+                      style={{ borderColor: "var(--season-border)" }}
+                      title="Verified Google Review"
+                    >
+                      <GoogleGIcon className="w-4 h-4" />
+                    </div>
+                  </div>
+
+                  {/* Star Rating & Relative Time */}
+                  <div className="flex items-center justify-between mb-3 pt-1 border-t border-slate-100">
+                    <div className="flex items-center gap-1" aria-label={`${rev.rating} out of 5 stars`}>
+                      {[...Array(rev.rating || 5)].map((_, i) => (
+                        <Star key={i} className="w-3.5 h-3.5 fill-amber-400 text-amber-400" aria-hidden="true" />
+                      ))}
+                    </div>
+                    <span className="text-[11px] text-[#56635E] font-medium">
+                      {rev.relative_time_description}
+                    </span>
+                  </div>
+
+                  {/* Review Text */}
+                  <p className="font-sans text-xs sm:text-[13px] leading-relaxed text-[#17211D]/85 line-clamp-4">
+                    &ldquo;{rev.text}&rdquo;
+                  </p>
+                </div>
+
+                {/* Bottom Verification Footer */}
+                <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-[11px] text-[#56635E]">
+                  <span className="flex items-center gap-1 text-emerald-600 font-semibold">
+                    <CheckCircle2 className="w-3 h-3" aria-hidden="true" />
+                    <span>Verified Google Review</span>
+                  </span>
+                  {rev.author_url ? (
+                    <a
+                      href={rev.author_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-[10px] text-blue-600 hover:underline uppercase font-bold tracking-wider flex items-center gap-0.5"
+                    >
+                      Google Maps <ExternalLink className="w-2.5 h-2.5" />
+                    </a>
+                  ) : (
+                    <span className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">
+                      Google Maps
+                    </span>
+                  )}
+                </div>
+              </article>
             ))}
           </div>
-        </div>
+        ) : (
+          /* Honest unavailable state — no fake reviews shown */
+          <div className="flex flex-col items-center justify-center py-12 text-center text-[#56635E]">
+            <GoogleGIcon className="w-8 h-8 mb-3 opacity-40" />
+            <p className="text-sm font-medium">Google Reviews are currently unavailable.</p>
+            <a
+              href="https://maps.google.com/?cid=13210438173678079031"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-2 text-xs text-blue-600 hover:underline flex items-center gap-1"
+            >
+              View on Google Maps <ExternalLink className="w-3 h-3" />
+            </a>
+          </div>
+        )}
+
+        {/* Mobile Swipe Cue & Interactive Pagination Dots — only when real reviews are shown */}
+        {hasRealData && (
+          <div className="flex sm:hidden flex-col items-center gap-1.5 mt-4 select-none" aria-hidden="true">
+            <span className="text-[10.5px] font-medium text-[#56635E] tracking-wider uppercase">
+              ← swipe reviews →
+            </span>
+            <div
+              className="flex items-center justify-center gap-1.5"
+              role="tablist"
+              aria-label="Google reviews pagination"
+            >
+              {reviewsList.map((rev, i) => (
+                <button
+                  key={rev.id}
+                  type="button"
+                  role="tab"
+                  aria-selected={activeIndex === i}
+                  aria-label={`Go to review by ${rev.author_name}`}
+                  onClick={() => scrollToCard(i)}
+                  className={`transition-all duration-200 rounded-full cursor-pointer ${
+                    activeIndex === i
+                      ? "w-6 h-2 bg-[var(--season-primary)]"
+                      : "w-2 h-2 bg-slate-300 hover:bg-slate-400"
+                  }`}
+                />
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </section>
   );

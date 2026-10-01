@@ -158,8 +158,9 @@ export const getTourFromDB = cache(async function(slug: string): Promise<TourPac
       badge: "",
     };
   } catch (error) {
-    console.warn("DB Connection failed, falling back to mock data for Tour:", slug);
-    return LIVE_TOURS_CATALOG.find(t => t.slug === slug) || null;
+    console.error("DB Connection failed for Tour detail:", slug, error);
+    // Return null — do NOT silently serve static catalog data in production
+    return null;
   }
 });
 
@@ -209,8 +210,9 @@ export const getOtherToursFromDB = cache(async function(excludeSlug: string): Pr
       maxPersons: tour.maxPersons || 2,
     }));
   } catch (error) {
-    console.warn("DB Connection failed, falling back to mock data for Other Tours");
-    return LIVE_TOURS_CATALOG.filter(t => t.slug !== excludeSlug).slice(0, 4);
+    console.error("DB Connection failed for Other Tours (excluding:", excludeSlug, "):", error);
+    // Return empty — do NOT silently serve static catalog data in production
+    return [];
   }
 });
 

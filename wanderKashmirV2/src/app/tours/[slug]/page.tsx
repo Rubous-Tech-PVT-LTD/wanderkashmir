@@ -11,7 +11,8 @@ import { LIVE_TOURS_CATALOG } from "@/data/liveToursData";
 import { getTourFromDB, getOtherToursFromDB, getToursByTravelStyle } from "@/data/toursDataFetching";
 import prisma from "@/lib/prisma";
 
-export const dynamic = "force-dynamic";
+// ISR: revalidate every 60 seconds so Admin publish changes are reflected promptly
+export const revalidate = 60;
 
 interface PageProps {
   params: Promise<{ slug: string }>;
@@ -95,8 +96,6 @@ export default async function TourOrStylePage({ params, searchParams }: PageProp
   const { slug } = await params;
   const resolvedSearchParams = searchParams ? await searchParams : {};
   const parsedMaxPrice = resolvedSearchParams.maxPrice ? Number(resolvedSearchParams.maxPrice) : undefined;
-
-  console.log("=== [DEBUG] TourOrStylePage requested slug:", slug);
 
   // 1. Check if slug matches an active Travel Style
   const travelStyleData = await getToursByTravelStyle(slug, {
