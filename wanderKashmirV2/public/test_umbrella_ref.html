@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    body { background: #f8fafc; padding: 40px; display: flex; gap: 40px; align-items: center; font-family: sans-serif; }
+    .box { background: white; padding: 24px; border-radius: 12px; display: flex; flex-direction: column; align-items: center; gap: 12px; border: 1px solid #e2e8f0; }
+    svg { width: 90px; height: 90px; }
+    img { width: 90px; height: auto; image-rendering: -webkit-optimize-contrast; }
+  </style>
+</head>
+<body>
+  <!-- Reference Image -->
+  <div class="box">
+    <span>MMT Reference</span>
+    <img src="/media_ref.png" alt="Reference" />
+  </div>
+
+  <!-- SVG Match V5 (Pixel-Perfect MMT) -->
+  <div class="box">
+    <span>SVG Match V5</span>
+    <svg viewBox="0 0 36 36" fill="none">
+      <!-- 1. Soft Floor Shadow -->
+      <ellipse cx="14" cy="28.5" rx="11" ry="2.6" fill="rgba(100, 116, 139, 0.2)" />
+
+      <!-- 2. Umbrella Shaft curving behind ball -->
+      <path
+        d="M19 12L15 20C14.2 21.8 13.2 23.5 12 24.8C10.8 25.8 9.5 26.2 8 26"
+        stroke="#17211D"
+        stroke-width="1.3"
+        stroke-linecap="round"
+      />
+
+      <!-- 3. Beach Ball (Crisp sphere with clean MMT black crescent) -->
+      <circle cx="10" cy="23" r="4.2" fill="#FFFFFF" stroke="#17211D" stroke-width="1.3" />
+      <!-- Signature MMT Black Wedge/Crescent -->
+      <path
+        d="M6.5 24.5C7.2 22.5 8.8 21 11 20.5C11.5 22.2 10.8 24.2 8.5 25.5C7.5 25.2 6.8 24.8 6.5 24.5Z"
+        fill="#17211D"
+      />
+      <path
+        d="M7.8 20.8C9.2 19.8 11.2 20.2 12.5 21.2"
+        stroke="#17211D"
+        stroke-width="1"
+        stroke-linecap="round"
+      />
+
+      <!-- 4. Umbrella Finial Peg -->
+      <line x1="21.8" y1="2.2" x2="20.5" y2="4.5" stroke="#17211D" stroke-width="1.3" stroke-linecap="round" />
+
+      <!-- 5. Umbrella Canopy (Smooth Elliptical Dome) -->
+      <!-- Panel 1 (Left Grey) -->
+      <path
+        d="M7.5 11.5C9.5 6.5 14.5 4 20.5 4.5L13.5 12.8C11.5 12.2 9.5 11.8 7.5 11.5Z"
+        fill="#CBD5E1"
+        stroke="#17211D"
+        stroke-width="1.2"
+        stroke-linejoin="round"
+      />
+      <!-- Panel 2 (Center-Left White) -->
+      <path
+        d="M20.5 4.5C22.5 4.8 24.5 5.8 26.2 7.2L19.5 13.8L13.5 12.8L20.5 4.5Z"
+        fill="#FFFFFF"
+        stroke="#17211D"
+        stroke-width="1.2"
+        stroke-linejoin="round"
+      />
+      <!-- Panel 3 (Center-Right Grey) -->
+      <path
+        d="M26.2 7.2C28.5 9 30 11 31 13.2L25.2 14.2L19.5 13.8L26.2 7.2Z"
+        fill="#CBD5E1"
+        stroke="#17211D"
+        stroke-width="1.2"
+        stroke-linejoin="round"
+      />
+      <!-- Panel 4 (Far-Right White) -->
+      <path
+        d="M31 13.2C31.5 13.8 31 14.2 30 14.5L25.2 14.2L31 13.2Z"
+        fill="#FFFFFF"
+        stroke="#17211D"
+        stroke-width="1.2"
+        stroke-linejoin="round"
+      />
+
+      <!-- Outer Rim Outline -->
+      <path
+        d="M7.5 11.5C9.5 6 15 3.5 24 5.8C28 7.8 30 10.8 31 13.2C24.5 15.5 15.5 14.8 7.5 11.5Z"
+        fill="none"
+        stroke="#17211D"
+        stroke-width="1.3"
+        stroke-linejoin="round"
+      />
+    </svg>
+  </div>
+</body>
+</html>

@@ -1,0 +1,403 @@
+@import "tailwindcss";
+
+@theme {
+  --color-season-primary: var(--season-primary);
+  --color-season-secondary: var(--season-secondary);
+  --color-season-tertiary: var(--season-tertiary);
+  --color-season-background: var(--season-background);
+  --color-season-surface: var(--season-surface);
+  --color-season-text: var(--season-text);
+  --color-season-border: var(--season-border);
+  --color-season-muted: var(--season-muted);
+  --color-season-primary-light: var(--season-primary-light);
+  --color-season-primary-hover: var(--season-primary-hover);
+  --color-season-secondary-light: var(--season-secondary-light);
+
+  --color-primary: var(--season-primary);
+  --color-primary-deep: var(--season-primary-hover);
+  --color-forest: var(--season-primary);
+  --color-deep: var(--season-primary-hover);
+  --color-gold: var(--season-secondary);
+  --color-sky: var(--season-secondary);
+  --color-kashmir-bg: var(--season-background);
+  --color-kashmir-surface: var(--season-surface);
+  --color-kashmir-text: var(--season-text);
+  --color-kashmir-muted: var(--season-muted);
+  --color-kashmir-border: var(--season-border);
+
+  --font-display: var(--font-plus-jakarta), "Plus Jakarta Sans", sans-serif;
+  --font-sans: var(--font-inter), "Inter", sans-serif;
+}
+
+:root {
+  /* Default Seasonal Tokens (Initial Date Fallback: Autumn / Harud) */
+  --season-primary: #D62828;
+  --season-secondary: #F4A261;
+  --season-tertiary: #9D0208;
+  --season-background: #FFFFFF;
+  --season-surface: #FFFFFF;
+  --season-text: #1F2120;
+  --season-border: #E9DECB;
+  --season-muted: #5C5E58;
+  --season-primary-light: #FCECEB;
+  --season-primary-hover: #B31E1E;
+  --season-secondary-light: #FEF3EA;
+  --season-focus-ring: rgba(214, 40, 40, 0.35);
+  --season-footer-bg: #220D0D;
+
+  /* Seasonal Search Bar Glassmorphism Fallback (Autumn) */
+  --season-search-glass-bg: rgba(34, 18, 16, 0.68);
+  --season-search-glass-border: rgba(255, 255, 255, 0.22);
+  --season-search-glass-blur: 24px;
+  --season-search-glass-shadow: 0 8px 18px -4px rgba(0, 0, 0, 0.22), 0 2px 6px -1px rgba(214, 40, 40, 0.12);
+
+  --background: var(--season-background);
+  --foreground: var(--season-text);
+  --surface: var(--season-surface);
+  --primary: var(--season-primary);
+  --primary-deep: var(--season-primary-hover);
+  --accent-gold: var(--season-secondary);
+  --accent-sky: var(--season-secondary);
+  --text-main: var(--season-text);
+  --text-muted: var(--season-muted);
+  --border-subtle: var(--season-border);
+}
+
+/* 🔒 LOCKED PALETTES PER DATA-SEASON */
+[data-season="spring"] {
+  --season-primary: #D91E63;
+  --season-secondary: #399E96;
+  --season-tertiary: #E9C46A;
+  --season-background: #FFFFFF;
+  --season-surface: #FFFFFF;
+  --season-text: #1F2421;
+  --season-border: #EADFD5;
+  --season-muted: #5C635E;
+  --season-primary-light: #FCE7F0;
+  --season-primary-hover: #B81552;
+  --season-secondary-light: #E6F4F2;
+  --season-focus-ring: rgba(217, 30, 99, 0.35);
+  --season-footer-bg: #1F0C16;
+
+  --season-search-glass-bg: rgba(36, 16, 26, 0.68);
+  --season-search-glass-border: rgba(255, 255, 255, 0.22);
+  --season-search-glass-blur: 24px;
+  --season-search-glass-shadow: 0 8px 18px -4px rgba(0, 0, 0, 0.22), 0 2px 6px -1px rgba(217, 30, 99, 0.12);
+}
+
+[data-season="summer"] {
+  --season-primary: #164E3B;
+  --season-secondary: #0878B9;
+  --season-tertiary: #8FBC72;
+  --season-background: #FFFFFF;
+  --season-surface: #FFFFFF;
+  --season-text: #17211D;
+  --season-border: #D2E1DB;
+  --season-muted: #56635E;
+  --season-primary-light: #EBF2EE;
+  --season-primary-hover: #0D3028;
+  --season-secondary-light: #E5F2F9;
+  --season-focus-ring: rgba(22, 78, 59, 0.35);
+  --season-footer-bg: #0C2B20;
+
+  --season-search-glass-bg: rgba(14, 30, 24, 0.68);
+  --season-search-glass-border: rgba(255, 255, 255, 0.22);
+  --season-search-glass-blur: 24px;
+  --season-search-glass-shadow: 0 8px 18px -4px rgba(0, 0, 0, 0.22), 0 2px 6px -1px rgba(22, 78, 59, 0.15);
+}
+
+[data-season="autumn"] {
+  --season-primary: #D62828;
+  --season-secondary: #F4A261;
+  --season-tertiary: #9D0208;
+  --season-background: #FFFFFF;
+  --season-surface: #FFFFFF;
+  --season-text: #1F2120;
+  --season-border: #E9DECB;
+  --season-muted: #5C5E58;
+  --season-primary-light: #FCECEB;
+  --season-primary-hover: #B31E1E;
+  --season-secondary-light: #FEF3EA;
+  --season-focus-ring: rgba(214, 40, 40, 0.35);
+  --season-footer-bg: #220D0D;
+
+  --season-search-glass-bg: rgba(34, 18, 16, 0.68);
+  --season-search-glass-border: rgba(255, 255, 255, 0.22);
+  --season-search-glass-blur: 24px;
+  --season-search-glass-shadow: 0 8px 18px -4px rgba(0, 0, 0, 0.22), 0 2px 6px -1px rgba(214, 40, 40, 0.12);
+}
+
+[data-season="winter"] {
+  --season-primary: #00B4D8;
+  --season-secondary: #343A40;
+  --season-tertiary: #8B5A2B;
+  --season-background: #FFFFFF;
+  --season-surface: #FFFFFF;
+  --season-text: #1E293B;
+  --season-border: #E2E8F0;
+  --season-muted: #64748B;
+  --season-primary-light: #E6F8FB;
+  --season-primary-hover: #0096B4;
+  --season-secondary-light: #ECEFF1;
+  --season-focus-ring: rgba(0, 180, 216, 0.35);
+  --season-footer-bg: #0B1824;
+
+  --season-search-glass-bg: rgba(14, 26, 38, 0.70);
+  --season-search-glass-border: rgba(255, 255, 255, 0.25);
+  --season-search-glass-blur: 28px;
+  --season-search-glass-shadow: 0 8px 18px -4px rgba(0, 0, 0, 0.22), 0 2px 6px -1px rgba(0, 180, 216, 0.15);
+}
+
+html,
+body {
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+body {
+  background-color: var(--season-background);
+  color: var(--season-text);
+  font-family: var(--font-inter), "Inter", sans-serif;
+  -webkit-font-smoothing: antialiased;
+  transition: background-color 0.25s ease, color 0.25s ease;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-plus-jakarta), "Plus Jakarta Sans", sans-serif;
+  letter-spacing: -0.02em;
+}
+
+/* =========================================================================
+   SEASONAL INTERACTIVE & HOVER STYLES (DEDICATED CSS RULES)
+   ========================================================================= */
+
+/* Primary CTA button with distinct seasonal hover */
+.btn-season-primary {
+  background-color: var(--season-primary);
+  color: #ffffff;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.btn-season-primary:hover {
+  background-color: var(--season-primary-hover);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.12), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+  transform: translateY(-1px);
+}
+.btn-season-primary:active {
+  transform: translateY(0);
+}
+
+/* Secondary Action button with distinct seasonal hover */
+.btn-season-secondary {
+  background-color: var(--season-primary-light);
+  color: var(--season-primary);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.btn-season-secondary:hover {
+  background-color: var(--season-primary);
+  color: #ffffff;
+}
+
+/* Navigation items with distinct seasonal hover */
+.nav-season-item {
+  color: #17211D;
+  transition: all 0.2s ease;
+}
+.nav-season-item:hover {
+  color: var(--season-primary);
+  background-color: var(--season-primary-light);
+}
+.nav-season-item .nav-icon {
+  color: var(--season-secondary);
+  transition: color 0.2s ease;
+}
+.nav-season-item:hover .nav-icon {
+  color: var(--season-primary);
+}
+
+/* Pathway Card with seasonal hover */
+.card-season-pathway {
+  border: 1px solid var(--season-border);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.card-season-pathway:hover {
+  border-color: var(--season-primary);
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.08), 0 8px 10px -6px rgba(0, 0, 0, 0.04);
+  transform: translateY(-3px);
+}
+.card-season-pathway .card-icon-box {
+  background-color: #F7F7F3;
+  color: var(--season-secondary);
+  border: 1px solid var(--season-border);
+  transition: all 0.25s ease;
+}
+.card-season-pathway:hover .card-icon-box {
+  background-color: var(--season-primary);
+  color: #ffffff;
+  border-color: var(--season-primary);
+}
+.card-season-pathway .card-title {
+  color: #17211D;
+  transition: color 0.2s ease;
+}
+.card-season-pathway:hover .card-title {
+  color: var(--season-primary);
+}
+.card-season-pathway .card-arrow-link {
+  color: var(--season-primary);
+  transition: color 0.2s ease;
+}
+.card-season-pathway:hover .card-arrow-link {
+  color: var(--season-primary-hover);
+}
+
+/* Input Fields with seasonal hover and focus */
+.input-season-field {
+  border: 1px solid var(--season-border);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+.input-season-field:hover {
+  border-color: var(--season-primary);
+}
+.input-season-field:focus-within {
+  border-color: var(--season-primary);
+  outline: 2px solid var(--season-focus-ring);
+}
+
+.container-custom {
+  max-width: 1280px;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+
+@media (min-width: 640px) {
+  .container-custom {
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .container-custom {
+    padding-left: 2rem;
+    padding-right: 2rem;
+  }
+  .site-header {
+    height: 72px !important;
+    min-height: 72px !important;
+    max-height: 72px !important;
+  }
+}
+
+@media (max-width: 1023px) and (min-width: 768px) {
+  .site-header {
+    height: 68px !important;
+    min-height: 68px !important;
+    max-height: 68px !important;
+  }
+}
+
+@media (max-width: 767px) {
+  .site-header {
+    height: 64px !important;
+    min-height: 64px !important;
+    max-height: 64px !important;
+  }
+}
+
+/* ============================================================
+   4 Seasons Infinite Attention Gradient Animation
+   Harud (Autumn) -> Wandh (Winter) -> Sonth (Spring) -> Retkol (Summer)
+   Smooth fluid cycle designed for high user engagement & conversion
+   ============================================================ */
+@keyframes fourSeasonsInfiniteCycle {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+@keyframes buttonPulseGlow {
+  0%, 100% {
+    box-shadow: 0 4px 14px -2px rgba(214, 40, 40, 0.45), 0 0 0 0 rgba(214, 40, 40, 0.3);
+  }
+  25% {
+    box-shadow: 0 4px 14px -2px rgba(30, 58, 138, 0.45), 0 0 0 2px rgba(2, 132, 199, 0.25);
+  }
+  50% {
+    box-shadow: 0 4px 14px -2px rgba(217, 30, 99, 0.45), 0 0 0 2px rgba(13, 148, 136, 0.25);
+  }
+  75% {
+    box-shadow: 0 4px 14px -2px rgba(15, 118, 110, 0.45), 0 0 0 2px rgba(233, 196, 106, 0.25);
+  }
+}
+
+.animate-four-seasons {
+  background: linear-gradient(
+    115deg,
+    #D62828 0%,    /* Autumn (Harud) Crimson */
+    #F4A261 14%,   /* Autumn Warm Amber Glow */
+    #1E3A8A 28%,   /* Winter (Wandh) Deep Cobalt */
+    #0284C7 42%,   /* Winter Glacier Blue */
+    #D91E63 56%,   /* Spring (Sonth) Almond Tulip Pink */
+    #0D9488 70%,   /* Spring Fresh Meadow Emerald */
+    #0F766E 84%,   /* Summer (Retkol) Pine Forest */
+    #E9C46A 94%,   /* Summer Golden Sun */
+    #D62828 100%   /* Seamless Return to Autumn */
+  ) !important;
+  background-size: 340% 340% !important;
+  animation: fourSeasonsInfiniteCycle 10s ease infinite, buttonPulseGlow 10s ease infinite !important;
+  transition: transform 0.15s ease, filter 0.2s ease !important;
+}
+
+.animate-four-seasons:hover {
+  filter: brightness(1.08);
+}
+
+.animate-four-seasons:active {
+  transform: scale(0.97);
+}
+
+/* ============================================================
+   Mobile Pill 4-Seasons Background Color Animation (Infinite)
+   Cycles smoothly through all 4 seasonal colors:
+   Autumn (#D62828) -> Winter (#1E3A8A) -> Spring (#D91E63) -> Summer (#164E3B)
+   ============================================================ */
+@keyframes fourSeasonsPillBg {
+  0%, 100% {
+    background-color: #D62828; /* Autumn (Harud Crimson) */
+    box-shadow: 0 4px 14px -2px rgba(214, 40, 40, 0.45), 0 0 0 1px rgba(255, 255, 255, 0.2) inset;
+  }
+  25% {
+    background-color: #1E3A8A; /* Winter (Wandh Cobalt) */
+    box-shadow: 0 4px 14px -2px rgba(30, 58, 138, 0.45), 0 0 0 1px rgba(255, 255, 255, 0.2) inset;
+  }
+  50% {
+    background-color: #D91E63; /* Spring (Sonth Tulip Pink) */
+    box-shadow: 0 4px 14px -2px rgba(217, 30, 99, 0.45), 0 0 0 1px rgba(255, 255, 255, 0.2) inset;
+  }
+  75% {
+    background-color: #164E3B; /* Summer (Retkol Pine Emerald) */
+    box-shadow: 0 4px 14px -2px rgba(22, 78, 59, 0.45), 0 0 0 1px rgba(255, 255, 255, 0.2) inset;
+  }
+}
+
+.animate-four-seasons-pill {
+  animation: fourSeasonsPillBg 8s ease-in-out infinite !important;
+  transition: transform 0.15s ease, filter 0.2s ease !important;
+}
+
+.animate-four-seasons-pill:hover {
+  filter: brightness(1.08);
+}
+
+.animate-four-seasons-pill:active {
+  transform: scale(0.97);
+}
+
