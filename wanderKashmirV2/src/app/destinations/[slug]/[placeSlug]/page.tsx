@@ -93,7 +93,7 @@ async function resolveEntity(
 
   // Find the specific DestinationPlace link for this placeSlug
   const linkedEntry = destination.places.find(
-    (dp) => dp.place.slug === placeSlug
+    (dp: (typeof destination.places)[number]) => dp.place.slug === placeSlug
   );
 
   if (!linkedEntry) {
@@ -110,10 +110,10 @@ async function resolveEntity(
   // Related places: same destination, exclude current, ACTIVE only
   const relatedPlaces = destination.places
     .filter(
-      (dp) =>
+      (dp: (typeof destination.places)[number]) =>
         dp.place.slug !== placeSlug && dp.place.status === "ACTIVE"
     )
-    .map((dp) => ({
+    .map((dp: (typeof destination.places)[number]) => ({
       id: dp.place.id,
       name: dp.place.name,
       slug: dp.place.slug,

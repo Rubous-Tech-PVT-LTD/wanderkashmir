@@ -58,7 +58,7 @@ export default async function DestinationsPage({ searchParams }: DestinationsPag
 
   // 2. Defensive server-side validation: Guarantee strictly DESTINATION type and PUBLISHED status
   const allDestinations = rawDestinations.filter(
-    (d) => d.type === "DESTINATION" && d.workflowState === "PUBLISHED"
+    (d: (typeof rawDestinations)[number]) => d.type === "DESTINATION" && d.workflowState === "PUBLISHED"
   );
 
   const mappings = categoryMappings?.value ? JSON.parse(categoryMappings.value) : {};
@@ -67,7 +67,7 @@ export default async function DestinationsPage({ searchParams }: DestinationsPag
   let filteredDestinations = allDestinations;
 
   if (activeCategory) {
-    filteredDestinations = filteredDestinations.filter(dest => {
+    filteredDestinations = filteredDestinations.filter((dest: (typeof allDestinations)[number]) => {
       const cats = mappings[dest.slug || ""] || [];
       return cats.includes(activeCategory);
     });
@@ -75,7 +75,7 @@ export default async function DestinationsPage({ searchParams }: DestinationsPag
 
   const normalizedFilter = activeName ? activeName.toLowerCase() : "";
   if (normalizedFilter) {
-    filteredDestinations = filteredDestinations.filter((dest) => {
+    filteredDestinations = filteredDestinations.filter((dest: (typeof allDestinations)[number]) => {
       const slug = (dest.slug || "").toLowerCase();
       const title = (dest.title || "").toLowerCase();
       const heading = (dest.h1Heading || "").toLowerCase();

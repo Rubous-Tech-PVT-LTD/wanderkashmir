@@ -12,7 +12,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       take: 5000,
     });
 
-    propertyUrls = properties.map((property) => ({
+    propertyUrls = properties.map((property: (typeof properties)[number]) => ({
       url: `${baseUrl}/stays/${property.id}`,
       lastModified: property.updatedAt,
       changeFrequency: 'weekly',
@@ -30,7 +30,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       take: 5000,
     });
 
-    tourUrls = tours.map((tour) => ({
+    tourUrls = tours.map((tour: (typeof tours)[number]) => ({
       url: `${baseUrl}/tours/${tour.slug}`,
       lastModified: tour.updatedAt,
       changeFrequency: 'weekly',
@@ -48,7 +48,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       take: 5000,
     });
 
-    vehicleUrls = vehicles.map((vehicle) => ({
+    vehicleUrls = vehicles.map((vehicle: (typeof vehicles)[number]) => ({
       url: `${baseUrl}/taxis/${vehicle.id}`,
       lastModified: vehicle.updatedAt,
       changeFrequency: 'weekly',
@@ -66,7 +66,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       take: 5000,
     });
 
-    guideUrls = guides.map((guide) => ({
+    guideUrls = guides.map((guide: (typeof guides)[number]) => ({
       url: `${baseUrl}/guides/${guide.id}`,
       lastModified: guide.updatedAt,
       changeFrequency: 'weekly',
@@ -95,7 +95,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       }
     };
 
-    seoUrls = seoPages.map((page) => ({
+    seoUrls = seoPages.map((page: (typeof seoPages)[number]) => ({
       url: `${baseUrl}${getBaseRoute(page.type)}/${page.slug}`,
       lastModified: page.updatedAt,
       changeFrequency: 'weekly',
@@ -120,7 +120,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       take: 5000,
     });
 
-    placeUrls = destinationPlaces.map((dp) => ({
+    placeUrls = destinationPlaces.map((dp: (typeof destinationPlaces)[number]) => ({
       url: `${baseUrl}/destinations/${dp.destination.slug}/${dp.place.slug}`,
       lastModified: dp.place.updatedAt || dp.updatedAt,
       changeFrequency: 'weekly',

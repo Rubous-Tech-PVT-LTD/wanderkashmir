@@ -7,7 +7,6 @@ import ToursHeroBanner from "@/components/tours/ToursHeroBanner";
 import ToursRecommendationBar from "@/components/tours/ToursRecommendationBar";
 import ToursInventoryView from "@/components/tours/ToursInventoryView";
 import ToursNeedHelpBanner from "@/components/tours/ToursNeedHelpBanner";
-import { LIVE_TOURS_CATALOG } from "@/data/liveToursData";
 import { getTourFromDB, getOtherToursFromDB, getToursByTravelStyle } from "@/data/toursDataFetching";
 import prisma from "@/lib/prisma";
 
@@ -25,18 +24,19 @@ interface PageProps {
 }
 
 export async function generateStaticParams() {
-  const tours = await prisma.tour.findMany({
-    where: { isLive: true },
-    select: { slug: true },
-  }).catch(() => []);
-  const styles = await prisma.travelStyle.findMany({
-    where: { isActive: true },
-    select: { slug: true },
-  }).catch(() => []);
+  const tours: { slug: string }[] = await prisma.tour
+    .findMany({
+      where: { isLive: true },
+      select: { slug: true },
+    })
+    .catch(() => []);
+  const styles: { slug: string }[] = await prisma.travelStyle
+    .findMany({
+      where: { isActive: true },
+      select: { slug: true },
+    })
+    .catch(() => []);
   return [
-    ...LIVE_TOURS_CATALOG.map((tour) => ({
-      slug: tour.slug,
-    })),
     ...tours.map((t) => ({ slug: t.slug })),
     ...styles.map((s) => ({ slug: s.slug })),
   ];

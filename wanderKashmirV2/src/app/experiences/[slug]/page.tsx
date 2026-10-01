@@ -48,7 +48,7 @@ export default async function ExperienceDetailPage({ params }: { params: { slug:
 
   const relatedTours = experience.tourExperiences
     .map((te: any) => te.tour)
-    .filter(tour => tour.isLive)
+    .filter((tour: { isLive: boolean }) => tour.isLive)
     .slice(0, 4); // Max 4 tours as requested
 
   // Helper to format tour data for TourCard

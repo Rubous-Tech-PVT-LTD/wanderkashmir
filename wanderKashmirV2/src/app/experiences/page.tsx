@@ -61,7 +61,7 @@ export default async function ExperiencesPage({
           {experiences.length > 0 ? (
             <>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                {experiences.map((exp) => (
+                {experiences.map((exp: (typeof experiences)[number]) => (
                   <ExperienceCard key={exp.id} experience={exp} />
                 ))}
               </div>

@@ -1,5 +1,5 @@
 import prisma from "../lib/prisma";
-import { TourPackageDetail, LIVE_TOURS_CATALOG } from "./liveToursData";
+import { TourPackageDetail } from "./liveToursData";
 import { cache } from "react";
 
 export const getTourFromDB = cache(async function(slug: string): Promise<TourPackageDetail | null> {
@@ -37,7 +37,7 @@ export const getTourFromDB = cache(async function(slug: string): Promise<TourPac
         resolvedDestinations = tour.destinations.map((dName: string) => {
           const cleanName = dName.trim();
           const norm = cleanName.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
-          const matched = destPages.find((p) => {
+          const matched = destPages.find((p: { slug: string; title: string; h1Heading: string | null }) => {
             const pSlug = p.slug.toLowerCase();
             const pTitle = p.title.toLowerCase();
             return pSlug === norm || pSlug === `destinations-${norm}` || pTitle.includes(cleanName.toLowerCase());
@@ -66,8 +66,8 @@ export const getTourFromDB = cache(async function(slug: string): Promise<TourPac
 
     // Filter and map travel guides for valid, published BLOG pages only
     const travelGuides = (tour.travelGuides || [])
-      .filter((tg) => tg.guide && tg.guide.type === "BLOG" && tg.guide.workflowState === "PUBLISHED")
-      .map((tg) => ({
+      .filter((tg: { guide?: { type: string; workflowState: string; title: string; slug: string; imageUrl?: string | null; description?: string | null } | null }) => Boolean(tg.guide && tg.guide.type === "BLOG" && tg.guide.workflowState === "PUBLISHED"))
+      .map((tg: { id: string; guideId: string; displayOrder: number; guide: { title: string; slug: string; imageUrl?: string | null; description?: string | null } }) => ({
         id: tg.id,
         guideId: tg.guideId,
         title: tg.guide.title,
@@ -90,7 +90,7 @@ export const getTourFromDB = cache(async function(slug: string): Promise<TourPac
       resolvedDestinations,
       price: tour.price || 0,
       originalPrice: tour.originalPrice || tour.price || 0,
-      rating: tour.reviews?.length ? tour.reviews.reduce((acc, r) => acc + r.rating, 0) / tour.reviews.length : 0,
+      rating: tour.reviews?.length ? tour.reviews.reduce((acc: number, r: { rating: number }) => acc + r.rating, 0) / tour.reviews.length : 0,
       reviewsCount: tour.reviews?.length || 0,
       overview: tour.overview || "",
       images: tour.images || [],
@@ -114,7 +114,7 @@ export const getTourFromDB = cache(async function(slug: string): Promise<TourPac
       inclusions: tour.inclusions || [],
       exclusions: tour.exclusions || [],
       highlights: tour.highlights || [],
-      reviewsList: tour.reviews?.map(r => ({
+      reviewsList: tour.reviews?.map((r: { user?: { name: string | null } | null; createdAt: Date; rating: number; comment?: string | null }) => ({
         name: r.user?.name || "Traveler",
         avatar: "",
         location: "", // The user instructed to hide the fallback reviewer location if unavailable
@@ -122,7 +122,7 @@ export const getTourFromDB = cache(async function(slug: string): Promise<TourPac
         rating: r.rating,
         text: r.comment || "",
       })) || [],
-      stays: tour.stays?.map(s => ({
+      stays: tour.stays?.map((s: { id: string; destination: string; nights: number; stayType?: string | null; displayOrder: number; propertyId?: string | null }) => ({
         id: s.id,
         destination: s.destination,
         nights: s.nights,
@@ -130,7 +130,7 @@ export const getTourFromDB = cache(async function(slug: string): Promise<TourPac
         displayOrder: s.displayOrder,
         propertyId: s.propertyId,
       })) || [],
-      transports: tour.transports?.map(t => ({
+      transports: tour.transports?.map((t: { id: string; origin: string; destination: string; purpose?: string | null; displayOrder: number; vehicleId?: string | null; driverId?: string | null }) => ({
         id: t.id,
         origin: t.origin,
         destination: t.destination,
@@ -139,7 +139,7 @@ export const getTourFromDB = cache(async function(slug: string): Promise<TourPac
         vehicleId: t.vehicleId,
         driverId: t.driverId,
       })) || [],
-      experiences: tour.experiences?.map(te => ({
+      experiences: tour.experiences?.map((te: NonNullable<typeof tour.experiences>[number]) => ({
         id: te.id,
         experienceId: te.experienceId,
         title: te.experience.title,
@@ -171,7 +171,7 @@ export const getOtherToursFromDB = cache(async function(excludeSlug: string): Pr
       take: 4,
     });
 
-    return tours.map(tour => ({
+    return tours.map((tour: (typeof tours)[number]) => ({
       id: tour.id,
       slug: tour.slug,
       title: tour.title,
@@ -264,7 +264,7 @@ export const getToursByTravelStyle = cache(async function(
 
     if (!travelStyle) return null;
 
-    let mappedTours: TourPackageDetail[] = travelStyle.tours.map((item) => {
+    let mappedTours: TourPackageDetail[] = travelStyle.tours.map((item: (typeof travelStyle.tours)[number]) => {
       const tour = item.tour;
       return {
         id: tour.id,
@@ -278,7 +278,7 @@ export const getToursByTravelStyle = cache(async function(
         routeDisplay: tour.destinations || [],
         price: tour.price || 0,
         originalPrice: tour.originalPrice || tour.price || 0,
-        rating: tour.reviews?.length ? tour.reviews.reduce((acc, r) => acc + r.rating, 0) / tour.reviews.length : 0,
+        rating: tour.reviews?.length ? tour.reviews.reduce((acc: number, r: { rating: number }) => acc + r.rating, 0) / tour.reviews.length : 0,
         reviewsCount: tour.reviews?.length || 0,
         overview: tour.overview || "",
         images: tour.images || [],
@@ -288,7 +288,7 @@ export const getToursByTravelStyle = cache(async function(
         exclusions: tour.exclusions || [],
         highlights: tour.highlights || [],
         reviewsList: [],
-        stays: (tour.stays || []).map((s) => ({
+        stays: (tour.stays || []).map((s: { id: string; destination: string; nights: number; stayType?: string | null; displayOrder: number; propertyId?: string | null }) => ({
           id: s.id,
           destination: s.destination,
           nights: s.nights,

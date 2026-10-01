@@ -170,7 +170,7 @@ export default async function HomePage() {
       },
     });
 
-    featuredDestinations = rawDestinations.map((dest) => ({
+    featuredDestinations = rawDestinations.map((dest: (typeof rawDestinations)[number]) => ({
       id: dest.id,
       name: getDestinationDisplayName(dest),
       slug: dest.slug,
@@ -211,7 +211,7 @@ export default async function HomePage() {
     });
 
     popularTours = APPROVED_POPULAR_TOURS_BASE.map((base) => {
-      const match = dbTours.find((d) => d.slug === base.slug);
+      const match = dbTours.find((d: (typeof dbTours)[number]) => d.slug === base.slug);
       const dbImage =
         match && match.images && match.images.length > 0 && match.images[0].trim()
           ? match.images[0].trim()
@@ -224,7 +224,7 @@ export default async function HomePage() {
     });
 
     syncedFilterTours = FILTER_TOURS_CATALOG.map((base) => {
-      const match = dbTours.find((d) => d.slug === base.slug);
+      const match = dbTours.find((d: (typeof dbTours)[number]) => d.slug === base.slug);
       const dbImage =
         match && match.images && match.images.length > 0 && match.images[0].trim()
           ? match.images[0].trim()

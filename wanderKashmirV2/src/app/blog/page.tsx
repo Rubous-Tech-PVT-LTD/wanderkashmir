@@ -39,7 +39,7 @@ export default async function BlogPage() {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {blogs.map((blog) => (
+            {blogs.map((blog: (typeof blogs)[number]) => (
               <article key={blog.id} className="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group flex flex-col">
                 <Link href={`/blog/${blog.slug}`} className="block relative aspect-[4/3] overflow-hidden bg-slate-100">
                   <img 

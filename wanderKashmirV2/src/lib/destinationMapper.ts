@@ -185,7 +185,7 @@ export async function getDestinationData(slug: string): Promise<DestinationPageD
       });
       // Maintain explicit admin ordering
       return cmsDoc.featuredPropertyIds
-        .map((id: string) => props.find((p) => p.id === id))
+        .map((id: string) => props.find((p: (typeof props)[number]) => p.id === id))
         .filter(Boolean)
         .map((prop: any) => ({
           id: prop.id,
@@ -229,7 +229,7 @@ export async function getDestinationData(slug: string): Promise<DestinationPageD
       });
       // Maintain explicit admin ordering
       return cmsDoc.featuredTourIds
-        .map((id: string) => tours.find((t) => t.id === id))
+        .map((id: string) => tours.find((t: (typeof tours)[number]) => t.id === id))
         .filter(Boolean)
         .map((t: any) => ({
           id: t.id,
@@ -275,7 +275,7 @@ export async function getDestinationData(slug: string): Promise<DestinationPageD
         select: { id: true, title: true, slug: true, imageUrl: true, description: true },
       });
       return cmsDoc.nearbyDestinationSlugs
-        .map((s: string) => nearbyPages.find((p) => p.slug === s))
+        .map((s: string) => nearbyPages.find((p: (typeof nearbyPages)[number]) => p.slug === s))
         .filter(Boolean)
         .map((p: any) => ({
           id: p.id,

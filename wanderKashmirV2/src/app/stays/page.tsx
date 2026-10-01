@@ -63,7 +63,7 @@ export default async function StaysPage({ searchParams }: StaysPageProps) {
   });
 
   // Transform database records into clean, display-ready items
-  const properties: StayPropertyItem[] = rawProperties.map((p) => ({
+  const properties: StayPropertyItem[] = rawProperties.map((p: (typeof rawProperties)[number]) => ({
     id: p.id,
     name: p.name,
     location: p.location,
