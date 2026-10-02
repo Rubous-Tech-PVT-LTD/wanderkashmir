@@ -29,6 +29,30 @@ export const metadata: Metadata = {
   alternates: {
     canonical: "/",
   },
+  icons: {
+    icon: [
+      {
+        url: "https://res.cloudinary.com/dcmoseix9/image/upload/v1790940410/favicon_fbpa6r.ico",
+        sizes: "32x32",
+      },
+      {
+        url: "https://res.cloudinary.com/dcmoseix9/image/upload/v1790940411/favicon_px8xdy.svg",
+        type: "image/svg+xml",
+      },
+      {
+        url: "https://res.cloudinary.com/dcmoseix9/image/upload/v1790940410/favicon-96x96_jtczpk.png",
+        sizes: "96x96",
+        type: "image/png",
+      },
+    ],
+    apple: [
+      {
+        url: "https://res.cloudinary.com/dcmoseix9/image/upload/v1790940409/apple-touch-icon_gkpbmz.png",
+        sizes: "180x180",
+        type: "image/png",
+      },
+    ],
+  },
   openGraph: {
     siteName: "WanderKashmir",
     locale: "en_IN",
