@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { Plus_Jakarta_Sans, Inter } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/lib/theme/themeProvider";
-import ThemeTestingControl from "@/components/ThemeTestingControl";
 
 const plusJakartaSans = Plus_Jakarta_Sans({
   variable: "--font-plus-jakarta",
@@ -103,7 +102,6 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col font-sans bg-white text-[var(--season-text)] antialiased transition-colors duration-200">
         <ThemeProvider>
           {children}
-          <ThemeTestingControl />
         </ThemeProvider>
       </body>
     </html>

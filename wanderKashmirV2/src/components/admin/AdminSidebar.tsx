@@ -3,6 +3,8 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useSeasonalTheme } from "@/lib/theme/themeProvider";
+import { seasonalThemes, SeasonId } from "@/lib/theme/seasonalThemes";
 import {
   LayoutDashboard,
   Compass,
@@ -17,6 +19,9 @@ import {
   Menu,
   X,
   ShieldCheck,
+  ChevronDown,
+  Check,
+  Calendar,
 } from "lucide-react";
 import { logoutAdminAction } from "@/actions/adminAuth";
 
@@ -68,7 +73,9 @@ const navSections: NavSection[] = [
 
 export default function AdminSidebar({ userEmail }: AdminSidebarProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [themeOpen, setThemeOpen] = useState(false);
   const pathname = usePathname();
+  const { mode, setMode, selectedSeason, setSelectedSeason, activeSeason, autoSeason } = useSeasonalTheme();
 
   return (
     <>
@@ -162,6 +169,134 @@ export default function AdminSidebar({ userEmail }: AdminSidebarProps) {
             </div>
           ))}
         </nav>
+ 
+         {/* Seasonal Theme Control */}
+         <div className="p-3 border-t border-slate-800/80 bg-slate-950/40">
+           <div className="px-1 pb-1.5 text-[10px] font-bold uppercase tracking-wider text-slate-500 flex items-center justify-between select-none">
+             <span className="flex items-center gap-1.5">
+               <Palette className="w-3 h-3 text-emerald-400" />
+               <span>Theme / Season</span>
+             </span>
+             <span className="text-[9px] text-emerald-400 font-semibold px-1.5 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/20">
+               {mode === "automatic" ? "Auto" : "Manual"}
+             </span>
+           </div>
+ 
+           <button
+             type="button"
+             onClick={() => setThemeOpen(!themeOpen)}
+             className="w-full flex items-center justify-between p-2 rounded-lg bg-slate-900/90 border border-slate-800 hover:border-slate-700 text-left transition-all group cursor-pointer"
+             aria-expanded={themeOpen}
+           >
+             <div className="flex items-center gap-2.5 min-w-0">
+               <div className="flex items-center -space-x-1 shrink-0">
+                 <span
+                   className="w-2.5 h-2.5 rounded-full ring-1 ring-slate-900"
+                   style={{ backgroundColor: activeSeason.colors.primary }}
+                 />
+                 <span
+                   className="w-2.5 h-2.5 rounded-full ring-1 ring-slate-900"
+                   style={{ backgroundColor: activeSeason.colors.secondary }}
+                 />
+                 <span
+                   className="w-2.5 h-2.5 rounded-full ring-1 ring-slate-900"
+                   style={{ backgroundColor: activeSeason.colors.tertiary }}
+                 />
+               </div>
+ 
+               <div className="min-w-0">
+                 <div className="text-xs font-semibold text-white truncate flex items-center gap-1">
+                   <span>{activeSeason.name}</span>
+                   <span className="text-slate-400 font-normal">({activeSeason.kashmiriName})</span>
+                 </div>
+                 <div className="text-[10px] text-slate-400 truncate">
+                   {mode === "automatic" ? "Date-based (Auto)" : "Manual Override"}
+                 </div>
+               </div>
+             </div>
+ 
+             <ChevronDown
+               className={`w-3.5 h-3.5 text-slate-400 group-hover:text-white transition-transform shrink-0 ${
+                 themeOpen ? "rotate-180" : ""
+               }`}
+             />
+           </button>
+ 
+           {themeOpen && (
+             <div className="mt-2 space-y-1 p-1.5 rounded-lg bg-slate-900 border border-slate-800 animate-in fade-in duration-150">
+               <button
+                 type="button"
+                 onClick={() => {
+                   setMode("automatic");
+                 }}
+                 className={`w-full flex items-center justify-between px-2 py-1.5 rounded-md text-xs transition-colors cursor-pointer ${
+                   mode === "automatic"
+                     ? "bg-emerald-500/10 text-emerald-400 font-semibold border border-emerald-500/20"
+                     : "text-slate-300 hover:bg-slate-800 hover:text-white"
+                 }`}
+               >
+                 <div className="flex items-center gap-2">
+                   <Calendar className="w-3.5 h-3.5 text-slate-400" />
+                   <div className="text-left">
+                     <div>Automatic (Date-based)</div>
+                     <div className="text-[9px] text-slate-400 font-normal">
+                       Current: {seasonalThemes[autoSeason]?.name} ({seasonalThemes[autoSeason]?.kashmiriName})
+                     </div>
+                   </div>
+                 </div>
+                 {mode === "automatic" && <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0" />}
+               </button>
+ 
+               <div className="h-px bg-slate-800 my-1" />
+ 
+               <div className="px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-slate-500">
+                 Manual Override
+               </div>
+ 
+               {(["spring", "summer", "autumn", "winter"] as SeasonId[]).map((seasonKey) => {
+                 const s = seasonalThemes[seasonKey];
+                 const isSelected = mode === "manual" && selectedSeason === seasonKey;
+ 
+                 return (
+                   <button
+                     key={seasonKey}
+                     type="button"
+                     onClick={() => {
+                       setSelectedSeason(seasonKey);
+                     }}
+                     className={`w-full flex items-center justify-between px-2 py-1.5 rounded-md text-xs transition-colors cursor-pointer ${
+                       isSelected
+                         ? "bg-emerald-500/10 text-emerald-400 font-semibold border border-emerald-500/20"
+                         : "text-slate-300 hover:bg-slate-800 hover:text-white"
+                     }`}
+                   >
+                     <div className="flex items-center gap-2 min-w-0">
+                       <div className="flex items-center -space-x-1 shrink-0">
+                         <span
+                           className="w-2 h-2 rounded-full"
+                           style={{ backgroundColor: s.colors.primary }}
+                         />
+                         <span
+                           className="w-2 h-2 rounded-full"
+                           style={{ backgroundColor: s.colors.secondary }}
+                         />
+                         <span
+                           className="w-2 h-2 rounded-full"
+                           style={{ backgroundColor: s.colors.tertiary }}
+                         />
+                       </div>
+                       <div className="text-left truncate">
+                         <span className="truncate">{s.name}</span>{" "}
+                         <span className="text-[10px] text-slate-400">({s.kashmiriName})</span>
+                       </div>
+                     </div>
+                     {isSelected && <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0" />}
+                   </button>
+                 );
+               })}
+             </div>
+           )}
+         </div>
 
         {/* User & Security Footer */}
         <div className="p-4 border-t border-slate-800/80 bg-slate-950/60">
