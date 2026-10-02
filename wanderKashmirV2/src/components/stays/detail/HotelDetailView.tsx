@@ -124,6 +124,7 @@ export default function HotelDetailView({ hotel, slug }: HotelDetailViewProps) {
 
         {/* Conversion Block */}
         <HotelBookingCTA
+          propertyId={hotel.basic.id}
           conversion={hotel.conversion}
           hotelName={hotel.basic.name}
           destinationHub={hotel.location.destinationHub}

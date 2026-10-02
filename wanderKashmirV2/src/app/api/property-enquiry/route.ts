@@ -1,10 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
-import { submitCustomTripRequest } from "@/actions/customTrip";
+import { submitPropertyEnquiry } from "@/actions/propertyEnquiry";
 
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const result = await submitCustomTripRequest(body);
+    const result = await submitPropertyEnquiry({
+      propertyId: body.propertyId,
+      name: body.name,
+      phone: body.phone,
+      email: body.email,
+      dates: body.dates,
+      guests: body.guests,
+      message: body.message,
+    });
 
     if (!result.success) {
       return NextResponse.json(
@@ -15,11 +23,11 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json(result, { status: 201 });
   } catch (error: any) {
-    console.error("API error submitting custom trip request:", error);
+    console.error("API error submitting property enquiry:", error);
     return NextResponse.json(
       {
         success: false,
-        error: "Unable to process request. Please try again.",
+        error: "Unable to process enquiry. Please try again.",
       },
       { status: 500 }
     );
