@@ -1,25 +1,45 @@
-import { Compass } from "lucide-react";
-import MigrationPendingView from "@/components/admin/MigrationPendingView";
-import prisma from "@/lib/prisma";
+import { getAdminToursList, getAdminTourFormOptions } from "@/lib/admin/tours";
+import TourListClient from "@/components/admin/tours/TourListClient";
 
-export const revalidate = 0;
+export const revalidate = 0; // Fresh admin data on every request
 
-export default async function AdminToursPage() {
-  const [liveTours, totalTours] = await Promise.all([
-    prisma.tour.count({ where: { isLive: true } }),
-    prisma.tour.count(),
+export default async function AdminToursPage({
+  searchParams,
+}: {
+  searchParams: Promise<{
+    search?: string;
+    status?: "all" | "live" | "draft";
+    categoryId?: string;
+    page?: string;
+  }>;
+}) {
+  const params = await searchParams;
+  const page = parseInt(params.page || "1", 10) || 1;
+  const search = params.search || "";
+  const status = params.status || "all";
+  const categoryId = params.categoryId || "";
+
+  const [toursData, formOptions] = await Promise.all([
+    getAdminToursList({
+      search,
+      status,
+      categoryId,
+      page,
+      limit: 20,
+    }),
+    getAdminTourFormOptions(),
   ]);
 
   return (
-    <MigrationPendingView
-      title="Tours Management"
-      description="Tour package publishing, pricing management, itinerary builder, and seasonal controls are scheduled for migration in a dedicated Tour CRUD phase."
-      icon={Compass}
-      v1RouteName="V1 Tours Tab"
-      stats={[
-        { label: "Live Tours", value: liveTours },
-        { label: "Total in DB", value: totalTours },
-      ]}
+    <TourListClient
+      tours={toursData.tours}
+      totalCount={toursData.totalCount}
+      currentPage={toursData.page}
+      totalPages={toursData.totalPages}
+      categories={formOptions.categories}
+      currentStatus={status}
+      currentSearch={search}
+      currentCategory={categoryId}
     />
   );
 }
