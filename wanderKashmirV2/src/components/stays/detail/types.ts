@@ -150,18 +150,16 @@ export function mapPropertyToHotelViewModel(
   const locStr = property.location || "";
   const locLower = locStr.toLowerCase();
 
-  // Determine property type based on name and location cues
-  const isHouseboat =
-    propName.toLowerCase().includes("houseboat") ||
-    locLower.includes("nigeen") ||
-    locLower.includes("dal lake") ||
-    locLower.includes("lake");
-
-  const propertyType = isHouseboat
-    ? "Houseboat"
-    : property.vendorProfile?.type === "HOMESTAY"
-    ? "Homestay"
-    : "Hotel & Resort";
+  // Determine property type strictly from Property.propertyType
+  let propertyType: "Hotel & Resort" | "Houseboat" | "Homestay" | "Boutique Stay" = "Hotel & Resort";
+  const rawPt = (property.propertyType || "").toString().toUpperCase();
+  if (rawPt === "HOUSEBOAT") {
+    propertyType = "Houseboat";
+  } else if (rawPt === "HOMESTAY") {
+    propertyType = "Homestay";
+  } else if (rawPt === "RESORT" || rawPt === "HOTEL") {
+    propertyType = "Hotel & Resort";
+  }
 
   // Determine primary destination hub
   let destinationHub = "Kashmir";

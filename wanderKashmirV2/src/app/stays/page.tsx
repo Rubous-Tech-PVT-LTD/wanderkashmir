@@ -8,7 +8,7 @@ import StaysHeroBanner from "@/components/stays/StaysHeroBanner";
 import StaysInventoryView from "@/components/stays/StaysInventoryView";
 import { StayPropertyItem } from "@/components/stays/StayCard";
 
-export const revalidate = 3600; // ISR for stays index
+export const revalidate = 60; // ISR for stays index
 
 export const metadata: Metadata = {
   title: "Hotels, Resorts & Houseboats in Kashmir | WanderKashmir",
@@ -42,11 +42,28 @@ export default async function StaysPage({ searchParams }: StaysPageProps) {
   const activeLocation = resolvedParams.location ? resolvedParams.location.trim() : undefined;
   const activeMaxPrice = resolvedParams.maxPrice ? parseInt(resolvedParams.maxPrice.trim(), 10) : undefined;
 
-  // Fetch strictly verified & approved properties from database
+  // Map requested type filter to database PropertyType enum
+  let propertyTypeFilter: "HOTEL" | "RESORT" | "HOMESTAY" | "HOUSEBOAT" | undefined = undefined;
+  if (activeType && activeType !== "ALL") {
+    const norm = activeType.toLowerCase();
+    if (norm === "hotel" || norm === "hotels") propertyTypeFilter = "HOTEL";
+    else if (norm === "resort" || norm === "resorts") propertyTypeFilter = "RESORT";
+    else if (norm === "homestay" || norm === "homestays") propertyTypeFilter = "HOMESTAY";
+    else if (norm === "houseboat" || norm === "houseboats") propertyTypeFilter = "HOUSEBOAT";
+  }
+
+  // Fetch strictly verified & approved properties from database with server-side query filters
   const rawProperties = await prisma.property.findMany({
     where: {
       isApproved: true,
       status: "APPROVED",
+      ...(propertyTypeFilter ? { propertyType: propertyTypeFilter } : {}),
+      ...(activeLocation && activeLocation !== "ALL"
+        ? { location: { contains: activeLocation, mode: "insensitive" } }
+        : {}),
+      ...(activeMaxPrice && !isNaN(activeMaxPrice)
+        ? { pricePerNight: { lte: activeMaxPrice } }
+        : {}),
     },
     include: {
       vendorProfile: {

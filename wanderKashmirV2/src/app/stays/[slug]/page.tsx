@@ -1,5 +1,6 @@
 import React from "react";
 import { Metadata } from "next";
+import { notFound } from "next/navigation";
 
 import prisma from "@/lib/prisma";
 import Navbar from "@/components/Navbar";
@@ -7,7 +8,7 @@ import Footer from "@/components/Footer";
 import HotelDetailView from "@/components/stays/detail/HotelDetailView";
 import { mapPropertyToHotelViewModel } from "@/components/stays/detail/types";
 
-export const revalidate = 3600;
+export const revalidate = 60;
 
 interface HotelDetailPageProps {
   params: Promise<{
@@ -41,11 +42,7 @@ export async function generateMetadata({
 
   if (!property) {
     return {
-      title: "Hotel Details | WanderKashmir Stays",
-      description: "Explore verified hotels, alpine resorts, and houseboats in Kashmir.",
-      alternates: {
-        canonical: `https://www.wanderkashmir.com/stays/${slug}`,
-      },
+      title: "Stay Not Found | WanderKashmir",
     };
   }
 
@@ -98,11 +95,22 @@ export default async function HotelDetailPage({ params }: HotelDetailPageProps) 
         },
       },
       roomTypes: true,
-      reviews: true,
+      reviews: {
+        include: {
+          user: {
+            select: { name: true },
+          },
+        },
+        orderBy: { createdAt: "desc" },
+      },
     },
   });
 
-  // Map to strongly typed view model; returns null if not found
+  if (!property) {
+    notFound();
+  }
+
+  // Map to strongly typed view model
   const hotel = mapPropertyToHotelViewModel(property, slug);
 
   return (

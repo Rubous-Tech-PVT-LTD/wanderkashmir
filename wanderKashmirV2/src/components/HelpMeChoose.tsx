@@ -197,75 +197,7 @@ export interface PathwayCardItem {
   actionText: string;
 }
 
-export const HELP_ME_CHOOSE_CARDS: PathwayCardItem[] = [
-  {
-    id: "culture",
-    title: "CULTURE",
-    subtitle: "Heritage & Local Life",
-    imageUrl:
-      "https://res.cloudinary.com/dcmoseix9/image/upload/v1790881582/culture_hf5pex.jpg",
-    svgUrl: "https://res.cloudinary.com/dcmoseix9/image/upload/v1789793264/palace_igvqrj.png",
-    fallbackIcon: HouseboatIcon,
-    href: "/tours/culture",
-    actionText: "Explore Culture",
-  },
-  {
-    id: "spiritual",
-    title: "SPIRITUAL",
-    subtitle: "Sacred Kashmir",
-    imageUrl:
-      "https://res.cloudinary.com/dcmoseix9/image/upload/v1790833523/Spritural_Image_fj5gla.jpg",
-    svgUrl: "https://res.cloudinary.com/dcmoseix9/image/upload/v1789793902/dervish_jr9igw.png",
-    fallbackIcon: ShrineIcon,
-    href: "/tours/spiritual",
-    actionText: "Explore Spiritual Kashmir",
-  },
-  {
-    id: "nature",
-    title: "NATURE",
-    subtitle: "Scenic Himalayan Escapes",
-    imageUrl:
-      "https://res.cloudinary.com/dcmoseix9/image/upload/v1790833824/Nature_morh8k.jpg",
-    svgUrl: "https://res.cloudinary.com/dcmoseix9/image/upload/v1789793956/solo-traveller_uiybia.png",
-    fallbackIcon: BackpackIcon,
-    href: "/tours/nature",
-    actionText: "Explore Nature Trips",
-  },
-  {
-    id: "family",
-    title: "FAMILY",
-    subtitle: "Easy Kashmir Experiences",
-    imageUrl:
-      "https://res.cloudinary.com/dcmoseix9/image/upload/v1790833786/family_image_dy0haf.jpg",
-    svgUrl: "https://res.cloudinary.com/dcmoseix9/image/upload/v1789794097/building_grx3vy.png",
-    fallbackIcon: TraditionalChinarIcon,
-    href: "/tours/family",
-    actionText: "Explore Family Trips",
-  },
-  {
-    id: "adventure",
-    title: "ADVENTURE",
-    subtitle: "Outdoor Experiences",
-    imageUrl:
-      "https://res.cloudinary.com/dcmoseix9/image/upload/v1790881766/adv_tq4hts.jpg",
-    svgUrl: "https://res.cloudinary.com/dcmoseix9/image/upload/v1789794239/hiking_rpczgx.png",
-    iconClassName: "-scale-x-100", // Flipped towards user/center
-    fallbackIcon: HikingBootIcon,
-    href: "/tours/adventure",
-    actionText: "Explore Adventure",
-  },
-  {
-    id: "trekking",
-    title: "TREKKING",
-    subtitle: "Mountain Exploration",
-    imageUrl:
-      "https://res.cloudinary.com/dcmoseix9/image/upload/v1790833785/Trek_image_zr6vzf.jpg",
-    svgUrl: "",
-    fallbackIcon: MountainLakeIcon,
-    href: "/tours/trekking",
-    actionText: "Explore Trekking",
-  },
-];
+// Hardcoded fallback removed — HelpMeChoose is strictly database-backed via TravelStyle model
 
 const STYLE_ICON_MAP: Record<string, {
   svgUrl?: string;
@@ -337,7 +269,7 @@ export default function HelpMeChoose({ travelStyles }: HelpMeChooseProps = {}) {
   const [activeIndex, setActiveIndex] = useState(0);
 
   const cards: PathwayCardItem[] = React.useMemo(() => {
-    if (travelStyles !== undefined) {
+    if (travelStyles && travelStyles.length > 0) {
       return travelStyles.map((style) => {
         const iconConfig = STYLE_ICON_MAP[style.slug.toLowerCase()] || {
           fallbackIcon: MountainLakeIcon,
@@ -357,7 +289,7 @@ export default function HelpMeChoose({ travelStyles }: HelpMeChooseProps = {}) {
         };
       });
     }
-    return HELP_ME_CHOOSE_CARDS;
+    return [];
   }, [travelStyles]);
 
   const checkScroll = React.useCallback(() => {

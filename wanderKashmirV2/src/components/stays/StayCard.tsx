@@ -30,22 +30,14 @@ interface StayCardProps {
 export default function StayCard({ property }: StayCardProps) {
   const [isSaved, setIsSaved] = useState(false);
 
-  // Normalize stay type (Resort vs Houseboat vs Homestay vs Hotel)
-  const isHouseboat =
-    property.propertyType === "HOUSEBOAT" ||
-    (!property.propertyType && (
-      property.name.toLowerCase().includes("houseboat") ||
-      property.location.toLowerCase().includes("lake") ||
-      property.location.toLowerCase().includes("nigeen") ||
-      property.location.toLowerCase().includes("dal")
-    ));
-
+  // Normalize stay type strictly from Property.propertyType
+  const pt = (property.propertyType || "HOTEL").toUpperCase();
   const stayCategory =
-    property.propertyType === "RESORT"
+    pt === "RESORT"
       ? "Resort"
-      : isHouseboat
+      : pt === "HOUSEBOAT"
       ? "Houseboat"
-      : property.propertyType === "HOMESTAY" || (!property.propertyType && property.vendorType === "HOMESTAY")
+      : pt === "HOMESTAY"
       ? "Homestay"
       : "Hotel";
 

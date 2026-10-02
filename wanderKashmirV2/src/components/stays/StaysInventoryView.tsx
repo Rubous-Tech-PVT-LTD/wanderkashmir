@@ -54,7 +54,7 @@ export default function StaysInventoryView({
   const [sortBy, setSortBy] = useState<string>("recommended");
   const [mobileFilterOpen, setMobileFilterOpen] = useState<boolean>(false);
 
-  // Helper to categorize any property based on Property.propertyType
+  // Helper to categorize any property strictly based on Property.propertyType
   const getPropertyCategory = (prop: StayPropertyItem) => {
     if (prop.propertyType) {
       const pt = prop.propertyType.toUpperCase();
@@ -63,15 +63,6 @@ export default function StaysInventoryView({
       if (pt === "HOUSEBOAT") return "HOUSEBOAT";
       if (pt === "HOMESTAY") return "HOMESTAY";
     }
-    if (
-      prop.name.toLowerCase().includes("houseboat") ||
-      prop.location.toLowerCase().includes("lake") ||
-      prop.location.toLowerCase().includes("nigeen") ||
-      prop.location.toLowerCase().includes("dal")
-    ) {
-      return "HOUSEBOAT";
-    }
-    if (prop.vendorType === "HOMESTAY") return "HOMESTAY";
     return "HOTEL";
   };
 
@@ -143,7 +134,7 @@ export default function StaysInventoryView({
     };
   }, [initialProperties]);
 
-  // 2. Synchronize URL query params quietly
+  // 2. Synchronize URL query params with router navigation
   const updateUrlParams = (newType: string, newLoc: string, newMaxPrice: number | null) => {
     const params = new URLSearchParams();
     if (newType !== "ALL") params.set("type", newType.toLowerCase());
@@ -152,9 +143,7 @@ export default function StaysInventoryView({
 
     const qs = params.toString();
     const newPath = qs ? `/stays?${qs}` : "/stays";
-    if (typeof window !== "undefined") {
-      window.history.replaceState(null, "", newPath);
-    }
+    router.push(newPath);
   };
 
   // Filter handlers

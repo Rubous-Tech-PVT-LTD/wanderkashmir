@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { ArrowRight, Phone, Mail, MapPin } from "lucide-react";
-import { HELP_ME_CHOOSE_CONFIG, HELP_ME_CHOOSE_CARDS } from "@/components/HelpMeChoose";
+import { HELP_ME_CHOOSE_CONFIG } from "@/components/HelpMeChoose";
 import CustomizeTripModal from "@/components/CustomizeTripModal";
 
 // =============================================================================
@@ -119,10 +119,14 @@ export const REAL_FOOTER_LINKS = {
     { label: "Doodhpathri Travel Guide", href: "/destinations/doodhpathri" },
     { label: "Yusmarg Travel Guide", href: "/destinations/yusmarg" },
   ],
-  TravelStyles: HELP_ME_CHOOSE_CARDS.map((style) => ({
-    label: `${style.title.charAt(0) + style.title.slice(1).toLowerCase()} Tours`,
-    href: style.href,
-  })),
+  TravelStyles: [
+    { label: "Culture Tours", href: "/tours/culture" },
+    { label: "Spiritual Tours", href: "/tours/spiritual" },
+    { label: "Nature Tours", href: "/tours/nature" },
+    { label: "Family Tours", href: "/tours/family" },
+    { label: "Adventure Tours", href: "/tours/adventure" },
+    { label: "Trekking Tours", href: "/tours/trekking" },
+  ],
   Company: [
     { label: "About Us", href: "/about" },
     { label: "Our Vision", href: "/our-vision" },
