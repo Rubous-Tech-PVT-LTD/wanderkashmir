@@ -216,6 +216,25 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     console.error("Error fetching experiences for sitemap:", error);
   }
 
+  // 8. Dynamic Published Blogs (Strictly type = BLOG and workflowState = PUBLISHED)
+  let blogUrls: MetadataRoute.Sitemap = [];
+  try {
+    const blogs = await prisma.seoLandingPage.findMany({
+      where: { type: 'BLOG', workflowState: 'PUBLISHED' },
+      select: { slug: true, updatedAt: true },
+      take: 2000,
+    });
+
+    blogUrls = blogs.map((blog: (typeof blogs)[number]) => ({
+      url: `${baseUrl}/blog/${blog.slug}`,
+      lastModified: blog.updatedAt,
+      changeFrequency: 'weekly',
+      priority: 0.7,
+    }));
+  } catch (error) {
+    console.error("Error fetching blogs for sitemap:", error);
+  }
+
   // Combine and deduplicate strictly by URL
   const allEntries = [
     ...staticRoutes,
@@ -225,6 +244,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...destinationUrls,
     ...placeUrls,
     ...experienceUrls,
+    ...blogUrls,
   ];
 
   const uniqueUrlMap = new Map<string, (typeof allEntries)[number]>();

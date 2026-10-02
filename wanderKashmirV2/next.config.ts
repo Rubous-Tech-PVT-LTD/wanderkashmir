@@ -53,6 +53,31 @@ const nextConfig: NextConfig = {
         destination: "/destinations/pahalgam/aru-valley",
         permanent: true,
       },
+      {
+        source: "/kashmir-tour-packages",
+        destination: "/tours",
+        permanent: true,
+      },
+      {
+        source: "/privacy",
+        destination: "/privacy-policy",
+        permanent: true,
+      },
+      {
+        source: "/tours/winter-kashmir-trip",
+        destination: "/tours",
+        permanent: true,
+      },
+      {
+        source: "/homestays",
+        destination: "/stays",
+        permanent: true,
+      },
+      {
+        source: "/homestays/:slug*",
+        destination: "/stays",
+        permanent: true,
+      },
     ];
   },
 };
