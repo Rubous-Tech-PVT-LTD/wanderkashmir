@@ -128,6 +128,7 @@ model Property {
   isApproved        Boolean       @default(false)
   rejectionReason   String?
   status            String        @default("PENDING")
+  propertyType      PropertyType  @default(HOTEL)
   latitude          Float?
   longitude         Float?
   bedDetails        String?
@@ -150,6 +151,7 @@ model Property {
   @@index([vendorProfileId])
   @@index([isApproved])
   @@index([status])
+  @@index([propertyType])
 }
 
 model RoomType {
@@ -373,6 +375,7 @@ model Tour {
   transports    TourTransport[]
   experiences   TourExperience[]
   travelGuides  TourTravelGuide[]
+  travelStyles  TourTravelStyle[]
 }
 
 model TourStay {
@@ -402,6 +405,34 @@ model TourCategory {
   tours       Tour[]
 }
 
+model TravelStyle {
+  id           String            @id @default(cuid())
+  name         String            @unique
+  slug         String            @unique
+  description  String?
+  imageUrl     String?
+  imageAlt     String?
+  isActive     Boolean           @default(true)
+  displayOrder Int               @default(0)
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
+  tours        TourTravelStyle[]
+}
+
+model TourTravelStyle {
+  id            String      @id @default(cuid())
+  tourId        String
+  travelStyleId String
+  displayOrder  Int         @default(0)
+  createdAt     DateTime    @default(now())
+  tour          Tour        @relation(fields: [tourId], references: [id], onDelete: Cascade)
+  travelStyle   TravelStyle @relation(fields: [travelStyleId], references: [id], onDelete: Cascade)
+
+  @@unique([tourId, travelStyleId])
+  @@index([tourId])
+  @@index([travelStyleId])
+}
+
 model SeoLandingPage {
   id                String           @id @default(cuid())
   slug              String           @unique
@@ -422,8 +453,40 @@ model SeoLandingPage {
   contentAssets     ContentAsset[]
   comments          SeoPageComment[]
   tourGuides        TourTravelGuide[]
+  places            DestinationPlace[]
 
   @@index([type])
+}
+
+model Place {
+  id                String             @id @default(cuid())
+  name              String
+  slug              String             @unique
+  description       String?
+  imageUrl          String?
+  destination       String?
+  status            String             @default("ACTIVE")
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+  destinationPlaces DestinationPlace[]
+
+  @@index([destination])
+  @@index([status])
+}
+
+model DestinationPlace {
+  id            String         @id @default(cuid())
+  destinationId String
+  placeId       String
+  displayOrder  Int            @default(0)
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  destination   SeoLandingPage @relation(fields: [destinationId], references: [id], onDelete: Cascade)
+  place         Place          @relation(fields: [placeId], references: [id], onDelete: Cascade)
+
+  @@unique([destinationId, placeId])
+  @@index([destinationId, displayOrder])
+  @@index([placeId])
 }
 
 model PromoCode {
@@ -982,6 +1045,13 @@ enum VendorType {
   HOMESTAY
   TAXI
   GUIDE
+}
+
+enum PropertyType {
+  HOTEL
+  RESORT
+  HOMESTAY
+  HOUSEBOAT
 }
 
 enum SubscriptionPlan {
