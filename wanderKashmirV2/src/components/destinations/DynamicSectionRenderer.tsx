@@ -6,7 +6,6 @@ import {
   Camera, Landmark, Info, AlertTriangle, Lightbulb, 
   Compass, Sparkles, CheckCircle2, ChevronRight 
 } from "lucide-react";
-import { marked } from "marked";
 import { RichContentRenderer } from "./RichContentRenderer";
 
 export interface DynamicSectionBlockProps {
@@ -291,7 +290,6 @@ function CalloutSection({ block }: { block: DynamicSectionBlockProps }) {
 function ImageTextSection({ block }: { block: DynamicSectionBlockProps }) {
   const isRight = block.layout === "imageRight";
   const imgUrl = typeof block.image === "string" ? block.image : block.image?.url;
-  const contentHtml = typeof block.content === "string" ? marked.parse(block.content) : "";
 
   return (
     <div className="mb-14 sm:mb-16">

@@ -4,6 +4,9 @@ import Footer from "@/components/Footer";
 export const metadata = {
   title: "Safety Guidelines | WanderKashmir",
   description: "Safety guidelines for traveling in Kashmir.",
+  alternates: {
+    canonical: "https://www.wanderkashmir.com/safety",
+  },
 };
 
 export default function SafetyPage() {

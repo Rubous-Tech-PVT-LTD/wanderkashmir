@@ -4,6 +4,9 @@ import Footer from "@/components/Footer";
 export const metadata = {
   title: "Help Center | WanderKashmir",
   description: "Help center and FAQs for WanderKashmir.",
+  alternates: {
+    canonical: "https://www.wanderkashmir.com/help",
+  },
 };
 
 export default function HelpCenterPage() {

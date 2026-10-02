@@ -10,7 +10,6 @@ import {
 import Footer from "@/components/Footer";
 import Navbar from "@/components/Navbar";
 import { JsonLd } from "@/components/JsonLd";
-import { marked } from "marked";
 import TourBentoGallery from "@/components/tours/TourBentoGallery";
 import { DynamicSectionRenderer } from "@/components/destinations/DynamicSectionRenderer";
 
@@ -21,14 +20,17 @@ import {
 } from "@/components/destinations/RichContentRenderer";
 import { getDestinationData } from "@/lib/destinationMapper";
 
-export const revalidate = 3600;
+export const revalidate = 60;
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const resolvedParams = await params;
   const destination = await getDestinationData(resolvedParams.slug);
 
   if (!destination) {
-    return { title: "Destination not found" };
+    return {
+      title: "Destination Not Found | WanderKashmir",
+      robots: { index: false, follow: false },
+    };
   }
 
   return {
@@ -42,6 +44,12 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
       description: destination.seo.description,
       url: destination.seo.canonicalUrl,
       images: destination.seo.ogImage ? [destination.seo.ogImage] : [],
+      type: "website",
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: destination.seo.title,
+      description: destination.seo.description,
     },
   };
 }

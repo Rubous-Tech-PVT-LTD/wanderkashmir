@@ -5,6 +5,9 @@ import { Mail, Phone, MapPin } from "lucide-react";
 export const metadata = {
   title: "Contact Us | WanderKashmir",
   description: "Get in touch with WanderKashmir.",
+  alternates: {
+    canonical: "https://www.wanderkashmir.com/contact",
+  },
 };
 
 export default function ContactPage() {

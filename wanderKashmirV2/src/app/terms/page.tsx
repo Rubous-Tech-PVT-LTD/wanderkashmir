@@ -5,6 +5,9 @@ import { Shield, BookOpen, AlertCircle, Scale, CreditCard } from "lucide-react";
 export const metadata = {
   title: "Terms of Service | WanderKashmir",
   description: "Terms and conditions for users and vendors of WanderKashmir.",
+  alternates: {
+    canonical: "https://www.wanderkashmir.com/terms",
+  },
 };
 
 export default function TermsOfServicePage() {

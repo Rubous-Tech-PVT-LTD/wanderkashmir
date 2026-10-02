@@ -19,9 +19,50 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "WanderKashmir | Curated Kashmir Tour Packages, Dal Lake Houseboats & Local Stays",
+  metadataBase: new URL("https://www.wanderkashmir.com"),
+  title: {
+    default: "WanderKashmir | Curated Kashmir Tour Packages, Dal Lake Houseboats & Local Stays",
+    template: "%s | WanderKashmir",
+  },
   description:
     "Explore Kashmir with direct local itineraries, heritage houseboats on Dal Lake, boutique alpine stays, and verified mountain drivers managed directly from Srinagar.",
+  alternates: {
+    canonical: "/",
+  },
+  openGraph: {
+    siteName: "WanderKashmir",
+    locale: "en_IN",
+    type: "website",
+    url: "https://www.wanderkashmir.com",
+    title: "WanderKashmir | Curated Kashmir Tour Packages, Dal Lake Houseboats & Local Stays",
+    description:
+      "Explore Kashmir with direct local itineraries, heritage houseboats on Dal Lake, boutique alpine stays, and verified mountain drivers managed directly from Srinagar.",
+    images: [
+      {
+        url: "/images/dal-lake-hero.png",
+        width: 1200,
+        height: 630,
+        alt: "WanderKashmir - Curated Kashmir Travel Experiences",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "WanderKashmir | Curated Kashmir Tour Packages, Dal Lake Houseboats & Local Stays",
+    description:
+      "Explore Kashmir with direct local itineraries, heritage houseboats on Dal Lake, boutique alpine stays, and verified mountain drivers managed directly from Srinagar.",
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-video-preview": -1,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
+  },
 };
 
 export default function RootLayout({

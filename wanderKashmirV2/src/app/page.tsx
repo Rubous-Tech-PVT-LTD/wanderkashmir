@@ -14,8 +14,9 @@ import GoogleReviewsSection from "@/components/GoogleReviewsSection";
 import Footer from "@/components/Footer";
 import prisma from "@/lib/prisma";
 import { getRealGoogleReviews } from "@/lib/googleReviews";
+import { JsonLd } from "@/components/JsonLd";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 60;
 
 export const metadata: Metadata = {
   title: "WanderKashmir | Curated Kashmir Tour Packages, Dal Lake Houseboats & Local Stays",
@@ -242,8 +243,38 @@ export default async function HomePage() {
   // Fetch real Google Place reviews live for WanderKashmir
   const googleReviewsData = await getRealGoogleReviews();
 
+  const orgJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "TravelAgency",
+    name: "WanderKashmir",
+    url: "https://www.wanderkashmir.com",
+    logo: "https://www.wanderkashmir.com/brand-logo.png",
+    description: "Curated Kashmir tour packages, Dal Lake houseboats, boutique alpine stays, and verified mountain drivers.",
+    telephone: "+91-6005888754",
+    email: "support@wanderkashmir.com",
+    address: {
+      "@type": "PostalAddress",
+      addressLocality: "Srinagar",
+      addressRegion: "Jammu & Kashmir",
+      addressCountry: "IN",
+    },
+    sameAs: [
+      "https://www.instagram.com/wanderkashmirtravel",
+    ],
+    ...(googleReviewsData?.rating && googleReviewsData?.userRatingsTotal
+      ? {
+          aggregateRating: {
+            "@type": "AggregateRating",
+            ratingValue: googleReviewsData.rating,
+            reviewCount: googleReviewsData.userRatingsTotal,
+          },
+        }
+      : {}),
+  };
+
   return (
     <div className="flex min-h-screen flex-col bg-white text-[var(--season-text)] transition-colors duration-200 overflow-x-clip">
+      <JsonLd data={orgJsonLd} />
       {/* 1. Nav / Header */}
       <Navbar />
 

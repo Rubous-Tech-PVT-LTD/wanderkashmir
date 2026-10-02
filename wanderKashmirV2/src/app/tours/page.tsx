@@ -16,6 +16,24 @@ export const metadata: Metadata = {
   title: "Kashmir Tour Packages | Curated Itineraries & Mountain Stays | WanderKashmir",
   description:
     "Explore our hand-crafted Kashmir tour packages covering Srinagar, Gulmarg, Pahalgam, and Sonamarg. Private chauffeurs, premium stays, Dal Lake houseboats, and transparent pricing.",
+  alternates: {
+    canonical: "https://www.wanderkashmir.com/tours",
+  },
+  openGraph: {
+    title: "Kashmir Tour Packages | WanderKashmir",
+    description:
+      "Explore our hand-crafted Kashmir tour packages covering Srinagar, Gulmarg, Pahalgam, and Sonamarg.",
+    url: "https://www.wanderkashmir.com/tours",
+    siteName: "WanderKashmir",
+    locale: "en_IN",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Kashmir Tour Packages | WanderKashmir",
+    description:
+      "Explore our hand-crafted Kashmir tour packages covering Srinagar, Gulmarg, Pahalgam, and Sonamarg.",
+  },
 };
 
 interface ToursPageProps {

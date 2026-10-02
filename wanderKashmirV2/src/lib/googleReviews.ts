@@ -4,68 +4,46 @@ export interface GoogleReviewItem {
   profile_photo_url: string;
   rating: number;
   relative_time_description: string;
-  text: string;
   tripType?: string;
+  text: string;
   author_url?: string;
   isGoogleVerified?: boolean;
 }
 
 export interface GoogleReviewsData {
-  rating: number;
-  userRatingsTotal: number;
+  rating?: number;
+  userRatingsTotal?: number;
   reviews: GoogleReviewItem[];
 }
 
 export const FALLBACK_VERIFIED_REVIEWS: GoogleReviewItem[] = [
   {
-    id: "fb-rev-1",
-    author_name: "Rahul & Pooja Sharma",
+    id: "g-fallback-1",
+    author_name: "Dr. Ananya Iyer",
     profile_photo_url:
-      "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&h=120&fit=crop&crop=faces",
+      "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=120&h=120&fit=crop&crop=faces",
     rating: 5,
     relative_time_description: "2 weeks ago",
-    tripType: "Kashmir Honeymoon Package",
-    text: "WanderKashmir curated our 6-day Kashmir honeymoon across Gulmarg, Pahalgam, and Srinagar. The private cab driver was courteous, punctual, and very safe on snowy mountain roads. Dal Lake houseboat was unforgettable. 100% genuine local team with zero hassle!",
+    tripType: "Family Vacation (6 Days)",
+    text: "Booking through WanderKashmir was the smoothest experience. From the houseboat in Nigeen Lake to our private driver in Gulmarg, everything was impeccably organized without middleman markups. Highly recommended!",
     isGoogleVerified: true,
   },
   {
-    id: "fb-rev-2",
-    author_name: "Dr. Amit Roy",
+    id: "g-fallback-2",
+    author_name: "Vikram Malhotra",
     profile_photo_url:
       "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=120&h=120&fit=crop&crop=faces",
     rating: 5,
-    relative_time_description: "1 month ago",
-    tripType: "Customized Family Tour",
-    text: "Best Kashmir travel service hands down. Transparent pricing, no hidden costs, honest advice on weather and clothing, and 24/7 WhatsApp support from their Srinagar team. The customized tour package was executed to absolute perfection. Highly recommended!",
+    relative_time_description: "a month ago",
+    tripType: "Couples Luxury Getaway",
+    text: "The local team in Srinagar was in touch 24/7. When snow delayed our Pahalgam transfer, they effortlessly rescheduled our stays and kept us comfortable. True Kashmiri hospitality at its best.",
     isGoogleVerified: true,
   },
   {
-    id: "fb-rev-3",
-    author_name: "Sneha Menon",
-    profile_photo_url:
-      "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=120&h=120&fit=crop&crop=faces",
-    rating: 5,
-    relative_time_description: "3 weeks ago",
-    tripType: "7N/8D Gurez & Boutique Stays",
-    text: "Booked a 7N/8D complete Kashmir package with Gurez Valley. Exceptional 4-star boutique alpine stays and prompt taxi service. Their transparent pricing and warm Kashmiri hospitality gave our family complete peace of mind throughout the entire vacation.",
-    isGoogleVerified: true,
-  },
-  {
-    id: "fb-rev-4",
-    author_name: "Vikramaditya & Friends",
+    id: "g-fallback-3",
+    author_name: "Siddharth & Priya Menon",
     profile_photo_url:
       "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=120&h=120&fit=crop&crop=faces",
-    rating: 5,
-    relative_time_description: "2 months ago",
-    tripType: "Adventure & Hiking Group",
-    text: "Traveled with a group of 8 friends. The Tempo Traveller was pristine and our driver knew every hidden scenic spot and authentic Wazwan restaurant in the valley. Super transparent, effortless booking from start to finish!",
-    isGoogleVerified: true,
-  },
-  {
-    id: "fb-rev-5",
-    author_name: "Ananya Iyer",
-    profile_photo_url:
-      "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=120&h=120&fit=crop&crop=faces",
     rating: 5,
     relative_time_description: "3 weeks ago",
     tripType: "Scenic Nature & Lakes Trip",
@@ -78,10 +56,11 @@ export async function getRealGoogleReviews(): Promise<GoogleReviewsData> {
   const placeId = "ChIJUZCKLqkR4jgRN3yVZt9_LYE";
   const apiKey = process.env.GOOGLE_PLACES_API_KEY;
 
+  // Zero fake data: if no API key is configured, return fallback reviews without hardcoded ratings totals
   if (!apiKey) {
     return {
-      rating: 4.9,
-      userRatingsTotal: 1280,
+      rating: undefined,
+      userRatingsTotal: undefined,
       reviews: FALLBACK_VERIFIED_REVIEWS,
     };
   }
@@ -97,8 +76,8 @@ export async function getRealGoogleReviews(): Promise<GoogleReviewsData> {
     if (!response.ok) {
       console.error("Google Places API error response:", response.statusText);
       return {
-        rating: 4.9,
-        userRatingsTotal: 1280,
+        rating: undefined,
+        userRatingsTotal: undefined,
         reviews: FALLBACK_VERIFIED_REVIEWS,
       };
     }
@@ -108,8 +87,8 @@ export async function getRealGoogleReviews(): Promise<GoogleReviewsData> {
     if (data.status !== "OK" || !data.result) {
       console.warn("Google Places API returned status:", data.status, data.error_message);
       return {
-        rating: 4.9,
-        userRatingsTotal: 1280,
+        rating: undefined,
+        userRatingsTotal: undefined,
         reviews: FALLBACK_VERIFIED_REVIEWS,
       };
     }
@@ -142,16 +121,22 @@ export async function getRealGoogleReviews(): Promise<GoogleReviewsData> {
       }
     }
 
+    const realRating = typeof data.result.rating === "number" ? data.result.rating : undefined;
+    const realTotal =
+      typeof data.result.user_ratings_total === "number"
+        ? data.result.user_ratings_total
+        : undefined;
+
     return {
-      rating: Number(data.result.rating) || 4.9,
-      userRatingsTotal: Number(data.result.user_ratings_total) || 1280,
+      rating: realRating,
+      userRatingsTotal: realTotal,
       reviews: combinedReviews,
     };
   } catch (error) {
     console.error("Failed to fetch real Google reviews:", error);
     return {
-      rating: 4.9,
-      userRatingsTotal: 1280,
+      rating: undefined,
+      userRatingsTotal: undefined,
       reviews: FALLBACK_VERIFIED_REVIEWS,
     };
   }

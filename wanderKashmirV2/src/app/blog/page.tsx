@@ -5,11 +5,25 @@ import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, Calendar, User } from "lucide-react";
 
-export const revalidate = 3600; // Revalidate every hour
+export const revalidate = 60;
 
 export const metadata = {
   title: "Kashmir Travel Blog | Insider Tips, Guides & Hidden Gems | WanderKashmir",
   description: "Discover curated Kashmir travel guides, seasonal packing tips, authentic village stories, and local recommendations written by Kashmiri locals.",
+  alternates: {
+    canonical: "https://www.wanderkashmir.com/blog",
+  },
+  openGraph: {
+    title: "Kashmir Travel Blog | WanderKashmir",
+    description: "Discover curated Kashmir travel guides, seasonal packing tips, authentic village stories, and local recommendations written by Kashmiri locals.",
+    url: "https://www.wanderkashmir.com/blog",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Kashmir Travel Blog | WanderKashmir",
+    description: "Discover curated Kashmir travel guides, seasonal packing tips, authentic village stories, and local recommendations written by Kashmiri locals.",
+  },
 };
 
 export default async function BlogPage() {

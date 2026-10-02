@@ -8,31 +8,54 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import TourCardCompact from "@/components/tours/TourCardCompact";
 
-export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
+interface ExperienceDetailPageProps {
+  params: Promise<{ slug: string }>;
+}
+
+export async function generateMetadata({ params }: ExperienceDetailPageProps): Promise<Metadata> {
+  const { slug } = await params;
   const experience = await prisma.experience.findUnique({
-    where: { slug: params.slug }
+    where: { slug }
   });
 
   if (!experience || experience.status !== 'ACTIVE') {
-    return { title: 'Experience Not Found | WanderKashmir' };
+    return {
+      title: 'Experience Not Found | WanderKashmir',
+      robots: { index: false, follow: false },
+    };
   }
+
+  const desc = experience.description 
+    ? experience.description.substring(0, 160) 
+    : `Discover ${experience.title} in ${experience.destination} with WanderKashmir.`;
 
   return {
     title: `${experience.title} in ${experience.destination} | WanderKashmir`,
-    description: experience.description 
-      ? experience.description.substring(0, 160) 
-      : `Discover ${experience.title} in ${experience.destination} with WanderKashmir.`,
+    description: desc,
     alternates: {
       canonical: `https://www.wanderkashmir.com/experiences/${experience.slug}`,
-    }
+    },
+    openGraph: {
+      title: `${experience.title} in ${experience.destination} | WanderKashmir`,
+      description: desc,
+      url: `https://www.wanderkashmir.com/experiences/${experience.slug}`,
+      images: experience.images?.[0] ? [experience.images[0]] : [],
+      type: "website",
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: `${experience.title} in ${experience.destination} | WanderKashmir`,
+      description: desc,
+    },
   };
 }
 
 export const revalidate = 60;
 
-export default async function ExperienceDetailPage({ params }: { params: { slug: string } }) {
+export default async function ExperienceDetailPage({ params }: ExperienceDetailPageProps) {
+  const { slug } = await params;
   const experience = await prisma.experience.findUnique({
-    where: { slug: params.slug },
+    where: { slug },
     include: {
       tourExperiences: {
         include: {

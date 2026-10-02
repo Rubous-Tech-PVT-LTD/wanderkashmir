@@ -8,7 +8,7 @@ import Footer from "@/components/Footer";
 import { JsonLd } from "@/components/JsonLd";
 import prisma from "@/lib/prisma";
 
-export const revalidate = 3600;
+export const revalidate = 60;
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -154,12 +154,13 @@ export async function generateMetadata({
   const entity = await resolveEntity(slug, placeSlug);
 
   if (!entity) {
-    return { title: "Place not found" };
+    return {
+      title: "Place Not Found | WanderKashmir",
+      robots: { index: false, follow: false },
+    };
   }
 
-  const baseUrl =
-    process.env.NEXT_PUBLIC_SITE_URL || "https://www.wanderkashmir.com";
-  const canonicalUrl = `${baseUrl}/destinations/${entity.destination.slug}/${entity.place.slug}`;
+  const canonicalUrl = `https://www.wanderkashmir.com/destinations/${entity.destination.slug}/${entity.place.slug}`;
 
   // Only use real description — never invented
   const metaDescription = entity.place.description
@@ -175,6 +176,12 @@ export async function generateMetadata({
       ...(metaDescription !== undefined && { description: metaDescription }),
       url: canonicalUrl,
       ...(entity.place.imageUrl && { images: [entity.place.imageUrl] }),
+      type: "website",
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: `${entity.place.name}, ${entity.destination.name} | WanderKashmir`,
+      ...(metaDescription !== undefined && { description: metaDescription }),
     },
   };
 }
@@ -195,9 +202,8 @@ export default async function PlaceEntityPage({
 
   const { destination, place, relatedPlaces } = entity;
 
-  const baseUrl =
-    process.env.NEXT_PUBLIC_SITE_URL || "https://www.wanderkashmir.com";
-  const canonicalUrl = `${baseUrl}/destinations/${destination.slug}/${place.slug}`;
+  const canonicalOrigin = "https://www.wanderkashmir.com";
+  const canonicalUrl = `${canonicalOrigin}/destinations/${destination.slug}/${place.slug}`;
 
   // ─── Structured Data ──────────────────────────────────────────────────────
   // Only include properties for which real data exists — never invent.
@@ -206,18 +212,18 @@ export default async function PlaceEntityPage({
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
     itemListElement: [
-      { "@type": "ListItem", position: 1, name: "Home", item: baseUrl },
+      { "@type": "ListItem", position: 1, name: "Home", item: canonicalOrigin },
       {
         "@type": "ListItem",
         position: 2,
         name: "Destinations",
-        item: `${baseUrl}/destinations`,
+        item: `${canonicalOrigin}/destinations`,
       },
       {
         "@type": "ListItem",
         position: 3,
         name: destination.name,
-        item: `${baseUrl}/destinations/${destination.slug}`,
+        item: `${canonicalOrigin}/destinations/${destination.slug}`,
       },
       { "@type": "ListItem", position: 4, name: place.name, item: canonicalUrl },
     ],
@@ -234,7 +240,7 @@ export default async function PlaceEntityPage({
     containedInPlace: {
       "@type": "TouristDestination",
       name: destination.name,
-      url: `${baseUrl}/destinations/${destination.slug}`,
+      url: `${canonicalOrigin}/destinations/${destination.slug}`,
     },
   };
 

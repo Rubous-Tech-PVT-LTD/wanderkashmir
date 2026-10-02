@@ -7,6 +7,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import HotelDetailView from "@/components/stays/detail/HotelDetailView";
 import { mapPropertyToHotelViewModel } from "@/components/stays/detail/types";
+import { JsonLd } from "@/components/JsonLd";
 
 export const revalidate = 60;
 
@@ -43,6 +44,7 @@ export async function generateMetadata({
   if (!property) {
     return {
       title: "Stay Not Found | WanderKashmir",
+      robots: { index: false, follow: false },
     };
   }
 
@@ -51,7 +53,7 @@ export async function generateMetadata({
     : `Explore ${property.name} in ${property.location}. Verified rates and local hospitality with WanderKashmir.`;
 
   const ogImg =
-    Array.isArray(property.images) && property.images.length > 0 && property.images[0].startsWith("http")
+    Array.isArray(property.images) && property.images.length > 0 && typeof property.images[0] === "string" && property.images[0].startsWith("http")
       ? property.images[0]
       : undefined;
 
@@ -67,6 +69,11 @@ export async function generateMetadata({
       url: `https://www.wanderkashmir.com/stays/${slug}`,
       images: ogImg ? [ogImg] : [],
       type: "website",
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: `${property.name} | WanderKashmir`,
+      description: cleanDesc,
     },
   };
 }
@@ -113,8 +120,32 @@ export default async function HotelDetailPage({ params }: HotelDetailPageProps) 
   // Map to strongly typed view model
   const hotel = mapPropertyToHotelViewModel(property, slug);
 
+  const ogImg =
+    Array.isArray(property.images) && property.images.length > 0 && typeof property.images[0] === "string" && property.images[0].startsWith("http")
+      ? property.images[0]
+      : undefined;
+
+  const hotelJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "LodgingBusiness",
+    name: property.name,
+    description: property.description || undefined,
+    url: `https://www.wanderkashmir.com/stays/${slug}`,
+    address: {
+      "@type": "PostalAddress",
+      addressLocality: property.location,
+      addressRegion: "Jammu and Kashmir",
+      addressCountry: "IN",
+    },
+    ...(ogImg ? { image: ogImg } : {}),
+    ...(property.pricePerNight
+      ? { priceRange: `₹${Math.round(property.pricePerNight)}` }
+      : {}),
+  };
+
   return (
     <>
+      <JsonLd data={hotelJsonLd} />
       <Navbar />
       <main className="min-h-screen bg-[var(--season-background,#FAFAFA)]">
         <HotelDetailView hotel={hotel} slug={slug} />

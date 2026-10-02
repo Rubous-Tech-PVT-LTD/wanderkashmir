@@ -8,13 +8,24 @@ import DestinationsHeroBanner from "@/components/destinations/DestinationsHeroBa
 import DestinationsInventoryView from "@/components/destinations/DestinationsInventoryView";
 
 
-export const revalidate = 3600; // ISR for destination index
+export const revalidate = 60; // ISR for destination index
 
 export const metadata: Metadata = {
   title: "Destinations | Discover Kashmir | WanderKashmir",
   description: "Explore Kashmir's destinations, landscapes and local experiences. Plan your perfect journey through our verified destination guides.",
   alternates: {
     canonical: "https://www.wanderkashmir.com/destinations",
+  },
+  openGraph: {
+    title: "Destinations | Discover Kashmir | WanderKashmir",
+    description: "Explore Kashmir's destinations, landscapes and local experiences. Plan your perfect journey through our verified destination guides.",
+    url: "https://www.wanderkashmir.com/destinations",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Destinations | Discover Kashmir | WanderKashmir",
+    description: "Explore Kashmir's destinations, landscapes and local experiences. Plan your perfect journey through our verified destination guides.",
   },
 };
 

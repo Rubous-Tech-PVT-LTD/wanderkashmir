@@ -6,6 +6,9 @@ import Link from "next/link";
 export const metadata = {
   title: "About Us | WanderKashmir",
   description: "Learn more about WanderKashmir and our mission as true locals of Kashmir.",
+  alternates: {
+    canonical: "https://www.wanderkashmir.com/about",
+  },
 };
 
 export default function AboutPage() {

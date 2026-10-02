@@ -5,6 +5,9 @@ import { Eye, Users, Heart, Globe, Sparkles } from "lucide-react";
 export const metadata = {
   title: "Our Vision | WanderKashmir",
   description: "Transforming Kashmir's tourism by bringing every village into the digital world.",
+  alternates: {
+    canonical: "https://www.wanderkashmir.com/our-vision",
+  },
 };
 
 export default function OurVisionPage() {

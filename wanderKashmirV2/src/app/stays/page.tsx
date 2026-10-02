@@ -26,6 +26,12 @@ export const metadata: Metadata = {
     locale: "en_US",
     type: "website",
   },
+  twitter: {
+    card: "summary_large_image",
+    title: "Hotels, Resorts & Houseboats in Kashmir | WanderKashmir",
+    description:
+      "Handpicked boutique resorts, Dal Lake houseboats, and alpine stays across Srinagar, Pahalgam, Gulmarg, and Gurez Valley.",
+  },
 };
 
 interface StaysPageProps {

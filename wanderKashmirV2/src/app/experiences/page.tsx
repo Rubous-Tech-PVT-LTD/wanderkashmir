@@ -11,7 +11,18 @@ export const metadata: Metadata = {
   description: "Discover top-rated activities and experiences in Kashmir, from Shikara rides to Gondola tickets.",
   alternates: {
     canonical: "https://www.wanderkashmir.com/experiences",
-  }
+  },
+  openGraph: {
+    title: "Kashmir Experiences & Activities | WanderKashmir",
+    description: "Discover top-rated activities and experiences in Kashmir, from Shikara rides to Gondola tickets.",
+    url: "https://www.wanderkashmir.com/experiences",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Kashmir Experiences & Activities | WanderKashmir",
+    description: "Discover top-rated activities and experiences in Kashmir, from Shikara rides to Gondola tickets.",
+  },
 };
 
 export const revalidate = 60;
@@ -19,9 +30,10 @@ export const revalidate = 60;
 export default async function ExperiencesPage({ 
   searchParams 
 }: { 
-  searchParams: { [key: string]: string | string[] | undefined } 
+  searchParams?: Promise<{ [key: string]: string | string[] | undefined }> | { [key: string]: string | string[] | undefined };
 }) {
-  const pageParam = searchParams.page;
+  const resolvedSearchParams = searchParams ? await Promise.resolve(searchParams) : {};
+  const pageParam = resolvedSearchParams.page;
   const page = typeof pageParam === 'string' ? parseInt(pageParam, 10) : 1;
   const currentPage = isNaN(page) || page < 1 ? 1 : page;
   const take = 12;

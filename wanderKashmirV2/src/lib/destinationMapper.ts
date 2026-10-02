@@ -315,8 +315,14 @@ export async function getDestinationData(slug: string): Promise<DestinationPageD
     : [];
 
   // 10. SEO Metadata
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://www.wanderkashmir.com";
-  const canonicalUrl = cmsDoc.canonicalUrl || `${baseUrl}/destinations/${page.slug}`;
+  let canonicalUrl = `https://www.wanderkashmir.com/destinations/${page.slug}`;
+  if (
+    cmsDoc.canonicalUrl &&
+    typeof cmsDoc.canonicalUrl === "string" &&
+    cmsDoc.canonicalUrl.startsWith("https://www.wanderkashmir.com/")
+  ) {
+    canonicalUrl = cmsDoc.canonicalUrl;
+  }
   const seo = {
     title: cmsDoc.metaTitle || page.title,
     description: (cmsDoc.metaDescription || page.description || "").replace(/^Meta\s*Description:\s*/i, ""),

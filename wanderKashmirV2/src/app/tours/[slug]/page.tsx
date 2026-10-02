@@ -42,6 +42,8 @@ export async function generateStaticParams() {
   ];
 }
 
+import { JsonLd } from "@/components/JsonLd";
+
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
 
@@ -57,14 +59,22 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
         travelStyle.description ||
         `Explore hand-crafted ${travelStyle.name} Kashmir tour packages with local guides, private chauffeurs, verified stays, and transparent pricing.`,
       alternates: {
-        canonical: `/tours/${travelStyle.slug}`,
+        canonical: `https://www.wanderkashmir.com/tours/${travelStyle.slug}`,
       },
       openGraph: {
         title: `${travelStyle.name} Kashmir Tour Packages | WanderKashmir`,
         description:
           travelStyle.description ||
           `Explore hand-crafted ${travelStyle.name} Kashmir tour packages with local specialists.`,
+        url: `https://www.wanderkashmir.com/tours/${travelStyle.slug}`,
         images: travelStyle.imageUrl ? [travelStyle.imageUrl] : [],
+      },
+      twitter: {
+        card: "summary_large_image",
+        title: `${travelStyle.name} Kashmir Tour Packages | WanderKashmir`,
+        description:
+          travelStyle.description ||
+          `Explore hand-crafted ${travelStyle.name} Kashmir tour packages with local specialists.`,
       },
     };
   }
@@ -75,6 +85,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   if (!tour) {
     return {
       title: "Tour Not Found | WanderKashmir",
+      robots: { index: false, follow: false },
     };
   }
 
@@ -82,12 +93,18 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     title: `${tour.title} (${tour.duration}) | WanderKashmir`,
     description: tour.overview,
     alternates: {
-      canonical: `/tours/${slug}`,
+      canonical: `https://www.wanderkashmir.com/tours/${slug}`,
     },
     openGraph: {
       title: `${tour.title} - ${tour.duration}`,
       description: tour.overview,
+      url: `https://www.wanderkashmir.com/tours/${slug}`,
       images: tour.images && tour.images[0] ? [tour.images[0]] : [],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: `${tour.title} - ${tour.duration}`,
+      description: tour.overview,
     },
   };
 }
@@ -150,8 +167,34 @@ export default async function TourOrStylePage({ params, searchParams }: PageProp
 
   const otherTours = await getOtherToursFromDB(slug);
 
+  const tourJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "TouristTrip",
+    name: tour.title,
+    description: tour.overview,
+    touristType: "Traveler",
+    url: `https://www.wanderkashmir.com/tours/${tour.slug}`,
+    ...(tour.price
+      ? {
+          offers: {
+            "@type": "Offer",
+            price: tour.price,
+            priceCurrency: "INR",
+            availability: "https://schema.org/InStock",
+            url: `https://www.wanderkashmir.com/tours/${tour.slug}`,
+          },
+        }
+      : {}),
+    provider: {
+      "@type": "TravelAgency",
+      name: "WanderKashmir",
+      url: "https://www.wanderkashmir.com",
+    },
+  };
+
   return (
     <div className="flex min-h-screen flex-col bg-white text-[var(--season-text)] transition-colors duration-200">
+      <JsonLd data={tourJsonLd} />
       <Navbar />
       <main className="flex-1">
         <TourPackageView tour={tour} otherTours={otherTours} />

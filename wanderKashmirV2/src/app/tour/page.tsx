@@ -8,6 +8,13 @@ export const metadata: Metadata = {
   title: "Complete Kashmir Experience (7 Days • 6 Nights) | WanderKashmir",
   description:
     "Experience the best of Kashmir with our 7 Days Complete Kashmir Experience package. Srinagar, Gulmarg, Pahalgam & Sonamarg with private cab, hotel stays, Dal Lake houseboat, and meals.",
+  alternates: {
+    canonical: "https://www.wanderkashmir.com/tours",
+  },
+  robots: {
+    index: false,
+    follow: true,
+  },
 };
 
 export default function TourSingularPage() {
