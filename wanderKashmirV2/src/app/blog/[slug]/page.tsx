@@ -9,6 +9,7 @@ import { marked } from "marked";
 import { JsonLd } from "@/components/JsonLd";
 
 export const revalidate = 3600;
+export const dynamicParams = true;
 
 interface BlogPageProps {
   params: Promise<{ slug: string }>;
@@ -16,72 +17,76 @@ interface BlogPageProps {
 
 export async function generateMetadata({ params }: BlogPageProps): Promise<Metadata> {
   const resolvedParams = await params;
-  const page = await prisma.seoLandingPage.findFirst({
-    where: {
-      slug: resolvedParams.slug,
-      type: "BLOG",
-      workflowState: "PUBLISHED",
-    },
-  });
+  try {
+    const page = await prisma.seoLandingPage.findFirst({
+      where: {
+        slug: resolvedParams.slug,
+        type: "BLOG",
+        workflowState: "PUBLISHED",
+      },
+    });
 
-  if (!page) {
+    if (!page) {
+      return {
+        title: "Blog Article Not Found | WanderKashmir",
+        robots: { index: false, follow: false },
+      };
+    }
+
+    const baseUrl = "https://www.wanderkashmir.com";
+    const canonicalUrl = `${baseUrl}/blog/${page.slug}`;
+    const cleanDescription = page.description?.replace(/^Meta\s*Description:\s*/i, "").trim() || "";
+
     return {
-      title: "Blog Article Not Found | WanderKashmir",
-      robots: { index: false, follow: false },
+      title: `${page.title} | WanderKashmir`,
+      description: cleanDescription,
+      alternates: {
+        canonical: canonicalUrl,
+      },
+      openGraph: {
+        title: page.title,
+        description: cleanDescription,
+        url: canonicalUrl,
+        images: page.imageUrl ? [{ url: page.imageUrl }] : [],
+        type: "article",
+        publishedTime: page.createdAt.toISOString(),
+        modifiedTime: page.updatedAt.toISOString(),
+      },
+      twitter: {
+        card: "summary_large_image",
+        title: page.title,
+        description: cleanDescription,
+        images: page.imageUrl ? [page.imageUrl] : [],
+      },
+    };
+  } catch (error) {
+    console.error("Error generating blog metadata:", error);
+    return {
+      title: "Kashmir Travel Blog | WanderKashmir",
     };
   }
-
-  const baseUrl = "https://www.wanderkashmir.com";
-  const canonicalUrl = `${baseUrl}/blog/${page.slug}`;
-  const cleanDescription = page.description?.replace(/^Meta\s*Description:\s*/i, "").trim() || "";
-
-  return {
-    title: `${page.title} | WanderKashmir`,
-    description: cleanDescription,
-    alternates: {
-      canonical: canonicalUrl,
-    },
-    openGraph: {
-      title: page.title,
-      description: cleanDescription,
-      url: canonicalUrl,
-      images: page.imageUrl ? [{ url: page.imageUrl }] : [],
-      type: "article",
-      publishedTime: page.createdAt.toISOString(),
-      modifiedTime: page.updatedAt.toISOString(),
-    },
-    twitter: {
-      card: "summary_large_image",
-      title: page.title,
-      description: cleanDescription,
-      images: page.imageUrl ? [page.imageUrl] : [],
-    },
-  };
 }
 
 export async function generateStaticParams() {
-  try {
-    const pages = await prisma.seoLandingPage.findMany({
-      where: { type: "BLOG", workflowState: "PUBLISHED" },
-      select: { slug: true },
-      take: 200,
-    });
-    return pages.map((page: (typeof pages)[number]) => ({ slug: page.slug }));
-  } catch (error) {
-    console.warn("Database unavailable during build. Falling back to dynamic rendering for blog pages:", error);
-    return [];
-  }
+  // Return empty list to use on-demand ISR and prevent build-time database pool saturation
+  return [];
 }
 
 export default async function BlogArticlePage({ params }: BlogPageProps) {
   const resolvedParams = await params;
-  const page = await prisma.seoLandingPage.findFirst({
-    where: {
-      slug: resolvedParams.slug,
-      type: "BLOG",
-      workflowState: "PUBLISHED",
-    },
-  });
+  let page: any = null;
+
+  try {
+    page = await prisma.seoLandingPage.findFirst({
+      where: {
+        slug: resolvedParams.slug,
+        type: "BLOG",
+        workflowState: "PUBLISHED",
+      },
+    });
+  } catch (error) {
+    console.error("Error fetching blog article from DB:", error);
+  }
 
   if (!page) {
     notFound();
