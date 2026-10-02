@@ -2,6 +2,8 @@
 
 import prisma from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
+import { headers } from "next/headers";
+import { checkRateLimit, extractClientIp } from "@/lib/rateLimit";
 
 export interface CustomTripInput {
   name: string;
@@ -33,13 +35,15 @@ export interface CustomTripResult {
     createdAt: string;
   };
   error?: string;
+  isRateLimited?: boolean;
 }
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const PHONE_CHARS_REGEX = /^[\d\s+\-()]+$/;
 
 export async function submitCustomTripRequest(
-  input: CustomTripInput
+  input: CustomTripInput,
+  options?: { ip?: string }
 ): Promise<CustomTripResult> {
   try {
     const trimmedName = (input.name || "").trim();
@@ -47,18 +51,39 @@ export async function submitCustomTripRequest(
     const trimmedEmail = (input.email || "").trim();
     const trimmedGuests = (input.guestsCount || "").trim();
 
-    // 1. Name validation
+    // 1. Basic structural validation
     if (!trimmedName || trimmedName.length < 2) {
       return { success: false, error: "Please enter your full name (at least 2 characters)." };
     }
+    if (!trimmedPhone) {
+      return { success: false, error: "Please enter your phone or WhatsApp number." };
+    }
+
+    // 2. Resolve requester IP and enforce distributed rate limiting BEFORE database operations
+    let clientIp = options?.ip;
+    if (!clientIp) {
+      try {
+        const headersList = await headers();
+        clientIp = extractClientIp(headersList);
+      } catch (_) {
+        clientIp = "127.0.0.1";
+      }
+    }
+
+    const rateLimitCheck = await checkRateLimit("CUSTOMIZE_TRIP", clientIp);
+    if (!rateLimitCheck.success) {
+      return {
+        success: false,
+        error: rateLimitCheck.error || "Too many requests. Please try again in a few minutes.",
+        isRateLimited: rateLimitCheck.isRateLimited,
+      };
+    }
+
+    // 3. Name & Phone business validation
     if (trimmedName.length > 100) {
       return { success: false, error: "Name is too long (maximum 100 characters)." };
     }
 
-    // 2. Phone validation
-    if (!trimmedPhone) {
-      return { success: false, error: "Please enter your phone or WhatsApp number." };
-    }
     if (!PHONE_CHARS_REGEX.test(trimmedPhone)) {
       return { success: false, error: "Phone number contains invalid characters." };
     }
@@ -67,18 +92,18 @@ export async function submitCustomTripRequest(
       return { success: false, error: "Please enter a valid phone number with 8 to 15 digits." };
     }
 
-    // 3. Email validation
+    // 4. Email validation
     if (trimmedEmail && !EMAIL_REGEX.test(trimmedEmail)) {
       return { success: false, error: "Please enter a valid email address." };
     }
 
-    // 4. Guests count validation
+    // 5. Guests count validation
     const guestsCount = trimmedGuests || "2 Adults";
     if (guestsCount.length > 50) {
       return { success: false, error: "Traveller count description is too long." };
     }
 
-    // 5. Server-side duplicate protection (30-second window)
+    // 6. Server-side duplicate protection (30-second window)
     const thirtySecondsAgo = new Date(Date.now() - 30 * 1000);
     const recentDuplicate = await prisma.customTourRequest.findFirst({
       where: {
@@ -119,7 +144,7 @@ export async function submitCustomTripRequest(
       };
     }
 
-    // 6. Format fields
+    // 7. Format fields
     const travelDates = input.travelDates || (input.durationDays ? `${input.durationDays} Days` : "Upcoming");
     const specialRequestsCombined = [
       input.durationDays ? `Duration: ${input.durationDays} Days` : null,
@@ -132,7 +157,7 @@ export async function submitCustomTripRequest(
         ? input.destinations.map((d) => d.trim()).filter(Boolean)
         : ["Srinagar", "Gulmarg", "Pahalgam"];
 
-    // 7. Safe production database write
+    // 8. Safe production database write
     const inquiry = await prisma.customTourRequest.create({
       data: {
         name: trimmedName,

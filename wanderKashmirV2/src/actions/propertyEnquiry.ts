@@ -2,6 +2,8 @@
 
 import prisma from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
+import { headers } from "next/headers";
+import { checkRateLimit, extractClientIp } from "@/lib/rateLimit";
 
 export interface PropertyEnquiryInput {
   propertyId: string;
@@ -18,13 +20,15 @@ export interface PropertyEnquiryResult {
   referenceId?: string;
   inquiryId?: string;
   error?: string;
+  isRateLimited?: boolean;
 }
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const PHONE_CHARS_REGEX = /^[\d\s+\-()]+$/;
 
 export async function submitPropertyEnquiry(
-  input: PropertyEnquiryInput
+  input: PropertyEnquiryInput,
+  options?: { ip?: string }
 ): Promise<PropertyEnquiryResult> {
   try {
     const rawPropertyId = (input.propertyId || "").trim();
@@ -35,14 +39,47 @@ export async function submitPropertyEnquiry(
     const rawGuests = (input.guests || "").trim();
     const rawMessage = (input.message || "").trim();
 
-    // 1. Property ID & server-side existence/approval guard
+    // 1. Basic structural validation
     if (!rawPropertyId) {
       return {
         success: false,
         error: "Missing canonical Property ID for enquiry.",
       };
     }
+    if (!rawName || rawName.length < 2) {
+      return {
+        success: false,
+        error: "Please enter your full name (at least 2 characters).",
+      };
+    }
+    if (!rawPhone) {
+      return {
+        success: false,
+        error: "Please enter your phone or WhatsApp number.",
+      };
+    }
 
+    // 2. Resolve requester IP and enforce distributed rate limiting BEFORE database operations
+    let clientIp = options?.ip;
+    if (!clientIp) {
+      try {
+        const headersList = await headers();
+        clientIp = extractClientIp(headersList);
+      } catch (_) {
+        clientIp = "127.0.0.1";
+      }
+    }
+
+    const rateLimitCheck = await checkRateLimit("PROPERTY_ENQUIRY", clientIp);
+    if (!rateLimitCheck.success) {
+      return {
+        success: false,
+        error: rateLimitCheck.error || "Too many requests. Please try again in a few minutes.",
+        isRateLimited: rateLimitCheck.isRateLimited,
+      };
+    }
+
+    // 3. Property existence and approval guard
     const property = await prisma.property.findUnique({
       where: { id: rawPropertyId },
       select: {
@@ -69,13 +106,7 @@ export async function submitPropertyEnquiry(
       };
     }
 
-    // 2. Customer Name Validation
-    if (!rawName || rawName.length < 2) {
-      return {
-        success: false,
-        error: "Please enter your full name (at least 2 characters).",
-      };
-    }
+    // 4. Extended Business Validation
     if (rawName.length > 100) {
       return {
         success: false,
@@ -83,13 +114,6 @@ export async function submitPropertyEnquiry(
       };
     }
 
-    // 3. Customer Phone Validation
-    if (!rawPhone) {
-      return {
-        success: false,
-        error: "Please enter your phone or WhatsApp number.",
-      };
-    }
     if (!PHONE_CHARS_REGEX.test(rawPhone)) {
       return {
         success: false,
@@ -104,7 +128,6 @@ export async function submitPropertyEnquiry(
       };
     }
 
-    // 4. Optional Email Validation
     if (rawEmail && !EMAIL_REGEX.test(rawEmail)) {
       return {
         success: false,
@@ -116,7 +139,7 @@ export async function submitPropertyEnquiry(
     const guestsCount = rawGuests || "2 Guests";
     const travelDates = rawDates || null;
 
-    // 6. Duplicate Submission Protection (Server-Side)
+    // 6. Duplicate Submission Protection (Server-Side 30-second window)
     const thirtySecondsAgo = new Date(Date.now() - 30 * 1000);
     const recentDuplicate = await prisma.customTourRequest.findFirst({
       where: {
