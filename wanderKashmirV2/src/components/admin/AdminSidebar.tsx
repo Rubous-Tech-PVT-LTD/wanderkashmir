@@ -119,7 +119,7 @@ export default function AdminSidebar({ userEmail }: AdminSidebarProps) {
               >
                 <Icon className={`w-4 h-4 shrink-0 ${isActive ? "text-emerald-400" : "text-slate-500"}`} />
                 <span>{item.name}</span>
-                {item.href !== "/admin" && item.href !== "/admin/leads" && item.href !== "/admin/tours" && item.href !== "/admin/travel-styles" && item.href !== "/admin/properties" && item.href !== "/admin/destinations" && item.href !== "/admin/experiences" && item.href !== "/admin/reviews" && (
+                {item.href !== "/admin" && item.href !== "/admin/leads" && item.href !== "/admin/tours" && item.href !== "/admin/travel-styles" && item.href !== "/admin/properties" && item.href !== "/admin/destinations" && item.href !== "/admin/experiences" && item.href !== "/admin/reviews" && item.href !== "/admin/seo" && (
                   <span className="ml-auto text-[10px] px-1.5 py-0.5 rounded bg-slate-800 text-slate-400 font-normal">
                     v1
                   </span>

@@ -1,25 +1,52 @@
-import { Globe } from "lucide-react";
-import MigrationPendingView from "@/components/admin/MigrationPendingView";
-import prisma from "@/lib/prisma";
+import {
+  getAdminSeoList,
+  getAdminSeoStats,
+  getGscIntegrationOverview,
+} from "@/lib/admin/seo";
+import SeoListClient from "@/components/admin/seo/SeoListClient";
 
-export const revalidate = 0;
+export const revalidate = 0; // Fresh admin data on every request
 
-export default async function AdminSeoPage() {
-  const [publishedPages, totalPages] = await Promise.all([
-    prisma.seoLandingPage.count({ where: { workflowState: "PUBLISHED" } }),
-    prisma.seoLandingPage.count(),
+export default async function AdminSeoPage({
+  searchParams,
+}: {
+  searchParams: Promise<{
+    search?: string;
+    workflowState?: string;
+    type?: string;
+    page?: string;
+  }>;
+}) {
+  const params = await searchParams;
+  const page = parseInt(params.page || "1", 10) || 1;
+  const search = params.search || "";
+  const workflowState = params.workflowState || "ALL";
+  const type = params.type || "ALL";
+
+  const [seoResult, stats, gscOverview] = await Promise.all([
+    getAdminSeoList({
+      search,
+      workflowState,
+      type,
+      page,
+      limit: 20,
+    }),
+    getAdminSeoStats(),
+    getGscIntegrationOverview(),
   ]);
 
   return (
-    <MigrationPendingView
-      title="SEO Engine & Intelligence"
-      description="Automated content generation, programmatic landing pages, keyword tracking, and search indexing workflows are active in V1 and scheduled for V2 migration."
-      icon={Globe}
-      v1RouteName="V1 SEO Intelligence Tab"
-      stats={[
-        { label: "Published Pages", value: publishedPages },
-        { label: "Total SEO Pages", value: totalPages },
-      ]}
+    <SeoListClient
+      pages={seoResult.pages}
+      totalCount={seoResult.totalCount}
+      currentPage={seoResult.page}
+      totalPages={seoResult.totalPages}
+      currentWorkflowState={workflowState}
+      currentType={type}
+      currentSearch={search}
+      availableTypes={seoResult.availableTypes}
+      stats={stats}
+      gscOverview={gscOverview}
     />
   );
 }
