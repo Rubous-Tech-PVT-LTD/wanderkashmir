@@ -24,16 +24,46 @@ interface AdminSidebarProps {
   userEmail: string;
 }
 
-const navItems = [
-  { name: "Dashboard", href: "/admin", icon: LayoutDashboard },
-  { name: "Tours", href: "/admin/tours", icon: Compass },
-  { name: "Travel Styles", href: "/admin/travel-styles", icon: Palette },
-  { name: "Destinations", href: "/admin/destinations", icon: MapPin },
-  { name: "Properties", href: "/admin/properties", icon: Building },
-  { name: "Experiences", href: "/admin/experiences", icon: Sparkles },
-  { name: "Reviews", href: "/admin/reviews", icon: Star },
-  { name: "Leads & Inquiries", href: "/admin/leads", icon: Inbox },
-  { name: "SEO", href: "/admin/seo", icon: Globe },
+interface NavItem {
+  name: string;
+  href: string;
+  icon: React.ComponentType<{ className?: string }>;
+}
+
+interface NavSection {
+  title?: string;
+  items: NavItem[];
+}
+
+const navSections: NavSection[] = [
+  {
+    items: [
+      { name: "Dashboard", href: "/admin", icon: LayoutDashboard },
+    ],
+  },
+  {
+    title: "Content Management",
+    items: [
+      { name: "Tours", href: "/admin/tours", icon: Compass },
+      { name: "Travel Styles", href: "/admin/travel-styles", icon: Palette },
+      { name: "Stays & Properties", href: "/admin/properties", icon: Building },
+      { name: "Destinations & Places", href: "/admin/destinations", icon: MapPin },
+      { name: "Experiences", href: "/admin/experiences", icon: Sparkles },
+      { name: "Reviews", href: "/admin/reviews", icon: Star },
+    ],
+  },
+  {
+    title: "SEO & Growth",
+    items: [
+      { name: "SEO Intelligence", href: "/admin/seo", icon: Globe },
+    ],
+  },
+  {
+    title: "Operations",
+    items: [
+      { name: "Customer Leads", href: "/admin/leads", icon: Inbox },
+    ],
+  },
 ];
 
 export default function AdminSidebar({ userEmail }: AdminSidebarProps) {
@@ -85,7 +115,7 @@ export default function AdminSidebar({ userEmail }: AdminSidebarProps) {
             <div>
               <div className="font-bold text-white text-base tracking-tight leading-none">WanderKashmir</div>
               <div className="text-[10px] text-emerald-400 font-semibold tracking-wider uppercase mt-1">
-                Admin Foundation
+                Admin Console
               </div>
             </div>
           </Link>
@@ -98,35 +128,39 @@ export default function AdminSidebar({ userEmail }: AdminSidebarProps) {
         </div>
 
         {/* Navigation List */}
-        <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
-          {navItems.map((item) => {
-            const Icon = item.icon;
-            const isActive =
-              item.href === "/admin"
-                ? pathname === "/admin"
-                : pathname.startsWith(item.href);
+        <nav className="flex-1 px-3 py-4 space-y-5 overflow-y-auto">
+          {navSections.map((section, idx) => (
+            <div key={idx} className="space-y-1">
+              {section.title && (
+                <div className="px-3 pb-1 text-[10px] font-bold uppercase tracking-wider text-slate-500 select-none">
+                  {section.title}
+                </div>
+              )}
+              {section.items.map((item) => {
+                const Icon = item.icon;
+                const isActive =
+                  item.href === "/admin"
+                    ? pathname === "/admin"
+                    : pathname.startsWith(item.href);
 
-            return (
-              <Link
-                key={item.name}
-                href={item.href}
-                onClick={() => setMobileOpen(false)}
-                className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${
-                  isActive
-                    ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
-                    : "text-slate-400 hover:text-slate-200 hover:bg-slate-900/60"
-                }`}
-              >
-                <Icon className={`w-4 h-4 shrink-0 ${isActive ? "text-emerald-400" : "text-slate-500"}`} />
-                <span>{item.name}</span>
-                {item.href !== "/admin" && item.href !== "/admin/leads" && item.href !== "/admin/tours" && item.href !== "/admin/travel-styles" && item.href !== "/admin/properties" && item.href !== "/admin/destinations" && item.href !== "/admin/experiences" && item.href !== "/admin/reviews" && item.href !== "/admin/seo" && (
-                  <span className="ml-auto text-[10px] px-1.5 py-0.5 rounded bg-slate-800 text-slate-400 font-normal">
-                    v1
-                  </span>
-                )}
-              </Link>
-            );
-          })}
+                return (
+                  <Link
+                    key={item.name}
+                    href={item.href}
+                    onClick={() => setMobileOpen(false)}
+                    className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
+                      isActive
+                        ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
+                        : "text-slate-400 hover:text-slate-200 hover:bg-slate-900/60"
+                    }`}
+                  >
+                    <Icon className={`w-4 h-4 shrink-0 ${isActive ? "text-emerald-400" : "text-slate-500"}`} />
+                    <span>{item.name}</span>
+                  </Link>
+                );
+              })}
+            </div>
+          ))}
         </nav>
 
         {/* User & Security Footer */}
@@ -144,7 +178,7 @@ export default function AdminSidebar({ userEmail }: AdminSidebarProps) {
               className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold text-red-400 bg-red-500/10 border border-red-500/20 hover:bg-red-500/20 transition-colors cursor-pointer"
             >
               <LogOut className="w-3.5 h-3.5" />
-              Sign Out
+              <span>Sign Out</span>
             </button>
           </form>
         </div>

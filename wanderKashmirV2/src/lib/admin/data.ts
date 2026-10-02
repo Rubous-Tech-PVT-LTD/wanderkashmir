@@ -9,6 +9,8 @@ export interface AdminDashboardMetrics {
   activeExperiences: number;
   leadsCount: number;
   publishedDestinations: number;
+  reviewsCount: number;
+  seoPagesCount: number;
 }
 
 export interface AdminLeadItem {
@@ -42,6 +44,8 @@ export async function getAdminDashboardMetrics(): Promise<AdminDashboardMetrics>
       activeExperiences,
       leadsCount,
       publishedDestinations,
+      reviewsCount,
+      seoPagesCount,
     ] = await Promise.all([
       prisma.tour.count({ where: { isLive: true } }),
       prisma.tour.count(),
@@ -51,6 +55,8 @@ export async function getAdminDashboardMetrics(): Promise<AdminDashboardMetrics>
       prisma.experience.count({ where: { status: "ACTIVE" } }),
       prisma.customTourRequest.count(),
       prisma.seoLandingPage.count({ where: { type: "DESTINATION", workflowState: "PUBLISHED" } }),
+      prisma.review.count(),
+      prisma.seoLandingPage.count(),
     ]);
 
     return {
@@ -62,6 +68,8 @@ export async function getAdminDashboardMetrics(): Promise<AdminDashboardMetrics>
       activeExperiences,
       leadsCount,
       publishedDestinations,
+      reviewsCount,
+      seoPagesCount,
     };
   } catch (error) {
     console.error("Error fetching admin dashboard metrics:", error);
@@ -74,6 +82,8 @@ export async function getAdminDashboardMetrics(): Promise<AdminDashboardMetrics>
       activeExperiences: 0,
       leadsCount: 0,
       publishedDestinations: 0,
+      reviewsCount: 0,
+      seoPagesCount: 0,
     };
   }
 }
