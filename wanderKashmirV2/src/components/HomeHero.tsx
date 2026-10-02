@@ -124,6 +124,12 @@ export default function HomeHero({ rating, totalReviews }: HomeHeroProps) {
               Planning something special?
             </span>
             <CustomizeTripModal
+              customTitle="Plan Your Perfect Kashmir Trip"
+              customSubtitle="Get a personalized itinerary, verified drivers, and handpicked stays direct from Srinagar."
+              contextPayload={{
+                sourceType: "homepage",
+                sourcePage: "/",
+              }}
               renderTrigger={(openModal) => (
                 <button
                   type="button"
@@ -132,7 +138,7 @@ export default function HomeHero({ rating, totalReviews }: HomeHeroProps) {
                   style={{ borderColor: "var(--season-border)" }}
                 >
                   <ItineraryIcon className="w-3.5 h-3.5 shrink-0" style={{ color: "var(--season-primary)" }} />
-                  <span>Customize Custom Itinerary</span>
+                  <span>Customize Your Trip</span>
                 </button>
               )}
             />

@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { ChevronLeft, ChevronRight, LayoutGrid, ArrowRight } from "lucide-react";
+import CustomizeTripModal from "@/components/CustomizeTripModal";
 
 // =============================================================================
 // 1. BESPOKE OUTLINE SVG ICONS (Matching reference design style)
@@ -571,6 +572,39 @@ export default function HelpMeChoose({ travelStyles }: HelpMeChooseProps = {}) {
             </div>
           </div>
         )}
+
+        {/* Can't find exactly what you're looking for? Customize CTA */}
+        <div className="mt-8 pt-6 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-4 bg-slate-50/80 rounded-2xl p-4 sm:px-6 sm:py-4">
+          <div className="text-center sm:text-left">
+            <h4 className="text-sm font-bold text-slate-900 font-display">
+              Can&apos;t find exactly what you&apos;re looking for?
+            </h4>
+            <p className="text-xs text-slate-500 mt-0.5">
+              Let our Srinagar destination experts design a custom package for your exact dates and group size.
+            </p>
+          </div>
+          <CustomizeTripModal
+            customTitle="Plan Your Perfect Kashmir Trip"
+            customSubtitle="Get a personalized itinerary, verified drivers, and handpicked stays direct from Srinagar."
+            contextPayload={{
+              sourceType: "homepage",
+              sourcePage: "/",
+            }}
+            renderTrigger={(openModal) => (
+              <button
+                type="button"
+                onClick={openModal}
+                className="shrink-0 px-4 py-2.5 rounded-xl text-xs font-bold text-white shadow-xs transition-all hover:brightness-105 active:scale-98 cursor-pointer flex items-center gap-1.5"
+                style={{
+                  backgroundColor: "var(--season-primary, #D62828)",
+                }}
+              >
+                <span>Customize My Trip</span>
+                <ArrowRight className="w-3.5 h-3.5" />
+              </button>
+            )}
+          />
+        </div>
       </div>
     </section>
   );

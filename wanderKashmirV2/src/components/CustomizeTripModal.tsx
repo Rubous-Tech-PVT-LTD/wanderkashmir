@@ -13,6 +13,8 @@ import {
   Loader2,
 } from "lucide-react";
 import { submitCustomTripRequest } from "@/actions/customTrip";
+import { trackEvent } from "@/lib/analytics";
+import { LeadContextPayload } from "@/types/leadPopup";
 
 interface CustomizeTripModalProps {
   renderTrigger?: (openModal: () => void) => React.ReactNode;
@@ -20,6 +22,10 @@ interface CustomizeTripModalProps {
   isOpen?: boolean;
   onClose?: () => void;
   defaultCategory?: string;
+  customTitle?: string;
+  customSubtitle?: string;
+  contextPayload?: LeadContextPayload;
+  onSuccess?: () => void;
 }
 
 export default function CustomizeTripModal({
@@ -28,6 +34,10 @@ export default function CustomizeTripModal({
   isOpen: controlledIsOpen,
   onClose,
   defaultCategory,
+  customTitle,
+  customSubtitle,
+  contextPayload,
+  onSuccess,
 }: CustomizeTripModalProps) {
   const [internalIsOpen, setInternalIsOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -47,10 +57,23 @@ export default function CustomizeTripModal({
   const isModalOpen = controlledIsOpen !== undefined ? controlledIsOpen : internalIsOpen;
   const modalRef = useRef<HTMLDivElement>(null);
 
-  // Body scroll lock & Escape key handling
+  // Body scroll lock, Escape key handling, and open tracking
   useEffect(() => {
     if (isModalOpen) {
       document.body.style.overflow = "hidden";
+
+      try {
+        localStorage.setItem("lead_popup_last_shown", Date.now().toString());
+      } catch (_) {}
+
+      trackEvent("customize_popup_open", {
+        triggerType: contextPayload?.triggerType || "cta",
+        sourceType: contextPayload?.sourceType,
+        tourSlug: contextPayload?.tourSlug,
+        travelStyle: contextPayload?.travelStyle,
+        destination: contextPayload?.destination,
+      });
+
       const handleKeyDown = (e: KeyboardEvent) => {
         if (e.key === "Escape") {
           handleClose();
@@ -67,6 +90,15 @@ export default function CustomizeTripModal({
   }, [isModalOpen]);
 
   const handleClose = () => {
+    if (!isSuccess) {
+      try {
+        localStorage.setItem("lead_popup_dismissed", Date.now().toString());
+      } catch (_) {}
+      trackEvent("customize_popup_close", {
+        sourceType: contextPayload?.sourceType,
+      });
+    }
+
     if (controlledIsOpen !== undefined && onClose) {
       onClose();
     } else {
@@ -108,19 +140,48 @@ export default function CustomizeTripModal({
     setIsSubmitting(true);
     setSubmissionError(null);
 
+    // Build context metadata tags cleanly without modifying customer inputs
+    const contextTags: string[] = [];
+    if (contextPayload?.sourceType) contextTags.push(`Source: ${contextPayload.sourceType}`);
+    if (contextPayload?.tourSlug) contextTags.push(`Tour: ${contextPayload.tourSlug}`);
+    if (contextPayload?.travelStyle) contextTags.push(`Travel Style: ${contextPayload.travelStyle}`);
+    if (contextPayload?.destination) contextTags.push(`Destination: ${contextPayload.destination}`);
+    if (contextPayload?.propertyId) contextTags.push(`Property: ${contextPayload.propertyId}`);
+    if (contextPayload?.experienceId) contextTags.push(`Experience: ${contextPayload.experienceId}`);
+    if (contextPayload?.triggerType) contextTags.push(`Trigger: ${contextPayload.triggerType}`);
+    if (contextPayload?.sourcePage) contextTags.push(`Page: ${contextPayload.sourcePage}`);
+
+    const metaString = contextTags.length > 0 ? `[Context: ${contextTags.join(" | ")}]` : "";
+    const combinedSpecialRequests = [metaString, preference.trim()].filter(Boolean).join("\n") || undefined;
+
+    const destinations = contextPayload?.destination
+      ? [contextPayload.destination]
+      : ["Srinagar", "Gulmarg", "Pahalgam"];
+
     try {
       const result = await submitCustomTripRequest({
         name: name.trim(),
         email: email.trim(),
         phone: phone.trim(),
         guestsCount: noOfTravellers.trim() || "2 Adults",
-        destinations: ["Srinagar", "Gulmarg", "Pahalgam"],
-        specialRequests: preference.trim() || undefined,
+        destinations: destinations,
+        specialRequests: combinedSpecialRequests,
       });
 
       if (result.success) {
         setReferenceId(result.referenceId || "WK-CUSTOM");
         setIsSuccess(true);
+        try {
+          localStorage.setItem("lead_popup_submitted", "true");
+        } catch (_) {}
+        onSuccess?.();
+        trackEvent("customize_popup_submit", {
+          referenceId: result.referenceId,
+          sourceType: contextPayload?.sourceType,
+          tourSlug: contextPayload?.tourSlug,
+          travelStyle: contextPayload?.travelStyle,
+          destination: contextPayload?.destination,
+        });
       } else {
         setSubmissionError(result.error || "Unable to submit your request. Please try again.");
       }
@@ -157,25 +218,25 @@ export default function CustomizeTripModal({
             className="relative w-full max-w-md bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden animate-in zoom-in-95 duration-200 flex flex-col max-h-[88vh] sm:max-h-[90vh] my-auto shrink-0"
           >
             {/* Modal Header */}
-            <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100 bg-slate-50/80 shrink-0">
+            <div className="flex items-start justify-between px-5 py-4 border-b border-slate-100 bg-slate-50/80 shrink-0">
               <div className="pr-3">
                 <h3
                   id="customize-modal-title"
                   className="font-display text-base sm:text-lg font-bold text-slate-900 tracking-tight leading-snug"
                 >
-                  {isSuccess ? "Request Submitted" : "Customize Your Itinerary"}
+                  {isSuccess ? "Request Submitted" : (customTitle || "Customize Your Itinerary")}
                 </h3>
-                <p className="text-[11px] sm:text-xs text-slate-500 font-sans mt-0.5">
+                <p className="text-[11px] sm:text-xs text-slate-500 font-sans mt-0.5 leading-relaxed">
                   {isSuccess
                     ? "Our Srinagar team will get in touch with you shortly."
-                    : "Share your details and preferences to get a personalized quote."}
+                    : (customSubtitle || "Share your details and preferences to get a personalized quote.")}
                 </p>
               </div>
               <button
                 type="button"
                 onClick={handleClose}
                 aria-label="Close modal"
-                className="translate-y-2 w-8 h-8 rounded-full flex items-center justify-center text-slate-600 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 transition-all cursor-pointer shrink-0 shadow-xs"
+                className="w-8 h-8 rounded-full flex items-center justify-center text-slate-600 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 transition-all cursor-pointer shrink-0 shadow-xs"
               >
                 <X className="w-4 h-4" />
               </button>
