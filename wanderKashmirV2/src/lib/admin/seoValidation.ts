@@ -464,16 +464,17 @@ export function runDeterministicValidation(
   }
 
   if (strategy.protectedComponents?.protectSlug && page.slug) {
-    const matchesSlug = (draft.slug || "").trim().toLowerCase() === page.slug.trim().toLowerCase();
+    const draftSlug = ((draft as any).slug || "").trim();
+    const matchesSlug = draftSlug.toLowerCase() === page.slug.trim().toLowerCase();
     recordCheck(
       matchesSlug,
       "CRITICAL",
       "protectedComponents",
       "[RETAIN EXISTING] Slug Preservation",
       `Protected canonical slug was preserved exactly: "/${page.slug}".`,
-      `Protected canonical slug was altered! Expected: "/${page.slug}", Observed: "/${draft.slug}".`,
+      `Protected canonical slug was altered! Expected: "/${page.slug}", Observed: "/${draftSlug}".`,
       page.slug,
-      draft.slug,
+      draftSlug,
       `Preserve the exact canonical URL slug "/${page.slug}".`
     );
   }
