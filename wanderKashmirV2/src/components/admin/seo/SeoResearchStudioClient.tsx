@@ -28,6 +28,14 @@ import {
   ArrowRight,
   Eye,
   Crosshair,
+  RefreshCw,
+  Trash2,
+  Edit3,
+  Check,
+  Copy,
+  Sliders,
+  HelpCircle,
+  Link2,
 } from "lucide-react";
 import {
   SeoResearchStudioPayload,
@@ -37,7 +45,11 @@ import {
 import {
   saveSeoResearchAction,
   saveSeoStrategyAction,
+  generateSeoContentDraftAction,
+  saveGeneratedDraftAction,
+  discardGeneratedDraftAction,
 } from "@/actions/adminSeo";
+import { GeneratedDraftContent } from "@/lib/admin/seoGeneration";
 import { SeoWorkflowState } from "@prisma/client";
 
 interface SeoResearchStudioClientProps {
@@ -48,16 +60,44 @@ export default function SeoResearchStudioClient({
   payload,
 }: SeoResearchStudioClientProps) {
   const router = useRouter();
-  const { page, savedResearch, savedStrategy, liveGscEvidence, matchedOpportunity, cannibalization, verifiedDbFacts } = payload;
+  const {
+    page,
+    savedResearch,
+    savedStrategy,
+    liveGscEvidence,
+    matchedOpportunity,
+    cannibalization,
+    verifiedDbFacts,
+    generatedDraft: initialDraft,
+  } = payload;
 
   const [activeStep, setActiveStep] = useState<1 | 2 | 3 | 4 | 5>(
-    savedStrategy ? 2 : 1
+    initialDraft ? 3 : savedStrategy ? 2 : 1
   );
 
   // Status & Feedback
   const [isSaving, setIsSaving] = useState(false);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+  // -------------------------------------------------------------
+  // STEP 3 STATE: GENERATION STUDIO
+  // -------------------------------------------------------------
+  const [draft, setDraft] = useState<GeneratedDraftContent | null>(initialDraft || null);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [generationTone, setGenerationTone] = useState<
+    "professional_authoritative" | "warm_inspirational" | "adventurous_expert"
+  >("professional_authoritative");
+  const [generationDepth, setGenerationDepth] = useState<"standard" | "comprehensive_deep_dive">(
+    "standard"
+  );
+  const [customInstructions, setCustomInstructions] = useState("");
+  const [isEditingDraft, setIsEditingDraft] = useState(false);
+  const [editableDraft, setEditableDraft] = useState<GeneratedDraftContent | null>(initialDraft || null);
+  const [isSavingDraft, setIsSavingDraft] = useState(false);
+  const [isDiscardingDraft, setIsDiscardingDraft] = useState(false);
+  const [showRegenerateConfirm, setShowRegenerateConfirm] = useState(false);
+  const [showDiscardConfirm, setShowDiscardConfirm] = useState(false);
 
   // -------------------------------------------------------------
   // STEP 1 STATE: RESEARCH
@@ -299,6 +339,93 @@ export default function SeoResearchStudioClient({
     }
   };
 
+  // -------------------------------------------------------------
+  // STEP 3 HANDLERS: GENERATION STUDIO
+  // -------------------------------------------------------------
+  const handleGenerateDraft = async () => {
+    if (!savedResearch) {
+      setErrorMsg("Please complete Step 1 (Research) before generating content.");
+      return;
+    }
+    if (!savedStrategy) {
+      setErrorMsg("Please complete Step 2 (Strategy) before generating content.");
+      return;
+    }
+
+    setIsGenerating(true);
+    setSuccessMsg(null);
+    setErrorMsg(null);
+    setShowRegenerateConfirm(false);
+
+    try {
+      const res = await generateSeoContentDraftAction(page.id, {
+        tone: generationTone,
+        depth: generationDepth,
+        customInstructions: customInstructions.trim() || undefined,
+      });
+
+      if (res.success && res.data) {
+        setDraft(res.data);
+        setEditableDraft(res.data);
+        setSuccessMsg("AI content draft generated successfully and stored in draft asset!");
+        router.refresh();
+      } else {
+        setErrorMsg(res.error || "Generation failed to produce a valid draft.");
+      }
+    } catch {
+      setErrorMsg("Network error communicating with Generation service.");
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  const handleSaveEditedDraft = async () => {
+    if (!editableDraft) return;
+    setIsSavingDraft(true);
+    setSuccessMsg(null);
+    setErrorMsg(null);
+
+    try {
+      const res = await saveGeneratedDraftAction(page.id, editableDraft);
+      if (res.success) {
+        setDraft(editableDraft);
+        setIsEditingDraft(false);
+        setSuccessMsg("Manual edits saved to generated draft successfully.");
+        router.refresh();
+      } else {
+        setErrorMsg(res.error || "Failed to save draft edits.");
+      }
+    } catch {
+      setErrorMsg("Network error saving draft edits.");
+    } finally {
+      setIsSavingDraft(false);
+    }
+  };
+
+  const handleDiscardDraft = async () => {
+    setIsDiscardingDraft(true);
+    setSuccessMsg(null);
+    setErrorMsg(null);
+    setShowDiscardConfirm(false);
+
+    try {
+      const res = await discardGeneratedDraftAction(page.id);
+      if (res.success) {
+        setDraft(null);
+        setEditableDraft(null);
+        setIsEditingDraft(false);
+        setSuccessMsg("Draft discarded. Workflow state returned to Strategy.");
+        router.refresh();
+      } else {
+        setErrorMsg(res.error || "Failed to discard draft.");
+      }
+    } catch {
+      setErrorMsg("Network error discarding draft.");
+    } finally {
+      setIsDiscardingDraft(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Top Header */}
@@ -355,6 +482,41 @@ export default function SeoResearchStudioClient({
               {isSaving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
               <span>Save Strategy Blueprint</span>
             </button>
+          ) : activeStep === 3 && draft ? (
+            <div className="flex items-center gap-2">
+              {isEditingDraft ? (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsEditingDraft(false);
+                      setEditableDraft(draft);
+                    }}
+                    className="px-3 py-1.5 rounded-lg border border-slate-700 text-slate-400 hover:text-white text-xs"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleSaveEditedDraft}
+                    disabled={isSavingDraft}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-medium"
+                  >
+                    {isSavingDraft ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
+                    <span>Save Draft Edits</span>
+                  </button>
+                </>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setIsEditingDraft(true)}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-medium"
+                >
+                  <Edit3 className="w-3.5 h-3.5 text-cyan-400" />
+                  <span>Edit Draft</span>
+                </button>
+              )}
+            </div>
           ) : null}
         </div>
       </div>
@@ -386,7 +548,14 @@ export default function SeoResearchStudioClient({
           {[
             { step: 1, title: "1. Research", desc: "Evidence & GSC", active: activeStep === 1, done: !!savedResearch },
             { step: 2, title: "2. Strategy", desc: "Decisions & Protect", active: activeStep === 2, done: !!savedStrategy },
-            { step: 3, title: "3. Generation", desc: "Coming Next", active: activeStep === 3, done: false, locked: true },
+            {
+              step: 3,
+              title: "3. Generation",
+              desc: "AI Draft Studio",
+              active: activeStep === 3,
+              done: !!draft || ["GENERATED", "VALIDATED", "PUBLISHED"].includes(page.workflowState),
+              locked: false,
+            },
             { step: 4, title: "4. Validation", desc: "Coming Next", active: activeStep === 4, done: false, locked: true },
             { step: 5, title: "5. Review & Publish", desc: "Final Stage", active: activeStep === 5, done: false, locked: true },
           ].map((s, idx) => (
@@ -1150,30 +1319,504 @@ export default function SeoResearchStudioClient({
       {/* ============================================================= */}
       {/* STEPS 3, 4, 5: NEXT PHASE PIPELINE PREVIEWS                   */}
       {/* ============================================================= */}
+      {/* ============================================================= */}
+      {/* STEP 3: CONTENT GENERATION STUDIO                             */}
+      {/* ============================================================= */}
       {activeStep === 3 && (
-        <div className="bg-slate-900/60 border border-slate-800 rounded-xl p-8 text-center space-y-4">
-          <div className="w-12 h-12 rounded-xl bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 flex items-center justify-center mx-auto">
-            <Sparkles className="w-6 h-6" />
+        <div className="space-y-6">
+          {/* Prerequisites Warning if Research or Strategy missing */}
+          {(!savedResearch || !savedStrategy) && (
+            <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-300 text-xs space-y-2">
+              <div className="flex items-center gap-2 font-semibold">
+                <AlertTriangle className="w-4 h-4 text-amber-400" />
+                <span>Prerequisites Incomplete</span>
+              </div>
+              <p className="text-slate-300">
+                AI Generation requires a completed Research context and Strategy blueprint.
+                {!savedResearch && " Please complete Step 1 (Research)."}
+                {!savedStrategy && " Please complete Step 2 (Strategy)."}
+              </p>
+              <div className="flex items-center gap-3 pt-2">
+                {!savedResearch && (
+                  <button
+                    type="button"
+                    onClick={() => setActiveStep(1)}
+                    className="px-3 py-1.5 rounded-lg bg-amber-600/30 hover:bg-amber-600/50 border border-amber-500/30 text-amber-200 text-xs font-medium"
+                  >
+                    Go to Step 1 (Research)
+                  </button>
+                )}
+                {!savedStrategy && (
+                  <button
+                    type="button"
+                    onClick={() => setActiveStep(2)}
+                    className="px-3 py-1.5 rounded-lg bg-amber-600/30 hover:bg-amber-600/50 border border-amber-500/30 text-amber-200 text-xs font-medium"
+                  >
+                    Go to Step 2 (Strategy)
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Strategy Context & Ground-Truth Strip */}
+          <div className="bg-slate-900/60 border border-slate-800 rounded-xl p-4 sm:p-5 space-y-3">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-lg bg-purple-500/10 border border-purple-500/20 text-purple-400 flex items-center justify-center">
+                  <Sparkles className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold text-white">Stage 3 — Research-Backed AI Generation</h3>
+                  <p className="text-xs text-slate-400">
+                    Target Query: <span className="text-purple-300 font-semibold">{targetQuery || page.title}</span> • Intent: <span className="capitalize text-slate-300">{searchIntent}</span>
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="px-2.5 py-1 rounded-full text-xs font-medium bg-slate-950 border border-slate-800 text-slate-300">
+                  Decision: <strong className="text-white">{adminDecision}</strong>
+                </span>
+                <span className="px-2.5 py-1 rounded-full text-xs font-medium bg-slate-950 border border-slate-800 text-slate-300">
+                  Action: <strong className="text-cyan-400">{recommendedAction}</strong>
+                </span>
+                <span className="px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-500/10 border border-emerald-500/20 text-emerald-400">
+                  {verifiedDbFacts.length} DB Facts
+                </span>
+              </div>
+            </div>
+
+            {/* Protected Elements Badges */}
+            <div className="flex items-center gap-2 flex-wrap pt-2 border-t border-slate-800/80 text-xs">
+              <span className="text-slate-400 font-medium">Protected Elements ([RETAIN EXISTING]):</span>
+              {protectTitle && (
+                <span className="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-300 border border-emerald-500/20">
+                  Title
+                </span>
+              )}
+              {protectH1 && (
+                <span className="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-300 border border-emerald-500/20">
+                  H1 Heading
+                </span>
+              )}
+              {protectMetaDescription && (
+                <span className="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-300 border border-emerald-500/20">
+                  Meta Snippet
+                </span>
+              )}
+              {protectPrimaryQuery && (
+                <span className="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-300 border border-emerald-500/20">
+                  Primary Query
+                </span>
+              )}
+              {protectFaqs && (
+                <span className="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-300 border border-emerald-500/20">
+                  Existing FAQs
+                </span>
+              )}
+              {!protectTitle && !protectH1 && !protectMetaDescription && !protectPrimaryQuery && !protectFaqs && (
+                <span className="text-slate-500 italic">None designated (full optimization allowed)</span>
+              )}
+            </div>
           </div>
-          <div>
-            <h3 className="text-base font-bold text-white">Stage 3 — Content Generation Engine</h3>
-            <p className="text-xs text-slate-400 max-w-md mx-auto mt-1">
-              Coming in next SEO pipeline phase. Generation will consume the Step 2 Strategy Blueprint while strictly enforcing Protected Components ({protectTitle ? "Title Protected, " : ""}{protectH1 ? "H1 Protected, " : ""}Protected Queries).
-            </p>
-          </div>
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-950 border border-slate-800 text-xs text-slate-400">
-            <Lock className="w-3.5 h-3.5 text-amber-400" />
-            <span>Generation Engine Locked in Step 3</span>
-          </div>
-          <div className="pt-4 flex justify-center gap-3">
-            <button
-              type="button"
-              onClick={() => setActiveStep(2)}
-              className="px-4 py-2 rounded-lg bg-slate-800 text-white text-xs font-medium"
-            >
-              Back to Strategy Studio
-            </button>
-          </div>
+
+          {/* Setup & Generation Controls (If no draft or regenerating) */}
+          {(!draft || showRegenerateConfirm) && (
+            <div className="bg-slate-900/60 border border-slate-800 rounded-xl p-5 sm:p-6 space-y-4">
+              <div className="flex items-center justify-between">
+                <h4 className="text-sm font-bold text-white flex items-center gap-2">
+                  <Sliders className="w-4 h-4 text-cyan-400" />
+                  <span>Generation Parameters</span>
+                </h4>
+                {showRegenerateConfirm && (
+                  <button
+                    type="button"
+                    onClick={() => setShowRegenerateConfirm(false)}
+                    className="text-xs text-slate-400 hover:text-white"
+                  >
+                    Cancel Regeneration
+                  </button>
+                )}
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+                <div>
+                  <label className="text-slate-400 block mb-1">Brand Voice & Tone:</label>
+                  <select
+                    value={generationTone}
+                    onChange={(e: any) => setGenerationTone(e.target.value)}
+                    className="w-full bg-slate-950 border border-slate-800 rounded px-3 py-2 text-white focus:outline-none focus:border-cyan-500"
+                  >
+                    <option value="professional_authoritative">Professional & Authoritative (Recommended)</option>
+                    <option value="warm_inspirational">Warm & Inspirational</option>
+                    <option value="adventurous_expert">Adventurous & High-Altitude Expert</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="text-slate-400 block mb-1">Content Depth:</label>
+                  <select
+                    value={generationDepth}
+                    onChange={(e: any) => setGenerationDepth(e.target.value)}
+                    className="w-full bg-slate-950 border border-slate-800 rounded px-3 py-2 text-white focus:outline-none focus:border-cyan-500"
+                  >
+                    <option value="standard">Standard Expert Guide (1,200 - 1,800 words)</option>
+                    <option value="comprehensive_deep_dive">Comprehensive Deep Dive (2,000+ words with itinerary/tips)</option>
+                  </select>
+                </div>
+
+                <div className="md:col-span-2">
+                  <label className="text-slate-400 block mb-1">Custom Editorial Instructions (Optional):</label>
+                  <input
+                    type="text"
+                    value={customInstructions}
+                    onChange={(e) => setCustomInstructions(e.target.value)}
+                    placeholder="e.g., Emphasize private 4x4 transport in winter, highlight verified boutique homestays..."
+                    className="w-full bg-slate-950 border border-slate-800 rounded px-3 py-2 text-white focus:outline-none focus:border-cyan-500"
+                  />
+                </div>
+              </div>
+
+              <div className="p-3 rounded-lg bg-slate-950 border border-slate-800 text-[11px] text-slate-400 space-y-1">
+                <div className="flex items-center gap-1.5 text-slate-300 font-medium">
+                  <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+                  <span>Production Safety Guarantees:</span>
+                </div>
+                <p>
+                  • Generation writes exclusively to a draft ContentAsset. The published page content remains 100% untouched.
+                </p>
+                <p>
+                  • Factual information is strictly bounded by the {verifiedDbFacts.length} verified database records.
+                </p>
+              </div>
+
+              <div className="pt-2 flex items-center justify-between">
+                <div className="text-xs text-slate-500">
+                  Powered by Gemini 2.5 Flash • Structured JSON Mode
+                </div>
+
+                <button
+                  type="button"
+                  onClick={handleGenerateDraft}
+                  disabled={isGenerating || !savedResearch || !savedStrategy}
+                  className="inline-flex items-center gap-2 px-6 py-2.5 rounded-lg bg-gradient-to-r from-purple-600 to-cyan-600 hover:from-purple-500 hover:to-cyan-500 text-white font-medium text-xs shadow-md transition disabled:opacity-50"
+                >
+                  {isGenerating ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <span>Generating SEO Content...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="w-4 h-4" />
+                      <span>{draft ? "Confirm & Regenerate Draft" : "Generate SEO Content Draft"}</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Generated Draft Display & Review Workspace */}
+          {draft && !showRegenerateConfirm && (
+            <div className="space-y-6">
+              {/* Draft Status Banner */}
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-slate-900/60 border border-cyan-500/30 rounded-xl p-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-lg bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 flex items-center justify-center">
+                    <CheckCircle2 className="w-5 h-5 text-cyan-400" />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <h4 className="text-sm font-bold text-white">Active Content Draft</h4>
+                      <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-cyan-500/20 text-cyan-300 border border-cyan-500/30">
+                        ContentAsset: DRAFT
+                      </span>
+                    </div>
+                    <p className="text-xs text-slate-400">
+                      Generated: {draft.generatedAt ? new Date(draft.generatedAt).toLocaleString() : "Recently"} via {draft.model || "gemini-2.5-flash"} • Live page remains untouched.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 self-start sm:self-auto flex-wrap">
+                  {isEditingDraft ? (
+                    <>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsEditingDraft(false);
+                          setEditableDraft(draft);
+                        }}
+                        className="px-3 py-1.5 rounded-lg border border-slate-700 text-slate-400 hover:text-white text-xs"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleSaveEditedDraft}
+                        disabled={isSavingDraft}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-medium"
+                      >
+                        {isSavingDraft ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
+                        <span>Save Edits</span>
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <button
+                        type="button"
+                        onClick={() => setIsEditingDraft(true)}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-medium"
+                      >
+                        <Edit3 className="w-3.5 h-3.5 text-cyan-400" />
+                        <span>Edit Draft</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setShowRegenerateConfirm(true)}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-purple-300 border border-purple-500/30 text-xs font-medium"
+                      >
+                        <RefreshCw className="w-3.5 h-3.5" />
+                        <span>Regenerate</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setShowDiscardConfirm(true)}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-rose-500/20 text-rose-400 border border-rose-500/20 text-xs font-medium"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                        <span>Discard</span>
+                      </button>
+                    </>
+                  )}
+                </div>
+              </div>
+
+              {/* SERP Snippet Preview (Google Result Mockup) */}
+              <div className="bg-slate-900/60 border border-slate-800 rounded-xl p-4 sm:p-5 space-y-3">
+                <div className="flex items-center justify-between">
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+                    <Globe className="w-3.5 h-3.5 text-cyan-400" />
+                    <span>Search Engine Snippet Preview (SERP)</span>
+                  </h4>
+                  {protectTitle && (
+                    <span className="text-[10px] text-emerald-400 flex items-center gap-1">
+                      <Lock className="w-3 h-3" />
+                      <span>[RETAIN EXISTING] Title Protected</span>
+                    </span>
+                  )}
+                </div>
+
+                {isEditingDraft ? (
+                  <div className="space-y-3 text-xs">
+                    <div>
+                      <label className="text-slate-400 block mb-1">Page Meta Title:</label>
+                      <input
+                        type="text"
+                        value={editableDraft?.title || ""}
+                        onChange={(e) =>
+                          setEditableDraft((prev) => (prev ? { ...prev, title: e.target.value } : null))
+                        }
+                        className="w-full bg-slate-950 border border-slate-800 rounded px-3 py-2 text-white focus:outline-none focus:border-cyan-500 font-medium"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-slate-400 block mb-1">Meta Description:</label>
+                      <textarea
+                        rows={2}
+                        value={editableDraft?.metaDescription || ""}
+                        onChange={(e) =>
+                          setEditableDraft((prev) => (prev ? { ...prev, metaDescription: e.target.value } : null))
+                        }
+                        className="w-full bg-slate-950 border border-slate-800 rounded p-2.5 text-white focus:outline-none focus:border-cyan-500"
+                      />
+                    </div>
+                  </div>
+                ) : (
+                  <div className="bg-slate-950 border border-slate-800/80 rounded-xl p-4 max-w-2xl font-sans">
+                    <div className="text-[11px] text-slate-400 flex items-center gap-1 mb-1 font-mono">
+                      <span>https://wanderkashmir.com/{page.type.toLowerCase()}s/{page.slug}</span>
+                    </div>
+                    <div className="text-base text-cyan-400 hover:underline cursor-pointer font-medium line-clamp-1">
+                      {draft.title}
+                    </div>
+                    <div className="text-xs text-slate-300 mt-1 line-clamp-2 leading-relaxed">
+                      {draft.metaDescription}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* H1 & Main Content Body */}
+              <div className="bg-slate-900/60 border border-slate-800 rounded-xl p-4 sm:p-5 space-y-4">
+                <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+                    <FileText className="w-3.5 h-3.5 text-purple-400" />
+                    <span>Primary Heading & Content Body</span>
+                  </h4>
+                  {protectH1 && (
+                    <span className="text-[10px] text-emerald-400 flex items-center gap-1">
+                      <Lock className="w-3 h-3" />
+                      <span>[RETAIN EXISTING] H1 Protected</span>
+                    </span>
+                  )}
+                </div>
+
+                {isEditingDraft ? (
+                  <div className="space-y-3 text-xs">
+                    <div>
+                      <label className="text-slate-400 block mb-1">H1 Heading:</label>
+                      <input
+                        type="text"
+                        value={editableDraft?.h1Heading || ""}
+                        onChange={(e) =>
+                          setEditableDraft((prev) => (prev ? { ...prev, h1Heading: e.target.value } : null))
+                        }
+                        className="w-full bg-slate-950 border border-slate-800 rounded px-3 py-2 text-white focus:outline-none focus:border-cyan-500 font-semibold"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-slate-400 block mb-1">Markdown Content Body:</label>
+                      <textarea
+                        rows={16}
+                        value={editableDraft?.content || ""}
+                        onChange={(e) =>
+                          setEditableDraft((prev) => (prev ? { ...prev, content: e.target.value } : null))
+                        }
+                        className="w-full bg-slate-950 border border-slate-800 rounded p-3 text-white font-mono text-xs focus:outline-none focus:border-cyan-500 leading-relaxed"
+                      />
+                    </div>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    <h2 className="text-xl font-bold text-white tracking-tight">{draft.h1Heading}</h2>
+                    <div className="bg-slate-950/80 border border-slate-800/80 rounded-xl p-4 sm:p-6 text-slate-300 text-xs leading-relaxed whitespace-pre-wrap font-sans space-y-3 max-h-[600px] overflow-y-auto">
+                      {draft.content}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* FAQs Section */}
+              <div className="bg-slate-900/60 border border-slate-800 rounded-xl p-4 sm:p-5 space-y-3">
+                <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+                    <HelpCircle className="w-3.5 h-3.5 text-cyan-400" />
+                    <span>Frequently Asked Questions ({draft.faqs?.length || 0})</span>
+                  </h4>
+                  {protectFaqs && (
+                    <span className="text-[10px] text-emerald-400 flex items-center gap-1">
+                      <Lock className="w-3 h-3" />
+                      <span>Existing FAQs Retained</span>
+                    </span>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  {draft.faqs && draft.faqs.length > 0 ? (
+                    draft.faqs.map((f, i) => (
+                      <div key={i} className="bg-slate-950 border border-slate-800/80 rounded-lg p-3 space-y-1">
+                        <div className="font-semibold text-white text-xs flex items-center gap-2">
+                          <span className="text-cyan-400 font-mono">Q{i + 1}:</span>
+                          <span>{f.question}</span>
+                        </div>
+                        <p className="text-slate-300 text-xs pl-6">{f.answer}</p>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-xs text-slate-500 italic">No FAQs generated.</p>
+                  )}
+                </div>
+              </div>
+
+              {/* Internal Link Suggestions */}
+              {draft.internalLinkSuggestions && draft.internalLinkSuggestions.length > 0 && (
+                <div className="bg-slate-900/60 border border-slate-800 rounded-xl p-4 sm:p-5 space-y-3">
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+                    <Link2 className="w-3.5 h-3.5 text-purple-400" />
+                    <span>Recommended Internal Links (Verified Real Routes)</span>
+                  </h4>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                    {draft.internalLinkSuggestions.map((l, i) => (
+                      <div key={i} className="bg-slate-950 border border-slate-800/80 rounded-lg p-3 space-y-1">
+                        <div className="flex items-center justify-between">
+                          <span className="font-semibold text-white">"{l.anchorText}"</span>
+                          <span className="font-mono text-[10px] text-purple-300 bg-purple-500/10 px-1.5 py-0.5 rounded border border-purple-500/20">
+                            {l.url}
+                          </span>
+                        </div>
+                        <p className="text-slate-400 text-[11px]">{l.context}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* SEO Strategic Alignment Notes */}
+              {draft.seoNotes && (
+                <div className="bg-slate-900/60 border border-slate-800 rounded-xl p-4 text-xs text-slate-400 space-y-1">
+                  <strong className="text-slate-300">Strategic Alignment Notes:</strong>
+                  <p>{draft.seoNotes}</p>
+                </div>
+              )}
+
+              {/* Stage 3 Footer Navigation */}
+              <div className="flex items-center justify-between pt-4 border-t border-slate-800">
+                <button
+                  type="button"
+                  onClick={() => setActiveStep(2)}
+                  className="px-4 py-2 rounded-lg border border-slate-800 text-slate-400 hover:text-white text-xs font-medium"
+                >
+                  ← Back to Strategy Studio
+                </button>
+
+                <div className="flex items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setActiveStep(4)}
+                    className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white font-medium text-xs transition shadow-sm"
+                  >
+                    <span>Proceed to Stage 4: Validation</span>
+                    <ArrowRight className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Discard Confirmation Modal */}
+          {showDiscardConfirm && (
+            <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4">
+              <div className="bg-slate-900 border border-slate-800 rounded-xl max-w-md w-full p-5 space-y-4">
+                <div className="flex items-center gap-3 text-rose-400">
+                  <AlertTriangle className="w-5 h-5 shrink-0" />
+                  <h3 className="text-sm font-bold text-white">Discard Content Draft?</h3>
+                </div>
+                <p className="text-xs text-slate-300 leading-relaxed">
+                  This will remove the current generated draft from ContentAsset and reset the workflow state from GENERATED back to STRATEGISED.
+                </p>
+                <div className="flex items-center justify-end gap-3 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setShowDiscardConfirm(false)}
+                    className="px-3 py-1.5 rounded-lg border border-slate-800 text-slate-400 hover:text-white text-xs"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleDiscardDraft}
+                    disabled={isDiscardingDraft}
+                    className="px-4 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-500 text-white text-xs font-medium disabled:opacity-50"
+                  >
+                    {isDiscardingDraft ? "Discarding..." : "Yes, Discard Draft"}
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       )}
 

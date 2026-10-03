@@ -4,6 +4,13 @@ import prisma from "@/lib/prisma";
 import { getAdminSession } from "@/lib/admin/auth";
 import { revalidatePath } from "next/cache";
 import { SeoWorkflowState } from "@prisma/client";
+import {
+  generateSeoContentDraft,
+  saveGeneratedDraft,
+  discardGeneratedDraft,
+  GeneratedDraftContent,
+  GenerationStudioOptions,
+} from "@/lib/admin/seoGeneration";
 
 export interface SeoLandingPageUpdateInput {
   title: string;
@@ -601,5 +608,111 @@ export async function saveSeoStrategyAction(
   }
 }
 
+/**
+ * Server Action: Triggers AI SEO content generation for an SEO Landing Page.
+ * Enforces strict 6-tier DB-verified admin auth and concurrency checks.
+ * Advances workflowState to GENERATED on success without overwriting published content.
+ */
+export async function generateSeoContentDraftAction(
+  pageId: string,
+  options?: GenerationStudioOptions
+): Promise<ActionResult<GeneratedDraftContent>> {
+  try {
+    const auth = await verifyAdminAuth();
+    if (!auth.authorized) {
+      return { success: false, error: auth.error };
+    }
 
+    const result = await generateSeoContentDraft(pageId, options);
 
+    if (!result.success || !result.data) {
+      return {
+        success: false,
+        error: result.error || "Generation failed to produce a valid draft.",
+      };
+    }
+
+    try {
+      revalidatePath("/admin/seo");
+      revalidatePath(`/admin/seo/${pageId}`);
+    } catch {}
+
+    return {
+      success: true,
+      data: result.data,
+    };
+  } catch (error: any) {
+    console.error("Error in generateSeoContentDraftAction:", error);
+    return {
+      success: false,
+      error: error?.message || "A server error occurred during AI generation.",
+    };
+  }
+}
+
+/**
+ * Server Action: Saves manual edits made to a generated draft in ContentAsset.
+ * Enforces strict 6-tier DB-verified admin auth.
+ */
+export async function saveGeneratedDraftAction(
+  pageId: string,
+  draftData: GeneratedDraftContent
+): Promise<ActionResult<{ success: boolean }>> {
+  try {
+    const auth = await verifyAdminAuth();
+    if (!auth.authorized) {
+      return { success: false, error: auth.error };
+    }
+
+    const result = await saveGeneratedDraft(pageId, draftData);
+    if (!result.success) {
+      return { success: false, error: result.error || "Failed to save draft." };
+    }
+
+    try {
+      revalidatePath("/admin/seo");
+      revalidatePath(`/admin/seo/${pageId}`);
+    } catch {}
+
+    return { success: true, data: { success: true } };
+  } catch (error: any) {
+    console.error("Error in saveGeneratedDraftAction:", error);
+    return {
+      success: false,
+      error: error?.message || "Failed to save edited draft.",
+    };
+  }
+}
+
+/**
+ * Server Action: Discards the generated draft from ContentAsset.
+ * Reverts workflowState from GENERATED to STRATEGISED if applicable.
+ */
+export async function discardGeneratedDraftAction(
+  pageId: string
+): Promise<ActionResult<{ success: boolean }>> {
+  try {
+    const auth = await verifyAdminAuth();
+    if (!auth.authorized) {
+      return { success: false, error: auth.error };
+    }
+
+    const result = await discardGeneratedDraft(pageId);
+    if (!result.success) {
+      return { success: false, error: result.error || "Failed to discard draft." };
+    }
+
+    try {
+      revalidatePath("/admin/seo");
+      revalidatePath(`/admin/seo/${pageId}`);
+    } catch {}
+
+    return { success: true, data: { success: true } };
+  } catch (error: any) {
+    console.error("Error in discardGeneratedDraftAction:", error);
+    return {
+      success: false,
+      error: error?.message || "Failed to discard draft.",
+    };
+  }
+}

@@ -125,6 +125,8 @@ export interface SeoResearchStudioPayload {
   matchedOpportunity: SeoResearchData["opportunityEvidence"];
   cannibalization: CannibalizationAnalysis;
   verifiedDbFacts: VerifiedDbFact[];
+  generatedDraft?: any | null;
+  activeJob?: { id: string; status: string; startedAt: Date | null } | null;
 }
 
 /**
@@ -152,17 +154,19 @@ export async function analyzeCannibalization(
         prisma.tourCategory.findMany({
           select: { id: true, name: true, slug: true },
         }),
-        prisma.place.findMany({
-          where: { status: "ACTIVE" },
-          select: {
-            id: true,
-            name: true,
-            slug: true,
-            destinationPlaces: {
-              select: { destination: { select: { slug: true } } },
+        prisma.place
+          .findMany({
+            where: { status: "ACTIVE" },
+            select: {
+              id: true,
+              name: true,
+              slug: true,
+              destinationPlaces: {
+                select: { destination: { select: { slug: true } } },
+              },
             },
-          },
-        }),
+          })
+          .catch(() => []),
       ]);
 
     const stopWords = new Set([
@@ -305,10 +309,12 @@ export async function getVerifiedDatabaseFacts(page: {
 
   try {
     // 1. Linked Destination Places
-    const places = await prisma.destinationPlace.findMany({
-      where: { destinationId: page.id },
-      include: { place: { select: { id: true, name: true, slug: true } } },
-    });
+    const places = await prisma.destinationPlace
+      .findMany({
+        where: { destinationId: page.id },
+        include: { place: { select: { id: true, name: true, slug: true } } },
+      })
+      .catch(() => []);
 
     if (places.length > 0) {
       facts.push({
@@ -380,24 +386,27 @@ export async function getSeoResearchStudioData(
   try {
     const page = await prisma.seoLandingPage.findUnique({
       where: { id: pageId },
-      include: {
-        places: {
-          include: {
-            place: {
-              select: {
-                id: true,
-                name: true,
-                slug: true,
-                status: true,
-              },
-            },
-          },
-          orderBy: { displayOrder: "asc" },
-        },
-      },
     });
 
     if (!page) return null;
+
+    let pagePlaces: any[] = [];
+    try {
+      pagePlaces = await prisma.destinationPlace.findMany({
+        where: { destinationId: page.id },
+        include: {
+          place: {
+            select: {
+              id: true,
+              name: true,
+              slug: true,
+              status: true,
+            },
+          },
+        },
+        orderBy: { displayOrder: "asc" },
+      });
+    } catch {}
 
     // 1. Fetch live GSC evidence
     let liveGscEvidence: SeoResearchData["gscEvidence"] = {
@@ -476,6 +485,58 @@ export async function getSeoResearchStudioData(
     const savedResearch = (page.seoResearch as unknown as SeoResearchData) || null;
     const savedStrategy = (page.seoStrategy as unknown as SeoStrategyData) || null;
 
+    // 5. Load generated draft from ContentAsset if present
+    let generatedDraft: any = null;
+    try {
+      const asset = await prisma.contentAsset.findUnique({
+        where: {
+          seoPageId_platform: {
+            seoPageId: page.id,
+            platform: "SEO_PAGE",
+          },
+        },
+        select: {
+          id: true,
+          title: true,
+          content: true,
+          jsonData: true,
+          publishStatus: true,
+          updatedAt: true,
+        },
+      });
+
+      if (asset?.jsonData) {
+        generatedDraft = {
+          ...(asset.jsonData as any),
+          assetId: asset.id,
+          updatedAt: asset.updatedAt,
+        };
+      }
+    } catch (e) {
+      console.warn("Could not query ContentAsset for SEO studio:", e);
+    }
+
+    // 6. Check for any currently active ContentGenerationJob
+    let activeJob: { id: string; status: string; startedAt: Date | null } | null = null;
+    try {
+      const threeMinutesAgo = new Date(Date.now() - 3 * 60 * 1000);
+      const job = await prisma.contentGenerationJob.findFirst({
+        where: {
+          seoLandingPageId: page.id,
+          platform: "SEO_PAGE",
+          status: { in: ["PENDING", "IN_PROGRESS"] },
+          createdAt: { gte: threeMinutesAgo },
+        },
+        select: { id: true, status: true, startedAt: true },
+        orderBy: { createdAt: "desc" },
+      });
+      if (job) {
+        activeJob = job;
+      }
+    } catch (e) {
+      console.warn("Could not check active ContentGenerationJob:", e);
+    }
+
     return {
       page: {
         id: page.id,
@@ -490,7 +551,7 @@ export async function getSeoResearchStudioData(
         createdAt: page.createdAt,
         updatedAt: page.updatedAt,
         faqs: page.faqs,
-        places: page.places,
+        places: pagePlaces,
       },
       savedResearch,
       savedStrategy,
@@ -498,6 +559,8 @@ export async function getSeoResearchStudioData(
       matchedOpportunity,
       cannibalization,
       verifiedDbFacts,
+      generatedDraft,
+      activeJob,
     };
   } catch (error) {
     console.error("Error loading SeoResearchStudioData:", error);
