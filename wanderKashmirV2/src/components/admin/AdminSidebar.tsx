@@ -22,6 +22,16 @@ import {
   ChevronDown,
   Check,
   Calendar,
+  Clock,
+  CheckCircle2,
+  XCircle,
+  Layers,
+  Car,
+  Users,
+  MessageSquare,
+  Mail,
+  Tag,
+  Megaphone,
 } from "lucide-react";
 import { logoutAdminAction } from "@/actions/adminAuth";
 
@@ -47,26 +57,63 @@ const navSections: NavSection[] = [
     ],
   },
   {
+    title: "Vendor Management",
+    items: [
+      { name: "Vendor Approvals", href: "/admin/vendors/pending", icon: Clock },
+      { name: "Live Vendors", href: "/admin/vendors/live", icon: CheckCircle2 },
+    ],
+  },
+  {
+    title: "Listing Management",
+    items: [
+      { name: "Listing Approvals", href: "/admin/listings/pending", icon: Clock },
+      { name: "Live Listings", href: "/admin/listings/live", icon: CheckCircle2 },
+    ],
+  },
+  {
     title: "Content Management",
     items: [
       { name: "Tours", href: "/admin/tours", icon: Compass },
+      { name: "Tour Categories", href: "/admin/tour-categories", icon: Layers },
       { name: "Travel Styles", href: "/admin/travel-styles", icon: Palette },
+      { name: "Taxis / Vehicles", href: "/admin/taxis", icon: Car },
       { name: "Stays & Properties", href: "/admin/properties", icon: Building },
       { name: "Destinations & Places", href: "/admin/destinations", icon: MapPin },
       { name: "Experiences", href: "/admin/experiences", icon: Sparkles },
-      { name: "Reviews", href: "/admin/reviews", icon: Star },
+    ],
+  },
+  {
+    title: "Compliance & Archive",
+    items: [
+      { name: "Rejected Vendors", href: "/admin/vendors/rejected", icon: XCircle },
     ],
   },
   {
     title: "SEO & Growth",
     items: [
       { name: "SEO Intelligence", href: "/admin/seo", icon: Globe },
+      { name: "SEO Comments", href: "/admin/seo-comments", icon: MessageSquare },
+    ],
+  },
+  {
+    title: "Marketing & Deals",
+    items: [
+      { name: "Bulk Emails", href: "/admin/emails", icon: Mail },
+      { name: "Promo Codes", href: "/admin/promo-codes", icon: Tag },
+      { name: "Site Popups", href: "/admin/popups", icon: Megaphone },
     ],
   },
   {
     title: "Operations",
     items: [
       { name: "Customer Leads", href: "/admin/leads", icon: Inbox },
+      { name: "Users & Tourists", href: "/admin/users", icon: Users },
+    ],
+  },
+  {
+    title: "V2 Extensions",
+    items: [
+      { name: "Customer Reviews", href: "/admin/reviews", icon: Star },
     ],
   },
 ];
@@ -76,6 +123,9 @@ export default function AdminSidebar({ userEmail }: AdminSidebarProps) {
   const [themeOpen, setThemeOpen] = useState(false);
   const pathname = usePathname();
   const { mode, setMode, selectedSeason, setSelectedSeason, activeSeason, autoSeason } = useSeasonalTheme();
+
+  const isWanderAdmin = pathname.startsWith("/wander-admin");
+  const adminBase = isWanderAdmin ? "/wander-admin" : "/admin";
 
   return (
     <>
@@ -115,7 +165,7 @@ export default function AdminSidebar({ userEmail }: AdminSidebarProps) {
       >
         {/* Brand Area */}
         <div className="p-5 border-b border-slate-800/80 flex items-center justify-between">
-          <Link href="/admin" className="flex items-center gap-3">
+          <Link href={adminBase} className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold text-sm shadow-md shadow-emerald-500/5">
               WK
             </div>
@@ -145,15 +195,16 @@ export default function AdminSidebar({ userEmail }: AdminSidebarProps) {
               )}
               {section.items.map((item) => {
                 const Icon = item.icon;
+                const itemHref = item.href.replace(/^\/admin/, adminBase);
                 const isActive =
                   item.href === "/admin"
-                    ? pathname === "/admin"
-                    : pathname.startsWith(item.href);
+                    ? pathname === "/admin" || pathname === "/wander-admin"
+                    : pathname.startsWith(item.href) || pathname.startsWith(itemHref);
 
                 return (
                   <Link
                     key={item.name}
-                    href={item.href}
+                    href={itemHref}
                     onClick={() => setMobileOpen(false)}
                     className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
                       isActive
