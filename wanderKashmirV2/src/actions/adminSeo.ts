@@ -11,6 +11,10 @@ import {
   GeneratedDraftContent,
   GenerationStudioOptions,
 } from "@/lib/admin/seoGeneration";
+import {
+  validateSeoLandingPageDraft,
+  SeoValidationReport,
+} from "@/lib/admin/seoValidation";
 
 export interface SeoLandingPageUpdateInput {
   title: string;
@@ -716,3 +720,47 @@ export async function discardGeneratedDraftAction(
     };
   }
 }
+
+/**
+ * Server Action: Executes full SEO validation on the latest generated draft.
+ * Enforces strict 6-tier DB-verified admin auth and updates SeoLandingPage.validationReport.
+ */
+export async function runSeoValidationAction(
+  pageId: string
+): Promise<ActionResult<SeoValidationReport>> {
+  try {
+    const auth = await verifyAdminAuth();
+    if (!auth.authorized) {
+      return { success: false, error: auth.error };
+    }
+
+    if (!pageId || typeof pageId !== "string") {
+      return { success: false, error: "Invalid SEO landing page identifier." };
+    }
+
+    const result = await validateSeoLandingPageDraft(pageId);
+    if (!result.success) {
+      return {
+        success: false,
+        error: result.error || "SEO validation failed to execute.",
+      };
+    }
+
+    try {
+      revalidatePath("/admin/seo");
+      revalidatePath(`/admin/seo/${pageId}`);
+    } catch {}
+
+    return {
+      success: true,
+      data: result.data,
+    };
+  } catch (error: any) {
+    console.error("Error in runSeoValidationAction:", error);
+    return {
+      success: false,
+      error: error?.message || "Internal error during SEO validation execution.",
+    };
+  }
+}
+

@@ -36,6 +36,11 @@ import {
   Sliders,
   HelpCircle,
   Link2,
+  ChevronDown,
+  ChevronUp,
+  AlertCircle,
+  XCircle,
+  Info,
 } from "lucide-react";
 import {
   SeoResearchStudioPayload,
@@ -48,8 +53,15 @@ import {
   generateSeoContentDraftAction,
   saveGeneratedDraftAction,
   discardGeneratedDraftAction,
+  runSeoValidationAction,
 } from "@/actions/adminSeo";
 import { GeneratedDraftContent } from "@/lib/admin/seoGeneration";
+import {
+  SeoValidationReport,
+  SeoValidationIssue,
+  ValidationSeverity,
+  ValidationCategoryKey,
+} from "@/lib/admin/seoValidation";
 import { SeoWorkflowState } from "@prisma/client";
 
 interface SeoResearchStudioClientProps {
@@ -69,16 +81,37 @@ export default function SeoResearchStudioClient({
     cannibalization,
     verifiedDbFacts,
     generatedDraft: initialDraft,
+    savedValidationReport,
   } = payload;
 
   const [activeStep, setActiveStep] = useState<1 | 2 | 3 | 4 | 5>(
-    initialDraft ? 3 : savedStrategy ? 2 : 1
+    page.workflowState === "VALIDATED" || savedValidationReport
+      ? 4
+      : initialDraft
+      ? 3
+      : savedStrategy
+      ? 2
+      : 1
   );
 
   // Status & Feedback
   const [isSaving, setIsSaving] = useState(false);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+  // -------------------------------------------------------------
+  // STEP 4 STATE: VALIDATION STUDIO
+  // -------------------------------------------------------------
+  const [validationReport, setValidationReport] = useState<SeoValidationReport | null>(
+    savedValidationReport || (page.validationReport as unknown as SeoValidationReport) || null
+  );
+  const [isValidating, setIsValidating] = useState(false);
+  const [expandedCategories, setExpandedCategories] = useState<Record<string, boolean>>({
+    metadata: true,
+    headings: true,
+    protectedComponents: true,
+    factualAlignment: true,
+  });
 
   // -------------------------------------------------------------
   // STEP 3 STATE: GENERATION STUDIO
@@ -426,6 +459,49 @@ export default function SeoResearchStudioClient({
     }
   };
 
+  const handleRunValidation = async () => {
+    setIsValidating(true);
+    setSuccessMsg(null);
+    setErrorMsg(null);
+
+    try {
+      const res = await runSeoValidationAction(page.id);
+      if (res.success && res.data) {
+        setValidationReport(res.data);
+        if (res.data.overallStatus === "PASS") {
+          setSuccessMsg("Validation completed: All checks passed! Content is ready for Human Review.");
+        } else if (res.data.overallStatus === "WARNING") {
+          setSuccessMsg("Validation completed with minor warnings. Content is acceptable for Human Review.");
+        } else {
+          setErrorMsg("Validation completed with errors/critical issues. Review issues below before review.");
+        }
+        // Expand all categories that have issues or warnings
+        const newExpanded: Record<string, boolean> = {};
+        Object.entries(res.data.categories).forEach(([k, cat]) => {
+          if (cat.errorCount > 0 || cat.criticalCount > 0 || cat.warningCount > 0) {
+            newExpanded[k] = true;
+          }
+        });
+        setExpandedCategories(newExpanded);
+        router.refresh();
+      } else {
+        setErrorMsg(res.error || "Failed to execute SEO validation.");
+      }
+    } catch {
+      setErrorMsg("Network error executing validation.");
+    } finally {
+      setIsValidating(false);
+    }
+  };
+
+  const toggleCategory = (key: string) => {
+    setExpandedCategories((prev) => ({
+      ...prev,
+      [key]: !prev[key],
+    }));
+  };
+
+
   return (
     <div className="space-y-6">
       {/* Top Header */}
@@ -517,6 +593,20 @@ export default function SeoResearchStudioClient({
                 </button>
               )}
             </div>
+          ) : activeStep === 4 && draft ? (
+            <button
+              type="button"
+              onClick={handleRunValidation}
+              disabled={isValidating}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-medium text-xs transition shadow-sm disabled:opacity-50"
+            >
+              {isValidating ? (
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              ) : (
+                <RefreshCw className="w-3.5 h-3.5" />
+              )}
+              <span>{validationReport ? "Re-run Validation" : "Run Validation"}</span>
+            </button>
           ) : null}
         </div>
       </div>
@@ -556,8 +646,22 @@ export default function SeoResearchStudioClient({
               done: !!draft || ["GENERATED", "VALIDATED", "PUBLISHED"].includes(page.workflowState),
               locked: false,
             },
-            { step: 4, title: "4. Validation", desc: "Coming Next", active: activeStep === 4, done: false, locked: true },
-            { step: 5, title: "5. Review & Publish", desc: "Final Stage", active: activeStep === 5, done: false, locked: true },
+            {
+              step: 4,
+              title: "4. Validation",
+              desc: "Audit & Consistency",
+              active: activeStep === 4,
+              done: !!validationReport || page.workflowState === "VALIDATED",
+              locked: false,
+            },
+            {
+              step: 5,
+              title: "5. Review & Publish",
+              desc: "Human Review",
+              active: activeStep === 5,
+              done: page.workflowState === "PUBLISHED",
+              locked: true,
+            },
           ].map((s, idx) => (
             <React.Fragment key={s.step}>
               <button
@@ -1821,29 +1925,434 @@ export default function SeoResearchStudioClient({
       )}
 
       {activeStep === 4 && (
-        <div className="bg-slate-900/60 border border-slate-800 rounded-xl p-8 text-center space-y-4">
-          <div className="w-12 h-12 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center mx-auto">
-            <ShieldCheck className="w-6 h-6" />
-          </div>
-          <div>
-            <h3 className="text-base font-bold text-white">Stage 4 — Automated Validation Engine</h3>
-            <p className="text-xs text-slate-400 max-w-md mx-auto mt-1">
-              Coming in next SEO pipeline phase. Validation will verify heading tags, meta snippet lengths, keyword presence, and canonical integrity.
-            </p>
-          </div>
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-950 border border-slate-800 text-xs text-slate-400">
-            <Lock className="w-3.5 h-3.5 text-amber-400" />
-            <span>Validation Engine Locked in Step 3</span>
-          </div>
-          <div className="pt-4 flex justify-center gap-3">
-            <button
-              type="button"
-              onClick={() => setActiveStep(2)}
-              className="px-4 py-2 rounded-lg bg-slate-800 text-white text-xs font-medium"
-            >
-              Back to Strategy Studio
-            </button>
-          </div>
+        <div className="space-y-6">
+          {!draft ? (
+            <div className="bg-slate-900/60 border border-slate-800 rounded-xl p-8 text-center space-y-4">
+              <div className="w-12 h-12 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-400 flex items-center justify-center mx-auto">
+                <AlertTriangle className="w-6 h-6" />
+              </div>
+              <div>
+                <h3 className="text-base font-bold text-white">Draft Generation Required</h3>
+                <p className="text-xs text-slate-400 max-w-md mx-auto mt-1">
+                  Generate a content draft before running validation. Validation audits the generated draft against your Research data, Strategy blueprint, and Ground-Truth database records.
+                </p>
+              </div>
+              <div className="pt-2 flex justify-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => setActiveStep(3)}
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-medium transition"
+                >
+                  <Sparkles className="w-4 h-4" />
+                  <span>Go to Stage 3: Generation Studio</span>
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-6">
+              {/* Target Identification Card */}
+              <div className="bg-slate-900/60 border border-slate-800 rounded-xl p-4 sm:p-5 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-bold uppercase tracking-wider text-cyan-400 flex items-center gap-1.5">
+                      <ShieldCheck className="w-4 h-4" />
+                      <span>Target: Generated Draft</span>
+                    </span>
+                    <span className="text-[11px] font-mono px-2 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700">
+                      Asset ID: {draft.assetId || "Latest Draft"}
+                    </span>
+                  </div>
+                  <div className="text-xs text-slate-300">
+                    <span className="text-slate-500">Page: </span>
+                    <strong className="text-white">{page.title}</strong>
+                    <span className="text-slate-500 font-mono"> (/{page.slug})</span>
+                  </div>
+                  <div className="flex items-center gap-3 text-[11px] text-slate-400 flex-wrap">
+                    <span>
+                      Generated:{" "}
+                      <strong className="text-slate-300">
+                        {draft.generatedAt ? new Date(draft.generatedAt).toLocaleString() : "Latest session"}
+                      </strong>
+                    </span>
+                    <span>•</span>
+                    <span>
+                      Workflow State:{" "}
+                      <strong className="font-mono text-cyan-400">{page.workflowState}</strong>
+                    </span>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-3 self-start md:self-auto">
+                  {validationReport ? (
+                    <span
+                      className={`px-3 py-1.5 rounded-lg border text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 ${
+                        validationReport.overallStatus === "PASS"
+                          ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/30"
+                          : validationReport.overallStatus === "WARNING"
+                          ? "bg-amber-500/10 text-amber-400 border-amber-500/30"
+                          : "bg-rose-500/10 text-rose-400 border-rose-500/30"
+                      }`}
+                    >
+                      {validationReport.overallStatus === "PASS" ? (
+                        <CheckCircle2 className="w-4 h-4" />
+                      ) : validationReport.overallStatus === "WARNING" ? (
+                        <AlertTriangle className="w-4 h-4" />
+                      ) : (
+                        <XCircle className="w-4 h-4" />
+                      )}
+                      <span>Overall: {validationReport.overallStatus}</span>
+                    </span>
+                  ) : (
+                    <span className="px-3 py-1.5 rounded-lg bg-slate-800 border border-slate-700 text-slate-400 text-xs font-medium">
+                      Not Yet Validated
+                    </span>
+                  )}
+
+                  <button
+                    type="button"
+                    onClick={handleRunValidation}
+                    disabled={isValidating}
+                    className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-medium text-xs transition shadow-sm disabled:opacity-50"
+                  >
+                    {isValidating ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <RefreshCw className="w-4 h-4" />
+                    )}
+                    <span>{validationReport ? "Re-run Validation" : "Run Validation"}</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Validation Summary Metrics */}
+              {validationReport && (
+                <>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+                    <div className="bg-slate-900/60 border border-slate-800 rounded-xl p-3.5 space-y-1">
+                      <div className="text-[10px] uppercase font-bold tracking-wider text-slate-400">Total Checks</div>
+                      <div className="text-xl font-bold text-white font-mono">{validationReport.metrics.totalChecks}</div>
+                      <div className="text-[10px] text-slate-500">11 Categories</div>
+                    </div>
+                    <div className="bg-slate-900/60 border border-slate-800 rounded-xl p-3.5 space-y-1">
+                      <div className="text-[10px] uppercase font-bold tracking-wider text-emerald-400">Checks Passed</div>
+                      <div className="text-xl font-bold text-emerald-400 font-mono">{validationReport.metrics.passedChecks}</div>
+                      <div className="text-[10px] text-slate-500">Satisfies rules</div>
+                    </div>
+                    <div className="bg-slate-900/60 border border-slate-800 rounded-xl p-3.5 space-y-1">
+                      <div className="text-[10px] uppercase font-bold tracking-wider text-amber-400">Warnings</div>
+                      <div className="text-xl font-bold text-amber-400 font-mono">{validationReport.metrics.warnings}</div>
+                      <div className="text-[10px] text-slate-500">Non-blocking</div>
+                    </div>
+                    <div className="bg-slate-900/60 border border-slate-800 rounded-xl p-3.5 space-y-1">
+                      <div className="text-[10px] uppercase font-bold tracking-wider text-rose-400">Errors</div>
+                      <div className="text-xl font-bold text-rose-400 font-mono">{validationReport.metrics.errors}</div>
+                      <div className="text-[10px] text-slate-500">Requires fix</div>
+                    </div>
+                    <div className="bg-slate-900/60 border border-slate-800 rounded-xl p-3.5 space-y-1">
+                      <div className="text-[10px] uppercase font-bold tracking-wider text-rose-500">Critical</div>
+                      <div className="text-xl font-bold text-rose-500 font-mono">{validationReport.metrics.criticals}</div>
+                      <div className="text-[10px] text-slate-500">Blocks publish</div>
+                    </div>
+                    <div className="bg-slate-900/60 border border-slate-800 rounded-xl p-3.5 space-y-1">
+                      <div className="text-[10px] uppercase font-bold tracking-wider text-cyan-400">Content Stats</div>
+                      <div className="text-xs font-bold text-white font-mono mt-1">{validationReport.wordCount} words</div>
+                      <div className="text-[10px] text-cyan-400 font-mono">{validationReport.keywordDensity.toFixed(2)}% density</div>
+                    </div>
+                  </div>
+
+                  {/* Human Review & Publish Handoff Notice */}
+                  <div
+                    className={`rounded-xl border p-4 sm:p-5 flex items-start gap-3.5 ${
+                      validationReport.overallStatus === "PASS" || validationReport.overallStatus === "WARNING"
+                        ? "bg-emerald-950/20 border-emerald-500/30 text-emerald-300"
+                        : "bg-rose-950/20 border-rose-500/30 text-rose-300"
+                    }`}
+                  >
+                    {validationReport.overallStatus === "PASS" || validationReport.overallStatus === "WARNING" ? (
+                      <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0 mt-0.5" />
+                    ) : (
+                      <AlertTriangle className="w-5 h-5 text-rose-400 shrink-0 mt-0.5" />
+                    )}
+                    <div className="space-y-1 text-xs">
+                      <h4 className="font-bold text-sm text-white">
+                        {validationReport.overallStatus === "PASS" || validationReport.overallStatus === "WARNING"
+                          ? "Ready for Human Review & Publishing (Stage 5)"
+                          : "Changes Required Before Human Review"}
+                      </h4>
+                      <p className="text-slate-300 leading-relaxed">
+                        {validationReport.overallStatus === "PASS"
+                          ? "This draft has satisfied all critical SEO validation criteria and protected component constraints. It is ready for human editorial review."
+                          : validationReport.overallStatus === "WARNING"
+                          ? "Draft has non-blocking warnings (e.g. secondary query coverage or minor length variances). It is acceptable for human editorial review."
+                          : "Draft has critical or blocking errors (such as altered protected titles/H1s or unresolved factual placeholders). Resolve them before proceeding."}
+                      </p>
+                      <p className="text-[11px] text-slate-400">
+                        Validated at {new Date(validationReport.validatedAt).toLocaleString()} • Note: Validation does not automatically publish or modify live website content.
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Recommendations */}
+                  {validationReport.recommendations && validationReport.recommendations.length > 0 && (
+                    <div className="bg-slate-900/60 border border-slate-800 rounded-xl p-4 sm:p-5 space-y-2.5">
+                      <h4 className="text-xs font-bold uppercase tracking-wider text-cyan-400 flex items-center gap-1.5">
+                        <Sparkles className="w-3.5 h-3.5" />
+                        <span>Actionable Optimization Recommendations ({validationReport.recommendations.length})</span>
+                      </h4>
+                      <div className="space-y-1.5 text-xs">
+                        {validationReport.recommendations.map((rec, i) => (
+                          <div key={i} className="flex items-start gap-2 text-slate-300 bg-slate-950/60 border border-slate-800/80 rounded-lg p-2.5">
+                            <span className="text-cyan-400 font-bold shrink-0">{i + 1}.</span>
+                            <span>{rec}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* 11 Category Cards */}
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400">
+                        Category Audit Breakdown (11 Rulesets)
+                      </h3>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const allOpen = Object.values(expandedCategories).some(Boolean);
+                          const next: Record<string, boolean> = {};
+                          if (!allOpen) {
+                            [
+                              "metadata",
+                              "headings",
+                              "searchIntent",
+                              "primaryQuery",
+                              "secondaryQueries",
+                              "keywordUsage",
+                              "completeness",
+                              "factualAlignment",
+                              "protectedComponents",
+                              "internalLinks",
+                              "faqs",
+                            ].forEach((k) => (next[k] = true));
+                          }
+                          setExpandedCategories(next);
+                        }}
+                        className="text-[11px] text-cyan-400 hover:underline"
+                      >
+                        {Object.values(expandedCategories).some(Boolean) ? "Collapse All" : "Expand All"}
+                      </button>
+                    </div>
+
+                    {[
+                      { key: "metadata" as const, label: "SEO Metadata", icon: Tag },
+                      { key: "headings" as const, label: "Heading Hierarchy", icon: Layers },
+                      { key: "searchIntent" as const, label: "Search Intent Alignment", icon: Crosshair },
+                      { key: "primaryQuery" as const, label: "Primary Target Query", icon: Search },
+                      { key: "secondaryQueries" as const, label: "Secondary Query Coverage", icon: TrendingUp },
+                      { key: "keywordUsage" as const, label: "Keyword Density & Usage", icon: BarChart3 },
+                      { key: "completeness" as const, label: "Content Completeness", icon: FileText },
+                      { key: "factualAlignment" as const, label: "Ground-Truth Factual Alignment", icon: Database },
+                      { key: "protectedComponents" as const, label: "Protected Components [RETAIN EXISTING]", icon: Lock },
+                      { key: "internalLinks" as const, label: "Internal Linking (Real Routes)", icon: Link2 },
+                      { key: "faqs" as const, label: "FAQ Consistency & Quality", icon: HelpCircle },
+                    ].map((catMeta) => {
+                      const cat = validationReport.categories[catMeta.key];
+                      if (!cat) return null;
+                      const Icon = catMeta.icon;
+                      const isExpanded = !!expandedCategories[catMeta.key];
+
+                      return (
+                        <div
+                          key={catMeta.key}
+                          className="bg-slate-900/60 border border-slate-800 rounded-xl overflow-hidden transition"
+                        >
+                          <div
+                            onClick={() => toggleCategory(catMeta.key)}
+                            className="p-3.5 sm:p-4 flex items-center justify-between cursor-pointer select-none hover:bg-slate-800/40 transition gap-2"
+                          >
+                            <div className="flex items-center gap-2.5 flex-wrap">
+                              <div
+                                className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 ${
+                                  cat.status === "PASS"
+                                    ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
+                                    : cat.status === "WARNING"
+                                    ? "bg-amber-500/10 text-amber-400 border border-amber-500/20"
+                                    : "bg-rose-500/10 text-rose-400 border border-rose-500/20"
+                                }`}
+                              >
+                                <Icon className="w-3.5 h-3.5" />
+                              </div>
+                              <span className="text-xs font-bold text-white">{catMeta.label}</span>
+
+                              <div className="flex items-center gap-1.5 text-[10px]">
+                                {cat.criticalCount > 0 && (
+                                  <span className="px-1.5 py-0.5 rounded bg-rose-500/20 text-rose-300 border border-rose-500/30 font-bold">
+                                    {cat.criticalCount} Critical
+                                  </span>
+                                )}
+                                {cat.errorCount > 0 && (
+                                  <span className="px-1.5 py-0.5 rounded bg-rose-500/10 text-rose-400 border border-rose-500/20 font-semibold">
+                                    {cat.errorCount} Error{cat.errorCount > 1 ? "s" : ""}
+                                  </span>
+                                )}
+                                {cat.warningCount > 0 && (
+                                  <span className="px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-400 border border-amber-500/20 font-semibold">
+                                    {cat.warningCount} Warning{cat.warningCount > 1 ? "s" : ""}
+                                  </span>
+                                )}
+                                <span className="px-1.5 py-0.5 rounded bg-slate-800 text-slate-400">
+                                  {cat.passedCount} Passed
+                                </span>
+                              </div>
+                            </div>
+
+                            <div className="flex items-center gap-2">
+                              <span
+                                className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${
+                                  cat.status === "PASS"
+                                    ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
+                                    : cat.status === "WARNING"
+                                    ? "bg-amber-500/10 text-amber-400 border border-amber-500/20"
+                                    : "bg-rose-500/10 text-rose-400 border border-rose-500/20"
+                                }`}
+                              >
+                                {cat.status}
+                              </span>
+                              {isExpanded ? (
+                                <ChevronUp className="w-4 h-4 text-slate-400" />
+                              ) : (
+                                <ChevronDown className="w-4 h-4 text-slate-400" />
+                              )}
+                            </div>
+                          </div>
+
+                          {isExpanded && (
+                            <div className="p-4 pt-1 border-t border-slate-800/80 space-y-3 bg-slate-950/40">
+                              {cat.issues.length === 0 ? (
+                                <div className="text-xs text-emerald-400 flex items-center gap-2 p-2 rounded bg-emerald-500/5 border border-emerald-500/10">
+                                  <CheckCircle2 className="w-4 h-4 shrink-0" />
+                                  <span>All configured checks in this category passed.</span>
+                                </div>
+                              ) : (
+                                <div className="space-y-2">
+                                  {cat.issues.map((issue, idx) => (
+                                    <div
+                                      key={idx}
+                                      className={`rounded-lg p-3 space-y-2 text-xs border ${
+                                        issue.severity === "CRITICAL"
+                                          ? "bg-rose-950/40 border-rose-600/60"
+                                          : issue.severity === "ERROR"
+                                          ? "bg-rose-950/20 border-rose-500/40"
+                                          : issue.severity === "WARNING"
+                                          ? "bg-amber-950/20 border-amber-500/40"
+                                          : "bg-slate-900 border-slate-800"
+                                      }`}
+                                    >
+                                      <div className="flex items-center justify-between gap-2">
+                                        <div className="flex items-center gap-2 font-semibold text-white">
+                                          <span
+                                            className={`px-1.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${
+                                              issue.severity === "CRITICAL"
+                                                ? "bg-rose-900 text-rose-200 border border-rose-600"
+                                                : issue.severity === "ERROR"
+                                                ? "bg-rose-900/60 text-rose-300 border border-rose-500"
+                                                : issue.severity === "WARNING"
+                                                ? "bg-amber-900/60 text-amber-300 border border-amber-500"
+                                                : "bg-blue-900/60 text-blue-300 border border-blue-500"
+                                            }`}
+                                          >
+                                            {issue.severity}
+                                          </span>
+                                          <span>{issue.title}</span>
+                                        </div>
+                                      </div>
+
+                                      <p className="text-slate-300">{issue.message}</p>
+
+                                      {(issue.expected || issue.observed) && (
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1 font-mono text-[11px]">
+                                          {issue.expected && (
+                                            <div className="p-2 rounded bg-slate-900 border border-slate-800 space-y-1">
+                                              <div className="text-[10px] text-slate-500 uppercase tracking-wider">
+                                                Expected / Ground-Truth:
+                                              </div>
+                                              <div className="text-slate-300 break-all">{issue.expected}</div>
+                                            </div>
+                                          )}
+                                          {issue.observed && (
+                                            <div className="p-2 rounded bg-slate-900 border border-slate-800 space-y-1">
+                                              <div className="text-[10px] text-rose-400 uppercase tracking-wider">
+                                                Observed in Draft:
+                                              </div>
+                                              <div className="text-rose-300 break-all">{issue.observed}</div>
+                                            </div>
+                                          )}
+                                        </div>
+                                      )}
+
+                                      {issue.recommendation && (
+                                        <div className="p-2 rounded bg-cyan-950/20 border border-cyan-800/40 text-[11px] text-cyan-300 flex items-start gap-1.5">
+                                          <span className="font-semibold shrink-0">Recommendation:</span>
+                                          <span>{issue.recommendation}</span>
+                                        </div>
+                                      )}
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+
+                              {cat.passedCount > 0 && cat.issues.length > 0 && (
+                                <details className="text-xs text-slate-400 pt-2 border-t border-slate-800/60">
+                                  <summary className="cursor-pointer hover:text-slate-200 select-none font-medium">
+                                    View {cat.passedCount} passed check{cat.passedCount > 1 ? "s" : ""}
+                                  </summary>
+                                  <div className="mt-2 space-y-1 pl-2 border-l border-slate-800">
+                                    {validationReport.passedChecks
+                                      .filter((c) => c.category === catMeta.key)
+                                      .map((p, idx) => (
+                                        <div key={idx} className="flex items-center gap-2 text-slate-400 text-[11px]">
+                                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                                          <span className="font-medium text-slate-300">{p.title}:</span>
+                                          <span>{p.message}</span>
+                                        </div>
+                                      ))}
+                                  </div>
+                                </details>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </>
+              )}
+
+              {/* Stage 4 Footer Navigation */}
+              <div className="flex items-center justify-between pt-4 border-t border-slate-800">
+                <button
+                  type="button"
+                  onClick={() => setActiveStep(3)}
+                  className="px-4 py-2 rounded-lg border border-slate-800 text-slate-400 hover:text-white text-xs font-medium"
+                >
+                  ← Back to AI Generation Studio
+                </button>
+
+                {validationReport &&
+                  (validationReport.overallStatus === "PASS" || validationReport.overallStatus === "WARNING") && (
+                    <button
+                      type="button"
+                      onClick={() => setActiveStep(5)}
+                      className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white font-medium text-xs transition shadow-sm"
+                    >
+                      <span>Proceed to Stage 5: Review & Publish Preview</span>
+                      <ArrowRight className="w-4 h-4" />
+                    </button>
+                  )}
+              </div>
+            </div>
+          )}
         </div>
       )}
 

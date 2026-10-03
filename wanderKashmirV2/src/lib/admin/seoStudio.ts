@@ -118,6 +118,7 @@ export interface SeoResearchStudioPayload {
     updatedAt: Date;
     faqs?: any;
     places?: any;
+    validationReport?: any;
   };
   savedResearch: SeoResearchData | null;
   savedStrategy: SeoStrategyData | null;
@@ -127,6 +128,7 @@ export interface SeoResearchStudioPayload {
   verifiedDbFacts: VerifiedDbFact[];
   generatedDraft?: any | null;
   activeJob?: { id: string; status: string; startedAt: Date | null } | null;
+  savedValidationReport?: any | null;
 }
 
 /**
@@ -552,6 +554,7 @@ export async function getSeoResearchStudioData(
         updatedAt: page.updatedAt,
         faqs: page.faqs,
         places: pagePlaces,
+        validationReport: page.validationReport,
       },
       savedResearch,
       savedStrategy,
@@ -561,6 +564,7 @@ export async function getSeoResearchStudioData(
       verifiedDbFacts,
       generatedDraft,
       activeJob,
+      savedValidationReport: (page.validationReport as any) || null,
     };
   } catch (error) {
     console.error("Error loading SeoResearchStudioData:", error);

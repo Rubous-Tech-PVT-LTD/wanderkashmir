@@ -670,25 +670,46 @@ export default function SeoDetailForm({ page }: SeoDetailFormProps) {
 
       {/* Tab 4: Validation Audit */}
       {activeTab === "VALIDATION" && (
-        <div className="bg-slate-900/60 border border-slate-800 rounded-xl p-5 sm:p-6 space-y-4">
-          <h2 className="text-base font-semibold text-white flex items-center gap-2 border-b border-slate-800/80 pb-3">
-            <FileCheck className="w-5 h-5 text-emerald-400" />
-            <span>SEO Validation Audit Report (`validationReport`)</span>
-          </h2>
-
-          {page.validationReport ? (
-            <pre className="bg-slate-950 p-4 rounded-lg border border-slate-800 text-xs text-emerald-300 font-mono overflow-x-auto max-h-96">
-              {JSON.stringify(page.validationReport, null, 2)}
-            </pre>
-          ) : (
-            <div className="p-8 text-center border border-dashed border-slate-800 rounded-lg">
-              <FileCheck className="w-8 h-8 text-slate-600 mx-auto mb-2" />
-              <p className="text-sm text-slate-400">No automated validation report recorded.</p>
-              <p className="text-xs text-slate-500 mt-1">
-                Automated validation runs check for title length, heading hierarchy, keyword presence, and canonical integrity.
+        <div className="space-y-4">
+          <div className="bg-slate-900/60 border border-slate-800 rounded-xl p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="space-y-1">
+              <h3 className="text-sm font-semibold text-white flex items-center gap-2">
+                <ShieldCheck className="w-4 h-4 text-emerald-400" />
+                <span>Validation Studio (Stage 4)</span>
+              </h3>
+              <p className="text-xs text-slate-400">
+                Execute deep 11-category audit on generated draft content against research, strategy, and ground-truth DB facts.
               </p>
             </div>
-          )}
+            <Link
+              href={`/admin/seo/${page.id}?studio=true`}
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold shrink-0 transition shadow-sm"
+            >
+              <span>Launch Validation Studio</span>
+              <ExternalLink className="w-3.5 h-3.5" />
+            </Link>
+          </div>
+
+          <div className="bg-slate-900/60 border border-slate-800 rounded-xl p-5 sm:p-6 space-y-4">
+            <h2 className="text-base font-semibold text-white flex items-center gap-2 border-b border-slate-800/80 pb-3">
+              <FileCheck className="w-5 h-5 text-emerald-400" />
+              <span>SEO Validation Audit Report (`validationReport`)</span>
+            </h2>
+
+            {page.validationReport ? (
+              <pre className="bg-slate-950 p-4 rounded-lg border border-slate-800 text-xs text-emerald-300 font-mono overflow-x-auto max-h-96">
+                {JSON.stringify(page.validationReport, null, 2)}
+              </pre>
+            ) : (
+              <div className="p-8 text-center border border-dashed border-slate-800 rounded-lg">
+                <FileCheck className="w-8 h-8 text-slate-600 mx-auto mb-2" />
+                <p className="text-sm text-slate-400">No automated validation report recorded.</p>
+                <p className="text-xs text-slate-500 mt-1">
+                  Click "Launch Validation Studio" above to run an automated 11-category audit on the latest content draft.
+                </p>
+              </div>
+            )}
+          </div>
         </div>
       )}
 
