@@ -95,23 +95,6 @@ export default function SeoListClient({
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight text-white sm:text-3xl flex items-center gap-2.5">
-            <Globe className="w-7 h-7 text-cyan-400" />
-            <span>SEO Intelligence & Pages</span>
-          </h1>
-          <p className="text-sm text-slate-400 mt-1">
-            Manage programmatic landing pages, research-first workflows, metadata, and canonical configurations.
-          </p>
-        </div>
-
-        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-800 text-xs text-slate-300">
-          <ShieldCheck className="w-4 h-4 text-emerald-400" />
-          <span>Research-First SEO Architecture</span>
-        </div>
-      </div>
 
       {/* Stats Cards */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
@@ -430,6 +413,14 @@ export default function SeoListClient({
                               <ExternalLink className="w-3.5 h-3.5" />
                             </Link>
                           )}
+                          <Link
+                            href={`/admin/seo/${p.id}?studio=true`}
+                            className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium text-amber-400 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/20 transition"
+                            title="Open SEO Research & Strategy Studio"
+                          >
+                            <Sparkles className="w-3 h-3 text-amber-400" />
+                            <span>Studio</span>
+                          </Link>
                           <Link
                             href={`/admin/seo/${p.id}`}
                             className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium text-cyan-400 bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/20 transition"

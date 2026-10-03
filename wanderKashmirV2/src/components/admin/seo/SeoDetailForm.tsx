@@ -18,9 +18,16 @@ import {
   FileCheck,
   Calendar,
   Clock,
+  Trash2,
+  Plus,
 } from "lucide-react";
-import { updateSeoLandingPageAction } from "@/actions/adminSeo";
+import { updateSeoLandingPageAction, deleteSeoLandingPageAction } from "@/actions/adminSeo";
 import { SeoWorkflowState } from "@prisma/client";
+
+interface FaqItem {
+  question: string;
+  answer: string;
+}
 
 interface SeoDetailFormProps {
   page: {
@@ -39,6 +46,7 @@ interface SeoDetailFormProps {
     seoStrategy: unknown;
     validationReport: unknown;
     gscInitialMetrics: unknown;
+    faqs?: unknown;
     places?: {
       id: string;
       displayOrder: number;
@@ -68,11 +76,61 @@ export default function SeoDetailForm({ page }: SeoDetailFormProps) {
   const [content, setContent] = useState(page.content || "");
   const [imageUrl, setImageUrl] = useState(page.imageUrl || "");
   const [workflowState, setWorkflowState] = useState<SeoWorkflowState>(page.workflowState);
+  const [faqs, setFaqs] = useState<FaqItem[]>(() => {
+    if (Array.isArray(page.faqs)) {
+      return page.faqs.map((f: any) => ({
+        question: typeof f?.question === "string" ? f.question : "",
+        answer: typeof f?.answer === "string" ? f.answer : "",
+      }));
+    }
+    return [];
+  });
 
   // Status & Validation State
   const [isSaving, setIsSaving] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+
+  const handleAddFaq = () => {
+    setFaqs([...faqs, { question: "", answer: "" }]);
+  };
+
+  const handleUpdateFaq = (index: number, field: "question" | "answer", val: string) => {
+    const updated = [...faqs];
+    updated[index][field] = val;
+    setFaqs(updated);
+  };
+
+  const handleRemoveFaq = (index: number) => {
+    setFaqs(faqs.filter((_, i) => i !== index));
+  };
+
+  const handleDeleteDraft = async () => {
+    if (page.workflowState === "PUBLISHED") {
+      setErrorMessage(
+        "Cannot delete a published SEO page to prevent 404 crawl errors. Please change workflow state to DRAFT first."
+      );
+      return;
+    }
+    if (!confirm("Are you sure you want to delete this draft SEO page? This cannot be undone.")) {
+      return;
+    }
+    setIsDeleting(true);
+    setErrorMessage(null);
+    try {
+      const res = await deleteSeoLandingPageAction(page.id);
+      if (res.success) {
+        router.push("/admin/seo");
+      } else {
+        setErrorMessage(res.error || "Failed to delete SEO page.");
+      }
+    } catch {
+      setErrorMessage("Network error communicating with server.");
+    } finally {
+      setIsDeleting(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -102,6 +160,7 @@ export default function SeoDetailForm({ page }: SeoDetailFormProps) {
         content: content.trim() || null,
         imageUrl: imageUrl.trim() || null,
         workflowState,
+        faqs: faqs.filter((f) => f.question.trim().length > 0 || f.answer.trim().length > 0),
       });
 
       if (res.success) {
@@ -143,17 +202,44 @@ export default function SeoDetailForm({ page }: SeoDetailFormProps) {
           </div>
         </div>
 
-        {page.workflowState === "PUBLISHED" && page.type === "DESTINATION" && (
+        <div className="flex items-center gap-2 self-start sm:self-auto flex-wrap">
           <Link
-            href={publicUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-900 text-slate-300 hover:text-white border border-slate-800 hover:bg-slate-800 transition self-start sm:self-auto"
+            href={`/admin/seo/${page.id}?studio=true`}
+            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white shadow-sm transition"
           >
-            <span>View Public Page</span>
-            <ExternalLink className="w-3.5 h-3.5" />
+            <Sparkles className="w-3.5 h-3.5" />
+            <span>Open Research Studio</span>
           </Link>
-        )}
+
+          {page.workflowState === "PUBLISHED" && page.type === "DESTINATION" && (
+            <Link
+              href={publicUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-900 text-slate-300 hover:text-white border border-slate-800 hover:bg-slate-800 transition"
+            >
+              <span>View Public Page</span>
+              <ExternalLink className="w-3.5 h-3.5" />
+            </Link>
+          )}
+
+          {page.workflowState !== "PUBLISHED" && (
+            <button
+              type="button"
+              onClick={handleDeleteDraft}
+              disabled={isDeleting}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border border-red-500/30 bg-red-500/10 text-red-400 hover:bg-red-500/20 transition disabled:opacity-50"
+              title="Delete draft page"
+            >
+              {isDeleting ? (
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              ) : (
+                <Trash2 className="w-3.5 h-3.5" />
+              )}
+              <span>Delete Draft</span>
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Notifications */}
@@ -350,6 +436,71 @@ export default function SeoDetailForm({ page }: SeoDetailFormProps) {
                   className="w-full bg-slate-950 border border-slate-800 rounded-lg p-3.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500 font-mono text-xs"
                 />
               </div>
+
+              {/* FAQ Schema Section */}
+              <div className="md:col-span-2 pt-3 border-t border-slate-800/80 space-y-3">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <label className="block text-xs font-medium uppercase tracking-wider text-slate-300">
+                      Structured FAQ Schema ({faqs.length})
+                    </label>
+                    <p className="text-[11px] text-slate-500">
+                      Frequently asked questions rendered in rich snippet FAQ markup.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleAddFaq}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-white text-xs font-medium border border-slate-700 transition"
+                  >
+                    <Plus className="w-3.5 h-3.5 text-cyan-400" />
+                    <span>Add FAQ</span>
+                  </button>
+                </div>
+
+                {faqs.length > 0 ? (
+                  <div className="space-y-3">
+                    {faqs.map((faq, idx) => (
+                      <div
+                        key={idx}
+                        className="bg-slate-950/70 border border-slate-800 rounded-lg p-3.5 space-y-2.5 relative"
+                      >
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs font-mono text-cyan-400 font-semibold">
+                            FAQ #{idx + 1}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveFaq(idx)}
+                            className="text-slate-500 hover:text-red-400 p-1 rounded hover:bg-slate-900 transition"
+                            title="Remove FAQ"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                        <input
+                          type="text"
+                          value={faq.question}
+                          onChange={(e) => handleUpdateFaq(idx, "question", e.target.value)}
+                          placeholder="Question, e.g. What is the best time to visit?"
+                          className="w-full bg-slate-900 border border-slate-800 rounded px-3 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500"
+                        />
+                        <textarea
+                          rows={2}
+                          value={faq.answer}
+                          onChange={(e) => handleUpdateFaq(idx, "answer", e.target.value)}
+                          placeholder="Concise answer..."
+                          className="w-full bg-slate-900 border border-slate-800 rounded px-3 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-xs text-slate-500 italic py-2">
+                    No FAQs defined yet. Click "Add FAQ" above to add structured questions.
+                  </p>
+                )}
+              </div>
             </div>
 
             {/* Timestamps */}
@@ -407,6 +558,26 @@ export default function SeoDetailForm({ page }: SeoDetailFormProps) {
       {/* Tab 2: Research & GSC Metrics */}
       {activeTab === "RESEARCH" && (
         <div className="space-y-6">
+          {/* Research Studio Launch Banner */}
+          <div className="bg-gradient-to-r from-purple-950/40 via-indigo-950/40 to-slate-900 border border-purple-500/30 rounded-xl p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-sm">
+            <div>
+              <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                <Sparkles className="w-4 h-4 text-purple-400" />
+                <span>SEO Research & Strategy Studio</span>
+              </h3>
+              <p className="text-xs text-slate-400 mt-1">
+                Run live Search Console performance analysis, cannibalization checks across 162 pages, verified database facts, and manual trend evidence.
+              </p>
+            </div>
+            <Link
+              href={`/admin/seo/${page.id}?studio=true`}
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-purple-600 hover:bg-purple-500 text-white text-xs font-semibold shrink-0 transition shadow-sm"
+            >
+              <span>Launch Research Studio</span>
+              <Sparkles className="w-3.5 h-3.5" />
+            </Link>
+          </div>
+
           <div className="bg-slate-900/60 border border-slate-800 rounded-xl p-5 sm:p-6 space-y-4">
             <h2 className="text-base font-semibold text-white flex items-center gap-2 border-b border-slate-800/80 pb-3">
               <SearchCode className="w-5 h-5 text-blue-400" />
@@ -422,7 +593,7 @@ export default function SeoDetailForm({ page }: SeoDetailFormProps) {
                 <SearchCode className="w-8 h-8 text-slate-600 mx-auto mb-2" />
                 <p className="text-sm text-slate-400">No keyword research payload stored.</p>
                 <p className="text-xs text-slate-500 mt-1">
-                  Research-first keywords and search volume are initialized during content generation.
+                  Click "Launch Research Studio" above to perform live research and save structured findings.
                 </p>
               </div>
             )}
@@ -453,25 +624,47 @@ export default function SeoDetailForm({ page }: SeoDetailFormProps) {
 
       {/* Tab 3: Strategy & Structure */}
       {activeTab === "STRATEGY" && (
-        <div className="bg-slate-900/60 border border-slate-800 rounded-xl p-5 sm:p-6 space-y-4">
-          <h2 className="text-base font-semibold text-white flex items-center gap-2 border-b border-slate-800/80 pb-3">
-            <Sparkles className="w-5 h-5 text-purple-400" />
-            <span>SEO Content Strategy Payload (`seoStrategy`)</span>
-          </h2>
-
-          {page.seoStrategy ? (
-            <pre className="bg-slate-950 p-4 rounded-lg border border-slate-800 text-xs text-purple-300 font-mono overflow-x-auto max-h-96">
-              {JSON.stringify(page.seoStrategy, null, 2)}
-            </pre>
-          ) : (
-            <div className="p-8 text-center border border-dashed border-slate-800 rounded-lg">
-              <Sparkles className="w-8 h-8 text-slate-600 mx-auto mb-2" />
-              <p className="text-sm text-slate-400">No strategy payload recorded for this page.</p>
-              <p className="text-xs text-slate-500 mt-1">
-                Topical hierarchy and internal linking strategy are generated during the content strategy phase.
+        <div className="space-y-6">
+          {/* Strategy Studio Launch Banner */}
+          <div className="bg-gradient-to-r from-purple-950/40 via-indigo-950/40 to-slate-900 border border-purple-500/30 rounded-xl p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-sm">
+            <div>
+              <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                <Sparkles className="w-4 h-4 text-purple-400" />
+                <span>SEO Strategy Blueprint Studio</span>
+              </h3>
+              <p className="text-xs text-slate-400 mt-1">
+                Configure strategic decisions (USE_EXISTING / CONSOLIDATE / CREATE_NEW), mark protected winning queries, and generate editorial blueprints.
               </p>
             </div>
-          )}
+            <Link
+              href={`/admin/seo/${page.id}?studio=true`}
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-purple-600 hover:bg-purple-500 text-white text-xs font-semibold shrink-0 transition shadow-sm"
+            >
+              <span>Launch Strategy Studio</span>
+              <Sparkles className="w-3.5 h-3.5" />
+            </Link>
+          </div>
+
+          <div className="bg-slate-900/60 border border-slate-800 rounded-xl p-5 sm:p-6 space-y-4">
+            <h2 className="text-base font-semibold text-white flex items-center gap-2 border-b border-slate-800/80 pb-3">
+              <Sparkles className="w-5 h-5 text-purple-400" />
+              <span>SEO Content Strategy Payload (`seoStrategy`)</span>
+            </h2>
+
+            {page.seoStrategy ? (
+              <pre className="bg-slate-950 p-4 rounded-lg border border-slate-800 text-xs text-purple-300 font-mono overflow-x-auto max-h-96">
+                {JSON.stringify(page.seoStrategy, null, 2)}
+              </pre>
+            ) : (
+              <div className="p-8 text-center border border-dashed border-slate-800 rounded-lg">
+                <Sparkles className="w-8 h-8 text-slate-600 mx-auto mb-2" />
+                <p className="text-sm text-slate-400">No strategy payload recorded for this page.</p>
+                <p className="text-xs text-slate-500 mt-1">
+                  Click "Launch Strategy Studio" above to map out topical hierarchy and protect winning queries.
+                </p>
+              </div>
+            )}
+          </div>
         </div>
       )}
 
