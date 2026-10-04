@@ -7,8 +7,8 @@ import HotelGallery from "@/components/stays/detail/HotelGallery";
 import TourStickyBookingCard from "./TourStickyBookingCard";
 import TourContentTabs from "./TourContentTabs";
 import TourCardCompact from "./TourCardCompact";
+import TourDynamicBlocksRenderer from "./TourDynamicBlocksRenderer";
 import { TourPackageDetail } from "@/data/liveToursData";
-import { RichContentRenderer } from "@/components/destinations/RichContentRenderer";
 
 interface TourPackageViewProps {
   tour: TourPackageDetail;
@@ -157,41 +157,7 @@ export default function TourPackageView({ tour, otherTours }: TourPackageViewPro
 
             {/* Dynamic Content Blocks (Rendered if populated in DB) */}
             {tour.dynamicBlocks && tour.dynamicBlocks.length > 0 && (
-              <div className="rounded-xl border border-slate-200/90 bg-white p-4 sm:p-6 space-y-6">
-                <RichContentRenderer
-                  content={tour.dynamicBlocks.map((b) => {
-                    if (b.type === "heading") {
-                      return { type: "heading" as const, level: (b.data?.level as 2 | 3 | 4) || 3, text: b.content || b.title || "" };
-                    }
-                    if (b.type === "paragraph") {
-                      return { type: "paragraph" as const, text: b.content || "" };
-                    }
-                    if (b.type === "image") {
-                      return { type: "image" as const, url: b.data?.url || b.content || "", alt: b.title || "", caption: b.data?.caption || "" };
-                    }
-                    if (b.type === "callout") {
-                      return { type: "callout" as const, variant: (b.data?.variant as "info" | "tip" | "warning" | "quote") || "tip", title: b.title, text: b.content || "" };
-                    }
-                    if (b.type === "list") {
-                      return {
-                        type: "list" as const,
-                        style: (b.data?.style as "bullet" | "numbered") || "bullet",
-                        items: Array.isArray(b.data?.items) ? b.data.items : (b.content || "").split("\n").filter(Boolean),
-                      };
-                    }
-                    if (b.type === "table") {
-                      return { type: "table" as const, headers: b.data?.headers || [], rows: b.data?.rows || [] };
-                    }
-                    if (b.type === "link") {
-                      return { type: "link" as const, text: b.title || b.content || "Learn More", url: b.data?.url || "#" };
-                    }
-                    if (b.type === "video") {
-                      return { type: "video" as const, url: b.data?.url || b.content || "", title: b.title, caption: b.data?.caption };
-                    }
-                    return { type: "paragraph" as const, text: b.content || "" };
-                  })}
-                />
-              </div>
+              <TourDynamicBlocksRenderer blocks={tour.dynamicBlocks} />
             )}
 
             {/* Linked Travel Guides (Rendered if linked and published in DB) */}
