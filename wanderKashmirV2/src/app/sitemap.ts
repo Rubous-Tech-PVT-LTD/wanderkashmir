@@ -130,6 +130,25 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     console.error("Error fetching travel styles for sitemap:", error);
   }
 
+  // 3b. Dynamic Tour Categories (Strictly showInFilter = true)
+  let tourCategoryUrls: MetadataRoute.Sitemap = [];
+  try {
+    const categories = await prisma.tourCategory.findMany({
+      where: { showInFilter: true },
+      select: { slug: true, updatedAt: true },
+      take: 100,
+    });
+
+    tourCategoryUrls = categories.map((cat: (typeof categories)[number]) => ({
+      url: `${baseUrl}/tours/category/${cat.slug}`,
+      lastModified: cat.updatedAt,
+      changeFrequency: 'weekly',
+      priority: 0.8,
+    }));
+  } catch (error) {
+    console.error("Error fetching tour categories for sitemap:", error);
+  }
+
   // 4. Dynamic Approved Stays (Strictly isApproved = true and status = APPROVED)
   let propertyUrls: MetadataRoute.Sitemap = [];
   try {
@@ -240,6 +259,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...staticRoutes,
     ...tourUrls,
     ...travelStyleUrls,
+    ...tourCategoryUrls,
     ...propertyUrls,
     ...destinationUrls,
     ...placeUrls,

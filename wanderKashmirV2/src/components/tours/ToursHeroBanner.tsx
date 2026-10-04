@@ -6,6 +6,7 @@ interface ToursHeroBannerProps {
   title?: string;
   description?: string;
   travelStyleName?: string;
+  categoryName?: string;
   heroImage?: string;
 }
 
@@ -13,6 +14,7 @@ export default function ToursHeroBanner({
   title = "Kashmir Tour Packages",
   description = "Handcrafted journeys through Kashmir’s breathtaking valleys, serene lakes, and authentic local hospitality.",
   travelStyleName,
+  categoryName,
   heroImage = "https://res.cloudinary.com/dcmoseix9/image/upload/v1790176178/WhatsApp_Image_2026-09-23_at_8.30.43_PM_xk1tmz.jpg",
 }: ToursHeroBannerProps) {
   return (
@@ -43,7 +45,7 @@ export default function ToursHeroBanner({
               <ChevronRight className="w-3.5 h-3.5 text-white/50 inline" />
             </li>
             <li>
-              {travelStyleName ? (
+              {travelStyleName || categoryName ? (
                 <Link href="/tours" className="hover:text-white transition-colors">
                   Tour Packages
                 </Link>
@@ -53,13 +55,13 @@ export default function ToursHeroBanner({
                 </span>
               )}
             </li>
-            {travelStyleName && (
+            {(categoryName || travelStyleName) && (
               <>
                 <li>
                   <ChevronRight className="w-3.5 h-3.5 text-white/50 inline" />
                 </li>
                 <li className="text-white font-semibold" aria-current="page">
-                  {travelStyleName}
+                  {categoryName || travelStyleName}
                 </li>
               </>
             )}
