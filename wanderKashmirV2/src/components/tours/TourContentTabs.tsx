@@ -25,6 +25,7 @@ import {
   Image as ImageIcon,
 } from "lucide-react";
 import { TourPackageDetail } from "@/data/liveToursData";
+import { RichContentRenderer } from "@/components/destinations/RichContentRenderer";
 
 
 interface TourContentTabsProps {
@@ -410,8 +411,8 @@ export default function TourContentTabs({ tour }: TourContentTabsProps) {
               className="px-4 pb-4 sm:px-4.5 sm:pb-4.5 pt-3.5 border-t border-slate-100/90 space-y-4 animate-in fade-in slide-in-from-top-1 duration-200"
             >
               {tour.contentSections?.bestTime ? (
-                <div className="p-4 sm:p-5 rounded-lg border border-slate-200/80 bg-slate-50/40 text-slate-700 text-xs sm:text-[13.5px] leading-relaxed whitespace-pre-line">
-                  {tour.contentSections.bestTime}
+                <div className="p-4 sm:p-5 rounded-lg border border-slate-200/80 bg-slate-50/40 text-slate-700 text-xs sm:text-[13.5px] leading-relaxed">
+                  <RichContentRenderer content={tour.contentSections.bestTime} className="prose-sm max-w-none text-slate-700" />
                 </div>
               ) : (
                 <div className="p-6 rounded-lg border border-slate-200/80 bg-slate-50/50 flex flex-col items-center justify-center text-center space-y-1.5 min-h-[140px]">
@@ -584,8 +585,8 @@ export default function TourContentTabs({ tour }: TourContentTabsProps) {
 
                           {/* Description */}
                           {activeDay.desc && (
-                            <div className="text-xs sm:text-[13px] text-slate-600 leading-relaxed whitespace-pre-line space-y-1">
-                              {activeDay.desc}
+                            <div className="text-xs sm:text-[13px] text-slate-600 leading-relaxed space-y-1">
+                              <RichContentRenderer content={activeDay.desc} className="prose-sm max-w-none text-slate-600" />
                             </div>
                           )}
 
@@ -666,8 +667,8 @@ export default function TourContentTabs({ tour }: TourContentTabsProps) {
 
                             {/* Description */}
                             {activeDay.desc && (
-                              <div className="text-xs sm:text-[13px] text-slate-600 leading-relaxed whitespace-pre-line space-y-1">
-                                {activeDay.desc}
+                              <div className="text-xs sm:text-[13px] text-slate-600 leading-relaxed space-y-1">
+                                <RichContentRenderer content={activeDay.desc} className="prose-sm max-w-none text-slate-600" />
                               </div>
                             )}
 
@@ -992,8 +993,8 @@ export default function TourContentTabs({ tour }: TourContentTabsProps) {
               className="px-4 pb-4 sm:px-4.5 sm:pb-4.5 pt-3.5 border-t border-slate-100/90 space-y-4 animate-in fade-in slide-in-from-top-1 duration-200"
             >
               {tour.contentSections?.food ? (
-                <div className="p-4 sm:p-5 rounded-lg border border-slate-200/80 bg-slate-50/40 text-slate-700 text-xs sm:text-[13.5px] leading-relaxed whitespace-pre-line">
-                  {tour.contentSections.food}
+                <div className="p-4 sm:p-5 rounded-lg border border-slate-200/80 bg-slate-50/40 text-slate-700 text-xs sm:text-[13.5px] leading-relaxed">
+                  <RichContentRenderer content={tour.contentSections.food} className="prose-sm max-w-none text-slate-700" />
                 </div>
               ) : (
                 <div className="p-6 rounded-lg border border-slate-200/80 bg-slate-50/50 flex flex-col items-center justify-center text-center space-y-1.5 min-h-[140px]">
@@ -1046,8 +1047,8 @@ export default function TourContentTabs({ tour }: TourContentTabsProps) {
               className="px-4 pb-4 sm:px-4.5 sm:pb-4.5 pt-3.5 border-t border-slate-100/90 space-y-4 animate-in fade-in slide-in-from-top-1 duration-200"
             >
               {tour.contentSections?.shopping ? (
-                <div className="p-4 sm:p-5 rounded-lg border border-slate-200/80 bg-slate-50/40 text-slate-700 text-xs sm:text-[13.5px] leading-relaxed whitespace-pre-line">
-                  {tour.contentSections.shopping}
+                <div className="p-4 sm:p-5 rounded-lg border border-slate-200/80 bg-slate-50/40 text-slate-700 text-xs sm:text-[13.5px] leading-relaxed">
+                  <RichContentRenderer content={tour.contentSections.shopping} className="prose-sm max-w-none text-slate-700" />
                 </div>
               ) : (
                 <div className="p-6 rounded-lg border border-slate-200/80 bg-slate-50/50 flex flex-col items-center justify-center text-center space-y-1.5 min-h-[140px]">
@@ -1196,8 +1197,8 @@ export default function TourContentTabs({ tour }: TourContentTabsProps) {
               className="px-4 pb-4 sm:px-4.5 sm:pb-4.5 pt-3.5 border-t border-slate-100/90 space-y-4 animate-in fade-in slide-in-from-top-1 duration-200"
             >
               {tour.contentSections?.nearby ? (
-                <div className="p-4 sm:p-5 rounded-lg border border-slate-200/80 bg-slate-50/40 text-slate-700 text-xs sm:text-[13.5px] leading-relaxed whitespace-pre-line">
-                  {tour.contentSections.nearby}
+                <div className="p-4 sm:p-5 rounded-lg border border-slate-200/80 bg-slate-50/40 text-slate-700 text-xs sm:text-[13.5px] leading-relaxed">
+                  <RichContentRenderer content={tour.contentSections.nearby} className="prose-sm max-w-none text-slate-700" />
                 </div>
               ) : (
                 <div className="p-6 rounded-lg border border-slate-200/80 bg-slate-50/50 flex flex-col items-center justify-center text-center space-y-1.5 min-h-[140px]">
@@ -1260,9 +1261,9 @@ export default function TourContentTabs({ tour }: TourContentTabsProps) {
                         <span className="text-[var(--season-primary)] font-bold shrink-0">Q:</span>
                         <span>{faq.question}</span>
                       </h3>
-                      <p className="text-xs sm:text-[13px] text-slate-600 leading-relaxed pl-5 whitespace-pre-line">
-                        {faq.answer}
-                      </p>
+                      <div className="text-xs sm:text-[13px] text-slate-600 leading-relaxed pl-5">
+                        <RichContentRenderer content={faq.answer} className="prose-sm max-w-none text-slate-600" />
+                      </div>
                     </div>
                   ))}
                 </div>
