@@ -11,6 +11,7 @@ export const getTourFromDB = cache(async function(slug: string): Promise<TourPac
         transports: { include: { vehicle: true, driver: true } },
         experiences: { include: { experience: true } },
         reviews: { include: { user: { select: { name: true } } } },
+        tourCategory: true,
         travelGuides: {
           include: {
             guide: true,
@@ -84,7 +85,7 @@ export const getTourFromDB = cache(async function(slug: string): Promise<TourPac
       duration: tour.duration || "",
       daysCount: parseInt((tour.duration || "0").match(/(\d+)/)?.[0] || "0", 10),
       nightsCount: Math.max(0, parseInt((tour.duration || "0").match(/(\d+)/)?.[0] || "1", 10) - 1),
-      category: tour.category || "general",
+      category: tour.tourCategory?.name || tour.category || "general",
       destinations: tour.destinations || [],
       routeDisplay: tour.destinations || [],
       resolvedDestinations,
@@ -168,6 +169,7 @@ export const getOtherToursFromDB = cache(async function(excludeSlug: string): Pr
   try {
     const tours = await prisma.tour.findMany({
       where: { isLive: true, slug: { not: excludeSlug } },
+      include: { tourCategory: true },
       take: 4,
     });
 
@@ -178,7 +180,7 @@ export const getOtherToursFromDB = cache(async function(excludeSlug: string): Pr
       duration: tour.duration || "",
       daysCount: parseInt((tour.duration || "0").match(/(\d+)/)?.[0] || "0", 10),
       nightsCount: Math.max(0, parseInt((tour.duration || "0").match(/(\d+)/)?.[0] || "1", 10) - 1),
-      category: tour.category || "general",
+      category: tour.tourCategory?.name || tour.category || "general",
       destinations: tour.destinations || [],
       routeDisplay: tour.destinations || [],
       price: tour.price || 0,
@@ -343,6 +345,126 @@ export const getToursByTravelStyle = cache(async function(
     };
   } catch (error) {
     console.warn("Failed to fetch tours by travel style:", error);
+    return null;
+  }
+});
+
+export interface TourCategoryListingData {
+  category: {
+    id: string;
+    name: string;
+    slug: string;
+    description: string | null;
+    showInFilter: boolean;
+    displayOrder: number;
+  };
+  tours: TourPackageDetail[];
+}
+
+export const getToursByCategory = cache(async function(
+  categorySlug: string,
+  filters?: {
+    duration?: string;
+    destination?: string;
+    maxPrice?: number;
+    sort?: string;
+  }
+): Promise<TourCategoryListingData | null> {
+  try {
+    const category = await prisma.tourCategory.findFirst({
+      where: { slug: categorySlug, showInFilter: true },
+      include: {
+        tours: {
+          where: {
+            isLive: true,
+          },
+          include: {
+            stays: true,
+            reviews: { include: { user: { select: { name: true } } } },
+          },
+          orderBy: { createdAt: "desc" },
+        },
+      },
+    });
+
+    if (!category) return null;
+
+    let mappedTours: TourPackageDetail[] = category.tours.map((tour: (typeof category.tours)[number]) => ({
+      id: tour.id,
+      slug: tour.slug,
+      title: tour.title,
+      duration: tour.duration || "",
+      daysCount: parseInt((tour.duration || "0").match(/(\d+)/)?.[0] || "0", 10),
+      nightsCount: Math.max(0, parseInt((tour.duration || "0").match(/(\d+)/)?.[0] || "1", 10) - 1),
+      category: tour.category || category.name,
+      destinations: tour.destinations || [],
+      routeDisplay: tour.destinations || [],
+      price: tour.price || 0,
+      originalPrice: tour.originalPrice || tour.price || 0,
+      rating: tour.reviews?.length
+        ? tour.reviews.reduce((acc: number, r: { rating: number }) => acc + r.rating, 0) / tour.reviews.length
+        : 0,
+      reviewsCount: tour.reviews?.length || 0,
+      overview: tour.overview || "",
+      images: tour.images || [],
+      whyThisRoute: [],
+      itinerary: Array.isArray(tour.itinerary) ? (tour.itinerary as any[]) : [],
+      inclusions: tour.inclusions || [],
+      exclusions: tour.exclusions || [],
+      highlights: tour.highlights || [],
+      reviewsList: [],
+      stays: (tour.stays || []).map((s: { id: string; destination: string; nights: number; stayType?: string | null; displayOrder: number; propertyId?: string | null }) => ({
+        id: s.id,
+        destination: s.destination,
+        nights: s.nights,
+        stayType: s.stayType || undefined,
+        displayOrder: s.displayOrder,
+        propertyId: s.propertyId,
+      })),
+      transports: [],
+      isLive: tour.isLive,
+      maxPersons: tour.maxPersons || 2,
+      badge: category.name,
+    }));
+
+    if (filters) {
+      if (filters.duration) {
+        const days = parseInt(filters.duration, 10);
+        if (!isNaN(days)) {
+          mappedTours = mappedTours.filter((t) => t.daysCount === days);
+        }
+      }
+      if (filters.destination) {
+        const destLower = filters.destination.toLowerCase();
+        mappedTours = mappedTours.filter((t) =>
+          t.destinations.some((d) => d.toLowerCase().includes(destLower))
+        );
+      }
+      if (filters.maxPrice) {
+        mappedTours = mappedTours.filter((t) => t.price <= filters.maxPrice!);
+      }
+      if (filters.sort) {
+        if (filters.sort === "price-asc") mappedTours.sort((a, b) => a.price - b.price);
+        else if (filters.sort === "price-desc") mappedTours.sort((a, b) => b.price - a.price);
+        else if (filters.sort === "duration-asc") mappedTours.sort((a, b) => a.daysCount - b.daysCount);
+        else if (filters.sort === "duration-desc") mappedTours.sort((a, b) => b.daysCount - a.daysCount);
+        else if (filters.sort === "rating") mappedTours.sort((a, b) => (b.rating || 0) - (a.rating || 0));
+      }
+    }
+
+    return {
+      category: {
+        id: category.id,
+        name: category.name,
+        slug: category.slug,
+        description: category.description,
+        showInFilter: category.showInFilter,
+        displayOrder: category.displayOrder,
+      },
+      tours: mappedTours,
+    };
+  } catch (error) {
+    console.warn("Failed to fetch tours by category:", error);
     return null;
   }
 });
