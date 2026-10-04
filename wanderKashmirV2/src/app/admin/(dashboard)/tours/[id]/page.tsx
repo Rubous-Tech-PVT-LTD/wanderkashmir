@@ -58,6 +58,36 @@ export default async function EditTourPage({
     exclusions: tour.exclusions,
     itinerary: tour.itinerary,
     travelStyleIds: tour.travelStyles.map((ts) => ts.travelStyleId),
+    stays: tour.stays.map((s) => ({
+      id: s.id,
+      destination: s.destination,
+      stayType: s.stayType,
+      propertyId: s.propertyId,
+      nights: s.nights,
+      displayOrder: s.displayOrder,
+    })),
+    transports: tour.transports.map((t) => ({
+      id: t.id,
+      origin: t.origin,
+      destination: t.destination,
+      purpose: t.purpose,
+      vehicleId: t.vehicleId,
+      driverId: t.driverId,
+      displayOrder: t.displayOrder,
+      status: t.status,
+    })),
+    experiences: tour.experiences.map((exp) => ({
+      id: exp.id,
+      experienceId: exp.experienceId,
+      isOptional: exp.isOptional,
+      dayNumber: exp.dayNumber,
+      displayOrder: exp.displayOrder,
+    })),
+    travelGuides: tour.travelGuides.map((g) => ({
+      id: g.id,
+      guideId: g.guideId,
+      displayOrder: g.displayOrder,
+    })),
     isLive: tour.isLive,
   };
 
@@ -66,6 +96,11 @@ export default async function EditTourPage({
       initialData={initialData}
       categories={formOptions.categories}
       travelStyles={formOptions.travelStyles}
+      properties={formOptions.properties}
+      vehicles={formOptions.vehicles}
+      drivers={formOptions.drivers}
+      experiences={formOptions.experiences}
+      travelGuides={formOptions.travelGuides}
       isEdit={true}
     />
   );

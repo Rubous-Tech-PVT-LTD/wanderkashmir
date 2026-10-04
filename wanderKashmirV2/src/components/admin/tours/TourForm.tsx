@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import {
   ArrowLeft,
   Save,
@@ -13,8 +14,25 @@ import {
   Trash2,
   ExternalLink,
   Info,
+  ChevronUp,
+  ChevronDown,
+  Building,
+  Car,
+  Sparkles,
+  BookOpen,
+  ArrowRight,
+  ImageIcon,
 } from "lucide-react";
-import { createTourAction, updateTourAction, TourFormInput } from "@/actions/adminTours";
+import {
+  createTourAction,
+  updateTourAction,
+  deleteTourAction,
+  TourFormInput,
+  TourStayInput,
+  TourTransportInput,
+  TourExperienceInput,
+  TourTravelGuideInput,
+} from "@/actions/adminTours";
 
 interface TourCategoryOption {
   id: string;
@@ -25,6 +43,39 @@ interface TourCategoryOption {
 interface TravelStyleOption {
   id: string;
   name: string;
+  slug: string;
+}
+
+interface PropertyOption {
+  id: string;
+  name: string;
+  location: string;
+  propertyType: string;
+}
+
+interface VehicleOption {
+  id: string;
+  make: string;
+  model: string;
+  type: string;
+  registrationNum: string;
+}
+
+interface DriverOption {
+  id: string;
+  name: string;
+  phone: string;
+}
+
+interface ExperienceOption {
+  id: string;
+  title: string;
+  duration?: string | null;
+}
+
+interface TravelGuideOption {
+  id: string;
+  title: string;
   slug: string;
 }
 
@@ -48,10 +99,19 @@ interface TourFormProps {
     exclusions: string[];
     itinerary: any;
     travelStyleIds: string[];
+    stays?: TourStayInput[];
+    transports?: TourTransportInput[];
+    experiences?: TourExperienceInput[];
+    travelGuides?: TourTravelGuideInput[];
     isLive: boolean;
   };
   categories: TourCategoryOption[];
   travelStyles: TravelStyleOption[];
+  properties?: PropertyOption[];
+  vehicles?: VehicleOption[];
+  drivers?: DriverOption[];
+  experiences?: ExperienceOption[];
+  travelGuides?: TravelGuideOption[];
   isEdit?: boolean;
 }
 
@@ -59,6 +119,11 @@ export default function TourForm({
   initialData,
   categories,
   travelStyles,
+  properties = [],
+  vehicles = [],
+  drivers = [],
+  experiences = [],
+  travelGuides = [],
   isEdit = false,
 }: TourFormProps) {
   const router = useRouter();
@@ -76,24 +141,65 @@ export default function TourForm({
   const [slug, setSlug] = useState(initialData?.slug || "");
   const [duration, setDuration] = useState(initialData?.duration || "");
   const [price, setPrice] = useState(initialData?.price ? String(initialData.price) : "");
-  const [originalPrice, setOriginalPrice] = useState(initialData?.originalPrice ? String(initialData.originalPrice) : "");
-  const [categoryId, setCategoryId] = useState(initialData?.categoryId || (categories[0]?.id || ""));
-  const [categoryName, setCategoryName] = useState(initialData?.category || (categories[0]?.name || "General"));
-  const [maxPersons, setMaxPersons] = useState(initialData?.maxPersons ? String(initialData.maxPersons) : "15");
+  const [originalPrice, setOriginalPrice] = useState(
+    initialData?.originalPrice ? String(initialData.originalPrice) : ""
+  );
+  const [categoryId, setCategoryId] = useState(
+    initialData?.categoryId || (categories[0]?.id || "")
+  );
+  const [categoryName, setCategoryName] = useState(
+    initialData?.category || (categories[0]?.name || "General")
+  );
+  const [maxPersons, setMaxPersons] = useState(
+    initialData?.maxPersons ? String(initialData.maxPersons) : "15"
+  );
   const [badge, setBadge] = useState(initialData?.badge || "");
   const [overview, setOverview] = useState(initialData?.overview || "");
-  const [destinationsStr, setDestinationsStr] = useState(initialData?.destinations?.join(", ") || "");
-  const [imagesStr, setImagesStr] = useState(initialData?.images?.join(", ") || "");
-  const [highlightsStr, setHighlightsStr] = useState(initialData?.highlights?.join(", ") || "");
-  const [inclusionsStr, setInclusionsStr] = useState(initialData?.inclusions?.join(", ") || "Hotel, Meals, Taxi, Shikara Ride");
-  const [exclusionsStr, setExclusionsStr] = useState(initialData?.exclusions?.join(", ") || "Flights, Personal Expenses");
-  const [itinerary, setItinerary] = useState<{ day: string; title: string; description: string }[]>(initialItinerary);
-  const [selectedStyleIds, setSelectedStyleIds] = useState<string[]>(initialData?.travelStyleIds || []);
+  const [destinationsStr, setDestinationsStr] = useState(
+    initialData?.destinations?.join(", ") || ""
+  );
+
+  // Images list
+  const [imagesList, setImagesList] = useState<string[]>(initialData?.images || []);
+  const [newImageUrl, setNewImageUrl] = useState("");
+
+  const [highlightsStr, setHighlightsStr] = useState(
+    initialData?.highlights?.join(", ") || ""
+  );
+  const [inclusionsStr, setInclusionsStr] = useState(
+    initialData?.inclusions?.join(", ") || "Hotel, Meals, Taxi, Shikara Ride"
+  );
+  const [exclusionsStr, setExclusionsStr] = useState(
+    initialData?.exclusions?.join(", ") || "Flights, Personal Expenses"
+  );
+  const [itinerary, setItinerary] = useState<
+    { day: string; title: string; description: string }[]
+  >(initialItinerary);
+  const [selectedStyleIds, setSelectedStyleIds] = useState<string[]>(
+    initialData?.travelStyleIds || []
+  );
+
+  // Relational Modules State
+  const [stays, setStays] = useState<TourStayInput[]>(initialData?.stays || []);
+  const [transports, setTransports] = useState<TourTransportInput[]>(
+    initialData?.transports || []
+  );
+  const [tourExperiences, setTourExperiences] = useState<TourExperienceInput[]>(
+    initialData?.experiences || []
+  );
+  const [tourGuides, setTourGuides] = useState<TourTravelGuideInput[]>(
+    initialData?.travelGuides || []
+  );
+
   const [isLive, setIsLive] = useState<boolean>(initialData?.isLive ?? true);
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
+
+  // Delete state
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   // Auto-slug generator on create if user hasn't typed a custom slug
   const handleTitleChange = (val: string) => {
@@ -123,7 +229,33 @@ export default function TourForm({
     );
   };
 
-  // Itinerary handlers
+  // Image handlers
+  const handleAddImage = () => {
+    if (!newImageUrl.trim()) return;
+    const url = newImageUrl.trim();
+    if (!url.startsWith("http://") && !url.startsWith("https://")) {
+      alert("Please enter a valid HTTP/HTTPS URL.");
+      return;
+    }
+    setImagesList([...imagesList, url]);
+    setNewImageUrl("");
+  };
+
+  const handleRemoveImage = (index: number) => {
+    setImagesList(imagesList.filter((_, i) => i !== index));
+  };
+
+  const handleMoveImage = (index: number, direction: "left" | "right") => {
+    const targetIndex = direction === "left" ? index - 1 : index + 1;
+    if (targetIndex < 0 || targetIndex >= imagesList.length) return;
+    const updated = [...imagesList];
+    const temp = updated[index];
+    updated[index] = updated[targetIndex];
+    updated[targetIndex] = temp;
+    setImagesList(updated);
+  };
+
+  // Itinerary handlers with reordering
   const addItineraryDay = () => {
     const nextDayNum = itinerary.length + 1;
     setItinerary([
@@ -132,9 +264,23 @@ export default function TourForm({
     ]);
   };
 
-  const updateItineraryItem = (index: number, field: "day" | "title" | "description", val: string) => {
+  const updateItineraryItem = (
+    index: number,
+    field: "day" | "title" | "description",
+    val: string
+  ) => {
     const updated = [...itinerary];
     updated[index][field] = val;
+    setItinerary(updated);
+  };
+
+  const moveItineraryDay = (index: number, direction: "up" | "down") => {
+    const targetIndex = direction === "up" ? index - 1 : index + 1;
+    if (targetIndex < 0 || targetIndex >= itinerary.length) return;
+    const updated = [...itinerary];
+    const temp = updated[index];
+    updated[index] = updated[targetIndex];
+    updated[targetIndex] = temp;
     setItinerary(updated);
   };
 
@@ -142,6 +288,111 @@ export default function TourForm({
     setItinerary(itinerary.filter((_, i) => i !== index));
   };
 
+  const renumberItineraryDays = () => {
+    setItinerary(
+      itinerary.map((item, idx) => ({
+        ...item,
+        day: `Day ${idx + 1}`,
+      }))
+    );
+  };
+
+  // Stays Handlers
+  const addStay = () => {
+    setStays([
+      ...stays,
+      {
+        destination: "Srinagar",
+        stayType: "Hotel",
+        propertyId: properties[0]?.id || null,
+        nights: 1,
+        displayOrder: stays.length + 1,
+      },
+    ]);
+  };
+
+  const updateStay = (index: number, updates: Partial<TourStayInput>) => {
+    const updated = [...stays];
+    updated[index] = { ...updated[index], ...updates };
+    setStays(updated);
+  };
+
+  const removeStay = (index: number) => {
+    setStays(stays.filter((_, i) => i !== index));
+  };
+
+  // Transport Handlers
+  const addTransport = () => {
+    setTransports([
+      ...transports,
+      {
+        origin: "Srinagar Airport",
+        destination: "Srinagar Hotel",
+        purpose: "Airport Transfer",
+        vehicleId: vehicles[0]?.id || null,
+        driverId: drivers[0]?.id || null,
+        displayOrder: transports.length + 1,
+      },
+    ]);
+  };
+
+  const updateTransport = (index: number, updates: Partial<TourTransportInput>) => {
+    const updated = [...transports];
+    updated[index] = { ...updated[index], ...updates };
+    setTransports(updated);
+  };
+
+  const removeTransport = (index: number) => {
+    setTransports(transports.filter((_, i) => i !== index));
+  };
+
+  // Experience Handlers
+  const addExperience = () => {
+    if (experiences.length === 0) return;
+    setTourExperiences([
+      ...tourExperiences,
+      {
+        experienceId: experiences[0].id,
+        isOptional: false,
+        dayNumber: 1,
+        displayOrder: tourExperiences.length + 1,
+      },
+    ]);
+  };
+
+  const updateExperience = (index: number, updates: Partial<TourExperienceInput>) => {
+    const updated = [...tourExperiences];
+    updated[index] = { ...updated[index], ...updates };
+    setTourExperiences(updated);
+  };
+
+  const removeExperience = (index: number) => {
+    setTourExperiences(tourExperiences.filter((_, i) => i !== index));
+  };
+
+  // Travel Guide Handlers
+  const addTravelGuide = () => {
+    if (travelGuides.length === 0) return;
+    setTourGuides([
+      ...tourGuides,
+      {
+        guideId: travelGuides[0].id,
+        displayOrder: tourGuides.length + 1,
+      },
+    ]);
+  };
+
+  const updateTravelGuide = (index: number, updates: Partial<TourTravelGuideInput>) => {
+    const updated = [...tourGuides];
+    updated[index] = { ...updated[index], ...updates };
+    setTourGuides(updated);
+  };
+
+  const removeTravelGuide = (index: number) => {
+    setTourGuides(tourGuides.filter((_, i) => i !== index));
+  };
+
+  // Main Save
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
@@ -160,13 +411,29 @@ export default function TourForm({
         maxPersons: parseInt(maxPersons, 10) || 1,
         badge: badge.trim() || null,
         overview: overview.trim() || null,
-        destinations: destinationsStr.split(",").map((s) => s.trim()).filter(Boolean),
-        images: imagesStr.split(",").map((s) => s.trim()).filter(Boolean),
-        highlights: highlightsStr.split(",").map((s) => s.trim()).filter(Boolean),
-        inclusions: inclusionsStr.split(",").map((s) => s.trim()).filter(Boolean),
-        exclusions: exclusionsStr.split(",").map((s) => s.trim()).filter(Boolean),
+        destinations: destinationsStr
+          .split(",")
+          .map((s) => s.trim())
+          .filter(Boolean),
+        images: imagesList,
+        highlights: highlightsStr
+          .split(",")
+          .map((s) => s.trim())
+          .filter(Boolean),
+        inclusions: inclusionsStr
+          .split(",")
+          .map((s) => s.trim())
+          .filter(Boolean),
+        exclusions: exclusionsStr
+          .split(",")
+          .map((s) => s.trim())
+          .filter(Boolean),
         itinerary,
         travelStyleIds: selectedStyleIds,
+        stays,
+        transports,
+        experiences: tourExperiences,
+        travelGuides: tourGuides,
         isLive,
       };
 
@@ -195,6 +462,26 @@ export default function TourForm({
     }
   };
 
+  const handleDelete = async () => {
+    if (!initialData?.id) return;
+    setDeleting(true);
+    try {
+      const res = await deleteTourAction(initialData.id);
+      if (res.success) {
+        router.push("/admin/tours");
+        router.refresh();
+      } else {
+        alert(res.error || "Failed to delete tour.");
+        setShowDeleteModal(false);
+      }
+    } catch {
+      alert("Error deleting tour.");
+      setShowDeleteModal(false);
+    } finally {
+      setDeleting(false);
+    }
+  };
+
   return (
     <form onSubmit={handleSubmit} className="space-y-8 max-w-4xl mx-auto pb-16">
       {/* Top Header */}
@@ -211,12 +498,22 @@ export default function TourForm({
           </h1>
           <p className="text-xs text-slate-400 mt-1">
             {isEdit
-              ? "Modify production tour details with strict mass-assignment safeguards"
+              ? "Modify production tour details with strict relation safeguards"
               : "Register a new tour directly to the shared production database"}
           </p>
         </div>
 
         <div className="flex items-center gap-3">
+          {isEdit && (
+            <button
+              type="button"
+              onClick={() => setShowDeleteModal(true)}
+              className="px-3.5 py-2 rounded-lg text-xs font-semibold text-rose-400 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/20 transition-colors flex items-center gap-1.5"
+            >
+              <Trash2 className="w-3.5 h-3.5" /> Delete Tour
+            </button>
+          )}
+
           <Link
             href="/admin/tours"
             className="px-4 py-2 rounded-lg text-xs font-semibold text-slate-300 bg-slate-800 hover:bg-slate-700 transition-colors border border-slate-700"
@@ -228,11 +525,7 @@ export default function TourForm({
             disabled={loading}
             className="inline-flex items-center gap-2 px-5 py-2 rounded-lg text-xs font-semibold text-white bg-emerald-600 hover:bg-emerald-500 shadow-lg shadow-emerald-600/20 transition-all disabled:opacity-60 cursor-pointer"
           >
-            {loading ? (
-              <Loader2 className="w-4 h-4 animate-spin" />
-            ) : (
-              <Save className="w-4 h-4" />
-            )}
+            {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
             {isEdit ? "Save Changes" : "Create Tour"}
           </button>
         </div>
@@ -253,7 +546,7 @@ export default function TourForm({
         </div>
       )}
 
-      {/* Publishing Status & General info */}
+      {/* 1. Publishing Status & Core Info */}
       <div className="rounded-xl border border-slate-800 bg-slate-950/60 p-6 space-y-6">
         <div className="flex items-center justify-between border-b border-slate-800/80 pb-4">
           <div>
@@ -402,7 +695,7 @@ export default function TourForm({
         </div>
       </div>
 
-      {/* Travel Styles */}
+      {/* 2. Travel Styles */}
       <div className="rounded-xl border border-slate-800 bg-slate-950/60 p-6 space-y-4">
         <div>
           <h2 className="text-sm font-semibold text-white">Travel Styles</h2>
@@ -436,9 +729,94 @@ export default function TourForm({
         </div>
       </div>
 
-      {/* Overview, Highlights, Destinations */}
+      {/* 3. Images Management */}
+      <div className="rounded-xl border border-slate-800 bg-slate-950/60 p-6 space-y-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-sm font-semibold text-white">Tour Images ({imagesList.length})</h2>
+            <p className="text-xs text-slate-400 mt-0.5">
+              Add Cloudinary or verified CDN image URLs. The first image is used as the cover photo.
+            </p>
+          </div>
+        </div>
+
+        <div className="flex gap-2">
+          <input
+            type="url"
+            value={newImageUrl}
+            onChange={(e) => setNewImageUrl(e.target.value)}
+            placeholder="Add image URL (https://res.cloudinary.com/...)"
+            className="flex-1 rounded-lg border border-slate-700 bg-slate-800/80 px-3.5 py-2 text-xs text-white focus:border-emerald-500 focus:outline-none"
+          />
+          <button
+            type="button"
+            onClick={handleAddImage}
+            className="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-lg text-xs font-semibold whitespace-nowrap transition-colors"
+          >
+            Add Photo
+          </button>
+        </div>
+
+        {imagesList.length > 0 ? (
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            {imagesList.map((img, idx) => (
+              <div
+                key={idx}
+                className="group relative aspect-video bg-slate-900 border border-slate-800 rounded-xl overflow-hidden shadow-sm"
+              >
+                <Image
+                  src={img}
+                  alt={`Tour image ${idx + 1}`}
+                  fill
+                  className="object-cover"
+                  sizes="(max-width: 768px) 50vw, 25vw"
+                />
+                <div className="absolute top-1 left-1 bg-black/70 px-1.5 py-0.5 rounded text-[10px] text-white font-mono">
+                  #{idx + 1} {idx === 0 && "(Cover)"}
+                </div>
+                <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1.5 p-1">
+                  {idx > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => handleMoveImage(idx, "left")}
+                      className="p-1 bg-slate-800 text-white rounded hover:bg-slate-700 text-xs"
+                      title="Move left"
+                    >
+                      ←
+                    </button>
+                  )}
+                  {idx < imagesList.length - 1 && (
+                    <button
+                      type="button"
+                      onClick={() => handleMoveImage(idx, "right")}
+                      className="p-1 bg-slate-800 text-white rounded hover:bg-slate-700 text-xs"
+                      title="Move right"
+                    >
+                      →
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveImage(idx)}
+                    className="p-1 bg-rose-600 text-white rounded hover:bg-rose-500 text-xs"
+                    title="Remove"
+                  >
+                    <Trash2 className="w-3 h-3" />
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-8 border border-dashed border-slate-800 rounded-xl text-xs text-slate-500">
+            No images added. Paste an image URL above to add a photo.
+          </div>
+        )}
+      </div>
+
+      {/* 4. Overview, Highlights, Inclusions, Exclusions */}
       <div className="rounded-xl border border-slate-800 bg-slate-950/60 p-6 space-y-5">
-        <h2 className="text-sm font-semibold text-white">Content & Overview</h2>
+        <h2 className="text-sm font-semibold text-white">Content & Inclusions</h2>
 
         <div>
           <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-1.5">
@@ -479,19 +857,6 @@ export default function TourForm({
           />
         </div>
 
-        <div>
-          <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-1.5">
-            Images (Comma-separated URLs)
-          </label>
-          <textarea
-            rows={2}
-            value={imagesStr}
-            onChange={(e) => setImagesStr(e.target.value)}
-            placeholder="https://images.unsplash.com/..., https://res.cloudinary.com/..."
-            className="w-full rounded-lg border border-slate-700 bg-slate-800/80 px-3.5 py-2.5 text-xs text-white focus:border-emerald-500 focus:outline-none font-mono"
-          />
-        </div>
-
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           <div>
             <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-1.5">
@@ -521,23 +886,35 @@ export default function TourForm({
         </div>
       </div>
 
-      {/* Day-by-Day Itinerary Builder */}
+      {/* 5. Day-by-Day Itinerary Builder (with Reorder Up / Down) */}
       <div className="rounded-xl border border-slate-800 bg-slate-950/60 p-6 space-y-5">
         <div className="flex items-center justify-between">
           <div>
             <h2 className="text-sm font-semibold text-white">Day-by-Day Itinerary</h2>
             <p className="text-xs text-slate-400 mt-0.5">
-              Add structured itinerary milestones for each day of the journey
+              Add structured itinerary milestones for each day. Reorder using up/down arrows.
             </p>
           </div>
 
-          <button
-            type="button"
-            onClick={addItineraryDay}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 hover:bg-emerald-500/20 transition-colors"
-          >
-            <Plus className="w-3.5 h-3.5" /> Add Day
-          </button>
+          <div className="flex items-center gap-2">
+            {itinerary.length > 1 && (
+              <button
+                type="button"
+                onClick={renumberItineraryDays}
+                className="px-2.5 py-1 text-xs text-slate-400 hover:text-white bg-slate-800 rounded transition-colors"
+                title="Renumber days sequentially"
+              >
+                Renumber
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={addItineraryDay}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 hover:bg-emerald-500/20 transition-colors"
+            >
+              <Plus className="w-3.5 h-3.5" /> Add Day
+            </button>
+          </div>
         </div>
 
         {itinerary.length === 0 ? (
@@ -572,14 +949,34 @@ export default function TourForm({
                     />
                   </div>
 
-                  <button
-                    type="button"
-                    onClick={() => removeItineraryDay(idx)}
-                    className="p-1.5 text-slate-500 hover:text-red-400 transition-colors"
-                    title="Remove day"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
+                  <div className="flex items-center gap-1">
+                    <button
+                      type="button"
+                      disabled={idx === 0}
+                      onClick={() => moveItineraryDay(idx, "up")}
+                      className="p-1 text-slate-400 hover:text-white disabled:opacity-30 transition-colors rounded hover:bg-slate-800"
+                      title="Move day up"
+                    >
+                      <ChevronUp className="w-4 h-4" />
+                    </button>
+                    <button
+                      type="button"
+                      disabled={idx === itinerary.length - 1}
+                      onClick={() => moveItineraryDay(idx, "down")}
+                      className="p-1 text-slate-400 hover:text-white disabled:opacity-30 transition-colors rounded hover:bg-slate-800"
+                      title="Move day down"
+                    >
+                      <ChevronDown className="w-4 h-4" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => removeItineraryDay(idx)}
+                      className="p-1 text-slate-500 hover:text-red-400 transition-colors rounded hover:bg-slate-800"
+                      title="Remove day"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
                 </div>
 
                 <div>
@@ -597,38 +994,374 @@ export default function TourForm({
         )}
       </div>
 
-      {/* Relation Preservation Notice */}
-      {isEdit && (
-        <div className="rounded-xl border border-slate-800 bg-slate-950/40 p-4 text-xs text-slate-400">
-          <p className="font-semibold text-slate-300">Phase 6A Relation Preservation Guarantee:</p>
-          <p className="mt-0.5 leading-relaxed">
-            Existing accommodation stays, transports, experiences, and travel guide associations for this tour are
-            strictly preserved in the database during title, pricing, itinerary, and travel style updates.
-          </p>
+      {/* 6. Tour Stays (TourStay Relation Management) */}
+      <div className="rounded-xl border border-slate-800 bg-slate-950/60 p-6 space-y-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-sm font-semibold text-white flex items-center gap-2">
+              <Building className="w-4 h-4 text-emerald-400" /> Accommodation Stays ({stays.length})
+            </h2>
+            <p className="text-xs text-slate-400 mt-0.5">
+              Assign real approved properties/hotels for each destination in this package
+            </p>
+          </div>
+
+          <button
+            type="button"
+            onClick={addStay}
+            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 hover:bg-emerald-500/20 transition-colors"
+          >
+            <Plus className="w-3.5 h-3.5" /> Add Stay
+          </button>
         </div>
-      )}
+
+        {stays.length > 0 ? (
+          <div className="space-y-3">
+            {stays.map((stay, idx) => (
+              <div
+                key={idx}
+                className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-center p-3 rounded-lg border border-slate-800 bg-slate-900/60 text-xs"
+              >
+                <div className="sm:col-span-3">
+                  <label className="text-[10px] text-slate-400 block mb-1">Destination</label>
+                  <input
+                    type="text"
+                    value={stay.destination}
+                    onChange={(e) => updateStay(idx, { destination: e.target.value })}
+                    placeholder="e.g. Srinagar"
+                    className="w-full rounded border border-slate-700 bg-slate-800 px-2.5 py-1.5 text-white"
+                  />
+                </div>
+                <div className="sm:col-span-2">
+                  <label className="text-[10px] text-slate-400 block mb-1">Stay Type</label>
+                  <select
+                    value={stay.stayType || "Hotel"}
+                    onChange={(e) => updateStay(idx, { stayType: e.target.value })}
+                    className="w-full rounded border border-slate-700 bg-slate-800 px-2 py-1.5 text-white"
+                  >
+                    <option value="Hotel">Hotel</option>
+                    <option value="Resort">Resort</option>
+                    <option value="Homestay">Homestay</option>
+                    <option value="Houseboat">Houseboat</option>
+                  </select>
+                </div>
+                <div className="sm:col-span-4">
+                  <label className="text-[10px] text-slate-400 block mb-1">Linked Property</label>
+                  <select
+                    value={stay.propertyId || ""}
+                    onChange={(e) => updateStay(idx, { propertyId: e.target.value || null })}
+                    className="w-full rounded border border-slate-700 bg-slate-800 px-2 py-1.5 text-white"
+                  >
+                    <option value="">-- No specific property --</option>
+                    {properties.map((p) => (
+                      <option key={p.id} value={p.id}>
+                        {p.name} ({p.location})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="sm:col-span-2">
+                  <label className="text-[10px] text-slate-400 block mb-1">Nights</label>
+                  <input
+                    type="number"
+                    min="1"
+                    value={stay.nights}
+                    onChange={(e) =>
+                      updateStay(idx, { nights: Math.max(1, parseInt(e.target.value, 10) || 1) })
+                    }
+                    className="w-full rounded border border-slate-700 bg-slate-800 px-2.5 py-1.5 text-white"
+                  />
+                </div>
+                <div className="sm:col-span-1 text-right">
+                  <button
+                    type="button"
+                    onClick={() => removeStay(idx)}
+                    className="p-1.5 text-slate-500 hover:text-rose-400 transition-colors"
+                    title="Remove stay"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-6 border border-dashed border-slate-800 rounded-xl text-xs text-slate-500">
+            No stay accommodations assigned. Click &quot;Add Stay&quot; to link properties to this tour.
+          </div>
+        )}
+      </div>
+
+      {/* 7. Tour Transport (TourTransport Relation Management) */}
+      <div className="rounded-xl border border-slate-800 bg-slate-950/60 p-6 space-y-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-sm font-semibold text-white flex items-center gap-2">
+              <Car className="w-4 h-4 text-sky-400" /> Transportation Segments ({transports.length})
+            </h2>
+            <p className="text-xs text-slate-400 mt-0.5">
+              Assign transport routes, dedicated vehicles, and drivers
+            </p>
+          </div>
+
+          <button
+            type="button"
+            onClick={addTransport}
+            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold text-sky-400 bg-sky-500/10 border border-sky-500/20 hover:bg-sky-500/20 transition-colors"
+          >
+            <Plus className="w-3.5 h-3.5" /> Add Transport
+          </button>
+        </div>
+
+        {transports.length > 0 ? (
+          <div className="space-y-3">
+            {transports.map((trans, idx) => (
+              <div
+                key={idx}
+                className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-center p-3 rounded-lg border border-slate-800 bg-slate-900/60 text-xs"
+              >
+                <div className="sm:col-span-3">
+                  <label className="text-[10px] text-slate-400 block mb-1">Origin</label>
+                  <input
+                    type="text"
+                    value={trans.origin}
+                    onChange={(e) => updateTransport(idx, { origin: e.target.value })}
+                    placeholder="e.g. Srinagar Airport"
+                    className="w-full rounded border border-slate-700 bg-slate-800 px-2.5 py-1.5 text-white"
+                  />
+                </div>
+                <div className="sm:col-span-3">
+                  <label className="text-[10px] text-slate-400 block mb-1">Destination</label>
+                  <input
+                    type="text"
+                    value={trans.destination}
+                    onChange={(e) => updateTransport(idx, { destination: e.target.value })}
+                    placeholder="e.g. Gulmarg"
+                    className="w-full rounded border border-slate-700 bg-slate-800 px-2.5 py-1.5 text-white"
+                  />
+                </div>
+                <div className="sm:col-span-3">
+                  <label className="text-[10px] text-slate-400 block mb-1">Vehicle</label>
+                  <select
+                    value={trans.vehicleId || ""}
+                    onChange={(e) => updateTransport(idx, { vehicleId: e.target.value || null })}
+                    className="w-full rounded border border-slate-700 bg-slate-800 px-2 py-1.5 text-white"
+                  >
+                    <option value="">-- No specific vehicle --</option>
+                    {vehicles.map((v) => (
+                      <option key={v.id} value={v.id}>
+                        {v.make} {v.model} ({v.type})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="sm:col-span-2">
+                  <label className="text-[10px] text-slate-400 block mb-1">Purpose</label>
+                  <input
+                    type="text"
+                    value={trans.purpose}
+                    onChange={(e) => updateTransport(idx, { purpose: e.target.value })}
+                    placeholder="Transfer / Tour"
+                    className="w-full rounded border border-slate-700 bg-slate-800 px-2.5 py-1.5 text-white"
+                  />
+                </div>
+                <div className="sm:col-span-1 text-right">
+                  <button
+                    type="button"
+                    onClick={() => removeTransport(idx)}
+                    className="p-1.5 text-slate-500 hover:text-rose-400 transition-colors"
+                    title="Remove segment"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-6 border border-dashed border-slate-800 rounded-xl text-xs text-slate-500">
+            No transport segments added. Click &quot;Add Transport&quot; to configure travel legs.
+          </div>
+        )}
+      </div>
+
+      {/* 8. Tour Experiences & Travel Guides */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Experiences */}
+        <div className="rounded-xl border border-slate-800 bg-slate-950/60 p-6 space-y-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-sm font-semibold text-white flex items-center gap-2">
+              <Sparkles className="w-4 h-4 text-amber-400" /> Experiences ({tourExperiences.length})
+            </h2>
+            <button
+              type="button"
+              onClick={addExperience}
+              disabled={experiences.length === 0}
+              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold text-amber-400 bg-amber-500/10 border border-amber-500/20 hover:bg-amber-500/20 transition-colors disabled:opacity-40"
+            >
+              <Plus className="w-3 h-3" /> Add
+            </button>
+          </div>
+
+          {tourExperiences.length > 0 ? (
+            <div className="space-y-2.5">
+              {tourExperiences.map((exp, idx) => (
+                <div
+                  key={idx}
+                  className="flex items-center gap-2 p-2.5 rounded-lg border border-slate-800 bg-slate-900/60 text-xs"
+                >
+                  <select
+                    value={exp.experienceId}
+                    onChange={(e) => updateExperience(idx, { experienceId: e.target.value })}
+                    className="flex-1 rounded border border-slate-700 bg-slate-800 px-2 py-1 text-white"
+                  >
+                    {experiences.map((item) => (
+                      <option key={item.id} value={item.id}>
+                        {item.title}
+                      </option>
+                    ))}
+                  </select>
+                  <button
+                    type="button"
+                    onClick={() => removeExperience(idx)}
+                    className="p-1 text-slate-500 hover:text-rose-400 transition-colors"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-6 border border-dashed border-slate-800 rounded-xl text-xs text-slate-500">
+              No experiences linked.
+            </div>
+          )}
+        </div>
+
+        {/* Travel Guides */}
+        <div className="rounded-xl border border-slate-800 bg-slate-950/60 p-6 space-y-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-sm font-semibold text-white flex items-center gap-2">
+              <BookOpen className="w-4 h-4 text-purple-400" /> Travel Guides ({tourGuides.length})
+            </h2>
+            <button
+              type="button"
+              onClick={addTravelGuide}
+              disabled={travelGuides.length === 0}
+              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold text-purple-400 bg-purple-500/10 border border-purple-500/20 hover:bg-purple-500/20 transition-colors disabled:opacity-40"
+            >
+              <Plus className="w-3 h-3" /> Add
+            </button>
+          </div>
+
+          {tourGuides.length > 0 ? (
+            <div className="space-y-2.5">
+              {tourGuides.map((guide, idx) => (
+                <div
+                  key={idx}
+                  className="flex items-center gap-2 p-2.5 rounded-lg border border-slate-800 bg-slate-900/60 text-xs"
+                >
+                  <select
+                    value={guide.guideId}
+                    onChange={(e) => updateTravelGuide(idx, { guideId: e.target.value })}
+                    className="flex-1 rounded border border-slate-700 bg-slate-800 px-2 py-1 text-white"
+                  >
+                    {travelGuides.map((g) => (
+                      <option key={g.id} value={g.id}>
+                        {g.title}
+                      </option>
+                    ))}
+                  </select>
+                  <button
+                    type="button"
+                    onClick={() => removeTravelGuide(idx)}
+                    className="p-1 text-slate-500 hover:text-rose-400 transition-colors"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-6 border border-dashed border-slate-800 rounded-xl text-xs text-slate-500">
+              No travel guides linked.
+            </div>
+          )}
+        </div>
+      </div>
 
       {/* Bottom Save Bar */}
-      <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-800">
-        <Link
-          href="/admin/tours"
-          className="px-4 py-2 rounded-lg text-xs font-semibold text-slate-300 bg-slate-800 hover:bg-slate-700 transition-colors border border-slate-700"
-        >
-          Cancel
-        </Link>
-        <button
-          type="submit"
-          disabled={loading}
-          className="inline-flex items-center gap-2 px-6 py-2.5 rounded-lg text-xs font-semibold text-white bg-emerald-600 hover:bg-emerald-500 shadow-lg shadow-emerald-600/20 transition-all disabled:opacity-60 cursor-pointer"
-        >
-          {loading ? (
-            <Loader2 className="w-4 h-4 animate-spin" />
-          ) : (
-            <Save className="w-4 h-4" />
+      <div className="flex items-center justify-between gap-3 pt-4 border-t border-slate-800">
+        <div>
+          {isEdit && (
+            <button
+              type="button"
+              onClick={() => setShowDeleteModal(true)}
+              className="px-4 py-2 rounded-lg text-xs font-semibold text-rose-400 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/20 transition-colors flex items-center gap-1.5"
+            >
+              <Trash2 className="w-3.5 h-3.5" /> Delete Tour
+            </button>
           )}
-          {isEdit ? "Save Tour Changes" : "Create Tour"}
-        </button>
+        </div>
+
+        <div className="flex items-center gap-3">
+          <Link
+            href="/admin/tours"
+            className="px-4 py-2 rounded-lg text-xs font-semibold text-slate-300 bg-slate-800 hover:bg-slate-700 transition-colors border border-slate-700"
+          >
+            Cancel
+          </Link>
+          <button
+            type="submit"
+            disabled={loading}
+            className="inline-flex items-center gap-2 px-6 py-2.5 rounded-lg text-xs font-semibold text-white bg-emerald-600 hover:bg-emerald-500 shadow-lg shadow-emerald-600/20 transition-all disabled:opacity-60 cursor-pointer"
+          >
+            {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+            {isEdit ? "Save Tour Changes" : "Create Tour"}
+          </button>
+        </div>
       </div>
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-in fade-in">
+          <div className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl p-6 space-y-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-xl bg-rose-500/10 text-rose-400 border border-rose-500/20">
+                <AlertCircle className="w-6 h-6" />
+              </div>
+              <div>
+                <h3 className="text-base font-bold text-white">Delete Tour Package</h3>
+                <p className="text-xs text-slate-400 mt-0.5 truncate max-w-[280px]">{title}</p>
+              </div>
+            </div>
+
+            <p className="text-xs text-slate-300 leading-relaxed">
+              Are you sure you want to permanently delete this tour package? This action will verify
+              that no customer bookings are linked to this package before proceeding.
+            </p>
+
+            <div className="flex items-center justify-end gap-2.5 pt-2">
+              <button
+                type="button"
+                onClick={() => setShowDeleteModal(false)}
+                disabled={deleting}
+                className="px-4 py-2 text-xs font-semibold text-slate-300 hover:text-white bg-slate-800 hover:bg-slate-700 rounded-xl transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleDelete}
+                disabled={deleting}
+                className="px-4 py-2 text-xs font-semibold text-white bg-rose-600 hover:bg-rose-500 rounded-xl shadow-md shadow-rose-600/20 transition-all disabled:opacity-50 flex items-center gap-1.5"
+              >
+                {deleting ? "Deleting..." : "Confirm Delete"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </form>
   );
 }

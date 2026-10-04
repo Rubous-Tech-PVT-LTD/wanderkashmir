@@ -45,7 +45,13 @@ export default function TourCategoriesClient({
   // Form Modal State (Create / Edit)
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState<AdminTourCategoryItem | null>(null);
-  const [formData, setFormData] = useState({ name: "", slug: "", description: "" });
+  const [formData, setFormData] = useState({
+    name: "",
+    slug: "",
+    description: "",
+    showInFilter: true,
+    displayOrder: 1,
+  });
   const [formLoading, setFormLoading] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
 
@@ -77,7 +83,17 @@ export default function TourCategoriesClient({
   // Open Create Modal
   const handleOpenCreate = () => {
     setEditingCategory(null);
-    setFormData({ name: "", slug: "", description: "" });
+    const nextOrder =
+      categories.length > 0
+        ? Math.max(...categories.map((c) => c.displayOrder || 0)) + 1
+        : 1;
+    setFormData({
+      name: "",
+      slug: "",
+      description: "",
+      showInFilter: true,
+      displayOrder: nextOrder,
+    });
     setFormError(null);
     setIsFormOpen(true);
   };
@@ -89,6 +105,8 @@ export default function TourCategoriesClient({
       name: cat.name,
       slug: cat.slug,
       description: cat.description || "",
+      showInFilter: cat.showInFilter !== false,
+      displayOrder: cat.displayOrder ?? 1,
     });
     setFormError(null);
     setIsFormOpen(true);
@@ -271,6 +289,8 @@ export default function TourCategoriesClient({
                 <tr>
                   <th className="px-5 py-3.5">Category Name & Details</th>
                   <th className="px-5 py-3.5">Slug</th>
+                  <th className="px-5 py-3.5 text-center">Order</th>
+                  <th className="px-5 py-3.5 text-center">Filter Visibility</th>
                   <th className="px-5 py-3.5 text-center">Linked Tours</th>
                   <th className="px-5 py-3.5">Updated</th>
                   <th className="px-5 py-3.5 text-right">Actions</th>
@@ -294,6 +314,26 @@ export default function TourCategoriesClient({
                       <span className="font-mono text-xs text-slate-400 bg-slate-900 px-2 py-0.5 rounded border border-slate-800">
                         {cat.slug}
                       </span>
+                    </td>
+
+                    {/* Display Order */}
+                    <td className="px-5 py-4 whitespace-nowrap text-center">
+                      <span className="font-mono text-xs font-semibold text-slate-300 bg-slate-800/80 px-2 py-0.5 rounded border border-slate-700">
+                        #{cat.displayOrder ?? 0}
+                      </span>
+                    </td>
+
+                    {/* Filter Visibility */}
+                    <td className="px-5 py-4 whitespace-nowrap text-center">
+                      {cat.showInFilter ? (
+                        <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                          Visible in Filter
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold bg-slate-800 text-slate-400 border border-slate-700">
+                          Hidden from Filter
+                        </span>
+                      )}
                     </td>
 
                     {/* Linked Tours Count */}
@@ -430,6 +470,43 @@ export default function TourCategoriesClient({
                 <p className="text-[10px] text-slate-500 mt-1">
                   Used for SEO indexing and filtering. Must be unique and alphanumeric.
                 </p>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-300 mb-1">
+                  Display Order <span className="text-rose-400">*</span>
+                </label>
+                <input
+                  type="number"
+                  min="1"
+                  required
+                  value={formData.displayOrder}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      displayOrder: parseInt(e.target.value, 10) || 1,
+                    })
+                  }
+                  className="w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-xs text-white focus:outline-none focus:border-emerald-500 font-mono"
+                />
+                <p className="text-[10px] text-slate-500 mt-1">
+                  Controls position in the public /tours filter (lower numbers appear first).
+                </p>
+              </div>
+
+              <div className="flex items-center justify-between p-3 rounded-lg border border-slate-800 bg-slate-800/50">
+                <div className="pr-3">
+                  <span className="text-xs font-semibold text-slate-200 block">Show in Tour Filter</span>
+                  <span className="text-[10px] text-slate-400">
+                    Controls whether this category appears in the public /tours filter.
+                  </span>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={formData.showInFilter}
+                  onChange={(e) => setFormData({ ...formData, showInFilter: e.target.checked })}
+                  className="w-4 h-4 rounded text-emerald-600 border-slate-700 focus:ring-emerald-500 cursor-pointer"
+                />
               </div>
 
               <div>

@@ -1,6 +1,9 @@
 import { redirect } from "next/navigation";
+import { headers } from "next/headers";
 import { getAdminSession } from "@/lib/admin/auth";
 import AdminSidebar from "@/components/admin/AdminSidebar";
+import { logoutAdminAction } from "@/actions/adminAuth";
+import { LogOut } from "lucide-react";
 
 export const metadata = {
   title: "Admin Dashboard | WanderKashmir",
@@ -16,13 +19,15 @@ export default async function AdminDashboardLayout({
   children: React.ReactNode;
 }) {
   const session = await getAdminSession();
+  const headerList = await headers();
+  const isWanderAdmin = headerList.get("x-admin-alias") === "wander-admin";
 
   if (!session) {
-    redirect("/admin/login");
+    redirect(isWanderAdmin ? "/wander-admin/login" : "/admin/login");
   }
 
   if (session.role !== "ADMIN") {
-    redirect("/admin/unauthorized");
+    redirect(isWanderAdmin ? "/wander-admin/unauthorized" : "/admin/unauthorized");
   }
 
   return (
@@ -45,8 +50,20 @@ export default async function AdminDashboardLayout({
             </span>
           </div>
 
-          <div className="text-xs text-slate-400">
-            Authenticated Admin: <span className="text-white font-medium">{session.email}</span>
+          <div className="flex items-center gap-4 text-xs text-slate-400">
+            <div>
+              Authenticated Admin: <span className="text-white font-medium">{session.email}</span>
+            </div>
+            <form action={logoutAdminAction}>
+              <button
+                type="submit"
+                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium text-red-400 bg-red-500/10 border border-red-500/20 hover:bg-red-500/20 transition-colors cursor-pointer"
+                title="Sign out of Admin session"
+              >
+                <LogOut className="w-3 h-3" />
+                <span>Sign Out</span>
+              </button>
+            </form>
           </div>
         </header>
 

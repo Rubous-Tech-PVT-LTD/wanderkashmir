@@ -8,6 +8,8 @@ import {
   Plus,
   ExternalLink,
   Edit,
+  Trash2,
+  AlertTriangle,
   Loader2,
   CheckCircle,
   EyeOff,
@@ -15,7 +17,10 @@ import {
   Image as ImageIcon,
 } from "lucide-react";
 import { AdminTravelStyleItem } from "@/lib/admin/travelStyles";
-import { toggleTravelStyleActiveAction } from "@/actions/adminTravelStyles";
+import {
+  toggleTravelStyleActiveAction,
+  deleteTravelStyleAction,
+} from "@/actions/adminTravelStyles";
 
 interface TravelStylesListClientProps {
   styles: AdminTravelStyleItem[];
@@ -31,6 +36,12 @@ export default function TravelStylesListClient({
 
   const [searchVal, setSearchVal] = useState(currentSearch);
   const [togglingId, setTogglingId] = useState<string | null>(null);
+
+  // Delete modal state
+  const [deleteModalStyle, setDeleteModalStyle] = useState<AdminTravelStyleItem | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [forceHardDelete, setForceHardDelete] = useState(false);
 
   const applySearch = (search: string) => {
     const params = new URLSearchParams(searchParams.toString());
@@ -60,6 +71,25 @@ export default function TravelStylesListClient({
       alert("Error communicating with server.");
     } finally {
       setTogglingId(null);
+    }
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!deleteModalStyle) return;
+    setIsDeleting(true);
+    setDeleteError(null);
+    try {
+      const res = await deleteTravelStyleAction(deleteModalStyle.id, forceHardDelete);
+      if (res.success) {
+        setDeleteModalStyle(null);
+        router.refresh();
+      } else {
+        setDeleteError(res.error || "Failed to delete travel style.");
+      }
+    } catch {
+      setDeleteError("Network error while deleting travel style.");
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -171,9 +201,20 @@ export default function TravelStylesListClient({
 
                       {/* Connected Tours */}
                       <td className="px-5 py-4 whitespace-nowrap">
-                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-slate-900 text-slate-200 border border-slate-800">
-                          <strong>{style.toursCount}</strong> Tours
-                        </span>
+                        <div className="inline-flex flex-col">
+                          <span className="text-xs font-bold text-white">
+                            {style.toursCount} Tours
+                          </span>
+                          <div className="flex items-center gap-1.5 mt-0.5 text-[10px]">
+                            <span className="text-emerald-400 font-medium">
+                              {style.liveToursCount} live
+                            </span>
+                            <span className="text-slate-600">•</span>
+                            <span className="text-slate-400 font-medium">
+                              {style.draftToursCount} draft
+                            </span>
+                          </div>
+                        </div>
                       </td>
 
                       {/* Active Status Toggle */}
@@ -219,6 +260,18 @@ export default function TravelStylesListClient({
                           >
                             <Edit className="w-3.5 h-3.5" /> Edit
                           </Link>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setDeleteModalStyle(style);
+                              setDeleteError(null);
+                              setForceHardDelete(false);
+                            }}
+                            className="p-1.5 rounded-lg text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 transition-colors cursor-pointer border border-transparent hover:border-rose-500/20"
+                            title="Delete / Archive Travel Style"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
                         </div>
                       </td>
                     </tr>
@@ -232,13 +285,87 @@ export default function TravelStylesListClient({
 
       {/* Safety Notice */}
       <div className="rounded-xl border border-slate-800 bg-slate-950/40 p-4 text-xs text-slate-400">
-        <p className="font-semibold text-slate-300">Phase 6B Policy Disclosure:</p>
+        <p className="font-semibold text-slate-300">Travel Styles Relational Safety Policy:</p>
         <p className="mt-0.5 leading-relaxed">
-          Destructive deletion of travel style records is intentionally excluded from Phase 6B to safeguard SEO indexing
-          and relational mappings. Deactivating a travel style immediately unpublishes its public category page and hides it
-          from user discovery while preserving all underlying tour data.
+          Deleting a travel style that is linked to tours safely deactivates (archives) it to preserve public URLs and tour categorization.
+          Permanent removal is only permitted when zero tours are connected, preventing orphaned database relationships.
         </p>
       </div>
+
+      {/* Delete Confirmation Modal */}
+      {deleteModalStyle && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+          <div className="w-full max-w-md rounded-2xl border border-slate-800 bg-slate-900 p-6 shadow-2xl space-y-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-xl bg-rose-500/10 text-rose-400 border border-rose-500/20">
+                <AlertTriangle className="w-6 h-6" />
+              </div>
+              <div>
+                <h3 className="text-base font-bold text-white">Delete Travel Style</h3>
+                <p className="text-xs text-slate-400">Production Relationship Safety Guard</p>
+              </div>
+            </div>
+
+            {deleteError && (
+              <div className="rounded-lg border border-rose-500/30 bg-rose-500/10 p-3 text-xs text-rose-300">
+                {deleteError}
+              </div>
+            )}
+
+            {deleteModalStyle.toursCount > 0 ? (
+              <div className="space-y-3">
+                <p className="text-xs text-slate-300 leading-relaxed">
+                  Travel style <strong className="text-white">"{deleteModalStyle.name}"</strong> has{" "}
+                  <strong className="text-amber-400">{deleteModalStyle.toursCount} connected tour package(s)</strong>.
+                  To protect public URLs and tour associations, deleting this style will safely{" "}
+                  <strong className="text-emerald-400">deactivate (archive)</strong> it rather than destroying relationships.
+                </p>
+
+                <label className="flex items-start gap-2 p-2.5 rounded-lg border border-slate-800 bg-slate-950/60 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={forceHardDelete}
+                    onChange={(e) => setForceHardDelete(e.target.checked)}
+                    className="mt-0.5 rounded border-slate-700 bg-slate-800 text-rose-500 focus:ring-0"
+                  />
+                  <span className="text-[11px] text-slate-400">
+                    Force permanent deletion (removes all {deleteModalStyle.toursCount} tour mapping rows from this style)
+                  </span>
+                </label>
+              </div>
+            ) : (
+              <p className="text-xs text-slate-300 leading-relaxed">
+                Are you sure you want to permanently delete travel style{" "}
+                <strong className="text-white">"{deleteModalStyle.name}"</strong>?
+                This style has 0 linked tours and can be safely deleted.
+              </p>
+            )}
+
+            <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-800">
+              <button
+                type="button"
+                disabled={isDeleting}
+                onClick={() => {
+                  setDeleteModalStyle(null);
+                  setDeleteError(null);
+                }}
+                className="px-4 py-2 rounded-lg text-xs font-semibold text-slate-300 bg-slate-800 hover:bg-slate-700 transition-colors cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={isDeleting}
+                onClick={handleDeleteConfirm}
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold text-white bg-rose-600 hover:bg-rose-500 transition-colors shadow-lg shadow-rose-600/20 cursor-pointer disabled:opacity-50"
+              >
+                {isDeleting && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+                {deleteModalStyle.toursCount > 0 && !forceHardDelete ? "Archive Style" : "Permanently Delete"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

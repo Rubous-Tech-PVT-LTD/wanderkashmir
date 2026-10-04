@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { headers } from "next/headers";
 import { getAdminSession } from "@/lib/admin/auth";
 import AdminLoginForm from "./AdminLoginForm";
 
@@ -10,11 +11,21 @@ export const metadata = {
   },
 };
 
-export default async function AdminLoginPage() {
+interface AdminLoginPageProps {
+  searchParams?: Promise<{ from?: string }>;
+}
+
+export default async function AdminLoginPage({ searchParams }: AdminLoginPageProps) {
   const session = await getAdminSession();
+  const headerList = await headers();
+  const isWanderAdmin = headerList.get("x-admin-alias") === "wander-admin";
+
   if (session && session.role === "ADMIN") {
-    redirect("/admin");
+    redirect(isWanderAdmin ? "/wander-admin" : "/admin");
   }
+
+  const resolvedParams = searchParams ? await searchParams : {};
+  const from = resolvedParams.from;
 
   return (
     <div className="flex min-h-screen items-center justify-center p-4 sm:p-6 bg-slate-950">
@@ -44,12 +55,12 @@ export default async function AdminLoginPage() {
 
         {/* Login Card */}
         <div className="rounded-2xl border border-slate-800 bg-slate-900/80 p-6 sm:p-8 backdrop-blur-xl shadow-2xl shadow-black/40">
-          <AdminLoginForm />
+          <AdminLoginForm initialFrom={from} isWanderAdminAlias={isWanderAdmin} />
         </div>
 
         {/* Footer info */}
         <p className="text-center text-xs text-slate-500 mt-6">
-          Phase 5 Admin Foundation • Read-Only Architecture • Shared Production DB
+          Admin Control Portal • Production DB Connected • Verified Access Only
         </p>
       </div>
     </div>

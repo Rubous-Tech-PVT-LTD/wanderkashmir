@@ -1,6 +1,6 @@
 "use server";
 
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 import bcrypt from "bcryptjs";
 import prisma from "@/lib/prisma";
@@ -78,5 +78,11 @@ export async function logoutAdminAction(): Promise<void> {
     maxAge: 0,
     path: "/",
   });
-  redirect("/admin/login");
+
+  const headerList = await headers();
+  const alias = headerList.get("x-admin-alias");
+  const referer = headerList.get("referer") || "";
+  const isWanderAdmin = alias === "wander-admin" || referer.includes("/wander-admin");
+
+  redirect(isWanderAdmin ? "/wander-admin/login" : "/admin/login");
 }

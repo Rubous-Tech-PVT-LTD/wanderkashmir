@@ -5,6 +5,40 @@ import { Prisma } from "@prisma/client";
 import { getAdminSession } from "@/lib/admin/auth";
 import { revalidatePath } from "next/cache";
 
+export interface TourStayInput {
+  id?: string;
+  destination: string;
+  stayType?: string | null;
+  propertyId?: string | null;
+  nights: number;
+  displayOrder?: number;
+}
+
+export interface TourTransportInput {
+  id?: string;
+  origin: string;
+  destination: string;
+  purpose: string;
+  vehicleId?: string | null;
+  driverId?: string | null;
+  displayOrder?: number;
+  status?: string;
+}
+
+export interface TourExperienceInput {
+  id?: string;
+  experienceId: string;
+  isOptional: boolean;
+  dayNumber?: number | null;
+  displayOrder?: number;
+}
+
+export interface TourTravelGuideInput {
+  id?: string;
+  guideId: string;
+  displayOrder?: number;
+}
+
 export interface TourFormInput {
   title: string;
   slug: string;
@@ -23,6 +57,10 @@ export interface TourFormInput {
   exclusions: string[];
   itinerary: any[];
   travelStyleIds: string[];
+  stays?: TourStayInput[];
+  transports?: TourTransportInput[];
+  experiences?: TourExperienceInput[];
+  travelGuides?: TourTravelGuideInput[];
   isLive: boolean;
 }
 
@@ -41,14 +79,53 @@ function sanitizeSlug(slug: string): string {
 }
 
 /**
+ * Common security check: verified active ADMIN session and DB verification.
+ */
+async function verifyAdminAuth(): Promise<{ authorized: boolean; error?: string; adminId?: string }> {
+  const session = await getAdminSession();
+  if (!session) {
+    return { authorized: false, error: "Unauthorized: Admin session required." };
+  }
+
+  if (session.role !== "ADMIN") {
+    return { authorized: false, error: "Forbidden: Administrator role required." };
+  }
+
+  const dbUser = await prisma.user.findUnique({
+    where: { id: session.userId },
+    select: { id: true, role: true, isBanned: true },
+  });
+
+  if (!dbUser || dbUser.role !== "ADMIN" || dbUser.isBanned) {
+    return { authorized: false, error: "Forbidden: Account is not an active administrator." };
+  }
+
+  return { authorized: true, adminId: dbUser.id };
+}
+
+function revalidateTourPaths(slug?: string, prevSlug?: string) {
+  try {
+    revalidatePath("/tours");
+    if (slug) revalidatePath(`/tours/${slug}`);
+    if (prevSlug && prevSlug !== slug) revalidatePath(`/tours/${prevSlug}`);
+    revalidatePath("/admin/tours");
+    revalidatePath("/sitemap.xml");
+  } catch (e) {
+    console.warn("Revalidation warning:", e);
+  }
+}
+
+/**
  * Server Action: Create a new production Tour.
  * Authenticated Admin required. Protected with strict server validation.
  */
-export async function createTourAction(input: TourFormInput): Promise<ActionResult<{ id: string; slug: string }>> {
+export async function createTourAction(
+  input: TourFormInput
+): Promise<ActionResult<{ id: string; slug: string }>> {
   try {
-    const session = await getAdminSession();
-    if (!session || session.role !== "ADMIN") {
-      return { success: false, error: "Unauthorized: Administrator privileges required." };
+    const auth = await verifyAdminAuth();
+    if (!auth.authorized) {
+      return { success: false, error: auth.error };
     }
 
     // 1. Server validation
@@ -74,7 +151,10 @@ export async function createTourAction(input: TourFormInput): Promise<ActionResu
 
     const originalPrice = input.originalPrice ? Number(input.originalPrice) : null;
     if (originalPrice !== null && (isNaN(originalPrice) || originalPrice < price)) {
-      return { success: false, error: "Original price must be greater than or equal to current price." };
+      return {
+        success: false,
+        error: "Original price must be greater than or equal to current price.",
+      };
     }
 
     const maxPersons = Math.max(1, parseInt(String(input.maxPersons || 1), 10) || 1);
@@ -117,7 +197,7 @@ export async function createTourAction(input: TourFormInput): Promise<ActionResu
       validStyleIds.push(...styles.map((s) => s.id));
     }
 
-    // 5. Database transaction to create Tour and assign TravelStyles
+    // 5. Database transaction to create Tour and assign relations
     const created = await prisma.$transaction(async (tx) => {
       const newTour = await tx.tour.create({
         data: {
@@ -131,16 +211,30 @@ export async function createTourAction(input: TourFormInput): Promise<ActionResu
           maxPersons,
           badge: input.badge ? input.badge.trim() : null,
           overview: input.overview ? input.overview.trim() : null,
-          destinations: Array.isArray(input.destinations) ? input.destinations.map((d) => String(d).trim()).filter(Boolean) : [],
-          images: Array.isArray(input.images) ? input.images.map((img) => String(img).trim()).filter(Boolean) : [],
-          highlights: Array.isArray(input.highlights) ? input.highlights.map((h) => String(h).trim()).filter(Boolean) : [],
-          inclusions: Array.isArray(input.inclusions) ? input.inclusions.map((inc) => String(inc).trim()).filter(Boolean) : [],
-          exclusions: Array.isArray(input.exclusions) ? input.exclusions.map((exc) => String(exc).trim()).filter(Boolean) : [],
-          itinerary: Array.isArray(input.itinerary) && input.itinerary.length > 0 ? (input.itinerary as Prisma.InputJsonValue) : Prisma.JsonNull,
+          destinations: Array.isArray(input.destinations)
+            ? input.destinations.map((d) => String(d).trim()).filter(Boolean)
+            : [],
+          images: Array.isArray(input.images)
+            ? input.images.map((img) => String(img).trim()).filter(Boolean)
+            : [],
+          highlights: Array.isArray(input.highlights)
+            ? input.highlights.map((h) => String(h).trim()).filter(Boolean)
+            : [],
+          inclusions: Array.isArray(input.inclusions)
+            ? input.inclusions.map((inc) => String(inc).trim()).filter(Boolean)
+            : [],
+          exclusions: Array.isArray(input.exclusions)
+            ? input.exclusions.map((exc) => String(exc).trim()).filter(Boolean)
+            : [],
+          itinerary:
+            Array.isArray(input.itinerary) && input.itinerary.length > 0
+              ? (input.itinerary as Prisma.InputJsonValue)
+              : Prisma.JsonNull,
           isLive: !!input.isLive,
         },
       });
 
+      // Assign TravelStyles
       if (validStyleIds.length > 0) {
         await tx.tourTravelStyle.createMany({
           data: validStyleIds.map((styleId, idx) => ({
@@ -151,27 +245,64 @@ export async function createTourAction(input: TourFormInput): Promise<ActionResu
         });
       }
 
+      // Assign Stays if provided
+      if (Array.isArray(input.stays) && input.stays.length > 0) {
+        await tx.tourStay.createMany({
+          data: input.stays.map((s, idx) => ({
+            tourId: newTour.id,
+            destination: (s.destination || "Kashmir").trim(),
+            stayType: s.stayType || null,
+            propertyId: s.propertyId && s.propertyId.trim() !== "" ? s.propertyId : null,
+            nights: Math.max(1, Number(s.nights) || 1),
+            displayOrder: s.displayOrder !== undefined ? Number(s.displayOrder) : idx + 1,
+          })),
+        });
+      }
+
+      // Assign Transports if provided
+      if (Array.isArray(input.transports) && input.transports.length > 0) {
+        await tx.tourTransport.createMany({
+          data: input.transports.map((t, idx) => ({
+            tourId: newTour.id,
+            origin: (t.origin || "Srinagar").trim(),
+            destination: (t.destination || "Kashmir").trim(),
+            purpose: t.purpose || "Transfer",
+            vehicleId: t.vehicleId && t.vehicleId.trim() !== "" ? t.vehicleId : null,
+            driverId: t.driverId && t.driverId.trim() !== "" ? t.driverId : null,
+            displayOrder: t.displayOrder !== undefined ? Number(t.displayOrder) : idx + 1,
+            status: t.status || "ACTIVE",
+          })),
+        });
+      }
+
+      // Assign Experiences if provided
+      if (Array.isArray(input.experiences) && input.experiences.length > 0) {
+        await tx.tourExperience.createMany({
+          data: input.experiences.map((exp, idx) => ({
+            tourId: newTour.id,
+            experienceId: exp.experienceId,
+            isOptional: !!exp.isOptional,
+            dayNumber: exp.dayNumber ? Number(exp.dayNumber) : null,
+            displayOrder: exp.displayOrder !== undefined ? Number(exp.displayOrder) : idx + 1,
+          })),
+        });
+      }
+
+      // Assign Travel Guides if provided
+      if (Array.isArray(input.travelGuides) && input.travelGuides.length > 0) {
+        await tx.tourTravelGuide.createMany({
+          data: input.travelGuides.map((g, idx) => ({
+            tourId: newTour.id,
+            guideId: g.guideId,
+            displayOrder: g.displayOrder !== undefined ? Number(g.displayOrder) : idx + 1,
+          })),
+        });
+      }
+
       return newTour;
     });
 
-    // 6. Public V2 Route Revalidation
-    try {
-      revalidatePath("/tours");
-      revalidatePath(`/tours/${created.slug}`);
-      revalidatePath("/admin/tours");
-      revalidatePath("/sitemap.xml");
-      if (validStyleIds.length > 0) {
-        const affectedStyles = await prisma.travelStyle.findMany({
-          where: { id: { in: validStyleIds } },
-          select: { slug: true },
-        });
-        for (const s of affectedStyles) {
-          revalidatePath(`/tours/${s.slug}`);
-        }
-      }
-    } catch (e) {
-      console.warn("Revalidation warning on tour creation:", e);
-    }
+    revalidateTourPaths(created.slug);
 
     return {
       success: true,
@@ -179,20 +310,25 @@ export async function createTourAction(input: TourFormInput): Promise<ActionResu
     };
   } catch (error) {
     console.error("Error creating tour:", error);
-    return { success: false, error: "Failed to create tour in database. Please check required fields." };
+    return {
+      success: false,
+      error: "Failed to create tour in database. Please check required fields.",
+    };
   }
 }
 
 /**
  * Server Action: Update an existing production Tour.
  * Authenticated Admin required. Protected against mass assignment.
- * CRITICAL: Preserves existing stays, transports, experiences, and travelGuides.
  */
-export async function updateTourAction(id: string, input: TourFormInput): Promise<ActionResult<{ id: string; slug: string }>> {
+export async function updateTourAction(
+  id: string,
+  input: TourFormInput
+): Promise<ActionResult<{ id: string; slug: string }>> {
   try {
-    const session = await getAdminSession();
-    if (!session || session.role !== "ADMIN") {
-      return { success: false, error: "Unauthorized: Administrator privileges required." };
+    const auth = await verifyAdminAuth();
+    if (!auth.authorized) {
+      return { success: false, error: auth.error };
     }
 
     if (!id || typeof id !== "string") {
@@ -202,7 +338,9 @@ export async function updateTourAction(id: string, input: TourFormInput): Promis
     const existingTour = await prisma.tour.findUnique({
       where: { id },
       include: {
-        travelStyles: { select: { travelStyleId: true, travelStyle: { select: { slug: true } } } },
+        travelStyles: {
+          select: { travelStyleId: true, travelStyle: { select: { slug: true } } },
+        },
       },
     });
 
@@ -221,7 +359,6 @@ export async function updateTourAction(id: string, input: TourFormInput): Promis
       return { success: false, error: "Invalid URL slug format." };
     }
 
-    // If slug changed, verify uniqueness
     if (newSlug !== existingTour.slug) {
       const duplicateSlugCheck = await prisma.tour.findUnique({
         where: { slug: newSlug },
@@ -244,7 +381,10 @@ export async function updateTourAction(id: string, input: TourFormInput): Promis
 
     const originalPrice = input.originalPrice ? Number(input.originalPrice) : null;
     if (originalPrice !== null && (isNaN(originalPrice) || originalPrice < price)) {
-      return { success: false, error: "Original price must be greater than or equal to current price." };
+      return {
+        success: false,
+        error: "Original price must be greater than or equal to current price.",
+      };
     }
 
     const maxPersons = Math.max(1, parseInt(String(input.maxPersons || 1), 10) || 1);
@@ -279,8 +419,6 @@ export async function updateTourAction(id: string, input: TourFormInput): Promis
     }
 
     // 4. Update in Prisma transaction
-    // Explicit whitelist: only update permitted scalar fields and synchronize TravelStyles.
-    // Stays, transports, experiences, and travel guides are NOT touched or deleted.
     const updated = await prisma.$transaction(async (tx) => {
       const res = await tx.tour.update({
         where: { id },
@@ -295,12 +433,25 @@ export async function updateTourAction(id: string, input: TourFormInput): Promis
           maxPersons,
           badge: input.badge ? input.badge.trim() : null,
           overview: input.overview ? input.overview.trim() : null,
-          destinations: Array.isArray(input.destinations) ? input.destinations.map((d) => String(d).trim()).filter(Boolean) : [],
-          images: Array.isArray(input.images) ? input.images.map((img) => String(img).trim()).filter(Boolean) : [],
-          highlights: Array.isArray(input.highlights) ? input.highlights.map((h) => String(h).trim()).filter(Boolean) : [],
-          inclusions: Array.isArray(input.inclusions) ? input.inclusions.map((inc) => String(inc).trim()).filter(Boolean) : [],
-          exclusions: Array.isArray(input.exclusions) ? input.exclusions.map((exc) => String(exc).trim()).filter(Boolean) : [],
-          itinerary: Array.isArray(input.itinerary) && input.itinerary.length > 0 ? (input.itinerary as Prisma.InputJsonValue) : Prisma.JsonNull,
+          destinations: Array.isArray(input.destinations)
+            ? input.destinations.map((d) => String(d).trim()).filter(Boolean)
+            : [],
+          images: Array.isArray(input.images)
+            ? input.images.map((img) => String(img).trim()).filter(Boolean)
+            : [],
+          highlights: Array.isArray(input.highlights)
+            ? input.highlights.map((h) => String(h).trim()).filter(Boolean)
+            : [],
+          inclusions: Array.isArray(input.inclusions)
+            ? input.inclusions.map((inc) => String(inc).trim()).filter(Boolean)
+            : [],
+          exclusions: Array.isArray(input.exclusions)
+            ? input.exclusions.map((exc) => String(exc).trim()).filter(Boolean)
+            : [],
+          itinerary:
+            Array.isArray(input.itinerary) && input.itinerary.length > 0
+              ? (input.itinerary as Prisma.InputJsonValue)
+              : Prisma.JsonNull,
           isLive: !!input.isLive,
         },
       });
@@ -319,38 +470,76 @@ export async function updateTourAction(id: string, input: TourFormInput): Promis
         }
       }
 
+      // Synchronize Stays if explicitly provided
+      if (Array.isArray(input.stays)) {
+        await tx.tourStay.deleteMany({ where: { tourId: id } });
+        if (input.stays.length > 0) {
+          await tx.tourStay.createMany({
+            data: input.stays.map((s, idx) => ({
+              tourId: id,
+              destination: (s.destination || "Kashmir").trim(),
+              stayType: s.stayType || null,
+              propertyId: s.propertyId && s.propertyId.trim() !== "" ? s.propertyId : null,
+              nights: Math.max(1, Number(s.nights) || 1),
+              displayOrder: s.displayOrder !== undefined ? Number(s.displayOrder) : idx + 1,
+            })),
+          });
+        }
+      }
+
+      // Synchronize Transports if explicitly provided
+      if (Array.isArray(input.transports)) {
+        await tx.tourTransport.deleteMany({ where: { tourId: id } });
+        if (input.transports.length > 0) {
+          await tx.tourTransport.createMany({
+            data: input.transports.map((t, idx) => ({
+              tourId: id,
+              origin: (t.origin || "Srinagar").trim(),
+              destination: (t.destination || "Kashmir").trim(),
+              purpose: t.purpose || "Transfer",
+              vehicleId: t.vehicleId && t.vehicleId.trim() !== "" ? t.vehicleId : null,
+              driverId: t.driverId && t.driverId.trim() !== "" ? t.driverId : null,
+              displayOrder: t.displayOrder !== undefined ? Number(t.displayOrder) : idx + 1,
+              status: t.status || "ACTIVE",
+            })),
+          });
+        }
+      }
+
+      // Synchronize Experiences if explicitly provided
+      if (Array.isArray(input.experiences)) {
+        await tx.tourExperience.deleteMany({ where: { tourId: id } });
+        if (input.experiences.length > 0) {
+          await tx.tourExperience.createMany({
+            data: input.experiences.map((exp, idx) => ({
+              tourId: id,
+              experienceId: exp.experienceId,
+              isOptional: !!exp.isOptional,
+              dayNumber: exp.dayNumber ? Number(exp.dayNumber) : null,
+              displayOrder: exp.displayOrder !== undefined ? Number(exp.displayOrder) : idx + 1,
+            })),
+          });
+        }
+      }
+
+      // Synchronize Travel Guides if explicitly provided
+      if (Array.isArray(input.travelGuides)) {
+        await tx.tourTravelGuide.deleteMany({ where: { tourId: id } });
+        if (input.travelGuides.length > 0) {
+          await tx.tourTravelGuide.createMany({
+            data: input.travelGuides.map((g, idx) => ({
+              tourId: id,
+              guideId: g.guideId,
+              displayOrder: g.displayOrder !== undefined ? Number(g.displayOrder) : idx + 1,
+            })),
+          });
+        }
+      }
+
       return res;
     });
 
-    // 5. Trigger public revalidation
-    try {
-      revalidatePath("/tours");
-      revalidatePath(`/tours/${existingTour.slug}`);
-      if (newSlug !== existingTour.slug) {
-        revalidatePath(`/tours/${newSlug}`);
-      }
-      revalidatePath("/admin/tours");
-      revalidatePath(`/admin/tours/${id}`);
-      revalidatePath("/sitemap.xml");
-
-      // Revalidate affected travel styles
-      const affectedStyleSlugs = new Set<string>();
-      existingTour.travelStyles.forEach((ts) => {
-        if (ts.travelStyle?.slug) affectedStyleSlugs.add(ts.travelStyle.slug);
-      });
-      if (validStyleIds.length > 0) {
-        const newStyles = await prisma.travelStyle.findMany({
-          where: { id: { in: validStyleIds } },
-          select: { slug: true },
-        });
-        newStyles.forEach((s) => affectedStyleSlugs.add(s.slug));
-      }
-      for (const sSlug of affectedStyleSlugs) {
-        revalidatePath(`/tours/${sSlug}`);
-      }
-    } catch (e) {
-      console.warn("Revalidation warning on tour update:", e);
-    }
+    revalidateTourPaths(updated.slug, existingTour.slug);
 
     return {
       success: true,
@@ -366,11 +555,14 @@ export async function updateTourAction(id: string, input: TourFormInput): Promis
  * Server Action: Publish or unpublish a Tour.
  * Authenticated Admin required. Updates only isLive.
  */
-export async function toggleTourPublishAction(id: string, isLive: boolean): Promise<ActionResult<{ id: string; isLive: boolean }>> {
+export async function toggleTourPublishAction(
+  id: string,
+  isLive: boolean
+): Promise<ActionResult<{ id: string; isLive: boolean }>> {
   try {
-    const session = await getAdminSession();
-    if (!session || session.role !== "ADMIN") {
-      return { success: false, error: "Unauthorized: Administrator privileges required." };
+    const auth = await verifyAdminAuth();
+    if (!auth.authorized) {
+      return { success: false, error: auth.error };
     }
 
     if (!id || typeof id !== "string") {
@@ -392,15 +584,7 @@ export async function toggleTourPublishAction(id: string, isLive: boolean): Prom
       select: { id: true, slug: true, isLive: true },
     });
 
-    // Revalidate affected public routes
-    try {
-      revalidatePath("/tours");
-      revalidatePath(`/tours/${updated.slug}`);
-      revalidatePath("/admin/tours");
-      revalidatePath("/sitemap.xml");
-    } catch (e) {
-      console.warn("Revalidation warning on tour toggle:", e);
-    }
+    revalidateTourPaths(updated.slug);
 
     return {
       success: true,
@@ -409,5 +593,58 @@ export async function toggleTourPublishAction(id: string, isLive: boolean): Prom
   } catch (error) {
     console.error(`Error toggling tour status (${id}):`, error);
     return { success: false, error: "Failed to update tour publishing status." };
+  }
+}
+
+/**
+ * Server Action: Delete a Tour with foreign key booking safeguards.
+ * Authenticated Admin required. Prevents accidental deletion if bookings exist.
+ */
+export async function deleteTourAction(id: string): Promise<ActionResult> {
+  try {
+    const auth = await verifyAdminAuth();
+    if (!auth.authorized) {
+      return { success: false, error: auth.error };
+    }
+
+    if (!id || typeof id !== "string") {
+      return { success: false, error: "Missing required Tour ID." };
+    }
+
+    const tour = await prisma.tour.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        title: true,
+        slug: true,
+        _count: {
+          select: {
+            bookings: true,
+          },
+        },
+      },
+    });
+
+    if (!tour) {
+      return { success: false, error: "Tour record not found in database." };
+    }
+
+    if (tour._count.bookings > 0) {
+      return {
+        success: false,
+        error: `Cannot delete tour "${tour.title}" because it has ${tour._count.bookings} existing customer booking(s). Please unpublish it (set to Draft) instead to preserve financial and audit history.`,
+      };
+    }
+
+    await prisma.tour.delete({
+      where: { id },
+    });
+
+    revalidateTourPaths(tour.slug);
+
+    return { success: true };
+  } catch (error: any) {
+    console.error(`Error deleting tour (${id}):`, error);
+    return { success: false, error: "Failed to delete tour from database." };
   }
 }

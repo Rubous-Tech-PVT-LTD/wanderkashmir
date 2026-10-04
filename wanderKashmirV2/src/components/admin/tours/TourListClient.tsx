@@ -8,13 +8,15 @@ import {
   Plus,
   ExternalLink,
   Edit,
+  Trash2,
+  AlertTriangle,
   Loader2,
   CheckCircle,
   EyeOff,
   Filter,
 } from "lucide-react";
 import { AdminTourListItem } from "@/lib/admin/tours";
-import { toggleTourPublishAction } from "@/actions/adminTours";
+import { toggleTourPublishAction, deleteTourAction } from "@/actions/adminTours";
 
 interface TourListClientProps {
   tours: AdminTourListItem[];
@@ -42,6 +44,9 @@ export default function TourListClient({
 
   const [searchVal, setSearchVal] = useState(currentSearch);
   const [togglingId, setTogglingId] = useState<string | null>(null);
+  const [deleteModalTour, setDeleteModalTour] = useState<{ id: string; title: string } | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   const applyFilters = (updates: Record<string, string | null>) => {
     const params = new URLSearchParams(searchParams.toString());
@@ -77,6 +82,25 @@ export default function TourListClient({
       alert("Error communicating with server.");
     } finally {
       setTogglingId(null);
+    }
+  };
+
+  const handleDeleteTourConfirm = async () => {
+    if (!deleteModalTour) return;
+    setIsDeleting(true);
+    setDeleteError(null);
+    try {
+      const res = await deleteTourAction(deleteModalTour.id);
+      if (res.success) {
+        setDeleteModalTour(null);
+        router.refresh();
+      } else {
+        setDeleteError(res.error || "Failed to delete tour");
+      }
+    } catch {
+      setDeleteError("Network error while deleting tour");
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -274,6 +298,17 @@ export default function TourListClient({
                           >
                             <Edit className="w-3.5 h-3.5" /> Edit
                           </Link>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setDeleteError(null);
+                              setDeleteModalTour({ id: tour.id, title: tour.title });
+                            }}
+                            className="p-1.5 rounded-lg text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 transition-colors cursor-pointer border border-transparent hover:border-rose-500/20"
+                            title="Delete Tour"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
                         </div>
                       </td>
                     </tr>
@@ -309,6 +344,58 @@ export default function TourListClient({
             >
               Next
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {deleteModalTour && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+          <div className="w-full max-w-md rounded-2xl border border-slate-800 bg-slate-900 p-6 shadow-2xl space-y-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-xl bg-rose-500/10 text-rose-400 border border-rose-500/20">
+                <AlertTriangle className="w-6 h-6" />
+              </div>
+              <div>
+                <h3 className="text-base font-bold text-white">Delete Tour Confirmation</h3>
+                <p className="text-xs text-slate-400">This action requires explicit admin confirmation</p>
+              </div>
+            </div>
+
+            <p className="text-xs text-slate-300">
+              Are you sure you want to permanently delete tour{" "}
+              <strong className="text-white">"{deleteModalTour.title}"</strong>?
+              If any customer bookings reference this tour, the system will safely prevent deletion to avoid orphaned records.
+            </p>
+
+            {deleteError && (
+              <div className="rounded-lg border border-rose-500/30 bg-rose-500/10 p-3 text-xs text-rose-300">
+                {deleteError}
+              </div>
+            )}
+
+            <div className="flex items-center justify-end gap-3 pt-2">
+              <button
+                type="button"
+                disabled={isDeleting}
+                onClick={() => {
+                  setDeleteModalTour(null);
+                  setDeleteError(null);
+                }}
+                className="px-4 py-2 rounded-lg text-xs font-semibold text-slate-300 bg-slate-800 hover:bg-slate-700 transition-colors cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={isDeleting}
+                onClick={handleDeleteTourConfirm}
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold text-white bg-rose-600 hover:bg-rose-500 transition-colors shadow-lg shadow-rose-600/20 cursor-pointer disabled:opacity-50"
+              >
+                {isDeleting && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+                Confirm Delete
+              </button>
+            </div>
           </div>
         </div>
       )}

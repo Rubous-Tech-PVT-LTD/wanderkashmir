@@ -30,6 +30,29 @@ function sanitizeSlug(slug: string): string {
 }
 
 /**
+ * Strict server-side verification:
+ * 1. Checks HTTP-only admin session JWT
+ * 2. Validates live database record: role === 'ADMIN' and !isBanned
+ */
+async function verifyAdminAuth() {
+  const session = await getAdminSession();
+  if (!session || !session.userId) {
+    return { ok: false, error: "Unauthorized: Admin session required." };
+  }
+
+  const dbUser = await prisma.user.findUnique({
+    where: { id: session.userId },
+    select: { id: true, role: true, isBanned: true },
+  });
+
+  if (!dbUser || dbUser.role !== "ADMIN" || dbUser.isBanned) {
+    return { ok: false, error: "Forbidden: Administrator privileges required." };
+  }
+
+  return { ok: true, user: dbUser };
+}
+
+/**
  * Server Action: Create a new production Travel Style.
  * Authenticated Admin required. Protected with strict server validation.
  */
@@ -37,9 +60,9 @@ export async function createTravelStyleAction(
   input: TravelStyleFormInput
 ): Promise<ActionResult<{ id: string; slug: string }>> {
   try {
-    const session = await getAdminSession();
-    if (!session || session.role !== "ADMIN") {
-      return { success: false, error: "Unauthorized: Administrator privileges required." };
+    const auth = await verifyAdminAuth();
+    if (!auth.ok) {
+      return { success: false, error: auth.error };
     }
 
     const name = (input.name || "").trim();
@@ -144,9 +167,9 @@ export async function updateTravelStyleAction(
   input: TravelStyleFormInput
 ): Promise<ActionResult<{ id: string; slug: string }>> {
   try {
-    const session = await getAdminSession();
-    if (!session || session.role !== "ADMIN") {
-      return { success: false, error: "Unauthorized: Administrator privileges required." };
+    const auth = await verifyAdminAuth();
+    if (!auth.ok) {
+      return { success: false, error: auth.error };
     }
 
     if (!id || typeof id !== "string") {
@@ -262,9 +285,9 @@ export async function toggleTravelStyleActiveAction(
   isActive: boolean
 ): Promise<ActionResult<{ id: string; isActive: boolean }>> {
   try {
-    const session = await getAdminSession();
-    if (!session || session.role !== "ADMIN") {
-      return { success: false, error: "Unauthorized: Administrator privileges required." };
+    const auth = await verifyAdminAuth();
+    if (!auth.ok) {
+      return { success: false, error: auth.error };
     }
 
     if (!id || typeof id !== "string") {
@@ -314,9 +337,9 @@ export async function updateTravelStyleOrderAction(
   displayOrder: number
 ): Promise<ActionResult<{ id: string; displayOrder: number }>> {
   try {
-    const session = await getAdminSession();
-    if (!session || session.role !== "ADMIN") {
-      return { success: false, error: "Unauthorized: Administrator privileges required." };
+    const auth = await verifyAdminAuth();
+    if (!auth.ok) {
+      return { success: false, error: auth.error };
     }
 
     const orderNum = Math.max(0, parseInt(String(displayOrder), 10) || 0);
@@ -342,5 +365,100 @@ export async function updateTravelStyleOrderAction(
   } catch (error) {
     console.error(`Error updating travel style order (${id}):`, error);
     return { success: false, error: "Failed to update display order." };
+  }
+}
+
+/**
+ * Server Action: Safe delete or archive of a Travel Style.
+ * Parity with V1:
+ * - If style has assigned tours or was live, it is safely archived (isActive: false) to preserve URLs and tour associations.
+ * - If style has zero assigned tours or forceHardDelete is explicitly requested, it is removed cleanly.
+ */
+export async function deleteTravelStyleAction(
+  id: string,
+  forceHardDelete: boolean = false
+): Promise<ActionResult<{ id: string; archived: boolean; message: string }>> {
+  try {
+    const auth = await verifyAdminAuth();
+    if (!auth.ok) {
+      return { success: false, error: auth.error };
+    }
+
+    if (!id || typeof id !== "string") {
+      return { success: false, error: "Missing required Travel Style ID." };
+    }
+
+    const current = await prisma.travelStyle.findUnique({
+      where: { id },
+      include: {
+        _count: {
+          select: { tours: true },
+        },
+      },
+    });
+
+    if (!current) {
+      return { success: false, error: "Travel style not found." };
+    }
+
+    // Safe archive pattern if style has linked tours or was active
+    if (!forceHardDelete && (current._count.tours > 0 || current.isActive)) {
+      await prisma.travelStyle.update({
+        where: { id },
+        data: { isActive: false },
+      });
+
+      try {
+        revalidatePath("/tours");
+        revalidatePath(`/tours/${current.slug}`);
+        revalidatePath("/");
+        revalidatePath("/admin/travel-styles");
+        revalidatePath("/sitemap.xml");
+      } catch (e) {
+        console.warn("Revalidation warning on travel style archive:", e);
+      }
+
+      return {
+        success: true,
+        data: {
+          id,
+          archived: true,
+          message: `Travel style "${current.name}" has ${current._count.tours} assigned tour(s); it was safely deactivated (archived) to preserve URLs and tour associations.`,
+        },
+      };
+    }
+
+    // Hard delete when zero tours exist or forceHardDelete is true
+    await prisma.$transaction(async (tx) => {
+      await tx.tourTravelStyle.deleteMany({
+        where: { travelStyleId: id },
+      });
+
+      await tx.travelStyle.delete({
+        where: { id },
+      });
+    });
+
+    try {
+      revalidatePath("/tours");
+      revalidatePath(`/tours/${current.slug}`);
+      revalidatePath("/");
+      revalidatePath("/admin/travel-styles");
+      revalidatePath("/sitemap.xml");
+    } catch (e) {
+      console.warn("Revalidation warning on travel style delete:", e);
+    }
+
+    return {
+      success: true,
+      data: {
+        id,
+        archived: false,
+        message: `Travel style "${current.name}" was permanently deleted.`,
+      },
+    };
+  } catch (error) {
+    console.error(`Error deleting travel style (${id}):`, error);
+    return { success: false, error: "Failed to delete travel style." };
   }
 }

@@ -58,17 +58,21 @@ export async function verifyAdminToken(token: string): Promise<AdminSession | nu
  * Confirms that the role is strictly "ADMIN".
  */
 export async function getAdminSession(): Promise<AdminSession | null> {
-  const cookieStore = await cookies();
-  const sessionToken = cookieStore.get("admin_session")?.value;
+  try {
+    const cookieStore = await cookies();
+    const sessionToken = cookieStore.get("admin_session")?.value;
 
-  if (!sessionToken) {
+    if (!sessionToken) {
+      return null;
+    }
+
+    const session = await verifyAdminToken(sessionToken);
+    if (!session || session.role !== "ADMIN") {
+      return null;
+    }
+
+    return session;
+  } catch {
     return null;
   }
-
-  const session = await verifyAdminToken(sessionToken);
-  if (!session || session.role !== "ADMIN") {
-    return null;
-  }
-
-  return session;
 }

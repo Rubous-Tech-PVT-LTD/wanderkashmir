@@ -5,7 +5,12 @@ import { useRouter } from "next/navigation";
 import { loginAdminAction } from "@/actions/adminAuth";
 import { Lock, Mail, AlertCircle, Loader2 } from "lucide-react";
 
-export default function AdminLoginForm() {
+interface AdminLoginFormProps {
+  initialFrom?: string;
+  isWanderAdminAlias?: boolean;
+}
+
+export default function AdminLoginForm({ initialFrom, isWanderAdminAlias }: AdminLoginFormProps) {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const router = useRouter();
@@ -19,7 +24,12 @@ export default function AdminLoginForm() {
     try {
       const res = await loginAdminAction(formData);
       if (res.success) {
-        router.push("/admin");
+        const isAlias = isWanderAdminAlias || (typeof window !== "undefined" && window.location.pathname.startsWith("/wander-admin"));
+        const defaultPath = isAlias ? "/wander-admin" : "/admin";
+        const target = (initialFrom && (initialFrom.startsWith("/admin") || initialFrom.startsWith("/wander-admin")))
+          ? initialFrom
+          : defaultPath;
+        router.push(target);
         router.refresh();
       } else {
         setError(res.error || "Authentication failed. Please verify credentials.");

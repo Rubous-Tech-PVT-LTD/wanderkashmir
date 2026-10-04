@@ -25,6 +25,7 @@ import {
   updateExperienceAction,
   assignTourToExperienceAction,
   removeTourFromExperienceAction,
+  deleteExperienceAction,
   ExperienceFormInput,
 } from "@/actions/adminExperiences";
 
@@ -111,6 +112,7 @@ export default function ExperienceForm({ initialData, availableTours = [] }: Exp
 
   // Status & Validation State
   const [isSaving, setIsSaving] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
@@ -273,6 +275,33 @@ export default function ExperienceForm({ initialData, availableTours = [] }: Exp
     }
   };
 
+  const handleDeleteExperience = async () => {
+    if (!initialData?.id) return;
+    if (connectedTours.length > 0) {
+      setErrorMessage(
+        `Cannot delete experience because it is assigned to ${connectedTours.length} tour(s). Please remove all tour links first or set its status to Inactive.`
+      );
+      return;
+    }
+    if (!confirm("Are you sure you want to permanently delete this experience? This action cannot be undone.")) {
+      return;
+    }
+    setIsDeleting(true);
+    setErrorMessage(null);
+    try {
+      const res = await deleteExperienceAction(initialData.id);
+      if (res.success) {
+        router.push("/admin/experiences");
+      } else {
+        setErrorMessage(res.error || "Failed to delete experience.");
+      }
+    } catch {
+      setErrorMessage("An unexpected network error occurred.");
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   const alreadyAssignedIds = new Set(connectedTours.map((ct) => ct.tourId));
   const unassignedTours = availableTours.filter((t) => !alreadyAssignedIds.has(t.id));
 
@@ -298,17 +327,41 @@ export default function ExperienceForm({ initialData, availableTours = [] }: Exp
           </div>
         </div>
 
-        {isEdit && initialData?.slug && (
+        {isEdit && (
           <div className="flex items-center gap-2">
-            <Link
-              href={`/experiences/${initialData.slug}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-900 text-slate-300 hover:text-white border border-slate-800 hover:bg-slate-800 transition"
+            {initialData?.slug && (
+              <Link
+                href={`/experiences/${initialData.slug}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-900 text-slate-300 hover:text-white border border-slate-800 hover:bg-slate-800 transition"
+              >
+                <span>View Public Page</span>
+                <ExternalLink className="w-3.5 h-3.5" />
+              </Link>
+            )}
+            <button
+              type="button"
+              onClick={handleDeleteExperience}
+              disabled={isDeleting || connectedTours.length > 0}
+              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border transition ${
+                connectedTours.length > 0
+                  ? "border-slate-800 text-slate-600 cursor-not-allowed opacity-50"
+                  : "border-red-500/30 bg-red-500/10 text-red-400 hover:bg-red-500/20"
+              }`}
+              title={
+                connectedTours.length > 0
+                  ? `Cannot delete: Assigned to ${connectedTours.length} tour(s)`
+                  : "Delete experience"
+              }
             >
-              <span>View Public Page</span>
-              <ExternalLink className="w-3.5 h-3.5" />
-            </Link>
+              {isDeleting ? (
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              ) : (
+                <Trash2 className="w-3.5 h-3.5" />
+              )}
+              <span>Delete</span>
+            </button>
           </div>
         )}
       </div>

@@ -10,6 +10,8 @@ export interface AdminTravelStyleItem {
   isActive: boolean;
   displayOrder: number;
   toursCount: number;
+  liveToursCount: number;
+  draftToursCount: number;
   tours: {
     id: string;
     title: string;
@@ -39,6 +41,7 @@ export async function getAdminTravelStylesList(params?: GetAdminTravelStylesPara
         { name: { contains: term, mode: "insensitive" } },
         { slug: { contains: term, mode: "insensitive" } },
         { description: { contains: term, mode: "insensitive" } },
+        { id: { contains: term, mode: "insensitive" } },
       ];
     }
 
@@ -68,26 +71,41 @@ export async function getAdminTravelStylesList(params?: GetAdminTravelStylesPara
       },
     });
 
-    return stylesRaw.map((s) => ({
-      id: s.id,
-      name: s.name,
-      slug: s.slug,
-      description: s.description,
-      imageUrl: s.imageUrl,
-      imageAlt: s.imageAlt,
-      isActive: s.isActive,
-      displayOrder: s.displayOrder,
-      toursCount: s._count.tours,
-      tours: s.tours.map((t) => ({
-        id: t.tour.id,
-        title: t.tour.title,
-        slug: t.tour.slug,
-        isLive: t.tour.isLive,
-        duration: t.tour.duration,
-      })),
-      createdAt: s.createdAt,
-      updatedAt: s.updatedAt,
-    }));
+    return stylesRaw.map((s) => {
+      let liveToursCount = 0;
+      let draftToursCount = 0;
+      const tours = s.tours.map((t) => {
+        if (t.tour.isLive) {
+          liveToursCount++;
+        } else {
+          draftToursCount++;
+        }
+        return {
+          id: t.tour.id,
+          title: t.tour.title,
+          slug: t.tour.slug,
+          isLive: t.tour.isLive,
+          duration: t.tour.duration,
+        };
+      });
+
+      return {
+        id: s.id,
+        name: s.name,
+        slug: s.slug,
+        description: s.description,
+        imageUrl: s.imageUrl,
+        imageAlt: s.imageAlt,
+        isActive: s.isActive,
+        displayOrder: s.displayOrder,
+        toursCount: s._count.tours,
+        liveToursCount,
+        draftToursCount,
+        tours,
+        createdAt: s.createdAt,
+        updatedAt: s.updatedAt,
+      };
+    });
   } catch (error) {
     console.error("Error fetching admin travel styles list:", error);
     return [];

@@ -5,6 +5,8 @@ export interface AdminTourCategoryItem {
   name: string;
   slug: string;
   description: string | null;
+  showInFilter: boolean;
+  displayOrder: number;
   createdAt: Date;
   updatedAt: Date;
   totalToursCount: number;
@@ -46,7 +48,7 @@ export async function getAdminTourCategoriesList(
 
     const categoriesRaw = await prisma.tourCategory.findMany({
       where,
-      orderBy: { name: "asc" },
+      orderBy: [{ displayOrder: "asc" }, { name: "asc" }],
       include: {
         tours: {
           select: {
@@ -85,6 +87,8 @@ export async function getAdminTourCategoriesList(
         name: cat.name,
         slug: cat.slug,
         description: cat.description,
+        showInFilter: cat.showInFilter,
+        displayOrder: cat.displayOrder,
         createdAt: cat.createdAt,
         updatedAt: cat.updatedAt,
         totalToursCount,
@@ -144,6 +148,8 @@ export async function getAdminTourCategoryById(id: string): Promise<AdminTourCat
       name: cat.name,
       slug: cat.slug,
       description: cat.description,
+      showInFilter: cat.showInFilter,
+      displayOrder: cat.displayOrder,
       createdAt: cat.createdAt,
       updatedAt: cat.updatedAt,
       totalToursCount: cat._count.tours,

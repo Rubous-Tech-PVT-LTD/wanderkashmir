@@ -20,9 +20,10 @@ import {
   ShieldCheck,
   ChevronLeft,
   ChevronRight,
+  Trash2,
 } from "lucide-react";
 import { AdminExperienceListItem, AdminExperiencesStats } from "@/lib/admin/experiences";
-import { toggleExperienceStatusAction } from "@/actions/adminExperiences";
+import { toggleExperienceStatusAction, deleteExperienceAction } from "@/actions/adminExperiences";
 
 interface ExperienceListClientProps {
   experiences: AdminExperienceListItem[];
@@ -48,6 +49,7 @@ export default function ExperienceListClient({
 
   const [searchVal, setSearchVal] = useState(currentSearch);
   const [togglingId, setTogglingId] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const applyFilters = (updates: Record<string, string | null>) => {
     const params = new URLSearchParams(searchParams.toString());
@@ -83,6 +85,31 @@ export default function ExperienceListClient({
       alert("Network error communicating with server.");
     } finally {
       setTogglingId(null);
+    }
+  };
+
+  const handleDeleteExperience = async (experienceId: string, title: string, toursCount: number) => {
+    if (toursCount > 0) {
+      alert(
+        `Cannot delete "${title}" because it is currently linked to ${toursCount} tour(s). Please remove it from linked tours or set its status to Inactive.`
+      );
+      return;
+    }
+    if (!confirm(`Are you sure you want to permanently delete the experience "${title}"? This cannot be undone.`)) {
+      return;
+    }
+    setDeletingId(experienceId);
+    try {
+      const res = await deleteExperienceAction(experienceId);
+      if (res.success) {
+        router.refresh();
+      } else {
+        alert(res.error || "Failed to delete experience.");
+      }
+    } catch {
+      alert("Network error communicating with server.");
+    } finally {
+      setDeletingId(null);
     }
   };
 
@@ -362,6 +389,27 @@ export default function ExperienceListClient({
                             <Edit className="w-3.5 h-3.5" />
                             <span>Edit</span>
                           </Link>
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteExperience(exp.id, exp.title, exp.toursCount)}
+                            disabled={deletingId === exp.id || exp.toursCount > 0}
+                            className={`p-1.5 rounded-lg transition ${
+                              exp.toursCount > 0
+                                ? "text-slate-600 cursor-not-allowed opacity-40"
+                                : "text-slate-400 hover:text-red-400 hover:bg-red-500/10"
+                            }`}
+                            title={
+                              exp.toursCount > 0
+                                ? `Cannot delete: Assigned to ${exp.toursCount} tour(s)`
+                                : "Delete experience"
+                            }
+                          >
+                            {deletingId === exp.id ? (
+                              <Loader2 className="w-3.5 h-3.5 animate-spin text-red-400" />
+                            ) : (
+                              <Trash2 className="w-3.5 h-3.5" />
+                            )}
+                          </button>
                         </div>
                       </td>
                     </tr>
@@ -375,9 +423,9 @@ export default function ExperienceListClient({
         {/* Safety Note & Pagination Footer */}
         <div className="bg-slate-950 px-4 py-3.5 border-t border-slate-800 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div className="flex items-center gap-2 text-xs text-slate-500">
-            <ShieldCheck className="w-4 h-4 text-emerald-500" />
+            <ShieldCheck className="w-4 h-4 text-emerald-500 shrink-0" />
             <span>
-              Safe database rules: Destructive experience deletion is disabled. Toggle status to manage visibility.
+              Safe database rules: Experiences assigned to tours cannot be deleted (remove tour links or set status to Inactive). Unassigned experiences can be safely removed.
             </span>
           </div>
 

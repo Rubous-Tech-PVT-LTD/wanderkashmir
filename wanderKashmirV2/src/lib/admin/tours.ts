@@ -64,6 +64,8 @@ export async function getAdminToursList(params: GetAdminToursParams): Promise<Ge
         { title: { contains: term, mode: "insensitive" } },
         { slug: { contains: term, mode: "insensitive" } },
         { category: { contains: term, mode: "insensitive" } },
+        { id: { contains: term, mode: "insensitive" } },
+        { destinations: { has: term } },
       ];
     }
 
@@ -182,31 +184,66 @@ export async function getAdminTourById(id: string) {
 }
 
 /**
- * Fetch available categories and active travel styles for the tour editor form.
+ * Fetch available categories, travel styles, properties, vehicles, drivers, experiences,
+ * and travel guides for the tour editor form.
  */
 export async function getAdminTourFormOptions() {
   try {
-    const [categories, travelStyles] = await Promise.all([
-      prisma.tourCategory.findMany({
-        select: { id: true, name: true, slug: true },
-        orderBy: { name: "asc" },
-      }),
-      prisma.travelStyle.findMany({
-        where: { isActive: true },
-        select: { id: true, name: true, slug: true, displayOrder: true },
-        orderBy: { displayOrder: "asc" },
-      }),
-    ]);
+    const [categories, travelStyles, properties, vehicles, drivers, experiences, travelGuides] =
+      await Promise.all([
+        prisma.tourCategory.findMany({
+          select: { id: true, name: true, slug: true },
+          orderBy: { name: "asc" },
+        }),
+        prisma.travelStyle.findMany({
+          where: { isActive: true },
+          select: { id: true, name: true, slug: true, displayOrder: true },
+          orderBy: { displayOrder: "asc" },
+        }),
+        prisma.property.findMany({
+          where: { isApproved: true, status: "APPROVED" },
+          select: { id: true, name: true, location: true, propertyType: true },
+          orderBy: { name: "asc" },
+        }),
+        prisma.vehicle.findMany({
+          select: { id: true, make: true, model: true, type: true, registrationNum: true },
+          orderBy: { model: "asc" },
+        }),
+        prisma.driver.findMany({
+          where: { status: "ACTIVE" },
+          select: { id: true, name: true, phone: true },
+          orderBy: { name: "asc" },
+        }),
+        prisma.experience.findMany({
+          select: { id: true, title: true, duration: true },
+          orderBy: { title: "asc" },
+        }),
+        prisma.seoLandingPage.findMany({
+          where: { type: "BLOG" },
+          select: { id: true, title: true, slug: true },
+          orderBy: { title: "asc" },
+        }),
+      ]);
 
     return {
       categories,
       travelStyles,
+      properties,
+      vehicles,
+      drivers,
+      experiences,
+      travelGuides,
     };
   } catch (error) {
     console.error("Error fetching admin tour form options:", error);
     return {
       categories: [],
       travelStyles: [],
+      properties: [],
+      vehicles: [],
+      drivers: [],
+      experiences: [],
+      travelGuides: [],
     };
   }
 }

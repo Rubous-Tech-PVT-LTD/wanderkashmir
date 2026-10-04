@@ -30,6 +30,33 @@ function sanitizeSlug(slug: string): string {
 }
 
 /**
+ * Common security validator: Ensures that an active, verified ADMIN session exists
+ * and re-confirms the role and active non-banned state in the database before any mutation.
+ */
+async function verifyAdminAuth(): Promise<{ authorized: boolean; error?: string; adminId?: string }> {
+  const session = await getAdminSession();
+  if (!session) {
+    return { authorized: false, error: "Unauthorized: Admin session required." };
+  }
+
+  if (session.role !== "ADMIN") {
+    return { authorized: false, error: "Forbidden: Administrator privileges required." };
+  }
+
+  // Database verification prevents stale/forged JWT claims
+  const dbUser = await prisma.user.findUnique({
+    where: { id: session.userId },
+    select: { id: true, role: true, isBanned: true },
+  });
+
+  if (!dbUser || dbUser.role !== "ADMIN" || dbUser.isBanned) {
+    return { authorized: false, error: "Forbidden: Account is not an active administrator." };
+  }
+
+  return { authorized: true, adminId: dbUser.id };
+}
+
+/**
  * Server Action: Create a new production Experience.
  * Authenticated Admin required. Protected with strict server validation.
  */
@@ -37,9 +64,9 @@ export async function createExperienceAction(
   input: ExperienceFormInput
 ): Promise<ActionResult<{ id: string; slug: string }>> {
   try {
-    const session = await getAdminSession();
-    if (!session || session.role !== "ADMIN") {
-      return { success: false, error: "Unauthorized: Administrator privileges required." };
+    const auth = await verifyAdminAuth();
+    if (!auth.authorized) {
+      return { success: false, error: auth.error };
     }
 
     const title = (input.title || "").trim();
@@ -135,9 +162,9 @@ export async function updateExperienceAction(
   input: ExperienceFormInput
 ): Promise<ActionResult<{ id: string; slug: string }>> {
   try {
-    const session = await getAdminSession();
-    if (!session || session.role !== "ADMIN") {
-      return { success: false, error: "Unauthorized: Administrator privileges required." };
+    const auth = await verifyAdminAuth();
+    if (!auth.authorized) {
+      return { success: false, error: auth.error };
     }
 
     if (!id || typeof id !== "string") {
@@ -263,9 +290,9 @@ export async function toggleExperienceStatusAction(
   newStatus: "ACTIVE" | "INACTIVE"
 ): Promise<ActionResult<{ id: string; status: string }>> {
   try {
-    const session = await getAdminSession();
-    if (!session || session.role !== "ADMIN") {
-      return { success: false, error: "Unauthorized: Administrator privileges required." };
+    const auth = await verifyAdminAuth();
+    if (!auth.authorized) {
+      return { success: false, error: auth.error };
     }
 
     const experience = await prisma.experience.findUnique({
@@ -336,9 +363,9 @@ export async function assignTourToExperienceAction(input: {
   displayOrder?: number;
 }): Promise<ActionResult<{ id: string }>> {
   try {
-    const session = await getAdminSession();
-    if (!session || session.role !== "ADMIN") {
-      return { success: false, error: "Unauthorized: Administrator privileges required." };
+    const auth = await verifyAdminAuth();
+    if (!auth.authorized) {
+      return { success: false, error: auth.error };
     }
 
     const { experienceId, tourId } = input;
@@ -421,9 +448,9 @@ export async function removeTourFromExperienceAction(
   tourId: string
 ): Promise<ActionResult<{ success: boolean }>> {
   try {
-    const session = await getAdminSession();
-    if (!session || session.role !== "ADMIN") {
-      return { success: false, error: "Unauthorized: Administrator privileges required." };
+    const auth = await verifyAdminAuth();
+    if (!auth.authorized) {
+      return { success: false, error: auth.error };
     }
 
     if (!experienceId || !tourId) {
@@ -482,15 +509,71 @@ export async function removeTourFromExperienceAction(
 }
 
 /**
- * Destructive delete protection: As instructed by Phase 6E guidelines,
- * destructive deletion of Experience records is disabled to prevent data loss.
- * Admins are instructed to deactivate instead.
+ * Server Action: Delete an Experience safely.
+ * PARITY & SAFETY: Follows V1 behavior. Checks if assigned to any tours first.
+ * If assigned (assignmentCount > 0), rejects deletion to preserve relational integrity.
+ * If unassigned, deletes safely and revalidates public and admin caches.
  */
 export async function deleteExperienceAction(
-  _id: string
+  id: string
 ): Promise<ActionResult<{ success: boolean }>> {
-  return {
-    success: false,
-    error: "Destructive experience deletion is disabled to prevent orphan references and data loss. Please set status to INACTIVE instead.",
-  };
+  try {
+    const auth = await verifyAdminAuth();
+    if (!auth.authorized) {
+      return { success: false, error: auth.error };
+    }
+
+    if (!id || typeof id !== "string") {
+      return { success: false, error: "Invalid experience identifier." };
+    }
+
+    // Immediately re-fetch the Experience before deletion to check existence and relational safety
+    const experience = await prisma.experience.findUnique({
+      where: { id },
+      include: {
+        _count: {
+          select: { tourExperiences: true },
+        },
+      },
+    });
+
+    if (!experience) {
+      return { success: false, error: "Experience not found." };
+    }
+
+    // Relational safety check: strictly prevent deleting experiences assigned to tours
+    if (experience._count.tourExperiences > 0) {
+      return {
+        success: false,
+        error: `Cannot delete experience because it is assigned to ${experience._count.tourExperiences} tour(s). Please remove it from tours first or deactivate it instead.`,
+      };
+    }
+
+    // Hard delete safely supported since no blocking relations exist
+    await prisma.experience.delete({
+      where: { id },
+    });
+
+    // Revalidate affected paths
+    try {
+      revalidatePath("/experiences");
+      revalidatePath(`/experiences/${experience.slug}`);
+      revalidatePath("/admin/experiences");
+      revalidatePath("/wander-admin/experiences");
+      revalidatePath("/sitemap.xml");
+    } catch (e) {
+      console.warn("Revalidation warning after deleteExperience:", e);
+    }
+
+    return {
+      success: true,
+      data: { success: true },
+    };
+  } catch (error) {
+    console.error("Error deleting experience:", error);
+    return {
+      success: false,
+      error: "A database error occurred while deleting the experience.",
+    };
+  }
 }

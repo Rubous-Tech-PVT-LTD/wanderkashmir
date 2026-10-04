@@ -8,6 +8,8 @@ export interface TourCategoryFormInput {
   name: string;
   slug?: string;
   description?: string | null;
+  showInFilter?: boolean;
+  displayOrder?: number;
 }
 
 export interface ActionResult<T = unknown> {
@@ -65,12 +67,24 @@ export async function createTourCategoryAction(
       return { success: false, error: `A category with the slug "${rawSlug}" already exists.` };
     }
 
+    const showInFilter = input.showInFilter !== undefined ? !!input.showInFilter : true;
+    let displayOrder = input.displayOrder !== undefined ? Number(input.displayOrder) : 0;
+    if (input.displayOrder === undefined || isNaN(displayOrder) || displayOrder <= 0) {
+      const maxOrderCat = await prisma.tourCategory.findFirst({
+        orderBy: { displayOrder: "desc" },
+        select: { displayOrder: true },
+      });
+      displayOrder = (maxOrderCat?.displayOrder || 0) + 1;
+    }
+
     // 2. Create in DB
     const category = await prisma.tourCategory.create({
       data: {
         name,
         slug: rawSlug,
         description: input.description ? input.description.trim() : null,
+        showInFilter,
+        displayOrder,
       },
     });
 
@@ -130,7 +144,7 @@ export async function updateTourCategoryAction(
     // 1. Verify existence of target category
     const existing = await prisma.tourCategory.findUnique({
       where: { id },
-      select: { id: true, name: true, slug: true },
+      select: { id: true, name: true, slug: true, showInFilter: true, displayOrder: true },
     });
 
     if (!existing) {
@@ -157,6 +171,10 @@ export async function updateTourCategoryAction(
     }
 
     const nameChanged = existing.name !== name;
+    const showInFilter = input.showInFilter !== undefined ? !!input.showInFilter : existing.showInFilter;
+    const displayOrder = input.displayOrder !== undefined && !isNaN(Number(input.displayOrder))
+      ? Number(input.displayOrder)
+      : existing.displayOrder;
 
     // 3. Execute update in transaction
     const updated = await prisma.$transaction(async (tx) => {
@@ -166,6 +184,8 @@ export async function updateTourCategoryAction(
           name,
           slug: rawSlug,
           description: input.description ? input.description.trim() : null,
+          showInFilter,
+          displayOrder,
         },
       });
 
