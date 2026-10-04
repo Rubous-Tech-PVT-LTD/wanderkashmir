@@ -5,21 +5,41 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { ChevronDown, ChevronUp, RotateCcw, X, SlidersHorizontal } from "lucide-react";
 
+export interface TourCategoryFilterOption {
+  id: string;
+  name: string;
+  slug: string;
+  displayOrder: number;
+}
+
+export interface TravelStyleFilterOption {
+  id: string;
+  name: string;
+  slug: string;
+}
+
 interface ToursFilterSidebarProps {
+  categories?: TourCategoryFilterOption[];
+  travelStyles?: TravelStyleFilterOption[];
   category?: string;
+  style?: string;
   duration?: string;
   destination?: string;
   maxPrice?: number;
   onCloseMobile?: () => void;
 }
 
-const CATEGORIES = [
-  { slug: "culture", label: "Culture" },
-  { slug: "spiritual", label: "Spiritual" },
-  { slug: "nature", label: "Nature" },
-  { slug: "family", label: "Family" },
-  { slug: "adventure", label: "Adventure" },
-  { slug: "trekking", label: "Trekking" },
+const DEFAULT_CATEGORIES: TourCategoryFilterOption[] = [
+  { id: "cmsn21tdo0000xem8q480rezs", name: "Classic Kashmir", slug: "classic-kashmir", displayOrder: 1 },
+];
+
+const DEFAULT_TRAVEL_STYLES: TravelStyleFilterOption[] = [
+  { id: "style-1", slug: "culture", name: "Culture" },
+  { id: "style-2", slug: "spiritual", name: "Spiritual" },
+  { id: "style-3", slug: "nature", name: "Nature" },
+  { id: "style-4", slug: "family", name: "Family" },
+  { id: "style-5", slug: "adventure", name: "Adventure" },
+  { id: "style-6", slug: "trekking", name: "Trekking" },
 ];
 
 const DURATIONS = [
@@ -42,7 +62,10 @@ const MIN_TOUR_PRICE = 6999;
 const MAX_TOUR_PRICE = 24000;
 
 export default function ToursFilterSidebar({
+  categories = DEFAULT_CATEGORIES,
+  travelStyles = DEFAULT_TRAVEL_STYLES,
   category,
+  style,
   duration,
   destination,
   maxPrice,
@@ -52,9 +75,10 @@ export default function ToursFilterSidebar({
   const searchParams = useSearchParams();
 
   // Accordion state
-  const [openCategory, setOpenCategory] = useState(true);
-  const [openDuration, setOpenDuration] = useState(true);
-  const [openDestinations, setOpenDestinations] = useState(true);
+  const [openTourCategories, setOpenTourCategories] = useState(false);
+  const [openTravelStyles, setOpenTravelStyles] = useState(false);
+  const [openDuration, setOpenDuration] = useState(false);
+  const [openDestinations, setOpenDestinations] = useState(false);
   const [openPrice, setOpenPrice] = useState(true);
 
   // Local price state for smooth slider dragging
@@ -77,10 +101,18 @@ export default function ToursFilterSidebar({
   };
 
   const handleCategoryToggle = (slug: string) => {
-    if (category === slug) {
+    if (category?.toLowerCase() === slug.toLowerCase()) {
       updateFilters({ category: null });
     } else {
       updateFilters({ category: slug });
+    }
+  };
+
+  const handleStyleToggle = (styleSlug: string) => {
+    if (style?.toLowerCase() === styleSlug.toLowerCase()) {
+      updateFilters({ style: null });
+    } else {
+      updateFilters({ style: styleSlug });
     }
   };
 
@@ -116,6 +148,7 @@ export default function ToursFilterSidebar({
     setLocalPrice(MAX_TOUR_PRICE);
     const params = new URLSearchParams(searchParams ? searchParams.toString() : "");
     params.delete("category");
+    params.delete("style");
     params.delete("duration");
     params.delete("destination");
     params.delete("maxPrice");
@@ -123,7 +156,12 @@ export default function ToursFilterSidebar({
     router.push(qs ? `/tours?${qs}` : "/tours", { scroll: false });
   };
 
-  const hasActiveFilters = Boolean(category || duration || destination || (maxPrice && maxPrice < MAX_TOUR_PRICE));
+  const hasActiveFilters = Boolean(
+    category || style || duration || destination || (maxPrice && maxPrice < MAX_TOUR_PRICE)
+  );
+
+  const displayCategories = categories.length > 0 ? categories : DEFAULT_CATEGORIES;
+  const displayStyles = travelStyles.length > 0 ? travelStyles : DEFAULT_TRAVEL_STYLES;
 
   return (
     <div className="bg-white rounded-2xl border border-[var(--season-border,#E5E7EB)] p-5 shadow-xs space-y-5">
@@ -160,35 +198,78 @@ export default function ToursFilterSidebar({
         </div>
       </div>
 
-      {/* 1. Category Accordion */}
+      {/* 1. TOUR CATEGORIES ACCORDION (FIRST) */}
       <div className="border-b border-[var(--season-border,#F3F4F6)] pb-4">
         <button
           type="button"
-          onClick={() => setOpenCategory(!openCategory)}
+          onClick={() => setOpenTourCategories(!openTourCategories)}
           className="w-full flex items-center justify-between py-1 text-sm font-bold text-[var(--season-text,#111827)]"
         >
-          <span>Help Me Choose (Travel Styles)</span>
-          {openCategory ? <ChevronUp className="w-4 h-4 text-[var(--season-muted)]" /> : <ChevronDown className="w-4 h-4 text-[var(--season-muted)]" />}
+          <span>Tour Categories</span>
+          {openTourCategories ? (
+            <ChevronUp className="w-4 h-4 text-[var(--season-muted)]" />
+          ) : (
+            <ChevronDown className="w-4 h-4 text-[var(--season-muted)]" />
+          )}
         </button>
 
-        {openCategory && (
+        {openTourCategories && (
           <div className="mt-3 space-y-2.5">
-            {CATEGORIES.map((cat) => {
-              const isChecked = category?.toLowerCase() === cat.slug.toLowerCase();
+            {displayCategories.map((cat) => {
+              const isChecked =
+                category?.toLowerCase() === cat.slug.toLowerCase() ||
+                category === cat.id;
               return (
-                <Link
-                  key={cat.slug}
-                  href={isChecked ? "/tours" : `/tours/${cat.slug}`}
+                <label
+                  key={cat.id}
                   className="flex items-center gap-2.5 text-xs text-[var(--season-text,#374151)] font-medium cursor-pointer hover:text-[var(--season-primary)] transition-colors"
                 >
                   <input
                     type="checkbox"
                     checked={isChecked}
-                    readOnly
-                    className="w-4 h-4 rounded text-[var(--season-primary)] border-[var(--season-border)] focus:ring-[var(--season-primary)] cursor-pointer pointer-events-none"
+                    onChange={() => handleCategoryToggle(cat.slug)}
+                    className="w-4 h-4 rounded text-[var(--season-primary)] border-[var(--season-border)] focus:ring-[var(--season-primary)] cursor-pointer"
                   />
-                  <span>{cat.label}</span>
-                </Link>
+                  <span>{cat.name}</span>
+                </label>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      {/* 2. HELP ME CHOOSE (TRAVEL STYLES) ACCORDION (SECOND) */}
+      <div className="border-b border-[var(--season-border,#F3F4F6)] pb-4">
+        <button
+          type="button"
+          onClick={() => setOpenTravelStyles(!openTravelStyles)}
+          className="w-full flex items-center justify-between py-1 text-sm font-bold text-[var(--season-text,#111827)]"
+        >
+          <span>Help Me Choose (Travel Styles)</span>
+          {openTravelStyles ? (
+            <ChevronUp className="w-4 h-4 text-[var(--season-muted)]" />
+          ) : (
+            <ChevronDown className="w-4 h-4 text-[var(--season-muted)]" />
+          )}
+        </button>
+
+        {openTravelStyles && (
+          <div className="mt-3 space-y-2.5">
+            {displayStyles.map((styleItem) => {
+              const isChecked = style?.toLowerCase() === styleItem.slug.toLowerCase();
+              return (
+                <label
+                  key={styleItem.slug}
+                  className="flex items-center gap-2.5 text-xs text-[var(--season-text,#374151)] font-medium cursor-pointer hover:text-[var(--season-primary)] transition-colors"
+                >
+                  <input
+                    type="checkbox"
+                    checked={isChecked}
+                    onChange={() => handleStyleToggle(styleItem.slug)}
+                    className="w-4 h-4 rounded text-[var(--season-primary)] border-[var(--season-border)] focus:ring-[var(--season-primary)] cursor-pointer"
+                  />
+                  <span>{styleItem.name}</span>
+                </label>
               );
             })}
           </div>
