@@ -7,7 +7,7 @@ import ToursRecommendationBar from "@/components/tours/ToursRecommendationBar";
 import ToursInventoryView from "@/components/tours/ToursInventoryView";
 import ToursNeedHelpBanner from "@/components/tours/ToursNeedHelpBanner";
 import prisma from "@/lib/prisma";
-import { TourPackageDetail, TOUR_CATEGORIES } from "@/data/liveToursData";
+import { TourPackageDetail } from "@/data/liveToursData";
 
 // ISR: revalidate every 60 seconds so Admin publish changes are reflected promptly
 export const revalidate = 60;
@@ -39,6 +39,7 @@ export const metadata: Metadata = {
 interface ToursPageProps {
   searchParams: Promise<{
     category?: string;
+    style?: string;
     duration?: string;
     destination?: string;
     maxPrice?: string;
@@ -47,35 +48,103 @@ interface ToursPageProps {
 }
 
 export default async function ToursListingPage({ searchParams }: ToursPageProps) {
-  const { category, duration, destination, maxPrice, sort } = await searchParams;
-
-  if (category) {
-    const cleanCat = category.toLowerCase().trim();
-    if (["culture", "spiritual", "nature", "family", "adventure", "trekking"].includes(cleanCat)) {
-      redirect(`/tours/${cleanCat}`);
-    }
-  }
+  const { category, style, duration, destination, maxPrice, sort } = await searchParams;
 
   const parsedMaxPrice = maxPrice ? Number(maxPrice) : undefined;
 
-  // Fetch ONLY live/published tours from the production database
+  // 1. Fetch visible Tour Categories dynamically from database (ordered by displayOrder)
+  const dbTourCategories = await prisma.tourCategory
+    .findMany({
+      where: { showInFilter: true },
+      orderBy: [{ displayOrder: "asc" }, { name: "asc" }],
+      select: {
+        id: true,
+        name: true,
+        slug: true,
+        displayOrder: true,
+      },
+    })
+    .catch(() => []);
+
+  // 2. Fetch active Travel Styles dynamically from database
+  const dbTravelStyles = await prisma.travelStyle
+    .findMany({
+      where: { isActive: true },
+      orderBy: { displayOrder: "asc" },
+      select: {
+        id: true,
+        name: true,
+        slug: true,
+      },
+    })
+    .catch(() => []);
+
+  // 3. Resolve selected Category and Travel Style filters
+  let matchedCategoryId: string | undefined = undefined;
+  let activeCategorySlug: string | undefined = undefined;
+  let activeStyleSlug: string | undefined = undefined;
+
+  if (style && style !== "all") {
+    const cleanStyle = style.toLowerCase().trim();
+    const matchedStyle = dbTravelStyles.find((s) => s.slug.toLowerCase() === cleanStyle);
+    if (matchedStyle) {
+      activeStyleSlug = matchedStyle.slug;
+    }
+  }
+
+  if (category && category !== "all") {
+    const cleanCat = category.toLowerCase().trim();
+    const matchedCat = dbTourCategories.find(
+      (c) => c.slug.toLowerCase() === cleanCat || c.id === category
+    );
+
+    if (matchedCat) {
+      matchedCategoryId = matchedCat.id;
+      activeCategorySlug = matchedCat.slug;
+    } else {
+      // Check if it's an admin category that exists in DB (even if not shown in filter)
+      const anyCat = await prisma.tourCategory.findFirst({
+        where: { OR: [{ slug: cleanCat }, { id: category }] },
+        select: { id: true, slug: true },
+      });
+      if (anyCat) {
+        matchedCategoryId = anyCat.id;
+        activeCategorySlug = anyCat.slug;
+      } else if (!activeStyleSlug && dbTravelStyles.some((s) => s.slug.toLowerCase() === cleanCat)) {
+        // Backwards compatibility: if a travel style slug was passed in ?category=
+        activeStyleSlug = cleanCat;
+      }
+    }
+  }
+
+  // 4. Fetch ONLY live/published tours from production DB using canonical relational fields
   let dbTours: TourPackageDetail[] = [];
   try {
     const where: Record<string, unknown> = { isLive: true };
 
-    // Apply category filter at the DB level where possible
-    if (category && category !== "all") {
-      const categoryEntry = TOUR_CATEGORIES.find(
-        (c) => c.slug === category.toLowerCase().trim()
-      );
-      if (categoryEntry) {
-        where.category = categoryEntry.slug;
-      }
+    // Canonical relational filtering by Tour.categoryId
+    if (matchedCategoryId) {
+      where.categoryId = matchedCategoryId;
+    }
+
+    // TravelStyle filtering via Many-to-Many relation TourTravelStyle
+    if (activeStyleSlug) {
+      where.travelStyles = {
+        some: {
+          travelStyle: {
+            slug: activeStyleSlug,
+            isActive: true,
+          },
+        },
+      };
     }
 
     const raw = await prisma.tour.findMany({
       where,
       orderBy: { createdAt: "desc" },
+      include: {
+        tourCategory: { select: { id: true, name: true, slug: true } },
+      },
     });
 
     dbTours = raw.map((tour: (typeof raw)[number]) => ({
@@ -89,8 +158,8 @@ export default async function ToursListingPage({ searchParams }: ToursPageProps)
         parseInt((tour.duration || "0").match(/(\d+)/)?.[0] || "1", 10) - 1
       ),
       badge: (tour as any).badge || "",
-      category: tour.category || "general",
-      categoryDisplay: TOUR_CATEGORIES.find((c) => c.slug === (tour.category || "general"))?.label || tour.category || "General",
+      category: tour.tourCategory?.name || tour.category || "General",
+      categoryDisplay: tour.tourCategory?.name || tour.category || "General",
       destinations: (tour.destinations as string[]) || [],
       routeDisplay: (tour.destinations as string[]) || [],
       price: tour.price || 0,
@@ -112,7 +181,6 @@ export default async function ToursListingPage({ searchParams }: ToursPageProps)
     }));
   } catch (err) {
     console.error("Failed to fetch tours from production DB on /tours:", err);
-    // Return empty — do NOT silently serve static data in production
     dbTours = [];
   }
 
@@ -170,12 +238,15 @@ export default async function ToursListingPage({ searchParams }: ToursPageProps)
         <ToursHeroBanner />
 
         {/* 2. HELP ME CHOOSE RECOMMENDATION BAR */}
-        <ToursRecommendationBar currentCategory={category} />
+        <ToursRecommendationBar currentCategory={activeStyleSlug || category} />
 
         {/* 3. TOUR DISCOVERY AREA (Sidebar + Inventory Top Bar + 3-Col Cards Grid) */}
         <ToursInventoryView
           tours={filteredTours}
-          category={category}
+          categories={dbTourCategories}
+          travelStyles={dbTravelStyles}
+          category={activeCategorySlug || category}
+          style={activeStyleSlug || style}
           duration={duration}
           destination={destination}
           maxPrice={parsedMaxPrice}

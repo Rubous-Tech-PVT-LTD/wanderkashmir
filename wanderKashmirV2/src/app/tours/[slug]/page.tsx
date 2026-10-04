@@ -82,7 +82,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   // 2. Otherwise check if slug matches a Tour Detail page
   const tour = await getTourFromDB(slug);
 
-  if (!tour) {
+  if (!tour || !tour.isLive) {
     return {
       title: "Tour Not Found | WanderKashmir",
       robots: { index: false, follow: false },
@@ -124,6 +124,24 @@ export default async function TourOrStylePage({ params, searchParams }: PageProp
 
   if (travelStyleData) {
     const { style, tours } = travelStyleData;
+
+    const [dbTourCategories, dbTravelStyles] = await Promise.all([
+      prisma.tourCategory
+        .findMany({
+          where: { showInFilter: true },
+          orderBy: [{ displayOrder: "asc" }, { name: "asc" }],
+          select: { id: true, name: true, slug: true, displayOrder: true },
+        })
+        .catch(() => []),
+      prisma.travelStyle
+        .findMany({
+          where: { isActive: true },
+          orderBy: { displayOrder: "asc" },
+          select: { id: true, name: true, slug: true },
+        })
+        .catch(() => []),
+    ]);
+
     return (
       <div className="flex min-h-screen flex-col bg-white text-[var(--season-text,#1F2937)] transition-colors duration-200">
         <Navbar />
@@ -142,7 +160,10 @@ export default async function TourOrStylePage({ params, searchParams }: PageProp
           {/* 3. TOUR DISCOVERY AREA (Sidebar + Inventory Top Bar + 3-Col Cards Grid or Empty State) */}
           <ToursInventoryView
             tours={tours}
-            category={style.slug}
+            categories={dbTourCategories}
+            travelStyles={dbTravelStyles}
+            category={undefined}
+            style={style.slug}
             duration={resolvedSearchParams.duration}
             destination={resolvedSearchParams.destination}
             maxPrice={parsedMaxPrice}
@@ -161,7 +182,8 @@ export default async function TourOrStylePage({ params, searchParams }: PageProp
   // 2. Otherwise check if slug matches a Tour Detail page
   const tour = await getTourFromDB(slug);
 
-  if (!tour) {
+  // Strict draft tour access protection: draft tours must return 404
+  if (!tour || !tour.isLive) {
     notFound();
   }
 

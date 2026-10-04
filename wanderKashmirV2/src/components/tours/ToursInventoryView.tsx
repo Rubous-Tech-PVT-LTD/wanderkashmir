@@ -4,13 +4,16 @@ import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { TourPackageDetail } from "@/data/liveToursData";
 import TourCardCompact from "./TourCardCompact";
-import ToursFilterSidebar from "./ToursFilterSidebar";
+import ToursFilterSidebar, { TourCategoryFilterOption, TravelStyleFilterOption } from "./ToursFilterSidebar";
 import { SlidersHorizontal, RotateCcw, Compass } from "lucide-react";
 import Link from "next/link";
 
 interface ToursInventoryViewProps {
   tours: TourPackageDetail[];
+  categories?: TourCategoryFilterOption[];
+  travelStyles?: TravelStyleFilterOption[];
   category?: string;
+  style?: string;
   duration?: string;
   destination?: string;
   maxPrice?: number;
@@ -28,7 +31,10 @@ const SORT_OPTIONS = [
 
 export default function ToursInventoryView({
   tours,
+  categories,
+  travelStyles,
   category,
+  style,
   duration,
   destination,
   maxPrice,
@@ -51,6 +57,7 @@ export default function ToursInventoryView({
 
   const activeFilterCount = [
     category,
+    style,
     duration,
     destination,
     maxPrice && maxPrice < 24000 ? maxPrice : null,
@@ -64,7 +71,10 @@ export default function ToursInventoryView({
         {/* ========================================= */}
         <aside className="hidden lg:block w-64 xl:w-72 shrink-0 sticky top-24">
           <ToursFilterSidebar
+            categories={categories}
+            travelStyles={travelStyles}
             category={category}
+            style={style}
             duration={duration}
             destination={destination}
             maxPrice={maxPrice}
@@ -78,7 +88,10 @@ export default function ToursInventoryView({
           <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4 lg:hidden">
             <div className="bg-white w-full max-w-lg max-h-[85vh] overflow-y-auto rounded-t-3xl sm:rounded-2xl p-4 sm:p-6 shadow-2xl">
               <ToursFilterSidebar
+                categories={categories}
+                travelStyles={travelStyles}
                 category={category}
+                style={style}
                 duration={duration}
                 destination={destination}
                 maxPrice={maxPrice}

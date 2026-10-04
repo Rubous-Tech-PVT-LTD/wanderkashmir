@@ -95,25 +95,7 @@ export default async function TourCategoryDetailPage({ params, searchParams }: P
 
   const { category, tours } = categoryData;
 
-  // 2. Concurrently fetch filter sidebar options from database
-  const [dbTourCategories, dbTravelStyles] = await Promise.all([
-    prisma.tourCategory
-      .findMany({
-        where: { showInFilter: true },
-        orderBy: [{ displayOrder: "asc" }, { name: "asc" }],
-        select: { id: true, name: true, slug: true, displayOrder: true },
-      })
-      .catch(() => []),
-    prisma.travelStyle
-      .findMany({
-        where: { isActive: true },
-        orderBy: { displayOrder: "asc" },
-        select: { id: true, name: true, slug: true },
-      })
-      .catch(() => []),
-  ]);
-
-  // 3. Structured Data (Schema.org ItemList for category landing)
+  // 2. Structured Data (Schema.org ItemList for category landing)
   const categoryJsonLd = {
     "@context": "https://schema.org",
     "@type": "ItemList",
@@ -148,8 +130,6 @@ export default async function TourCategoryDetailPage({ params, searchParams }: P
         {/* 3. TOUR DISCOVERY AREA (Sidebar + Inventory Top Bar + 3-Col Cards Grid or Empty State) */}
         <ToursInventoryView
           tours={tours}
-          categories={dbTourCategories}
-          travelStyles={dbTravelStyles}
           category={category.slug}
           duration={resolvedSearchParams.duration}
           destination={resolvedSearchParams.destination}
