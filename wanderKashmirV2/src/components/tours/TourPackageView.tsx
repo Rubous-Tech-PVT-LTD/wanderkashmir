@@ -1,12 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { ChevronRight, Star } from "lucide-react";
+import Image from "next/image";
+import { ChevronRight, Star, Sparkles, CheckCircle2, XCircle, BookOpen } from "lucide-react";
 import HotelGallery from "@/components/stays/detail/HotelGallery";
 import TourStickyBookingCard from "./TourStickyBookingCard";
 import TourContentTabs from "./TourContentTabs";
 import TourCardCompact from "./TourCardCompact";
 import { TourPackageDetail } from "@/data/liveToursData";
+import { RichContentRenderer } from "@/components/destinations/RichContentRenderer";
 
 interface TourPackageViewProps {
   tour: TourPackageDetail;
@@ -87,8 +89,159 @@ export default function TourPackageView({ tour, otherTours }: TourPackageViewPro
               )}
             </div>
 
+            {/* Key Highlights (Rendered if populated in DB) */}
+            {tour.highlights && tour.highlights.length > 0 && (
+              <div className="p-4 sm:p-5 rounded-xl border border-slate-200/90 bg-slate-50/50 space-y-3">
+                <div className="flex items-center gap-2">
+                  <Sparkles className="w-4 h-4 text-[var(--season-primary,#065F46)]" />
+                  <h2 className="text-sm sm:text-base font-bold text-slate-900 tracking-tight">
+                    Tour Highlights
+                  </h2>
+                </div>
+                <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-xs sm:text-[13px] text-slate-700">
+                  {tour.highlights.map((h, i) => (
+                    <li key={i} className="flex items-start gap-2">
+                      <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+                      <span className="leading-snug">{h}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
             {/* Horizontal Tabs & Detailed Content (Overview, 5 Feature Cards, Route Map, etc.) */}
             <TourContentTabs tour={tour} />
+
+            {/* Inclusions & Exclusions (Rendered if populated in DB) */}
+            {((tour.inclusions && tour.inclusions.length > 0) || (tour.exclusions && tour.exclusions.length > 0)) && (
+              <div className="rounded-xl border border-slate-200/90 bg-white p-4 sm:p-5 space-y-4">
+                <h2 className="text-base sm:text-lg font-bold text-slate-900 tracking-tight">
+                  What's Included & Excluded
+                </h2>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {tour.inclusions && tour.inclusions.length > 0 && (
+                    <div className="space-y-2 p-3.5 sm:p-4 rounded-lg bg-emerald-50/40 border border-emerald-100/90">
+                      <h3 className="text-xs sm:text-sm font-bold text-emerald-900 flex items-center gap-1.5">
+                        <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                        <span>Inclusions</span>
+                      </h3>
+                      <ul className="space-y-1.5 text-xs sm:text-[13px] text-slate-700">
+                        {tour.inclusions.map((item, i) => (
+                          <li key={i} className="flex items-start gap-2">
+                            <span className="text-emerald-600 font-bold shrink-0">•</span>
+                            <span className="leading-snug">{item}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                  {tour.exclusions && tour.exclusions.length > 0 && (
+                    <div className="space-y-2 p-3.5 sm:p-4 rounded-lg bg-rose-50/40 border border-rose-100/90">
+                      <h3 className="text-xs sm:text-sm font-bold text-rose-900 flex items-center gap-1.5">
+                        <XCircle className="w-4 h-4 text-rose-600 shrink-0" />
+                        <span>Exclusions</span>
+                      </h3>
+                      <ul className="space-y-1.5 text-xs sm:text-[13px] text-slate-700">
+                        {tour.exclusions.map((item, i) => (
+                          <li key={i} className="flex items-start gap-2">
+                            <span className="text-rose-600 font-bold shrink-0">•</span>
+                            <span className="leading-snug">{item}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Dynamic Content Blocks (Rendered if populated in DB) */}
+            {tour.dynamicBlocks && tour.dynamicBlocks.length > 0 && (
+              <div className="rounded-xl border border-slate-200/90 bg-white p-4 sm:p-6 space-y-6">
+                <RichContentRenderer
+                  content={tour.dynamicBlocks.map((b) => {
+                    if (b.type === "heading") {
+                      return { type: "heading" as const, level: (b.data?.level as 2 | 3 | 4) || 3, text: b.content || b.title || "" };
+                    }
+                    if (b.type === "paragraph") {
+                      return { type: "paragraph" as const, text: b.content || "" };
+                    }
+                    if (b.type === "image") {
+                      return { type: "image" as const, url: b.data?.url || b.content || "", alt: b.title || "", caption: b.data?.caption || "" };
+                    }
+                    if (b.type === "callout") {
+                      return { type: "callout" as const, variant: (b.data?.variant as "info" | "tip" | "warning" | "quote") || "tip", title: b.title, text: b.content || "" };
+                    }
+                    if (b.type === "list") {
+                      return {
+                        type: "list" as const,
+                        style: (b.data?.style as "bullet" | "numbered") || "bullet",
+                        items: Array.isArray(b.data?.items) ? b.data.items : (b.content || "").split("\n").filter(Boolean),
+                      };
+                    }
+                    if (b.type === "table") {
+                      return { type: "table" as const, headers: b.data?.headers || [], rows: b.data?.rows || [] };
+                    }
+                    if (b.type === "link") {
+                      return { type: "link" as const, text: b.title || b.content || "Learn More", url: b.data?.url || "#" };
+                    }
+                    if (b.type === "video") {
+                      return { type: "video" as const, url: b.data?.url || b.content || "", title: b.title, caption: b.data?.caption };
+                    }
+                    return { type: "paragraph" as const, text: b.content || "" };
+                  })}
+                />
+              </div>
+            )}
+
+            {/* Linked Travel Guides (Rendered if linked and published in DB) */}
+            {tour.travelGuides && tour.travelGuides.length > 0 && (
+              <div className="rounded-xl border border-slate-200/90 bg-white p-4 sm:p-5 space-y-4">
+                <div className="flex items-center gap-2">
+                  <BookOpen className="w-4 h-4 text-[var(--season-primary,#065F46)]" />
+                  <h2 className="text-base sm:text-lg font-bold text-slate-900 tracking-tight">
+                    Travel Guides & Stories
+                  </h2>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                  {tour.travelGuides.map((guide) => (
+                    <Link
+                      key={guide.id}
+                      href={`/blog/${guide.slug}`}
+                      className="group flex gap-3 p-3 rounded-lg border border-slate-200/80 bg-slate-50/40 hover:bg-white hover:border-[var(--season-primary)]/70 hover:shadow-2xs transition-all"
+                    >
+                      {guide.imageUrl ? (
+                        <div className="relative w-20 h-20 rounded-md overflow-hidden bg-slate-100 shrink-0">
+                          <Image
+                            src={guide.imageUrl}
+                            alt={guide.title}
+                            fill
+                            className="object-cover group-hover:scale-105 transition-transform duration-300"
+                          />
+                        </div>
+                      ) : (
+                        <div className="w-20 h-20 rounded-md bg-emerald-50 border border-emerald-100 flex items-center justify-center shrink-0 text-emerald-600">
+                          <BookOpen className="w-6 h-6" />
+                        </div>
+                      )}
+                      <div className="min-w-0 space-y-1">
+                        <h3 className="text-xs sm:text-[13.5px] font-semibold text-slate-900 group-hover:text-[var(--season-primary)] transition-colors line-clamp-2 leading-snug">
+                          {guide.title}
+                        </h3>
+                        {guide.description && (
+                          <p className="text-[11px] text-slate-500 line-clamp-2 leading-relaxed">
+                            {guide.description}
+                          </p>
+                        )}
+                        <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-[var(--season-primary)] pt-0.5">
+                          Read Guide →
+                        </span>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Right Column (4 cols): Booking Card placed at current location (non-sticky) */}

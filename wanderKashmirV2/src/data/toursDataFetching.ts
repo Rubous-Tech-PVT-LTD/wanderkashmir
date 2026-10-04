@@ -78,6 +78,49 @@ export const getTourFromDB = cache(async function(slug: string): Promise<TourPac
         displayOrder: tg.displayOrder,
       }));
 
+    // Parse itinerary and bundled CMS fields (contentSections, dynamicBlocks)
+    let rawDays: any[] = [];
+    let extractedContentSections: any = undefined;
+    let extractedDynamicBlocks: any[] = [];
+
+    if (Array.isArray(tour.itinerary)) {
+      rawDays = tour.itinerary;
+    } else if (tour.itinerary && typeof tour.itinerary === "object") {
+      const itinObj = tour.itinerary as any;
+      if (Array.isArray(itinObj.days)) {
+        rawDays = itinObj.days;
+      }
+      if (itinObj.contentSections && typeof itinObj.contentSections === "object") {
+        extractedContentSections = itinObj.contentSections;
+      }
+      if (Array.isArray(itinObj.dynamicBlocks)) {
+        extractedDynamicBlocks = itinObj.dynamicBlocks;
+      }
+    }
+
+    // Also support direct columns if present on model in future
+    if ((tour as any).contentSections && typeof (tour as any).contentSections === "object") {
+      extractedContentSections = { ...(extractedContentSections || {}), ...(tour as any).contentSections };
+    }
+    if (Array.isArray((tour as any).dynamicBlocks) && (tour as any).dynamicBlocks.length > 0) {
+      extractedDynamicBlocks = (tour as any).dynamicBlocks;
+    }
+
+    const mappedItinerary = rawDays.map((item, idx) => ({
+      day: item.day ?? item.dayNumber ?? (idx + 1),
+      title: item.title || `Day ${item.day ?? item.dayNumber ?? (idx + 1)}`,
+      desc: item.desc || item.description || "",
+      activities: Array.isArray(item.activities)
+        ? item.activities
+        : typeof item.activities === "string" && item.activities
+        ? [item.activities]
+        : [],
+      location: item.location || item.destination || undefined,
+      stay: item.stay || item.overnight || undefined,
+      meals: item.meals || undefined,
+      image: item.image || item.imageUrl || undefined,
+    }));
+
     return {
       id: tour.id,
       slug: tour.slug,
@@ -104,22 +147,11 @@ export const getTourFromDB = cache(async function(slug: string): Promise<TourPac
       overview: tour.overview || "",
       images: tour.images || [],
       whyThisRoute: [],
-      itinerary: Array.isArray(tour.itinerary)
-        ? (tour.itinerary as any[]).map((item, idx) => ({
-            day: item.day ?? item.dayNumber ?? (idx + 1),
-            title: item.title || `Day ${item.day ?? item.dayNumber ?? (idx + 1)}`,
-            desc: item.desc || item.description || "",
-            activities: Array.isArray(item.activities)
-              ? item.activities
-              : typeof item.activities === "string" && item.activities
-              ? [item.activities]
-              : [],
-            location: item.location || item.destination || undefined,
-            stay: item.stay || item.overnight || undefined,
-            meals: item.meals || undefined,
-            image: item.image || item.imageUrl || undefined,
-          }))
-        : [],
+      itinerary: mappedItinerary,
+      contentSections: extractedContentSections,
+      dynamicBlocks: extractedDynamicBlocks
+        .filter((b) => b && b.isVisible !== false)
+        .sort((a, b) => (a.displayOrder ?? 50) - (b.displayOrder ?? 50)),
       inclusions: tour.inclusions || [],
       exclusions: tour.exclusions || [],
       highlights: tour.highlights || [],

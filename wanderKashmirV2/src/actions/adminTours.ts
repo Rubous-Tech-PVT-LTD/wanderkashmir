@@ -39,6 +39,46 @@ export interface TourTravelGuideInput {
   displayOrder?: number;
 }
 
+export interface TourItineraryInputDay {
+  day: string;
+  title: string;
+  description?: string;
+  desc?: string;
+  image?: string;
+  location?: string;
+  stay?: string;
+  meals?: string;
+  activities?: string[] | string;
+}
+
+export interface TourContentSectionsInput {
+  bestTime?: string;
+  food?: string;
+  shopping?: string;
+  nearby?: string;
+  faqs?: { question: string; answer: string }[];
+}
+
+export interface TourDynamicBlockInput {
+  id: string;
+  type: string;
+  title?: string;
+  text?: string;
+  level?: 2 | 3 | 4;
+  url?: string;
+  alt?: string;
+  caption?: string;
+  layout?: "full" | "inline-left" | "inline-right";
+  headers?: string[];
+  rows?: string[][];
+  items?: string[];
+  style?: "bullet" | "numbered" | "button" | "inline";
+  variant?: "info" | "tip" | "warning" | "quote";
+  isVisible?: boolean;
+  displayOrder?: number;
+  [key: string]: any;
+}
+
 export interface TourFormInput {
   title: string;
   slug: string;
@@ -55,7 +95,9 @@ export interface TourFormInput {
   highlights: string[];
   inclusions: string[];
   exclusions: string[];
-  itinerary: any[];
+  itinerary: TourItineraryInputDay[];
+  contentSections?: TourContentSectionsInput;
+  dynamicBlocks?: TourDynamicBlockInput[];
   travelStyleIds: string[];
   stays?: TourStayInput[];
   transports?: TourTransportInput[];
@@ -76,6 +118,93 @@ function sanitizeSlug(slug: string): string {
     .trim()
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/(^-|-$)+/g, "");
+}
+
+function packTourItineraryPayload(
+  itinerary: TourItineraryInputDay[],
+  contentSections?: TourContentSectionsInput,
+  dynamicBlocks?: TourDynamicBlockInput[],
+  existingItinerary?: any
+): Prisma.InputJsonValue | typeof Prisma.JsonNull {
+  let existingDaysMap: Record<string, any> = {};
+  if (existingItinerary) {
+    const rawDays = Array.isArray(existingItinerary)
+      ? existingItinerary
+      : Array.isArray(existingItinerary?.days)
+      ? existingItinerary.days
+      : [];
+    for (const d of rawDays) {
+      if (d && (d.day || d.title)) {
+        const key = String(d.day || "").toLowerCase().trim();
+        if (key) existingDaysMap[key] = d;
+      }
+    }
+  }
+
+  const normalizedDays = Array.isArray(itinerary)
+    ? itinerary.map((d, idx) => {
+        const dayLabel = d.day ? String(d.day).trim() : `Day ${idx + 1}`;
+        const existingDay = existingDaysMap[dayLabel.toLowerCase()] || {};
+
+        return {
+          day: dayLabel,
+          title: String(d.title !== undefined ? d.title : existingDay.title || "").trim(),
+          desc: String(
+            d.description !== undefined
+              ? d.description
+              : d.desc !== undefined
+              ? d.desc
+              : existingDay.desc || existingDay.description || ""
+          ).trim(),
+          image:
+            d.image !== undefined
+              ? d.image
+                ? String(d.image).trim()
+                : undefined
+              : existingDay.image,
+          location:
+            d.location !== undefined
+              ? d.location
+                ? String(d.location).trim()
+                : undefined
+              : existingDay.location,
+          stay:
+            d.stay !== undefined
+              ? d.stay
+                ? String(d.stay).trim()
+                : undefined
+              : existingDay.stay,
+          meals:
+            d.meals !== undefined
+              ? d.meals
+                ? String(d.meals).trim()
+                : undefined
+              : existingDay.meals,
+          activities: Array.isArray(d.activities)
+            ? d.activities.map((a: any) => String(a).trim()).filter(Boolean)
+            : typeof d.activities === "string" && (d.activities as string).trim()
+            ? (d.activities as string).split(",").map((a: string) => a.trim()).filter(Boolean)
+            : existingDay.activities || [],
+        };
+      })
+    : [];
+
+  const hasSections = contentSections && Object.keys(contentSections).length > 0;
+  const hasBlocks = Array.isArray(dynamicBlocks) && dynamicBlocks.length > 0;
+
+  if (hasSections || hasBlocks) {
+    return {
+      days: normalizedDays,
+      contentSections: contentSections || {},
+      dynamicBlocks: dynamicBlocks || [],
+    } as unknown as Prisma.InputJsonValue;
+  }
+
+  if (normalizedDays.length > 0) {
+    return normalizedDays as unknown as Prisma.InputJsonValue;
+  }
+
+  return Prisma.JsonNull;
 }
 
 /**
@@ -226,10 +355,11 @@ export async function createTourAction(
           exclusions: Array.isArray(input.exclusions)
             ? input.exclusions.map((exc) => String(exc).trim()).filter(Boolean)
             : [],
-          itinerary:
-            Array.isArray(input.itinerary) && input.itinerary.length > 0
-              ? (input.itinerary as Prisma.InputJsonValue)
-              : Prisma.JsonNull,
+          itinerary: packTourItineraryPayload(
+            input.itinerary,
+            input.contentSections,
+            input.dynamicBlocks
+          ),
           isLive: !!input.isLive,
         },
       });
@@ -448,10 +578,12 @@ export async function updateTourAction(
           exclusions: Array.isArray(input.exclusions)
             ? input.exclusions.map((exc) => String(exc).trim()).filter(Boolean)
             : [],
-          itinerary:
-            Array.isArray(input.itinerary) && input.itinerary.length > 0
-              ? (input.itinerary as Prisma.InputJsonValue)
-              : Prisma.JsonNull,
+          itinerary: packTourItineraryPayload(
+            input.itinerary,
+            input.contentSections,
+            input.dynamicBlocks,
+            existingTour.itinerary
+          ),
           isLive: !!input.isLive,
         },
       });

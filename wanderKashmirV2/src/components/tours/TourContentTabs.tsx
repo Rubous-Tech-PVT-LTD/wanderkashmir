@@ -409,10 +409,16 @@ export default function TourContentTabs({ tour }: TourContentTabsProps) {
               id="content-best-time"
               className="px-4 pb-4 sm:px-4.5 sm:pb-4.5 pt-3.5 border-t border-slate-100/90 space-y-4 animate-in fade-in slide-in-from-top-1 duration-200"
             >
-              <div className="p-6 rounded-lg border border-slate-200/80 bg-slate-50/50 flex flex-col items-center justify-center text-center space-y-1.5 min-h-[140px]">
-                <Clock className="w-6 h-6 text-slate-300" />
-                <p className="text-xs text-slate-500 font-medium">Best time information hasn't been configured for this tour yet.</p>
-              </div>
+              {tour.contentSections?.bestTime ? (
+                <div className="p-4 sm:p-5 rounded-lg border border-slate-200/80 bg-slate-50/40 text-slate-700 text-xs sm:text-[13.5px] leading-relaxed whitespace-pre-line">
+                  {tour.contentSections.bestTime}
+                </div>
+              ) : (
+                <div className="p-6 rounded-lg border border-slate-200/80 bg-slate-50/50 flex flex-col items-center justify-center text-center space-y-1.5 min-h-[140px]">
+                  <Clock className="w-6 h-6 text-slate-300" />
+                  <p className="text-xs text-slate-500 font-medium">Best time information hasn't been configured for this tour yet.</p>
+                </div>
+              )}
             </div>
           )}
         </section>
@@ -985,10 +991,16 @@ export default function TourContentTabs({ tour }: TourContentTabsProps) {
               id="content-food"
               className="px-4 pb-4 sm:px-4.5 sm:pb-4.5 pt-3.5 border-t border-slate-100/90 space-y-4 animate-in fade-in slide-in-from-top-1 duration-200"
             >
-              <div className="p-6 rounded-lg border border-slate-200/80 bg-slate-50/50 flex flex-col items-center justify-center text-center space-y-1.5 min-h-[140px]">
-                <UtensilsCrossed className="w-6 h-6 text-slate-300" />
-                <p className="text-xs text-slate-500 font-medium">Local food recommendations will appear here once configured.</p>
-              </div>
+              {tour.contentSections?.food ? (
+                <div className="p-4 sm:p-5 rounded-lg border border-slate-200/80 bg-slate-50/40 text-slate-700 text-xs sm:text-[13.5px] leading-relaxed whitespace-pre-line">
+                  {tour.contentSections.food}
+                </div>
+              ) : (
+                <div className="p-6 rounded-lg border border-slate-200/80 bg-slate-50/50 flex flex-col items-center justify-center text-center space-y-1.5 min-h-[140px]">
+                  <UtensilsCrossed className="w-6 h-6 text-slate-300" />
+                  <p className="text-xs text-slate-500 font-medium">Local food recommendations will appear here once configured.</p>
+                </div>
+              )}
             </div>
           )}
         </section>
@@ -1033,10 +1045,16 @@ export default function TourContentTabs({ tour }: TourContentTabsProps) {
               id="content-shopping"
               className="px-4 pb-4 sm:px-4.5 sm:pb-4.5 pt-3.5 border-t border-slate-100/90 space-y-4 animate-in fade-in slide-in-from-top-1 duration-200"
             >
-              <div className="p-6 rounded-lg border border-slate-200/80 bg-slate-50/50 flex flex-col items-center justify-center text-center space-y-1.5 min-h-[140px]">
-                <Sparkles className="w-6 h-6 text-slate-300" />
-                <p className="text-xs text-slate-500 font-medium">Shopping recommendations haven't been configured yet.</p>
-              </div>
+              {tour.contentSections?.shopping ? (
+                <div className="p-4 sm:p-5 rounded-lg border border-slate-200/80 bg-slate-50/40 text-slate-700 text-xs sm:text-[13.5px] leading-relaxed whitespace-pre-line">
+                  {tour.contentSections.shopping}
+                </div>
+              ) : (
+                <div className="p-6 rounded-lg border border-slate-200/80 bg-slate-50/50 flex flex-col items-center justify-center text-center space-y-1.5 min-h-[140px]">
+                  <Sparkles className="w-6 h-6 text-slate-300" />
+                  <p className="text-xs text-slate-500 font-medium">Shopping recommendations haven't been configured yet.</p>
+                </div>
+              )}
             </div>
           )}
         </section>
@@ -1177,14 +1195,21 @@ export default function TourContentTabs({ tour }: TourContentTabsProps) {
               id="content-nearby"
               className="px-4 pb-4 sm:px-4.5 sm:pb-4.5 pt-3.5 border-t border-slate-100/90 space-y-4 animate-in fade-in slide-in-from-top-1 duration-200"
             >
-              <div className="p-6 rounded-lg border border-slate-200/80 bg-slate-50/50 flex flex-col items-center justify-center text-center space-y-1.5 min-h-[140px]">
-                <Map className="w-6 h-6 text-slate-300" />
-                <p className="text-xs text-slate-500 font-medium">Nearby places to explore will appear here once configured.</p>
-              </div>
+              {tour.contentSections?.nearby ? (
+                <div className="p-4 sm:p-5 rounded-lg border border-slate-200/80 bg-slate-50/40 text-slate-700 text-xs sm:text-[13.5px] leading-relaxed whitespace-pre-line">
+                  {tour.contentSections.nearby}
+                </div>
+              ) : (
+                <div className="p-6 rounded-lg border border-slate-200/80 bg-slate-50/50 flex flex-col items-center justify-center text-center space-y-1.5 min-h-[140px]">
+                  <Map className="w-6 h-6 text-slate-300" />
+                  <p className="text-xs text-slate-500 font-medium">Nearby places to explore will appear here once configured.</p>
+                </div>
+              )}
             </div>
           )}
         </section>
-<section
+
+        <section
           id="faq"
           className={`rounded-xl border transition-colors duration-150 scroll-mt-24 bg-white ${
             openSections["faq"]
@@ -1222,16 +1247,35 @@ export default function TourContentTabs({ tour }: TourContentTabsProps) {
           {openSections["faq"] && (
             <div
               id="content-faq"
-              className="px-4 pb-4 sm:px-4.5 sm:pb-4.5 pt-3.5 border-t border-slate-100/90 animate-in fade-in slide-in-from-top-1 duration-200"
+              className="px-4 pb-4 sm:px-4.5 sm:pb-4.5 pt-3.5 border-t border-slate-100/90 animate-in fade-in slide-in-from-top-1 duration-200 space-y-3"
             >
-              <div className="p-6 rounded-lg border border-dashed border-slate-200 bg-slate-50/50 text-center space-y-1.5">
-                <div className="w-8 h-8 rounded-full bg-slate-100 text-slate-400 mx-auto flex items-center justify-center">
-                  <HelpCircle className="w-4 h-4" />
+              {tour.contentSections?.faqs && tour.contentSections.faqs.length > 0 ? (
+                <div className="space-y-2.5">
+                  {tour.contentSections.faqs.map((faq, fIdx) => (
+                    <div
+                      key={fIdx}
+                      className="p-3.5 sm:p-4 rounded-lg border border-slate-200/80 bg-slate-50/40 space-y-1.5"
+                    >
+                      <h3 className="text-xs sm:text-[13.5px] font-semibold text-slate-900 flex items-start gap-2">
+                        <span className="text-[var(--season-primary)] font-bold shrink-0">Q:</span>
+                        <span>{faq.question}</span>
+                      </h3>
+                      <p className="text-xs sm:text-[13px] text-slate-600 leading-relaxed pl-5 whitespace-pre-line">
+                        {faq.answer}
+                      </p>
+                    </div>
+                  ))}
                 </div>
-                <h3 className="text-xs sm:text-sm font-semibold text-slate-800">
-                  Frequently asked questions for this tour will be updated shortly.
-                </h3>
-              </div>
+              ) : (
+                <div className="p-6 rounded-lg border border-dashed border-slate-200 bg-slate-50/50 text-center space-y-1.5">
+                  <div className="w-8 h-8 rounded-full bg-slate-100 text-slate-400 mx-auto flex items-center justify-center">
+                    <HelpCircle className="w-4 h-4" />
+                  </div>
+                  <h3 className="text-xs sm:text-sm font-semibold text-slate-800">
+                    Frequently asked questions for this tour will be updated shortly.
+                  </h3>
+                </div>
+              )}
             </div>
           )}
         </section>

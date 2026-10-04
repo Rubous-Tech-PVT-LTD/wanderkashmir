@@ -124,8 +124,44 @@ export interface TourPackageDetail {
   transports?: TourTransportItem[];
   experiences?: TourExperienceItem[];
   travelGuides?: TourTravelGuideItem[];
+  contentSections?: TourContentSections;
+  dynamicBlocks?: TourDynamicBlock[];
   isLive: boolean;
   maxPersons: number;
+}
+
+export interface TourFaqItem {
+  id?: string;
+  question: string;
+  answer: string;
+}
+
+export interface TourContentSections {
+  bestTime?: string;
+  food?: string;
+  shopping?: string;
+  nearby?: string;
+  faqs?: TourFaqItem[];
+}
+
+export interface TourDynamicBlock {
+  id: string;
+  type: string;
+  title?: string;
+  text?: string;
+  level?: 2 | 3 | 4;
+  url?: string;
+  alt?: string;
+  caption?: string;
+  layout?: "full" | "inline-left" | "inline-right";
+  headers?: string[];
+  rows?: string[][];
+  items?: string[];
+  style?: "bullet" | "numbered" | "button" | "inline";
+  variant?: "info" | "tip" | "warning" | "quote";
+  isVisible?: boolean;
+  displayOrder?: number;
+  [key: string]: any;
 }
 
 export const TOUR_CATEGORIES = [
