@@ -26,6 +26,17 @@ export default function TourPackageView({ tour, otherTours }: TourPackageViewPro
           <Link href="/tours" className="hover:text-[var(--season-primary,#065F46)] transition-colors">
             Tour Packages
           </Link>
+          {tour.tourCategory && tour.tourCategory.slug && (
+            <>
+              <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
+              <Link
+                href={`/tours/category/${tour.tourCategory.slug}`}
+                className="hover:text-[var(--season-primary,#065F46)] transition-colors"
+              >
+                {tour.tourCategory.name}
+              </Link>
+            </>
+          )}
           <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
           <span className="text-slate-900 font-medium truncate">
             {tour.title}

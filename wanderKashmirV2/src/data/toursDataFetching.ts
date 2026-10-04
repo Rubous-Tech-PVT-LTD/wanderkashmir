@@ -86,6 +86,14 @@ export const getTourFromDB = cache(async function(slug: string): Promise<TourPac
       daysCount: parseInt((tour.duration || "0").match(/(\d+)/)?.[0] || "0", 10),
       nightsCount: Math.max(0, parseInt((tour.duration || "0").match(/(\d+)/)?.[0] || "1", 10) - 1),
       category: tour.tourCategory?.name || tour.category || "general",
+      categoryId: tour.categoryId || null,
+      tourCategory: tour.tourCategory
+        ? {
+            id: tour.tourCategory.id,
+            name: tour.tourCategory.name,
+            slug: tour.tourCategory.slug,
+          }
+        : null,
       destinations: tour.destinations || [],
       routeDisplay: tour.destinations || [],
       resolvedDestinations,
@@ -181,6 +189,14 @@ export const getOtherToursFromDB = cache(async function(excludeSlug: string): Pr
       daysCount: parseInt((tour.duration || "0").match(/(\d+)/)?.[0] || "0", 10),
       nightsCount: Math.max(0, parseInt((tour.duration || "0").match(/(\d+)/)?.[0] || "1", 10) - 1),
       category: tour.tourCategory?.name || tour.category || "general",
+      categoryId: tour.categoryId || null,
+      tourCategory: tour.tourCategory
+        ? {
+            id: tour.tourCategory.id,
+            name: tour.tourCategory.name,
+            slug: tour.tourCategory.slug,
+          }
+        : null,
       destinations: tour.destinations || [],
       routeDisplay: tour.destinations || [],
       price: tour.price || 0,

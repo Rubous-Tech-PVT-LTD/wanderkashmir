@@ -99,6 +99,12 @@ export interface TourPackageDetail {
   badge?: string | null;
   category: "general" | "family" | "short-kashmir-trips" | "weekend-escape" | string;
   categoryDisplay?: string;
+  categoryId?: string | null;
+  tourCategory?: {
+    id: string;
+    name: string;
+    slug: string;
+  } | null;
   destinations: string[];
   routeDisplay: string[];
   resolvedDestinations?: TourResolvedDestinationItem[];
