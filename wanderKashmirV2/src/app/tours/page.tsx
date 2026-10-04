@@ -184,17 +184,85 @@ export default async function ToursListingPage({ searchParams }: ToursPageProps)
     dbTours = [];
   }
 
+  // 5. Fetch all Live Tours inventory metadata to dynamically derive filters
+  let availableDurations: { value: string; label: string; count?: number }[] = [];
+  let availableDestinations: { name: string; label: string }[] = [];
+  let minPriceBound = 0;
+  let maxPriceBound = 50000;
+
+  try {
+    const liveMetaTours = await prisma.tour.findMany({
+      where: { isLive: true },
+      select: { duration: true, destinations: true, price: true },
+    });
+
+    const durationCountsMap = new Map<number, number>();
+    const destSet = new Set<string>();
+    const prices: number[] = [];
+
+    for (const t of liveMetaTours) {
+      const days = parseInt(
+        (t.duration || "0").match(/(\d+)\s*d/i)?.[1] ||
+          (t.duration || "0").match(/\d+/)?.[0] ||
+          "0",
+        10
+      );
+      if (days > 0) {
+        durationCountsMap.set(days, (durationCountsMap.get(days) || 0) + 1);
+      }
+      if (Array.isArray(t.destinations)) {
+        for (const d of t.destinations) {
+          const clean = d?.trim();
+          if (clean) destSet.add(clean);
+        }
+      }
+      if (typeof t.price === "number" && !isNaN(t.price) && t.price > 0) {
+        prices.push(t.price);
+      }
+    }
+
+    availableDurations = Array.from(durationCountsMap.entries())
+      .sort(([a], [b]) => a - b)
+      .map(([days, count]) => ({
+        value: String(days),
+        label: `${days} Days`,
+        count,
+      }));
+
+    availableDestinations = Array.from(destSet)
+      .sort((a, b) => a.localeCompare(b))
+      .map((name) => ({ name, label: name }));
+
+    if (prices.length > 0) {
+      minPriceBound = Math.min(...prices);
+      maxPriceBound = Math.ceil(Math.max(...prices) / 1000) * 1000;
+    }
+  } catch (metaErr) {
+    console.error("Failed to compute live filters metadata:", metaErr);
+  }
+
   // Apply remaining client-side filters (duration, destination, maxPrice, sort)
   // that are not cost-effective to push to every DB query permutation
   let filteredTours = dbTours;
 
   if (duration) {
-    const dur = duration.toLowerCase();
-    if (dur.includes("weekend") || dur === "2") {
+    const dur = duration.toLowerCase().trim();
+    const durNum = parseInt(dur, 10);
+    if (!isNaN(durNum)) {
+      if (dur === "2" || dur.includes("weekend")) {
+        filteredTours = filteredTours.filter((t) => t.daysCount <= 2);
+      } else if (dur.includes("short")) {
+        filteredTours = filteredTours.filter((t) => t.daysCount >= 3 && t.daysCount <= 4);
+      } else if (dur.includes("week")) {
+        filteredTours = filteredTours.filter((t) => t.daysCount >= 5);
+      } else {
+        filteredTours = filteredTours.filter((t) => t.daysCount === durNum);
+      }
+    } else if (dur.includes("weekend")) {
       filteredTours = filteredTours.filter((t) => t.daysCount <= 2);
-    } else if (dur.includes("short") || dur === "3" || dur === "4") {
+    } else if (dur.includes("short")) {
       filteredTours = filteredTours.filter((t) => t.daysCount >= 3 && t.daysCount <= 4);
-    } else if (dur.includes("week") || dur === "5" || dur === "6" || dur === "7") {
+    } else if (dur.includes("week")) {
       filteredTours = filteredTours.filter((t) => t.daysCount >= 5);
     }
   }
@@ -250,6 +318,10 @@ export default async function ToursListingPage({ searchParams }: ToursPageProps)
           duration={duration}
           destination={destination}
           maxPrice={parsedMaxPrice}
+          minPriceBound={minPriceBound}
+          maxPriceBound={maxPriceBound}
+          availableDurations={availableDurations}
+          availableDestinations={availableDestinations}
           sort={sort}
         />
 

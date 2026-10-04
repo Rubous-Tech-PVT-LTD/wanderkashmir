@@ -17,6 +17,10 @@ interface ToursInventoryViewProps {
   duration?: string;
   destination?: string;
   maxPrice?: number;
+  minPriceBound?: number;
+  maxPriceBound?: number;
+  availableDurations?: { value: string; label: string; count?: number }[];
+  availableDestinations?: { name: string; label: string }[];
   sort?: string;
 }
 
@@ -38,6 +42,10 @@ export default function ToursInventoryView({
   duration,
   destination,
   maxPrice,
+  minPriceBound,
+  maxPriceBound,
+  availableDurations,
+  availableDestinations,
   sort,
 }: ToursInventoryViewProps) {
   const router = useRouter();
@@ -60,7 +68,7 @@ export default function ToursInventoryView({
     style,
     duration,
     destination,
-    maxPrice && maxPrice < 24000 ? maxPrice : null,
+    maxPrice && maxPrice < (maxPriceBound ?? 50000) ? maxPrice : null,
   ].filter(Boolean).length;
 
   return (
@@ -78,6 +86,10 @@ export default function ToursInventoryView({
             duration={duration}
             destination={destination}
             maxPrice={maxPrice}
+            minPriceBound={minPriceBound}
+            maxPriceBound={maxPriceBound}
+            availableDurations={availableDurations}
+            availableDestinations={availableDestinations}
           />
         </aside>
 
@@ -95,6 +107,10 @@ export default function ToursInventoryView({
                 duration={duration}
                 destination={destination}
                 maxPrice={maxPrice}
+                minPriceBound={minPriceBound}
+                maxPriceBound={maxPriceBound}
+                availableDurations={availableDurations}
+                availableDestinations={availableDestinations}
                 onCloseMobile={() => setMobileFilterOpen(false)}
               />
             </div>

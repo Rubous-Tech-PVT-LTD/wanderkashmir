@@ -104,6 +104,8 @@ export interface TourFormInput {
   experiences?: TourExperienceInput[];
   travelGuides?: TourTravelGuideInput[];
   isLive: boolean;
+  isPopular?: boolean;
+  popularOrder?: number | null;
 }
 
 export interface ActionResult<T = unknown> {
@@ -361,6 +363,11 @@ export async function createTourAction(
             input.dynamicBlocks
           ),
           isLive: !!input.isLive,
+          isPopular: !!input.isPopular,
+          popularOrder:
+            input.isPopular && typeof input.popularOrder === "number" && input.popularOrder > 0
+              ? Math.floor(input.popularOrder)
+              : null,
         },
       });
 
@@ -585,6 +592,11 @@ export async function updateTourAction(
             existingTour.itinerary
           ),
           isLive: !!input.isLive,
+          isPopular: !!input.isPopular,
+          popularOrder:
+            input.isPopular && typeof input.popularOrder === "number" && input.popularOrder > 0
+              ? Math.floor(input.popularOrder)
+              : null,
         },
       });
 

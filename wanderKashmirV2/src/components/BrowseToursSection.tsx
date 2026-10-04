@@ -67,10 +67,22 @@ export const BROWSE_TRAVEL_STYLES = [
   },
 ];
 
+export interface BrowseDurationItem {
+  days: string;
+  toursCount: string;
+  href: string;
+}
+
+interface BrowseToursSectionProps {
+  durations?: BrowseDurationItem[];
+}
+
 // =============================================================================
 // MAIN COMPONENT: BrowseToursSection
 // =============================================================================
-export default function BrowseToursSection() {
+export default function BrowseToursSection({ durations }: BrowseToursSectionProps = {}) {
+  const durationItems = durations && durations.length > 0 ? durations : [];
+
   return (
     <section
       aria-labelledby="browse-tours-heading"
@@ -89,42 +101,44 @@ export default function BrowseToursSection() {
         {/* ===================================================================
             1. BROWSE BY DURATION
         =================================================================== */}
-        <div>
-          <div className="flex items-center justify-between gap-2 mb-3 sm:mb-3.5">
-            <h2
-              id="browse-tours-heading"
-              className="font-display text-lg sm:text-xl font-extrabold text-[#17211D] tracking-tight"
-            >
-              Browse by Duration
-            </h2>
-            <Link
-              href="/tours"
-              className="group inline-flex items-center gap-1 text-xs font-bold transition-all duration-200 hover:translate-x-0.5 cursor-pointer"
-              style={{ color: "var(--season-primary)" }}
-            >
-              <span>View All</span>
-              <ArrowRight className="w-3.5 h-3.5 transition-transform duration-200 group-hover:translate-x-1" />
-            </Link>
-          </div>
-
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5 sm:gap-3">
-            {BROWSE_DURATIONS.map((item) => (
-              <Link
-                key={item.days}
-                href={item.href}
-                className="group flex flex-col items-center justify-center py-3.5 px-3 bg-white rounded-xl border transition-all duration-200 shadow-2xs hover:shadow-md hover:-translate-y-0.5 hover:border-[var(--season-primary)] text-center focus:outline-hidden"
-                style={{ borderColor: "var(--season-border)" }}
+        {durationItems.length > 0 && (
+          <div>
+            <div className="flex items-center justify-between gap-2 mb-3 sm:mb-3.5">
+              <h2
+                id="browse-tours-heading"
+                className="font-display text-lg sm:text-xl font-extrabold text-[#17211D] tracking-tight"
               >
-                <span className="font-display font-extrabold text-sm sm:text-[15px] text-[#17211D] group-hover:text-[var(--season-primary)] transition-colors">
-                  {item.days}
-                </span>
-                <span className="text-[11px] text-[#607069] font-medium mt-0.5">
-                  {item.toursCount}
-                </span>
+                Browse by Duration
+              </h2>
+              <Link
+                href="/tours"
+                className="group inline-flex items-center gap-1 text-xs font-bold transition-all duration-200 hover:translate-x-0.5 cursor-pointer"
+                style={{ color: "var(--season-primary)" }}
+              >
+                <span>View All</span>
+                <ArrowRight className="w-3.5 h-3.5 transition-transform duration-200 group-hover:translate-x-1" />
               </Link>
-            ))}
+            </div>
+
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5 sm:gap-3">
+              {durationItems.map((item) => (
+                <Link
+                  key={item.days}
+                  href={item.href}
+                  className="group flex flex-col items-center justify-center py-3.5 px-3 bg-white rounded-xl border transition-all duration-200 shadow-2xs hover:shadow-md hover:-translate-y-0.5 hover:border-[var(--season-primary)] text-center focus:outline-hidden"
+                  style={{ borderColor: "var(--season-border)" }}
+                >
+                  <span className="font-display font-extrabold text-sm sm:text-[15px] text-[#17211D] group-hover:text-[var(--season-primary)] transition-colors">
+                    {item.days}
+                  </span>
+                  <span className="text-[11px] text-[#607069] font-medium mt-0.5">
+                    {item.toursCount}
+                  </span>
+                </Link>
+              ))}
+            </div>
           </div>
-        </div>
+        )}
 
         {/* ===================================================================
             2. BROWSE BY TRAVEL STYLE

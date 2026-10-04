@@ -112,6 +112,8 @@ interface TourFormProps {
     experiences?: TourExperienceInput[];
     travelGuides?: TourTravelGuideInput[];
     isLive: boolean;
+    isPopular?: boolean;
+    popularOrder?: number | null;
   };
   categories: TourCategoryOption[];
   travelStyles: TravelStyleOption[];
@@ -244,6 +246,12 @@ export default function TourForm({
   );
 
   const [isLive, setIsLive] = useState<boolean>(initialData?.isLive ?? true);
+  const [isPopular, setIsPopular] = useState<boolean>(initialData?.isPopular ?? false);
+  const [popularOrder, setPopularOrder] = useState<string>(
+    initialData?.popularOrder !== undefined && initialData?.popularOrder !== null
+      ? String(initialData.popularOrder)
+      : ""
+  );
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -520,6 +528,11 @@ export default function TourForm({
         experiences: tourExperiences,
         travelGuides: tourGuides,
         isLive,
+        isPopular,
+        popularOrder:
+          isPopular && popularOrder && parseInt(popularOrder, 10) > 0
+            ? Math.max(1, parseInt(popularOrder, 10))
+            : null,
       };
 
       if (isEdit && initialData?.id) {
@@ -653,6 +666,62 @@ export default function TourForm({
               {isLive ? "Live (Publicly Visible)" : "Draft (Hidden)"}
             </span>
           </label>
+        </div>
+
+        {/* Homepage Visibility / Popular Tour */}
+        <div className="border-b border-slate-800/80 pb-4 space-y-3">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div>
+              <h2 className="text-sm font-semibold text-white">Homepage Visibility</h2>
+              <p className="text-xs text-slate-400 mt-0.5">
+                Controls whether this tour can appear in the homepage Popular Kashmir Tours section.
+              </p>
+            </div>
+
+            <label className="relative inline-flex items-center cursor-pointer">
+              <input
+                type="checkbox"
+                checked={isPopular}
+                onChange={(e) => {
+                  const checked = e.target.checked;
+                  setIsPopular(checked);
+                  if (checked && !popularOrder) {
+                    setPopularOrder("1");
+                  }
+                }}
+                className="sr-only peer"
+              />
+              <div className="w-11 h-6 bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-amber-500"></div>
+              <span className="ml-3 text-xs font-semibold text-slate-300">
+                {isPopular ? "Popular Tour (Featured)" : "Standard Tour"}
+              </span>
+            </label>
+          </div>
+
+          {isPopular && (
+            <div className="flex items-center gap-3 pt-2">
+              <label className="text-xs font-semibold uppercase tracking-wider text-slate-300">
+                Popular Order:
+              </label>
+              <input
+                type="number"
+                min="1"
+                step="1"
+                value={popularOrder}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  if (val === "" || parseInt(val, 10) >= 1) {
+                    setPopularOrder(val);
+                  }
+                }}
+                placeholder="1"
+                className="w-24 rounded-lg border border-slate-700 bg-slate-800/80 px-3 py-1.5 text-sm text-white focus:border-amber-500 focus:outline-none"
+              />
+              <span className="text-xs text-slate-400">
+                (Lower numbers appear first on homepage, e.g. 1, 2, 3...)
+              </span>
+            </div>
+          )}
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">

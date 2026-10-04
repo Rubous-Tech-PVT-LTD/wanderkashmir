@@ -126,8 +126,12 @@ interface PopularToursProps {
 }
 
 export default function PopularTours({ initialTours }: PopularToursProps) {
-  const toursList = initialTours && initialTours.length > 0 ? initialTours : POPULAR_TOURS_DATA;
+  const toursList = initialTours || [];
   const [favorites, setFavorites] = useState<Record<string, boolean>>({});
+
+  if (toursList.length === 0) {
+    return null;
+  }
 
   const toggleFavorite = (e: React.MouseEvent, id: string) => {
     e.preventDefault();

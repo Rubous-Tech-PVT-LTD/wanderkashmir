@@ -26,6 +26,10 @@ interface ToursFilterSidebarProps {
   duration?: string;
   destination?: string;
   maxPrice?: number;
+  minPriceBound?: number;
+  maxPriceBound?: number;
+  availableDurations?: { value: string; label: string; count?: number }[];
+  availableDestinations?: { name: string; label: string }[];
   onCloseMobile?: () => void;
 }
 
@@ -42,25 +46,6 @@ const DEFAULT_TRAVEL_STYLES: TravelStyleFilterOption[] = [
   { id: "style-6", slug: "trekking", name: "Trekking" },
 ];
 
-const DURATIONS = [
-  { value: "2", label: "2 Days" },
-  { value: "3", label: "3 Days" },
-  { value: "4", label: "4 Days" },
-  { value: "5", label: "5 Days" },
-  { value: "6", label: "6 Days" },
-  { value: "7", label: "7 Days" },
-];
-
-const DESTINATIONS = [
-  { name: "Srinagar", label: "Srinagar" },
-  { name: "Gulmarg", label: "Gulmarg" },
-  { name: "Pahalgam", label: "Pahalgam" },
-  { name: "Sonamarg", label: "Sonamarg" },
-];
-
-const MIN_TOUR_PRICE = 6999;
-const MAX_TOUR_PRICE = 24000;
-
 export default function ToursFilterSidebar({
   categories = DEFAULT_CATEGORIES,
   travelStyles = DEFAULT_TRAVEL_STYLES,
@@ -69,6 +54,10 @@ export default function ToursFilterSidebar({
   duration,
   destination,
   maxPrice,
+  minPriceBound = 0,
+  maxPriceBound = 50000,
+  availableDurations = [],
+  availableDestinations = [],
   onCloseMobile,
 }: ToursFilterSidebarProps) {
   const router = useRouter();
@@ -81,8 +70,10 @@ export default function ToursFilterSidebar({
   const [openDestinations, setOpenDestinations] = useState(false);
   const [openPrice, setOpenPrice] = useState(true);
 
-  // Local price state for smooth slider dragging
-  const currentMaxPrice = maxPrice ? Number(maxPrice) : MAX_TOUR_PRICE;
+  // Dynamic price bounds
+  const effectiveMinPrice = minPriceBound;
+  const effectiveMaxPrice = maxPriceBound > minPriceBound ? maxPriceBound : 50000;
+  const currentMaxPrice = maxPrice ? Number(maxPrice) : effectiveMaxPrice;
   const [localPrice, setLocalPrice] = useState<number>(currentMaxPrice);
 
   const updateFilters = (newParams: Record<string, string | null>) => {
@@ -137,7 +128,7 @@ export default function ToursFilterSidebar({
   };
 
   const handlePriceCommit = () => {
-    if (localPrice >= MAX_TOUR_PRICE) {
+    if (localPrice >= effectiveMaxPrice) {
       updateFilters({ maxPrice: null });
     } else {
       updateFilters({ maxPrice: String(localPrice) });
@@ -145,7 +136,7 @@ export default function ToursFilterSidebar({
   };
 
   const clearAllFilters = () => {
-    setLocalPrice(MAX_TOUR_PRICE);
+    setLocalPrice(effectiveMaxPrice);
     const params = new URLSearchParams(searchParams ? searchParams.toString() : "");
     params.delete("category");
     params.delete("style");
@@ -157,7 +148,7 @@ export default function ToursFilterSidebar({
   };
 
   const hasActiveFilters = Boolean(
-    category || style || duration || destination || (maxPrice && maxPrice < MAX_TOUR_PRICE)
+    category || style || duration || destination || (maxPrice && maxPrice < effectiveMaxPrice)
   );
 
   const displayCategories = categories.length > 0 ? categories : DEFAULT_CATEGORIES;
@@ -277,72 +268,76 @@ export default function ToursFilterSidebar({
       </div>
 
       {/* 2. Duration Accordion */}
-      <div className="border-b border-[var(--season-border,#F3F4F6)] pb-4">
-        <button
-          type="button"
-          onClick={() => setOpenDuration(!openDuration)}
-          className="w-full flex items-center justify-between py-1 text-sm font-bold text-[var(--season-text,#111827)]"
-        >
-          <span>Duration</span>
-          {openDuration ? <ChevronUp className="w-4 h-4 text-[var(--season-muted)]" /> : <ChevronDown className="w-4 h-4 text-[var(--season-muted)]" />}
-        </button>
+      {availableDurations.length > 0 && (
+        <div className="border-b border-[var(--season-border,#F3F4F6)] pb-4">
+          <button
+            type="button"
+            onClick={() => setOpenDuration(!openDuration)}
+            className="w-full flex items-center justify-between py-1 text-sm font-bold text-[var(--season-text,#111827)]"
+          >
+            <span>Duration</span>
+            {openDuration ? <ChevronUp className="w-4 h-4 text-[var(--season-muted)]" /> : <ChevronDown className="w-4 h-4 text-[var(--season-muted)]" />}
+          </button>
 
-        {openDuration && (
-          <div className="mt-3 space-y-2.5">
-            {DURATIONS.map((dur) => {
-              const isChecked = duration === dur.value;
-              return (
-                <label
-                  key={dur.value}
-                  className="flex items-center gap-2.5 text-xs text-[var(--season-text,#374151)] font-medium cursor-pointer hover:text-[var(--season-primary)] transition-colors"
-                >
-                  <input
-                    type="checkbox"
-                    checked={isChecked}
-                    onChange={() => handleDurationToggle(dur.value)}
-                    className="w-4 h-4 rounded text-[var(--season-primary)] border-[var(--season-border)] focus:ring-[var(--season-primary)] cursor-pointer"
-                  />
-                  <span>{dur.label}</span>
-                </label>
-              );
-            })}
-          </div>
-        )}
-      </div>
+          {openDuration && (
+            <div className="mt-3 space-y-2.5">
+              {availableDurations.map((dur) => {
+                const isChecked = duration === dur.value;
+                return (
+                  <label
+                    key={dur.value}
+                    className="flex items-center gap-2.5 text-xs text-[var(--season-text,#374151)] font-medium cursor-pointer hover:text-[var(--season-primary)] transition-colors"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={isChecked}
+                      onChange={() => handleDurationToggle(dur.value)}
+                      className="w-4 h-4 rounded text-[var(--season-primary)] border-[var(--season-border)] focus:ring-[var(--season-primary)] cursor-pointer"
+                    />
+                    <span>{dur.label}</span>
+                  </label>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* 3. Destinations Accordion */}
-      <div className="border-b border-[var(--season-border,#F3F4F6)] pb-4">
-        <button
-          type="button"
-          onClick={() => setOpenDestinations(!openDestinations)}
-          className="w-full flex items-center justify-between py-1 text-sm font-bold text-[var(--season-text,#111827)]"
-        >
-          <span>Destinations</span>
-          {openDestinations ? <ChevronUp className="w-4 h-4 text-[var(--season-muted)]" /> : <ChevronDown className="w-4 h-4 text-[var(--season-muted)]" />}
-        </button>
+      {availableDestinations.length > 0 && (
+        <div className="border-b border-[var(--season-border,#F3F4F6)] pb-4">
+          <button
+            type="button"
+            onClick={() => setOpenDestinations(!openDestinations)}
+            className="w-full flex items-center justify-between py-1 text-sm font-bold text-[var(--season-text,#111827)]"
+          >
+            <span>Destinations</span>
+            {openDestinations ? <ChevronUp className="w-4 h-4 text-[var(--season-muted)]" /> : <ChevronDown className="w-4 h-4 text-[var(--season-muted)]" />}
+          </button>
 
-        {openDestinations && (
-          <div className="mt-3 space-y-2.5">
-            {DESTINATIONS.map((dest) => {
-              const isChecked = destination?.toLowerCase() === dest.name.toLowerCase();
-              return (
-                <label
-                  key={dest.name}
-                  className="flex items-center gap-2.5 text-xs text-[var(--season-text,#374151)] font-medium cursor-pointer hover:text-[var(--season-primary)] transition-colors"
-                >
-                  <input
-                    type="checkbox"
-                    checked={isChecked}
-                    onChange={() => handleDestinationToggle(dest.name)}
-                    className="w-4 h-4 rounded text-[var(--season-primary)] border-[var(--season-border)] focus:ring-[var(--season-primary)] cursor-pointer"
-                  />
-                  <span>{dest.label}</span>
-                </label>
-              );
-            })}
-          </div>
-        )}
-      </div>
+          {openDestinations && (
+            <div className="mt-3 space-y-2.5">
+              {availableDestinations.map((dest) => {
+                const isChecked = destination?.toLowerCase() === dest.name.toLowerCase();
+                return (
+                  <label
+                    key={dest.name}
+                    className="flex items-center gap-2.5 text-xs text-[var(--season-text,#374151)] font-medium cursor-pointer hover:text-[var(--season-primary)] transition-colors"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={isChecked}
+                      onChange={() => handleDestinationToggle(dest.name)}
+                      className="w-4 h-4 rounded text-[var(--season-primary)] border-[var(--season-border)] focus:ring-[var(--season-primary)] cursor-pointer"
+                    />
+                    <span>{dest.label}</span>
+                  </label>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* 4. Price Range (Per Person) Accordion */}
       <div className="pb-1">
@@ -359,9 +354,9 @@ export default function ToursFilterSidebar({
           <div className="mt-3 space-y-3">
             <input
               type="range"
-              min={MIN_TOUR_PRICE}
-              max={MAX_TOUR_PRICE}
-              step={1000}
+              min={effectiveMinPrice}
+              max={effectiveMaxPrice}
+              step={500}
               value={localPrice}
               onChange={(e) => handlePriceChange(Number(e.target.value))}
               onMouseUp={handlePriceCommit}
@@ -369,7 +364,7 @@ export default function ToursFilterSidebar({
               className="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-[var(--season-primary)]"
             />
             <div className="flex items-center justify-between text-xs text-[var(--season-muted,#6B7280)] font-medium">
-              <span>₹{MIN_TOUR_PRICE.toLocaleString()}</span>
+              <span>₹{effectiveMinPrice.toLocaleString()}</span>
               <span className="font-bold text-[var(--season-primary)]">
                 Up to ₹{localPrice.toLocaleString()}
               </span>

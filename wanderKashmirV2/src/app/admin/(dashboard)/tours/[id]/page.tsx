@@ -89,6 +89,8 @@ export default async function EditTourPage({
       displayOrder: g.displayOrder,
     })),
     isLive: tour.isLive,
+    isPopular: tour.isPopular ?? false,
+    popularOrder: tour.popularOrder ?? null,
   };
 
   return (

@@ -94,22 +94,50 @@ export default function FilterTours({ initialTours }: FilterToursProps = {}) {
     (monthFilter !== "any" ? 1 : 0) +
     (budgetFilter !== "any" ? 1 : 0);
 
-  const toursList = initialTours && initialTours.length > 0 ? initialTours : FILTER_TOURS_CATALOG;
+  const toursList = initialTours && initialTours.length > 0 ? initialTours : [];
+
+  // Dynamically compute available destinations from live tour packages
+  const availableDestinations = useMemo(() => {
+    const destSet = new Set<string>();
+    toursList.forEach((t) => {
+      t.destinations?.forEach((d) => {
+        const clean = d?.trim();
+        if (clean) destSet.add(clean);
+      });
+    });
+    return Array.from(destSet).sort((a, b) => a.localeCompare(b));
+  }, [toursList]);
+
+  // Dynamically compute available durations from live tour packages
+  const availableDurations = useMemo(() => {
+    const daysSet = new Set<number>();
+    toursList.forEach((t) => {
+      if (t.daysCount > 0) daysSet.add(t.daysCount);
+    });
+    return Array.from(daysSet).sort((a, b) => a - b);
+  }, [toursList]);
 
   // Filtered and sorted tours calculation
   const filteredTours = useMemo(() => {
     return toursList.filter((tour) => {
       // 1. Duration filter
       if (durationFilter !== "any") {
-        if (durationFilter === "short" && tour.daysCount > 4) return false;
-        if (durationFilter === "medium" && (tour.daysCount < 5 || tour.daysCount > 6)) return false;
-        if (durationFilter === "long" && tour.daysCount < 7) return false;
+        const durNum = parseInt(durationFilter, 10);
+        if (!isNaN(durNum)) {
+          if (tour.daysCount !== durNum) return false;
+        } else if (durationFilter === "short" && tour.daysCount > 4) {
+          return false;
+        } else if (durationFilter === "medium" && (tour.daysCount < 5 || tour.daysCount > 6)) {
+          return false;
+        } else if (durationFilter === "long" && tour.daysCount < 7) {
+          return false;
+        }
       }
 
       // 2. Destination filter
       if (destinationFilter !== "any") {
         const matchesDest = tour.destinations.some(
-          (d) => d.toLowerCase() === destinationFilter.toLowerCase()
+          (d) => d.toLowerCase().includes(destinationFilter.toLowerCase())
         );
         if (!matchesDest) return false;
       }
@@ -147,7 +175,11 @@ export default function FilterTours({ initialTours }: FilterToursProps = {}) {
       // Default: popular
       return b.reviewsCount - a.reviewsCount;
     });
-  }, [durationFilter, destinationFilter, travelStyleFilter, monthFilter, budgetFilter, sortBy]);
+  }, [toursList, durationFilter, destinationFilter, travelStyleFilter, monthFilter, budgetFilter, sortBy]);
+
+  if (toursList.length === 0) {
+    return null;
+  }
 
   return (
     <section
@@ -238,9 +270,11 @@ export default function FilterTours({ initialTours }: FilterToursProps = {}) {
                 className="w-full appearance-none bg-transparent text-[11.5px] font-bold text-[#17211D] pr-4 py-0 m-0 border-0 outline-hidden focus:outline-hidden cursor-pointer leading-tight"
               >
                 <option value="any">Any</option>
-                <option value="short">3 - 4 Days</option>
-                <option value="medium">5 - 6 Days</option>
-                <option value="long">7+ Days</option>
+                {availableDurations.map((days) => (
+                  <option key={days} value={String(days)}>
+                    {days} Days
+                  </option>
+                ))}
               </select>
               <ChevronDown className="w-3 h-3 text-[#56635E] absolute right-0 pointer-events-none" />
             </div>
@@ -262,12 +296,11 @@ export default function FilterTours({ initialTours }: FilterToursProps = {}) {
                 className="w-full appearance-none bg-transparent text-[11.5px] font-bold text-[#17211D] pr-4 py-0 m-0 border-0 outline-hidden focus:outline-hidden cursor-pointer leading-tight"
               >
                 <option value="any">Any</option>
-                <option value="srinagar">Srinagar</option>
-                <option value="gulmarg">Gulmarg</option>
-                <option value="pahalgam">Pahalgam</option>
-                <option value="sonamarg">Sonamarg</option>
-                <option value="doodhpathri">Doodhpathri</option>
-                <option value="gurez">Gurez Valley</option>
+                {availableDestinations.map((dest) => (
+                  <option key={dest} value={dest.toLowerCase()}>
+                    {dest}
+                  </option>
+                ))}
               </select>
               <ChevronDown className="w-3 h-3 text-[#56635E] absolute right-0 pointer-events-none" />
             </div>

@@ -3,9 +3,9 @@ import Navbar from "@/components/Navbar";
 import HomeHero from "@/components/HomeHero";
 import HelpMeChoose from "@/components/HelpMeChoose";
 import PopularTours from "@/components/PopularTours";
-import { PopularTourCard } from "@/types/tours";
+import { PopularTourCard, TourInclusionItem } from "@/types/tours";
 import FilterTours from "@/components/FilterTours";
-import { FILTER_TOURS_CATALOG, FilterTourPackage } from "@/data/filterToursData";
+import { FilterTourPackage } from "@/data/filterToursData";
 import BrowseToursSection from "@/components/BrowseToursSection";
 import DestinationGuidesAndFAQ, {
   FeaturedDestinationItem,
@@ -72,80 +72,15 @@ function getDestinationDisplayName(dest: {
   return "Destination";
 }
 
-const APPROVED_POPULAR_TOURS_BASE: PopularTourCard[] = [
-  {
-    id: "tour-7-days-complete",
-    title: "Complete Kashmir Experience",
-    slug: "7-days-complete-kashmir",
-    duration: "7 Days • 6 Nights",
-    badge: "Bestseller",
-    imageUrl: "",
-    destinations: ["Srinagar", "Gulmarg", "Pahalgam", "Sonamarg"],
-    rating: 4.8,
-    reviewsCount: 412,
-    inclusions: [
-      { label: "Hotel & Houseboat", type: "hotel" },
-      { label: "Private Cab", type: "cab" },
-      { label: "Daily Meals", type: "meals" },
-      { label: "Shikara Ride", type: "houseboat" },
-    ],
-    price: 23999,
-  },
-  {
-    id: "tour-6-days-explorer",
-    title: "Kashmir Explorer Package",
-    slug: "6-days-tour-kashmir-explorer-package",
-    duration: "6 Days • 5 Nights",
-    badge: "Top Rated",
-    imageUrl: "",
-    destinations: ["Srinagar", "Sonamarg", "Gulmarg", "Pahalgam"],
-    rating: 4.8,
-    reviewsCount: 320,
-    inclusions: [
-      { label: "Resort Stay", type: "hotel" },
-      { label: "Private Cab", type: "cab" },
-      { label: "Daily Meals", type: "meals" },
-      { label: "Gondola Assist", type: "activities" },
-    ],
-    price: 18000,
-  },
-  {
-    id: "tour-5-days-family",
-    title: "Family Special Package",
-    slug: "5-days-family-special",
-    duration: "5 Days • 4 Nights",
-    badge: "Family Pick",
-    imageUrl: "",
-    destinations: ["Srinagar", "Gulmarg", "Pahalgam"],
-    rating: 4.8,
-    reviewsCount: 295,
-    inclusions: [
-      { label: "Family Suites", type: "hotel" },
-      { label: "Private Cab", type: "cab" },
-      { label: "Daily Meals", type: "meals" },
-      { label: "Houseboat Stay", type: "houseboat" },
-    ],
-    price: 13999,
-  },
-  {
-    id: "tour-4-days-first-timer",
-    title: "Complete First-Timer",
-    slug: "4-days-srinagar-gulmarg-pahalgam",
-    duration: "4 Days • 3 Nights",
-    badge: "Best Value",
-    imageUrl: "",
-    destinations: ["Srinagar", "Gulmarg", "Pahalgam"],
-    rating: 4.8,
-    reviewsCount: 412,
-    inclusions: [
-      { label: "Deluxe Hotel", type: "hotel" },
-      { label: "Private Cab", type: "cab" },
-      { label: "Daily Breakfast", type: "meals" },
-      { label: "Gondola Tour", type: "activities" },
-    ],
-    price: 11999,
-  },
-];
+function extractDaysCount(durationStr: string): number {
+  if (!durationStr) return 0;
+  const dMatch = durationStr.match(/(\d+)\s*d/i);
+  if (dMatch && dMatch[1]) {
+    return parseInt(dMatch[1], 10);
+  }
+  const numMatch = durationStr.match(/\d+/);
+  return numMatch ? parseInt(numMatch[0], 10) : 0;
+}
 
 export default async function HomePage() {
   let featuredDestinations: FeaturedDestinationItem[] = [];
@@ -198,46 +133,147 @@ export default async function HomePage() {
     console.error("Failed to fetch travel styles for Homepage:", error);
   }
 
-  // Exactly the 4 approved Popular Tours cards — sync ONLY real uploaded images from DB
-  let popularTours: PopularTourCard[] = [...APPROVED_POPULAR_TOURS_BASE];
-  let syncedFilterTours: FilterTourPackage[] = [...FILTER_TOURS_CATALOG];
+  // Query DB for Live + Popular Tours (Max 4, ordered by popularOrder ASC)
+  let popularTours: PopularTourCard[] = [];
   try {
-    const popularSlugs = APPROVED_POPULAR_TOURS_BASE.map((t) => t.slug);
-    const filterSlugs = FILTER_TOURS_CATALOG.map((t) => t.slug);
-    const allRelevantSlugs = Array.from(new Set([...popularSlugs, ...filterSlugs]));
-
-    const dbTours = await prisma.tour.findMany({
-      where: { slug: { in: allRelevantSlugs } },
-      select: { slug: true, images: true, price: true },
+    const rawPopular = await prisma.tour.findMany({
+      where: {
+        isLive: true,
+        isPopular: true,
+      },
+      orderBy: [
+        { popularOrder: "asc" },
+        { createdAt: "desc" },
+      ],
+      take: 4,
+      select: {
+        id: true,
+        title: true,
+        slug: true,
+        duration: true,
+        badge: true,
+        images: true,
+        destinations: true,
+        price: true,
+        inclusions: true,
+      },
     });
 
-    popularTours = APPROVED_POPULAR_TOURS_BASE.map((base) => {
-      const match = dbTours.find((d: (typeof dbTours)[number]) => d.slug === base.slug);
-      const dbImage =
-        match && match.images && match.images.length > 0 && match.images[0].trim()
-          ? match.images[0].trim()
-          : "";
-      return {
-        ...base,
-        imageUrl: dbImage, // ONLY real DB image, otherwise "" ("Image yet to be assigned")
-        price: match && match.price ? match.price : base.price,
-      };
-    });
+    popularTours = rawPopular.map((tour) => {
+      const inclusionsList: TourInclusionItem[] = (tour.inclusions || []).slice(0, 4).map((inc) => {
+        const lower = inc.toLowerCase();
+        let type: TourInclusionItem["type"] = "activities";
+        if (lower.includes("hotel") || lower.includes("resort") || lower.includes("stay") || lower.includes("suite")) {
+          type = "hotel";
+        } else if (lower.includes("cab") || lower.includes("taxi") || lower.includes("transport") || lower.includes("car")) {
+          type = "cab";
+        } else if (lower.includes("houseboat") || lower.includes("shikara")) {
+          type = "houseboat";
+        } else if (lower.includes("meal") || lower.includes("breakfast") || lower.includes("dinner") || lower.includes("food")) {
+          type = "meals";
+        }
+        return { label: inc, type };
+      });
 
-    syncedFilterTours = FILTER_TOURS_CATALOG.map((base) => {
-      const match = dbTours.find((d: (typeof dbTours)[number]) => d.slug === base.slug);
-      const dbImage =
-        match && match.images && match.images.length > 0 && match.images[0].trim()
-          ? match.images[0].trim()
-          : "";
       return {
-        ...base,
-        imageUrl: dbImage, // ONLY real DB image, otherwise "" ("Image yet to be assigned")
-        price: match && match.price ? match.price : base.price,
+        id: tour.id,
+        title: tour.title,
+        slug: tour.slug,
+        duration: tour.duration,
+        badge: tour.badge || "",
+        imageUrl: tour.images && tour.images.length > 0 && tour.images[0].trim() ? tour.images[0].trim() : "",
+        destinations: (tour.destinations as string[]) || [],
+        rating: 4.8,
+        reviewsCount: 350,
+        inclusions: inclusionsList,
+        price: tour.price,
       };
     });
   } catch (error) {
-    console.error("Failed to sync tour images from DB:", error);
+    console.error("Failed to query popular tours from DB:", error);
+    popularTours = [];
+  }
+
+  // Query DB for Live Tours to power FilterTours & dynamic Browse by Duration
+  let liveFilterTours: FilterTourPackage[] = [];
+  let liveBrowseDurations: { days: string; toursCount: string; href: string }[] = [];
+
+  try {
+    const rawLiveTours = await prisma.tour.findMany({
+      where: { isLive: true },
+      orderBy: { createdAt: "desc" },
+      select: {
+        id: true,
+        title: true,
+        slug: true,
+        duration: true,
+        badge: true,
+        images: true,
+        destinations: true,
+        price: true,
+        inclusions: true,
+        travelStyles: {
+          include: {
+            travelStyle: { select: { name: true } },
+          },
+        },
+      },
+    });
+
+    liveFilterTours = rawLiveTours.map((tour) => {
+      const days = extractDaysCount(tour.duration);
+      const inclusionsList = (tour.inclusions || []).slice(0, 4).map((inc) => {
+        const lower = inc.toLowerCase();
+        let type: "hotel" | "cab" | "houseboat" | "meals" | "activities" = "activities";
+        if (lower.includes("hotel") || lower.includes("resort") || lower.includes("stay") || lower.includes("suite")) {
+          type = "hotel";
+        } else if (lower.includes("cab") || lower.includes("taxi") || lower.includes("transport") || lower.includes("car")) {
+          type = "cab";
+        } else if (lower.includes("houseboat") || lower.includes("shikara")) {
+          type = "houseboat";
+        } else if (lower.includes("meal") || lower.includes("breakfast") || lower.includes("dinner") || lower.includes("food")) {
+          type = "meals";
+        }
+        return { label: inc, type };
+      });
+
+      return {
+        id: tour.id,
+        title: tour.title,
+        slug: tour.slug,
+        duration: tour.duration,
+        daysCount: days,
+        nightsCount: Math.max(0, days - 1),
+        badge: tour.badge || undefined,
+        imageUrl: tour.images && tour.images.length > 0 && tour.images[0].trim() ? tour.images[0].trim() : "",
+        route: (tour.destinations as string[]) || [],
+        destinations: (tour.destinations as string[]) || [],
+        travelStyles: tour.travelStyles.map((ts) => ts.travelStyle.name),
+        months: ["All", "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
+        rating: 4.8,
+        reviewsCount: 350,
+        inclusions: inclusionsList,
+        price: tour.price,
+      };
+    });
+
+    const durationCountsMap = new Map<number, number>();
+    for (const tour of rawLiveTours) {
+      const days = extractDaysCount(tour.duration);
+      if (days > 0) {
+        durationCountsMap.set(days, (durationCountsMap.get(days) || 0) + 1);
+      }
+    }
+
+    liveBrowseDurations = Array.from(durationCountsMap.entries())
+      .sort(([a], [b]) => a - b)
+      .map(([days, count]) => ({
+        days: `${days} Days`,
+        toursCount: `${count} ${count === 1 ? "Tour" : "Tours"}`,
+        href: `/tours?duration=${days}`,
+      }));
+  } catch (error) {
+    console.error("Failed to query live tours for homepage discovery:", error);
   }
 
   // Fetch real Google Place reviews live for WanderKashmir
@@ -292,10 +328,10 @@ export default async function HomePage() {
         <PopularTours initialTours={popularTours} />
 
         {/* 5. Filter Tours (Interactive Filter Section with Live DB Images) */}
-        <FilterTours initialTours={syncedFilterTours} />
+        <FilterTours initialTours={liveFilterTours} />
 
         {/* 6. Browse by Duration, Travel Style & Local Experts Banner */}
-        <BrowseToursSection />
+        <BrowseToursSection durations={liveBrowseDurations} />
 
         {/* 7. Featured Destinations, Travel Guides & FAQs */}
         <DestinationGuidesAndFAQ featuredDestinations={featuredDestinations} />
