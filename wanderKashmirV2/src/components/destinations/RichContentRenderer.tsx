@@ -186,13 +186,17 @@ export function RichContentRenderer({
 
   const blocks = normalizeRichBlocks(content);
 
-  // If structured blocks exist, render them natively
+  // If structured blocks exist, render them natively with matching typography inheritance
   if (blocks && blocks.length > 0) {
     return (
-      <div className={`space-y-6 ${className}`}>
-        {blocks.map((block, idx) => (
-          <RichBlockItem key={idx} block={block} />
-        ))}
+      <div
+        className={`prose prose-slate max-w-none font-sans prose-headings:font-display prose-headings:font-bold prose-headings:tracking-tight prose-a:text-[var(--season-primary,#f97316)] hover:prose-a:text-orange-700 leading-relaxed ${className}`}
+      >
+        <div className="space-y-3">
+          {blocks.map((block, idx) => (
+            <RichBlockItem key={idx} block={block} />
+          ))}
+        </div>
       </div>
     );
   }
@@ -227,20 +231,20 @@ function RichBlockItem({ block }: { block: RichContentNode }) {
       const level = block.level || 3;
       if (level === 2) {
         return (
-          <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 font-display tracking-tight mt-8 mb-4">
+          <h2 className="font-bold text-inherit font-display tracking-tight mt-5 mb-2.5">
             {block.text}
           </h2>
         );
       }
       if (level === 4) {
         return (
-          <h4 className="text-lg sm:text-xl font-bold text-slate-900 font-display tracking-tight mt-6 mb-3">
+          <h4 className="font-bold text-inherit font-display tracking-tight mt-3 mb-1.5">
             {block.text}
           </h4>
         );
       }
       return (
-        <h3 className="text-xl sm:text-2xl font-bold text-slate-900 font-display tracking-tight mt-6 mb-3">
+        <h3 className="font-bold text-inherit font-display tracking-tight mt-4 mb-2">
           {block.text}
         </h3>
       );
@@ -251,7 +255,7 @@ function RichBlockItem({ block }: { block: RichContentNode }) {
       const parsedParagraph = sanitizeHtml(marked.parse(block.text) as string);
       return (
         <div
-          className="prose prose-slate max-w-none font-sans text-slate-600 leading-relaxed text-base sm:text-lg"
+          className="font-sans text-inherit leading-relaxed"
           dangerouslySetInnerHTML={{ __html: parsedParagraph }}
         />
       );
@@ -329,10 +333,10 @@ function RichBlockItem({ block }: { block: RichContentNode }) {
       return (
         <div className="my-6 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xs">
           <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse text-sm">
+            <table className="w-full text-left border-collapse text-sm font-sans">
               {headers.length > 0 && (
                 <thead>
-                  <tr className="bg-slate-50/80 border-b border-slate-200 text-slate-800 font-semibold text-xs uppercase tracking-wider">
+                  <tr className="bg-slate-50/80 border-b border-slate-200 text-slate-800 font-semibold text-xs uppercase tracking-wider font-sans">
                     {headers.map((head, hIdx) => (
                       <th key={hIdx} className="px-4 py-3.5">
                         {head}
@@ -341,13 +345,13 @@ function RichBlockItem({ block }: { block: RichContentNode }) {
                   </tr>
                 </thead>
               )}
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y divide-slate-100 font-sans">
                 {rows.map((row, rIdx) => (
                   <tr key={rIdx} className="hover:bg-slate-50/50 transition-colors">
                     {(Array.isArray(row) ? row : []).map((cell, cIdx) => (
                       <td
                         key={cIdx}
-                        className="px-4 py-3 text-slate-600"
+                        className="px-4 py-3 text-inherit"
                         dangerouslySetInnerHTML={{ __html: sanitizeHtml(String(cell || "")) }}
                       />
                     ))}
@@ -366,10 +370,10 @@ function RichBlockItem({ block }: { block: RichContentNode }) {
 
       if (block.style === "numbered") {
         return (
-          <ol className="my-4 space-y-2.5">
+          <ol className="my-3 space-y-2 font-sans text-inherit">
             {items.map((item, iIdx) => (
-              <li key={iIdx} className="flex items-start gap-3 text-slate-700 text-base sm:text-lg leading-relaxed">
-                <span className="shrink-0 flex items-center justify-center w-6 h-6 rounded-full bg-orange-100 text-orange-600 font-bold text-xs mt-0.5">
+              <li key={iIdx} className="flex items-start gap-2.5 text-inherit leading-relaxed">
+                <span className="shrink-0 flex items-center justify-center w-5 h-5 rounded-full bg-orange-100 text-orange-600 font-bold text-xs mt-0.5 font-sans">
                   {iIdx + 1}
                 </span>
                 <span dangerouslySetInnerHTML={{ __html: sanitizeHtml(String(item || "")) }} />
@@ -381,10 +385,10 @@ function RichBlockItem({ block }: { block: RichContentNode }) {
 
       // Default bullet list
       return (
-        <ul className="my-4 space-y-2.5">
+        <ul className="my-3 space-y-2 font-sans text-inherit">
           {items.map((item, iIdx) => (
-            <li key={iIdx} className="flex items-start gap-3 text-slate-700 text-base sm:text-lg leading-relaxed">
-              <span className="shrink-0 flex items-center justify-center w-5 h-5 rounded-full bg-slate-100 text-orange-500 mt-1">
+            <li key={iIdx} className="flex items-start gap-2.5 text-inherit leading-relaxed">
+              <span className="shrink-0 flex items-center justify-center w-4 h-4 rounded-full bg-slate-100 text-orange-500 mt-0.5">
                 <CheckCircle2 className="w-3.5 h-3.5" />
               </span>
               <span dangerouslySetInnerHTML={{ __html: sanitizeHtml(String(item || "")) }} />
@@ -432,7 +436,7 @@ function RichBlockItem({ block }: { block: RichContentNode }) {
               </h5>
             )}
             <div
-              className="text-sm sm:text-base leading-relaxed"
+              className="text-sm sm:text-base leading-relaxed font-sans"
               dangerouslySetInnerHTML={{ __html: sanitizeHtml(String(block.text || "")) }}
             />
           </div>

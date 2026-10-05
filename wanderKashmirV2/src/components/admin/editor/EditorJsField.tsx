@@ -572,12 +572,12 @@ export default function EditorJsField({
     <div
       ref={containerRef}
       onClick={handleContainerClick}
-      className="editorjs-dark-theme relative rounded-lg border border-slate-700 bg-slate-800/80 px-3.5 py-2.5 text-xs text-slate-100 transition-colors focus-within:border-emerald-500 focus-within:ring-1 focus-within:ring-emerald-500/20 cursor-text"
-      style={{ minHeight: `${minHeight}px` }}
+      className="editorjs-dark-theme relative rounded-lg border border-slate-700 bg-slate-800/80 px-3.5 py-2.5 text-xs text-slate-100 transition-colors focus-within:border-emerald-500 focus-within:ring-1 focus-within:ring-emerald-500/20 cursor-text font-sans"
+      style={{ minHeight: `${minHeight}px`, fontFamily: "inherit" }}
     >
       {/* Loading State */}
       {status === "loading" && (
-        <div className="flex items-center gap-2 py-3 px-1 text-slate-400 text-xs italic select-none">
+        <div className="flex items-center gap-2 py-3 px-1 text-slate-400 text-xs italic select-none font-sans">
           <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
           <span>Loading editor...</span>
         </div>
@@ -585,7 +585,7 @@ export default function EditorJsField({
 
       {/* Recoverable Error State */}
       {status === "error" && (
-        <div className="flex items-center justify-between gap-3 p-3 my-1 rounded bg-rose-950/40 border border-rose-800/60 text-xs text-rose-300">
+        <div className="flex items-center justify-between gap-3 p-3 my-1 rounded bg-rose-950/40 border border-rose-800/60 text-xs text-rose-300 font-sans">
           <div className="flex items-center gap-2">
             <AlertTriangle className="w-4 h-4 text-rose-400 shrink-0" />
             <span>{errorMessage || "Failed to load rich text editor."}</span>
@@ -593,7 +593,7 @@ export default function EditorJsField({
           <button
             type="button"
             onClick={handleRetry}
-            className="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-semibold rounded bg-rose-800 hover:bg-rose-700 text-white transition-colors shrink-0"
+            className="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-semibold rounded bg-rose-800 hover:bg-rose-700 text-white transition-colors shrink-0 font-sans"
           >
             <RotateCw className="w-3 h-3" />
             Retry
@@ -605,29 +605,52 @@ export default function EditorJsField({
       <div
         ref={holderRef}
         id={holderId}
-        className={`w-full prose-invert ${
+        className={`w-full prose-invert font-sans ${
           status === "ready" ? "opacity-100" : status === "loading" ? "opacity-20 pointer-events-none" : "hidden"
         }`}
       />
 
       {/* Editor.js dark theme overrides */}
       <style jsx global>{`
+        .editorjs-dark-theme,
+        .editorjs-dark-theme .codex-editor,
+        .editorjs-dark-theme .ce-block,
+        .editorjs-dark-theme .ce-block__content,
+        .editorjs-dark-theme .ce-paragraph,
+        .editorjs-dark-theme .ce-header,
+        .editorjs-dark-theme .cdx-list,
+        .editorjs-dark-theme .cdx-list__item,
+        .editorjs-dark-theme .cdx-quote,
+        .editorjs-dark-theme .cdx-quote__text,
+        .editorjs-dark-theme .cdx-quote__caption,
+        .editorjs-dark-theme .ce-delimiter,
+        .editorjs-dark-theme .tc-table,
+        .editorjs-dark-theme .tc-row,
+        .editorjs-dark-theme .tc-cell,
+        .editorjs-dark-theme [contenteditable] {
+          font-family: inherit;
+        }
         .editorjs-dark-theme .codex-editor {
           color: #f1f5f9;
+          font-family: inherit;
         }
         .editorjs-dark-theme .ce-block__content,
         .editorjs-dark-theme .ce-toolbar__content {
           max-width: 100%;
+          font-family: inherit;
         }
         .editorjs-dark-theme .codex-editor__redactor {
           padding-bottom: 16px !important;
+          font-family: inherit;
         }
         .editorjs-dark-theme .ce-paragraph {
+          font-family: inherit;
           line-height: 1.6;
           font-size: 0.8125rem;
           color: #e2e8f0;
         }
         .editorjs-dark-theme .ce-header {
+          font-family: inherit;
           color: #ffffff;
           font-weight: 700;
           letter-spacing: -0.015em;
@@ -635,23 +658,29 @@ export default function EditorJsField({
           margin-bottom: 0.5rem;
         }
         .editorjs-dark-theme h2.ce-header {
+          font-family: inherit;
           font-size: 1.25rem;
         }
         .editorjs-dark-theme h3.ce-header {
+          font-family: inherit;
           font-size: 1.1rem;
         }
         .editorjs-dark-theme h4.ce-header {
+          font-family: inherit;
           font-size: 0.95rem;
         }
         .editorjs-dark-theme .cdx-list {
+          font-family: inherit;
           padding-left: 1.25rem;
           color: #e2e8f0;
           font-size: 0.8125rem;
         }
         .editorjs-dark-theme .cdx-list__item {
+          font-family: inherit;
           padding: 0.15rem 0;
         }
         .editorjs-dark-theme .cdx-quote {
+          font-family: inherit;
           border-left: 3px solid #10b981;
           padding: 0.5rem 0.75rem;
           margin: 0.5rem 0;
@@ -659,28 +688,34 @@ export default function EditorJsField({
           font-style: italic;
         }
         .editorjs-dark-theme .cdx-quote__text {
+          font-family: inherit;
           font-size: 0.8125rem;
           margin-bottom: 0.25rem;
         }
         .editorjs-dark-theme .cdx-quote__caption {
+          font-family: inherit;
           font-size: 0.7rem;
           color: #94a3b8;
           font-style: normal;
         }
         .editorjs-dark-theme .ce-delimiter {
+          font-family: inherit;
           line-height: 1.6em;
           text-align: center;
           color: #64748b;
         }
         .editorjs-dark-theme .tc-table {
+          font-family: inherit;
           border-collapse: collapse;
           width: 100%;
           border: 1px solid #334155;
         }
         .editorjs-dark-theme .tc-row {
+          font-family: inherit;
           border-bottom: 1px solid #334155;
         }
         .editorjs-dark-theme .tc-cell {
+          font-family: inherit;
           border-right: 1px solid #334155;
           padding: 0.4rem 0.5rem;
           font-size: 0.8125rem;
