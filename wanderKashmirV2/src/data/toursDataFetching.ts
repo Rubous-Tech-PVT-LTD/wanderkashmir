@@ -161,7 +161,11 @@ export const getTourFromDB = cache(async function(slug: string): Promise<TourPac
       reviewsCount: tour.reviews?.length || 0,
       overview: tour.overview || "",
       images: tour.images || [],
-      whyThisRoute: [],
+      whyThisRoute: Array.isArray(extractedContentSections?.whyThisRoute)
+        ? extractedContentSections.whyThisRoute.map((s: any) => String(s).trim()).filter(Boolean)
+        : typeof extractedContentSections?.whyThisRoute === "string" && extractedContentSections.whyThisRoute.trim()
+        ? [extractedContentSections.whyThisRoute.trim()]
+        : [],
       itinerary: mappedItinerary,
       contentSections: extractedContentSections,
       dynamicBlocks: extractedDynamicBlocks
