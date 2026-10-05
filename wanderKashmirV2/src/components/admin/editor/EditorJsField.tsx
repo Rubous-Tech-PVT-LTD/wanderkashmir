@@ -1,8 +1,9 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useId, useRef, useState } from "react";
 import type { OutputData } from "@editorjs/editorjs";
+import { AlertTriangle, RotateCw } from "lucide-react";
 
 export interface EditorJsFieldProps {
   value?: string | OutputData | null;
@@ -13,22 +14,59 @@ export interface EditorJsFieldProps {
 }
 
 /**
- * Converts simple legacy Markdown text into Editor.js OutputData blocks
- * so existing markdown tours can be gracefully loaded into Editor.js.
+ * Safely resolves tool modules across Next.js dynamic import variations:
+ * handles mod.default.default, mod.default, or mod directly.
+ */
+function resolveToolModule(mod: any, toolName: string): any {
+  if (!mod) {
+    throw new Error(`Tool module "${toolName}" resolved to empty/undefined.`);
+  }
+
+  let resolved = mod;
+  if (resolved.default) {
+    resolved = resolved.default;
+  }
+  if (resolved && resolved.default && typeof resolved !== "function") {
+    resolved = resolved.default;
+  }
+
+  if (typeof resolved !== "function" && typeof resolved !== "object") {
+    throw new Error(`Tool "${toolName}" could not be resolved to a valid constructor or tool object.`);
+  }
+
+  return resolved;
+}
+
+/**
+ * Converts simple legacy Markdown text into valid Editor.js OutputData blocks
+ * so existing markdown tours can be gracefully edited inside Editor.js.
  */
 export function markdownToEditorBlocks(md: string): OutputData {
-  if (!md || !md.trim()) {
-    return { time: Date.now(), blocks: [] };
+  if (typeof md !== "string" || !md.trim()) {
+    return {
+      time: Date.now(),
+      blocks: [{ id: Math.random().toString(36).substring(2, 9), type: "paragraph", data: { text: "" } }],
+    };
+  }
+
+  const trimmed = md.trim();
+
+  // Guard against "[object Object]"
+  if (trimmed === "[object Object]") {
+    return {
+      time: Date.now(),
+      blocks: [{ id: Math.random().toString(36).substring(2, 9), type: "paragraph", data: { text: "" } }],
+    };
   }
 
   // Check if string is already stringified Editor.js JSON
-  const trimmed = md.trim();
-  if (trimmed.startsWith("{") && trimmed.endsWith("}") && trimmed.includes('"blocks"')) {
+  if (
+    (trimmed.startsWith("{") && trimmed.endsWith("}") && trimmed.includes('"blocks"')) ||
+    (trimmed.startsWith("[") && trimmed.endsWith("]"))
+  ) {
     try {
       const parsed = JSON.parse(trimmed);
-      if (Array.isArray(parsed.blocks)) {
-        return parsed as OutputData;
-      }
+      return normalizeToEditorData(parsed);
     } catch {
       // Continue to markdown parse
     }
@@ -63,7 +101,10 @@ export function markdownToEditorBlocks(md: string): OutputData {
         type: "list",
         data: {
           style: currentList.style,
-          items: currentList.items,
+          items: currentList.items.map((itemText) => ({
+            content: itemText,
+            items: [],
+          })),
         },
       });
       currentList = null;
@@ -78,7 +119,19 @@ export function markdownToEditorBlocks(md: string): OutputData {
       continue;
     }
 
-    // Heading
+    // Delimiter (--- or ***)
+    if (/^(\*{3,}|-{3,})$/.test(line)) {
+      flushParagraph();
+      flushList();
+      blocks.push({
+        id: Math.random().toString(36).substring(2, 9),
+        type: "delimiter",
+        data: {},
+      });
+      continue;
+    }
+
+    // Headings
     if (line.startsWith("### ")) {
       flushParagraph();
       flushList();
@@ -106,6 +159,19 @@ export function markdownToEditorBlocks(md: string): OutputData {
         id: Math.random().toString(36).substring(2, 9),
         type: "header",
         data: { text: line.replace(/^#\s+/, ""), level: 2 },
+      });
+      continue;
+    }
+
+    // Blockquote
+    if (line.startsWith(">")) {
+      flushParagraph();
+      flushList();
+      const quoteText = line.replace(/^>\s*/, "");
+      blocks.push({
+        id: Math.random().toString(36).substring(2, 9),
+        type: "quote",
+        data: { text: quoteText, caption: "" },
       });
       continue;
     }
@@ -152,8 +218,94 @@ export function markdownToEditorBlocks(md: string): OutputData {
 
   return {
     time: Date.now(),
-    blocks: blocks.length > 0 ? blocks : [{ type: "paragraph", data: { text: "" } }],
+    blocks:
+      blocks.length > 0
+        ? blocks
+        : [{ id: Math.random().toString(36).substring(2, 9), type: "paragraph", data: { text: "" } }],
   };
+}
+
+/**
+ * Robust normalization supporting:
+ * 1. Legacy Markdown string
+ * 2. JSON string containing OutputData
+ * 3. Parsed OutputData object { time, blocks: [...], version }
+ * 4. Raw array of blocks
+ * 5. null / undefined / empty values
+ */
+export function normalizeToEditorData(val: any): OutputData {
+  const emptyFallback: OutputData = {
+    time: Date.now(),
+    blocks: [{ id: Math.random().toString(36).substring(2, 9), type: "paragraph", data: { text: "" } }],
+  };
+
+  if (val === null || val === undefined) {
+    return emptyFallback;
+  }
+
+  // Already an OutputData object
+  if (typeof val === "object" && !Array.isArray(val)) {
+    if (Array.isArray(val.blocks)) {
+      if (val.blocks.length === 0) {
+        return emptyFallback;
+      }
+      const validBlocks = val.blocks.filter(
+        (b: any) =>
+          b &&
+          typeof b === "object" &&
+          typeof b.type === "string" &&
+          b.data !== undefined &&
+          b.data !== null
+      );
+      return {
+        time: typeof val.time === "number" ? val.time : Date.now(),
+        blocks: validBlocks.length > 0 ? validBlocks : emptyFallback.blocks,
+        version: typeof val.version === "string" ? val.version : "2.31.7",
+      };
+    }
+  }
+
+  // Raw array of blocks
+  if (Array.isArray(val)) {
+    const validBlocks = val.filter(
+      (b: any) =>
+        b &&
+        typeof b === "object" &&
+        typeof b.type === "string" &&
+        b.data !== undefined &&
+        b.data !== null
+    );
+    return {
+      time: Date.now(),
+      blocks: validBlocks.length > 0 ? validBlocks : emptyFallback.blocks,
+      version: "2.31.7",
+    };
+  }
+
+  // String format (JSON or Markdown)
+  if (typeof val === "string") {
+    const trimmed = val.trim();
+    if (!trimmed || trimmed === "[object Object]") {
+      return emptyFallback;
+    }
+
+    // Try parsing as JSON first
+    if (
+      (trimmed.startsWith("{") && trimmed.endsWith("}")) ||
+      (trimmed.startsWith("[") && trimmed.endsWith("]"))
+    ) {
+      try {
+        const parsed = JSON.parse(trimmed);
+        return normalizeToEditorData(parsed);
+      } catch {
+        // Fall back to markdown parsing
+      }
+    }
+
+    return markdownToEditorBlocks(val);
+  }
+
+  return emptyFallback;
 }
 
 export default function EditorJsField({
@@ -164,39 +316,55 @@ export default function EditorJsField({
   readOnly = false,
 }: EditorJsFieldProps) {
   const containerRef = useRef<HTMLDivElement>(null);
+  const holderRef = useRef<HTMLDivElement>(null);
   const editorInstanceRef = useRef<any>(null);
-  const [holderId] = useState(() => `editorjs-${Math.random().toString(36).substring(2, 9)}`);
-  const [, setIsReady] = useState(false);
+  const isInitializingRef = useRef<boolean>(false);
+  const isDestroyedRef = useRef<boolean>(false);
 
-  // Normalize initial data
-  const getInitialData = (): OutputData => {
-    if (!value) {
-      return { time: Date.now(), blocks: [] };
-    }
-    if (typeof value === "object" && Array.isArray(value.blocks)) {
-      return value as OutputData;
-    }
-    if (typeof value === "string") {
-      return markdownToEditorBlocks(value);
-    }
-    return { time: Date.now(), blocks: [] };
-  };
+  // Stable ID across re-renders
+  const rawId = useId().replace(/[^a-zA-Z0-9_-]/g, "");
+  const [holderId] = useState(() => `editorjs-${rawId || Math.random().toString(36).substring(2, 9)}`);
+
+  // UI state
+  const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [retryCount, setRetryCount] = useState<number>(0);
+
+  // Stable refs for props
+  const onChangeRef = useRef(onChange);
+  useEffect(() => {
+    onChangeRef.current = onChange;
+  }, [onChange]);
+
+  // Cache initial data at mount time so parent re-renders don't reset typing state
+  const [initialData] = useState<OutputData>(() => normalizeToEditorData(value));
 
   useEffect(() => {
-    let isMounted = true;
+    let isCancelled = false;
+    isDestroyedRef.current = false;
 
     async function initEditor() {
-      if (typeof window === "undefined" || !containerRef.current) return;
+      if (typeof window === "undefined") return;
+      if (isInitializingRef.current) return;
+
+      const holderEl = holderRef.current;
+      if (!holderEl) {
+        return;
+      }
+
+      isInitializingRef.current = true;
+      setStatus("loading");
+      setErrorMessage(null);
 
       try {
         // Dynamically import Editor.js and plugins
         const [
-          { default: EditorJS },
-          { default: Header },
-          { default: List },
-          { default: Quote },
-          { default: Delimiter },
-          { default: Table },
+          editorJsMod,
+          headerMod,
+          listMod,
+          quoteMod,
+          delimiterMod,
+          tableMod,
         ] = await Promise.all([
           import("@editorjs/editorjs"),
           import("@editorjs/header" as any),
@@ -206,24 +374,55 @@ export default function EditorJsField({
           import("@editorjs/table" as any),
         ]);
 
-        if (!isMounted) return;
+        if (isCancelled || isDestroyedRef.current) {
+          isInitializingRef.current = false;
+          return;
+        }
 
-        // Destroy previous instance if any
-        if (editorInstanceRef.current && typeof editorInstanceRef.current.destroy === "function") {
+        // Safely resolve tool constructors
+        const EditorJS = resolveToolModule(editorJsMod, "editorjs");
+        const Header = resolveToolModule(headerMod, "header");
+        const List = resolveToolModule(listMod, "list");
+        const Quote = resolveToolModule(quoteMod, "quote");
+        const Delimiter = resolveToolModule(delimiterMod, "delimiter");
+        const Table = resolveToolModule(tableMod, "table");
+
+        if (typeof EditorJS !== "function") {
+          throw new Error("EditorJS constructor could not be resolved from module exports.");
+        }
+
+        // Safely tear down previous instance if any
+        if (editorInstanceRef.current) {
           try {
-            await editorInstanceRef.current.destroy();
+            const oldInstance = editorInstanceRef.current;
+            editorInstanceRef.current = null;
+            if (typeof oldInstance.destroy === "function") {
+              if (oldInstance.isReady && typeof oldInstance.isReady.then === "function") {
+                await oldInstance.isReady.catch(() => {});
+              }
+              await oldInstance.destroy().catch(() => {});
+            }
           } catch {
             // Ignore teardown errors
           }
-          editorInstanceRef.current = null;
+        }
+
+        if (isCancelled || isDestroyedRef.current) {
+          isInitializingRef.current = false;
+          return;
+        }
+
+        // Clean any stray children inside the holder from interrupted mounts
+        if (holderEl) {
+          holderEl.innerHTML = "";
         }
 
         const editor = new EditorJS({
-          holder: holderId,
+          holder: holderEl,
           readOnly,
           placeholder,
           minHeight,
-          data: getInitialData(),
+          data: initialData,
           tools: {
             header: {
               class: Header,
@@ -259,55 +458,169 @@ export default function EditorJsField({
             },
             delimiter: Delimiter,
           },
-          onChange: async (api) => {
+          onChange: async (api: any) => {
             try {
               const output = await api.saver.save();
-              onChange(output);
+              onChangeRef.current(output);
             } catch (err) {
               console.warn("Editor.js save warning:", err);
             }
           },
           onReady: () => {
-            if (isMounted) {
-              setIsReady(true);
+            if (isCancelled || isDestroyedRef.current) {
+              try {
+                editor.destroy();
+              } catch {}
+              return;
             }
+            editorInstanceRef.current = editor;
+            setStatus("ready");
+            isInitializingRef.current = false;
           },
         });
 
-        editorInstanceRef.current = editor;
-      } catch (err) {
-        console.error("Failed to initialize Editor.js:", err);
+        // Also track isReady promise for robustness
+        if (editor.isReady && typeof editor.isReady.then === "function") {
+          editor.isReady
+            .then(() => {
+              if (!isCancelled && !isDestroyedRef.current) {
+                editorInstanceRef.current = editor;
+                setStatus("ready");
+                isInitializingRef.current = false;
+              }
+            })
+            .catch((err: any) => {
+              if (!isCancelled && !isDestroyedRef.current) {
+                console.error("Editor.js isReady rejected:", err);
+                setStatus("error");
+                setErrorMessage(err?.message || "Editor failed to become ready");
+                isInitializingRef.current = false;
+              }
+            });
+        }
+      } catch (err: any) {
+        if (!isCancelled && !isDestroyedRef.current) {
+          console.error("Failed to initialize Editor.js:", err);
+          setStatus("error");
+          setErrorMessage(err?.message || "Failed to initialize rich editor");
+          isInitializingRef.current = false;
+        }
       }
     }
 
     initEditor();
 
     return () => {
-      isMounted = false;
-      if (editorInstanceRef.current && typeof editorInstanceRef.current.destroy === "function") {
-        try {
-          editorInstanceRef.current.destroy();
-        } catch {
-          // Ignore
+      isCancelled = true;
+      isDestroyedRef.current = true;
+      isInitializingRef.current = false;
+
+      const editor = editorInstanceRef.current;
+      editorInstanceRef.current = null;
+
+      if (editor && typeof editor.destroy === "function") {
+        if (editor.isReady && typeof editor.isReady.then === "function") {
+          editor.isReady
+            .then(() => {
+              try {
+                editor.destroy();
+              } catch {}
+            })
+            .catch(() => {});
+        } else {
+          try {
+            editor.destroy();
+          } catch {}
         }
-        editorInstanceRef.current = null;
       }
     };
+    // Re-run if admin clicks Retry or container dimensions change
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [retryCount, minHeight, placeholder, readOnly]);
+
+  const handleContainerClick = (e: React.MouseEvent) => {
+    if (status === "ready" && editorInstanceRef.current) {
+      const target = e.target as HTMLElement;
+      // If clicking outside an active interactive child (e.g. padding of container)
+      if (
+        !target.closest("[contenteditable='true']") &&
+        !target.closest(".ce-toolbar") &&
+        !target.closest(".ce-popover") &&
+        !target.closest("button") &&
+        !target.closest("input")
+      ) {
+        try {
+          if (typeof editorInstanceRef.current.focus === "function") {
+            editorInstanceRef.current.focus(true);
+          }
+        } catch {
+          const editable = holderRef.current?.querySelector<HTMLElement>("[contenteditable='true']");
+          editable?.focus();
+        }
+      }
+    }
+  };
+
+  const handleRetry = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setStatus("loading");
+    setErrorMessage(null);
+    setRetryCount((prev) => prev + 1);
+  };
 
   return (
     <div
       ref={containerRef}
-      className="editorjs-dark-theme rounded-lg border border-slate-700 bg-slate-800/80 px-3.5 py-2.5 text-xs text-slate-100 transition-colors focus-within:border-emerald-500 focus-within:ring-1 focus-within:ring-emerald-500/20"
+      onClick={handleContainerClick}
+      className="editorjs-dark-theme relative rounded-lg border border-slate-700 bg-slate-800/80 px-3.5 py-2.5 text-xs text-slate-100 transition-colors focus-within:border-emerald-500 focus-within:ring-1 focus-within:ring-emerald-500/20 cursor-text"
       style={{ minHeight: `${minHeight}px` }}
     >
-      <div id={holderId} className="w-full prose-invert" />
-      
+      {/* Loading State */}
+      {status === "loading" && (
+        <div className="flex items-center gap-2 py-3 px-1 text-slate-400 text-xs italic select-none">
+          <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+          <span>Loading editor...</span>
+        </div>
+      )}
+
+      {/* Recoverable Error State */}
+      {status === "error" && (
+        <div className="flex items-center justify-between gap-3 p-3 my-1 rounded bg-rose-950/40 border border-rose-800/60 text-xs text-rose-300">
+          <div className="flex items-center gap-2">
+            <AlertTriangle className="w-4 h-4 text-rose-400 shrink-0" />
+            <span>{errorMessage || "Failed to load rich text editor."}</span>
+          </div>
+          <button
+            type="button"
+            onClick={handleRetry}
+            className="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-semibold rounded bg-rose-800 hover:bg-rose-700 text-white transition-colors shrink-0"
+          >
+            <RotateCw className="w-3 h-3" />
+            Retry
+          </button>
+        </div>
+      )}
+
+      {/* Actual Editor.js Holder */}
+      <div
+        ref={holderRef}
+        id={holderId}
+        className={`w-full prose-invert ${
+          status === "ready" ? "opacity-100" : status === "loading" ? "opacity-20 pointer-events-none" : "hidden"
+        }`}
+      />
+
       {/* Editor.js dark theme overrides */}
       <style jsx global>{`
         .editorjs-dark-theme .codex-editor {
           color: #f1f5f9;
+        }
+        .editorjs-dark-theme .ce-block__content,
+        .editorjs-dark-theme .ce-toolbar__content {
+          max-width: 100%;
+        }
+        .editorjs-dark-theme .codex-editor__redactor {
+          padding-bottom: 16px !important;
         }
         .editorjs-dark-theme .ce-paragraph {
           line-height: 1.6;
@@ -321,9 +634,15 @@ export default function EditorJsField({
           margin-top: 0.75rem;
           margin-bottom: 0.5rem;
         }
-        .editorjs-dark-theme h2.ce-header { font-size: 1.25rem; }
-        .editorjs-dark-theme h3.ce-header { font-size: 1.1rem; }
-        .editorjs-dark-theme h4.ce-header { font-size: 0.95rem; }
+        .editorjs-dark-theme h2.ce-header {
+          font-size: 1.25rem;
+        }
+        .editorjs-dark-theme h3.ce-header {
+          font-size: 1.1rem;
+        }
+        .editorjs-dark-theme h4.ce-header {
+          font-size: 0.95rem;
+        }
         .editorjs-dark-theme .cdx-list {
           padding-left: 1.25rem;
           color: #e2e8f0;
@@ -424,3 +743,4 @@ export default function EditorJsField({
     </div>
   );
 }
+

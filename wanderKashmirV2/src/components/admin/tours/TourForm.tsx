@@ -161,7 +161,12 @@ export default function TourForm({
   const initialItinerary = initialDaysRaw.map((item: any, idx: number) => ({
     day: item.day || `Day ${idx + 1}`,
     title: item.title || "",
-    description: item.desc || item.description || "",
+    description:
+      item.desc !== undefined && item.desc !== null && item.desc !== "" && item.desc !== "[object Object]"
+        ? item.desc
+        : item.description !== undefined && item.description !== null && item.description !== "" && item.description !== "[object Object]"
+        ? item.description
+        : "",
     image: item.image || item.imageUrl || "",
     location: item.location || item.destination || "",
     stay: item.stay || item.overnight || "",
