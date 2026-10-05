@@ -281,94 +281,14 @@ export function generateWhyThisRoute(params: {
   cmsOverride?: string[];
   days?: ResolvedDayRoute[];
 }): string[] {
-  // If CMS-authored override exists and is populated, use it
+  // If CMS-authored override exists and is populated, pass it through
   if (params.cmsOverride && Array.isArray(params.cmsOverride) && params.cmsOverride.length > 0) {
     const valid = params.cmsOverride.map((s) => s.trim()).filter(Boolean);
     if (valid.length > 0) return valid;
   }
 
-  const { circuit, uniqueStops, excursions, overnights, days = [] } = params;
-  const bullets: string[] = [];
-
-  const startStop = circuit[0] || "Srinagar";
-  const endStop = circuit[circuit.length - 1] || "Srinagar";
-  const stopNames = uniqueStops.map((s) => s.name);
-  const nonStartStops = stopNames.filter((n) => n !== startStop);
-
-  // Bullet 1: Route origin and initial progression
-  if (excursions.length > 0 && overnights.length === 0) {
-    // Single base with day excursion(s) (e.g. 3-days-srinagar-gulmarg)
-    bullets.push(
-      `The itinerary begins in ${startStop} and includes a full-day excursion to ${excursions.join(" and ")}.`
-    );
-  } else if (excursions.length > 0 && overnights.length > 0) {
-    // Base with excursion before valley transition (e.g. 7-days-complete-kashmir)
-    bullets.push(
-      `The itinerary begins in ${startStop} and includes a day excursion to ${excursions[0]} before continuing to ${overnights[0]}.`
-    );
-  } else if (nonStartStops.length > 0) {
-    // Transition to first stop (e.g. 4-days-srinagar-gulmarg-pahalgam)
-    bullets.push(
-      `The itinerary begins in ${startStop} before continuing to ${nonStartStops[0]}.`
-    );
-  } else {
-    bullets.push(
-      `The itinerary is based in ${startStop} for local sightseeing and activities.`
-    );
-  }
-
-  // Bullet 2: Intermediate progression / stay structure
-  if (excursions.length > 0 && overnights.length === 0) {
-    bullets.push(
-      `${excursions.join(" and ")} is visited as a day excursion before returning to ${startStop}.`
-    );
-  } else if (overnights.length === 1) {
-    const ov = overnights[0];
-    const daysAtDestination = days.filter((d) => d.destination.toLowerCase() === ov.toLowerCase()).length;
-    if (daysAtDestination >= 2) {
-      bullets.push(
-        `The itinerary includes multiple days in ${ov} for local sightseeing.`
-      );
-    } else {
-      bullets.push(
-        `The itinerary includes an overnight stay in ${ov} before returning to ${startStop}.`
-      );
-    }
-  } else if (overnights.length >= 2) {
-    bullets.push(
-      `The route includes overnight stays in ${overnights.join(" and ")} before returning to ${startStop}.`
-    );
-  } else if (excursions.length > 1) {
-    bullets.push(
-      `Day excursions to ${excursions.join(" and ")} return to ${startStop} in the evening.`
-    );
-  }
-
-  // Bullet 3: Conclusion & departure
-  const lastDay = days[days.length - 1];
-  const lastDayTitle = (lastDay?.title || "").toLowerCase();
-  const lastDayDesc = (lastDay?.desc || "").toLowerCase();
-  const hasAirportDrop =
-    lastDayTitle.includes("airport") ||
-    lastDayTitle.includes("departure") ||
-    lastDayDesc.includes("airport") ||
-    lastDayDesc.includes("departure");
-
-  if (endStop === startStop && hasAirportDrop) {
-    bullets.push(
-      `The tour returns to ${endStop} on the final day for departure.`
-    );
-  } else if (hasAirportDrop) {
-    bullets.push(
-      `The tour concludes in ${endStop} for airport drop-off and departure.`
-    );
-  } else {
-    bullets.push(
-      `The tour concludes in ${endStop} as per the scheduled itinerary.`
-    );
-  }
-
-  return bullets.slice(0, 3);
+  // No automatic marketing copy fallback - editorial copy must be Admin-controlled
+  return [];
 }
 
 /**

@@ -115,7 +115,8 @@ export interface TourPackageDetail {
   reviewsCount: number;
   overview: string;
   images: string[];
-  whyThisRoute: string[];
+  whyThisRoute?: FixedContentValue;
+  howToReachEnabled?: boolean;
   itinerary: TourItineraryDay[];
   inclusions: string[];
   exclusions: string[];
@@ -140,6 +141,8 @@ export interface TourFaqItem {
 }
 
 export interface TourContentSections {
+  howToReachEnabled?: boolean;
+  whyThisRoute?: FixedContentValue;
   bestTime?: FixedContentValue;
   food?: FixedContentValue;
   shopping?: FixedContentValue;

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { ArrowRight } from "lucide-react";
 import CustomizeTripModal from "@/components/CustomizeTripModal";
 import TourCheckAvailabilityModal from "@/components/tours/TourCheckAvailabilityModal";
+import { FixedContentValue } from "@/data/liveToursData";
 
 interface TourStickyBookingCardProps {
   title: string;
@@ -11,7 +12,7 @@ interface TourStickyBookingCardProps {
   originalPrice?: number;
   duration: string;
   maxPersons?: number;
-  whyThisRoute?: string[];
+  whyThisRoute?: FixedContentValue;
 }
 
 export default function TourStickyBookingCard({

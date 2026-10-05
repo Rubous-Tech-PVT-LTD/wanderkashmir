@@ -158,6 +158,12 @@ export default function TourForm({
     }
   }
 
+  // Ensure howToReachEnabled defaults to true for new or existing tours where it is not explicitly false
+  initialContentSections = {
+    ...initialContentSections,
+    howToReachEnabled: initialContentSections.howToReachEnabled !== false,
+  };
+
   const initialItinerary = initialDaysRaw.map((item: any, idx: number) => ({
     day: item.day || `Day ${idx + 1}`,
     title: item.title || "",

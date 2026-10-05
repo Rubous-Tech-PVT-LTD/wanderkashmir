@@ -55,6 +55,8 @@ export interface TourItineraryInputDay {
 }
 
 export interface TourContentSectionsInput {
+  howToReachEnabled?: boolean;
+  whyThisRoute?: FixedContentValue;
   bestTime?: FixedContentValue;
   food?: FixedContentValue;
   shopping?: FixedContentValue;

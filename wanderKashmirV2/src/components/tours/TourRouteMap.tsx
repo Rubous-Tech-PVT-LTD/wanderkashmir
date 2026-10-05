@@ -1,16 +1,17 @@
 "use client";
 
 import Link from "next/link";
-import { MapPin, ArrowRight, Compass, Sparkles, CheckCircle2, ChevronRight, ExternalLink } from "lucide-react";
-import { TourPackageDetail, TourItineraryDay, TourResolvedDestinationItem } from "@/data/liveToursData";
+import { MapPin, ArrowRight, Compass, Sparkles, ChevronRight } from "lucide-react";
+import { TourPackageDetail, TourItineraryDay, TourResolvedDestinationItem, FixedContentValue } from "@/data/liveToursData";
 import { analyzeTourRoute } from "@/lib/tours/routeResolver";
+import { RichContentRenderer, hasRichContent } from "@/components/destinations/RichContentRenderer";
 
 interface TourRouteMapProps {
   tour?: TourPackageDetail;
   destinations?: string[];
   itinerary?: TourItineraryDay[];
   resolvedDestinations?: TourResolvedDestinationItem[];
-  whyThisRoute?: string[];
+  whyThisRoute?: FixedContentValue;
   duration?: string;
 }
 
@@ -25,8 +26,9 @@ export default function TourRouteMap({
   const effectiveDestinations = tour?.destinations || destinations || [];
   const effectiveItinerary = tour?.itinerary || itinerary || [];
   const effectiveResolved = tour?.resolvedDestinations || resolvedDestinations || [];
-  const effectiveWhyThisRoute = tour?.whyThisRoute || whyThisRoute || [];
+  const effectiveWhyThisRoute = tour?.contentSections?.whyThisRoute || tour?.whyThisRoute || whyThisRoute;
   const effectiveDuration = tour?.duration || duration || "";
+  const hasWhyThisRoute = hasRichContent(effectiveWhyThisRoute);
 
   // Perform deterministic route analysis
   const analysis = analyzeTourRoute(
@@ -37,35 +39,30 @@ export default function TourRouteMap({
     effectiveDuration
   );
 
-  const { circuit, uniqueStops, days, whyThisRouteBullets, svgPath } = analysis;
+  const { circuit, uniqueStops, days, svgPath } = analysis;
 
   return (
     <div className="space-y-6">
-      {/* 1. WHY THIS ROUTE (Curated Route Explanation) */}
-      <div className="rounded-xl border border-emerald-100 bg-emerald-50/40 p-4 sm:p-5 space-y-3">
-        <div className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded-lg bg-emerald-100/80 flex items-center justify-center text-[var(--season-primary,#065F46)] shrink-0">
-            <Sparkles className="w-4 h-4 stroke-[2]" />
-          </div>
-          <div>
+      {/* 1. WHY THIS ROUTE (Admin-Authored Route Explanation) */}
+      {hasWhyThisRoute && (
+        <div className="rounded-xl border border-emerald-100 bg-emerald-50/40 p-4 sm:p-5 space-y-3">
+          <div className="flex items-center gap-2">
+            <div className="w-7 h-7 rounded-lg bg-emerald-100/80 flex items-center justify-center text-[var(--season-primary,#065F46)] shrink-0">
+              <Sparkles className="w-4 h-4 stroke-[2]" />
+            </div>
             <h3 className="text-sm sm:text-base font-bold text-slate-900 tracking-tight font-display">
               Why This Route
             </h3>
-            <p className="text-[11px] sm:text-xs text-slate-600">
-              Curated travel circuit based on this tour’s sequence & pacing
-            </p>
+          </div>
+
+          <div className="text-xs sm:text-[13.5px] text-slate-700 leading-relaxed pt-1">
+            <RichContentRenderer
+              content={effectiveWhyThisRoute}
+              className="prose-sm max-w-none text-slate-700"
+            />
           </div>
         </div>
-
-        <ul className="space-y-2 pt-1 text-xs sm:text-[13px] text-slate-700 leading-relaxed">
-          {whyThisRouteBullets.map((bullet, idx) => (
-            <li key={idx} className="flex items-start gap-2.5">
-              <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
-              <span>{bullet}</span>
-            </li>
-          ))}
-        </ul>
-      </div>
+      )}
 
       {/* 2. ROUTE OVERVIEW (Circuit Sequence Breadcrumbs) */}
       <div className="rounded-xl border border-slate-200/90 bg-white p-3.5 sm:p-4 space-y-2">

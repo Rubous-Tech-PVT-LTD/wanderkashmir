@@ -11,6 +11,7 @@ import {
   Trash2,
   ChevronUp,
   ChevronDown,
+  Compass,
 } from "lucide-react";
 import { TourContentSectionsInput } from "@/actions/adminTours";
 import EditorJsField from "@/components/admin/editor/EditorJsField";
@@ -71,7 +72,42 @@ export default function TourFixedContentSectionsEditor({
       </div>
 
       <div className="space-y-6">
-        {/* 1. Best Time to Visit */}
+        {/* 1. How to Reach & Route Explanation */}
+        <div className="space-y-3 p-4 rounded-xl border border-slate-800 bg-slate-900/60">
+          <div className="flex items-center justify-between gap-3">
+            <label className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-slate-300">
+              <Compass className="w-3.5 h-3.5 text-emerald-400" />
+              <span>How to Reach & Route Explanation</span>
+            </label>
+            <label className="flex items-center gap-2 cursor-pointer text-xs font-medium text-slate-300 select-none">
+              <input
+                type="checkbox"
+                checked={contentSections.howToReachEnabled !== false}
+                onChange={(e) => updateField("howToReachEnabled", e.target.checked)}
+                className="w-4 h-4 rounded border-slate-700 bg-slate-800 text-emerald-500 focus:ring-emerald-500 focus:ring-offset-slate-900 cursor-pointer"
+              />
+              <span>Show How to Reach</span>
+            </label>
+          </div>
+
+          <p className="text-xs text-slate-400">
+            When enabled, the public page displays the dynamic route circuit and map. Use &quot;Why This Route&quot; below to explain route pacing and connectivity. If left empty, no marketing copy will be shown.
+          </p>
+
+          <div className="space-y-2 pt-1">
+            <label className="block text-[11px] font-semibold uppercase tracking-wider text-slate-400">
+              Why This Route Details
+            </label>
+            <EditorJsField
+              value={contentSections.whyThisRoute}
+              onChange={(val: any) => updateField("whyThisRoute", val)}
+              placeholder="Explain the travel circuit sequence, pacing, and route connectivity..."
+              minHeight={120}
+            />
+          </div>
+        </div>
+
+        {/* 2. Best Time to Visit */}
         <div className="space-y-2">
           <label className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-slate-300">
             <Clock className="w-3.5 h-3.5 text-emerald-400" />
@@ -85,7 +121,7 @@ export default function TourFixedContentSectionsEditor({
           />
         </div>
 
-        {/* 2. Food Recommendations */}
+        {/* 3. Food Recommendations */}
         <div className="space-y-2">
           <label className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-slate-300">
             <UtensilsCrossed className="w-3.5 h-3.5 text-emerald-400" />
@@ -99,7 +135,7 @@ export default function TourFixedContentSectionsEditor({
           />
         </div>
 
-        {/* 3. Shopping Recommendations */}
+        {/* 4. Shopping Recommendations */}
         <div className="space-y-2">
           <label className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-slate-300">
             <Sparkles className="w-3.5 h-3.5 text-emerald-400" />
@@ -113,7 +149,7 @@ export default function TourFixedContentSectionsEditor({
           />
         </div>
 
-        {/* 4. Nearby Places */}
+        {/* 5. Nearby Places */}
         <div className="space-y-2">
           <label className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-slate-300">
             <MapPin className="w-3.5 h-3.5 text-emerald-400" />
@@ -127,7 +163,7 @@ export default function TourFixedContentSectionsEditor({
           />
         </div>
 
-        {/* 5. Frequently Asked Questions */}
+        {/* 6. Frequently Asked Questions */}
         <div className="space-y-3 pt-3 border-t border-slate-800">
           <div className="flex items-center justify-between">
             <label className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-slate-300">

@@ -965,54 +965,56 @@ export default function TourContentTabs({ tour }: TourContentTabsProps) {
         </section>
 
         {/* How to Reach / Route Map Section */}
-        <section
-          id="how-to-reach"
-          className={`rounded-xl border transition-colors duration-150 scroll-mt-24 bg-white ${
-            openSections["how-to-reach"]
-              ? "border-slate-300 shadow-2xs"
-              : "border-slate-200/90 hover:border-slate-300"
-          }`}
-        >
-          <button
-            type="button"
-            onClick={() => toggleSection("how-to-reach")}
-            className="w-full flex items-center justify-between text-left px-3.5 py-3 sm:px-4.5 sm:py-3.5 min-h-[52px] sm:min-h-[58px] group cursor-pointer"
-            aria-expanded={!!openSections["how-to-reach"]}
-            aria-controls="content-how-to-reach"
+        {tour.howToReachEnabled !== false && tour.contentSections?.howToReachEnabled !== false && (
+          <section
+            id="how-to-reach"
+            className={`rounded-xl border transition-colors duration-150 scroll-mt-24 bg-white ${
+              openSections["how-to-reach"]
+                ? "border-slate-300 shadow-2xs"
+                : "border-slate-200/90 hover:border-slate-300"
+            }`}
           >
-            <div className="flex items-center gap-3 min-w-0 pr-2">
-              <div className="w-8 h-8 rounded-lg bg-slate-50 border border-slate-100 flex items-center justify-center shrink-0 text-[var(--season-primary)] group-hover:bg-emerald-50 transition-colors">
-                <Compass className="w-4 h-4 stroke-[1.75]" />
-              </div>
-              <div className="min-w-0">
-                <h2 className="text-[15px] sm:text-[17px] font-semibold text-slate-900 leading-snug tracking-tight group-hover:text-[var(--season-primary)] transition-colors">
-                  How to Reach
-                </h2>
-                <p className="text-[12px] sm:text-[13px] text-slate-500 leading-tight truncate mt-0.5">
-                  Route map, destination circuit and connectivity
-                </p>
-              </div>
-            </div>
-            <ChevronDown
-              className={`w-4 h-4 text-slate-400 shrink-0 transition-transform duration-200 group-hover:text-slate-700 ${
-                openSections["how-to-reach"] ? "rotate-180 text-[var(--season-primary)]" : ""
-              }`}
-            />
-          </button>
-
-          {openSections["how-to-reach"] && (
-            <div
-              id="content-how-to-reach"
-              className="px-4 pb-4 sm:px-4.5 sm:pb-4.5 pt-3.5 border-t border-slate-100/90 animate-in fade-in slide-in-from-top-1 duration-200"
+            <button
+              type="button"
+              onClick={() => toggleSection("how-to-reach")}
+              className="w-full flex items-center justify-between text-left px-3.5 py-3 sm:px-4.5 sm:py-3.5 min-h-[52px] sm:min-h-[58px] group cursor-pointer"
+              aria-expanded={!!openSections["how-to-reach"]}
+              aria-controls="content-how-to-reach"
             >
-              <TourRouteMap
-                tour={tour}
-                destinations={tour.destinations || []}
-                itinerary={tour.itinerary || []}
+              <div className="flex items-center gap-3 min-w-0 pr-2">
+                <div className="w-8 h-8 rounded-lg bg-slate-50 border border-slate-100 flex items-center justify-center shrink-0 text-[var(--season-primary)] group-hover:bg-emerald-50 transition-colors">
+                  <Compass className="w-4 h-4 stroke-[1.75]" />
+                </div>
+                <div className="min-w-0">
+                  <h2 className="text-[15px] sm:text-[17px] font-semibold text-slate-900 leading-snug tracking-tight group-hover:text-[var(--season-primary)] transition-colors">
+                    How to Reach
+                  </h2>
+                  <p className="text-[12px] sm:text-[13px] text-slate-500 leading-tight truncate mt-0.5">
+                    Route map, destination circuit and connectivity
+                  </p>
+                </div>
+              </div>
+              <ChevronDown
+                className={`w-4 h-4 text-slate-400 shrink-0 transition-transform duration-200 group-hover:text-slate-700 ${
+                  openSections["how-to-reach"] ? "rotate-180 text-[var(--season-primary)]" : ""
+                }`}
               />
-            </div>
-          )}
-        </section>
+            </button>
+
+            {openSections["how-to-reach"] && (
+              <div
+                id="content-how-to-reach"
+                className="px-4 pb-4 sm:px-4.5 sm:pb-4.5 pt-3.5 border-t border-slate-100/90 animate-in fade-in slide-in-from-top-1 duration-200"
+              >
+                <TourRouteMap
+                  tour={tour}
+                  destinations={tour.destinations || []}
+                  itinerary={tour.itinerary || []}
+                />
+              </div>
+            )}
+          </section>
+        )}
 
         <section
           id="food"
