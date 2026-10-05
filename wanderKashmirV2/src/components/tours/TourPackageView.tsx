@@ -87,6 +87,13 @@ export default function TourPackageView({ tour, otherTours }: TourPackageViewPro
                   <span>Reviews coming soon</span>
                 </div>
               )}
+
+              {/* Tour Overview / Description */}
+              {tour.overview && (
+                <p className="text-xs sm:text-sm text-slate-600 leading-relaxed pt-1 whitespace-pre-line">
+                  {tour.overview}
+                </p>
+              )}
             </div>
 
             {/* Key Highlights (Rendered if populated in DB) */}
