@@ -165,25 +165,25 @@ function packTourItineraryPayload(
           image:
             d.image !== undefined
               ? d.image
-                ? String(d.image).trim()
+                ? String(d.image).trim() || undefined
                 : undefined
               : existingDay.image,
           location:
             d.location !== undefined
               ? d.location
-                ? String(d.location).trim()
+                ? String(d.location).trim() || undefined
                 : undefined
               : existingDay.location,
           stay:
             d.stay !== undefined
               ? d.stay
-                ? String(d.stay).trim()
+                ? String(d.stay).trim() || undefined
                 : undefined
               : existingDay.stay,
           meals:
             d.meals !== undefined
               ? d.meals
-                ? String(d.meals).trim()
+                ? String(d.meals).trim() || undefined
                 : undefined
               : existingDay.meals,
           activities: Array.isArray(d.activities)

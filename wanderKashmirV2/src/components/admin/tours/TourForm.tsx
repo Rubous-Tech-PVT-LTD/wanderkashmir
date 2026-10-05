@@ -514,10 +514,10 @@ export default function TourForm({
           day: d.day || `Day ${idx + 1}`,
           title: d.title,
           description: d.description,
-          image: d.image.trim() || undefined,
-          location: d.location.trim() || undefined,
-          stay: d.stay.trim() || undefined,
-          meals: d.meals.trim() || undefined,
+          image: (d.image || "").trim(),
+          location: (d.location || "").trim(),
+          stay: (d.stay || "").trim(),
+          meals: (d.meals || "").trim(),
           activities: d.activities
             ? d.activities
                 .split(",")
