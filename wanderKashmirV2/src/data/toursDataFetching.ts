@@ -7,8 +7,23 @@ export const getTourFromDB = cache(async function(slug: string): Promise<TourPac
     const tour = await prisma.tour.findUnique({
       where: { slug },
       include: {
-        stays: true,
-        transports: { include: { vehicle: true, driver: true } },
+        stays: {
+          include: {
+            property: true,
+          },
+          orderBy: { displayOrder: "asc" },
+        },
+        transports: {
+          include: {
+            vehicle: {
+              include: {
+                vendorProfile: true,
+              },
+            },
+            driver: true,
+          },
+          orderBy: { displayOrder: "asc" },
+        },
         experiences: { include: { experience: true } },
         reviews: { include: { user: { select: { name: true } } } },
         tourCategory: true,
@@ -163,22 +178,90 @@ export const getTourFromDB = cache(async function(slug: string): Promise<TourPac
         rating: r.rating,
         text: r.comment || "",
       })) || [],
-      stays: tour.stays?.map((s: { id: string; destination: string; nights: number; stayType?: string | null; displayOrder: number; propertyId?: string | null }) => ({
+      stays: tour.stays?.map((s: {
+        id: string;
+        destination: string;
+        nights: number;
+        stayType?: string | null;
+        displayOrder: number;
+        propertyId?: string | null;
+        property?: {
+          id: string;
+          name: string;
+          location: string;
+          propertyType: string;
+          images: string[];
+        } | null;
+      }) => ({
         id: s.id,
         destination: s.destination,
         nights: s.nights,
         stayType: s.stayType || undefined,
         displayOrder: s.displayOrder,
         propertyId: s.propertyId,
+        name: s.property?.name || null,
+        type: s.property?.propertyType || s.stayType || null,
+        location: s.property?.location || s.destination || null,
+        image: s.property?.images && s.property.images.length > 0 ? s.property.images[0] : null,
       })) || [],
-      transports: tour.transports?.map((t: { id: string; origin: string; destination: string; purpose?: string | null; displayOrder: number; vehicleId?: string | null; driverId?: string | null }) => ({
+      transports: tour.transports?.map((t: {
+        id: string;
+        origin: string;
+        destination: string;
+        purpose?: string | null;
+        displayOrder: number;
+        status?: string;
+        vehicleId?: string | null;
+        driverId?: string | null;
+        vehicle?: {
+          id: string;
+          make?: string | null;
+          model: string;
+          type?: string | null;
+          registrationNum?: string | null;
+          capacity?: number;
+          images?: string[];
+          vendorProfile?: {
+            businessName?: string | null;
+          } | null;
+        } | null;
+        driver?: {
+          id: string;
+          name: string;
+          status?: string;
+        } | null;
+      }) => ({
         id: t.id,
         origin: t.origin,
         destination: t.destination,
         purpose: t.purpose,
         displayOrder: t.displayOrder,
+        status: t.status,
         vehicleId: t.vehicleId,
+        vehicle: t.vehicle
+          ? {
+              id: t.vehicle.id,
+              make: t.vehicle.make,
+              model: t.vehicle.model,
+              type: t.vehicle.type,
+              registrationNum: t.vehicle.registrationNum,
+              capacity: t.vehicle.capacity,
+              images: t.vehicle.images || [],
+              vendorProfile: t.vehicle.vendorProfile
+                ? {
+                    businessName: t.vehicle.vendorProfile.businessName,
+                  }
+                : null,
+            }
+          : null,
         driverId: t.driverId,
+        driver: t.driver
+          ? {
+              id: t.driver.id,
+              name: t.driver.name,
+              status: t.driver.status,
+            }
+          : null,
       })) || [],
       experiences: tour.experiences?.map((te: NonNullable<typeof tour.experiences>[number]) => ({
         id: te.id,

@@ -265,21 +265,29 @@ export default function TourContentTabs({ tour }: TourContentTabsProps) {
               {tour.stays && tour.stays.length > 0 ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   {tour.stays.map((stay) => {
-                    if (stay.propertyId && stay.image && stay.name) {
+                    const isStayAssigned = Boolean(stay.propertyId && (stay.name || stay.propertyId));
+                    if (isStayAssigned) {
                       return (
                         <Link
                           key={stay.id}
-                          href={`/stays/${stay.propertyId}`}
+                          href={stay.propertyId ? `/stays/${stay.propertyId}` : "#"}
                           className="group p-3 rounded-lg border border-slate-200/80 bg-slate-50/30 hover:border-[var(--season-primary)]/70 hover:shadow-2xs transition-all space-y-2.5 block"
                         >
                           <div className="relative aspect-16/10 rounded-md overflow-hidden bg-slate-100">
-                            <Image
-                              src={stay.image}
-                              alt={stay.name}
-                              fill
-                              sizes="(max-width: 640px) 100vw, 50vw"
-                              className="object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
-                            />
+                            {stay.image ? (
+                              <Image
+                                src={stay.image}
+                                alt={stay.name || "Accommodation"}
+                                fill
+                                sizes="(max-width: 640px) 100vw, 50vw"
+                                className="object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
+                              />
+                            ) : (
+                              <div className="w-full h-full flex flex-col items-center justify-center bg-emerald-50/50 text-[var(--season-primary)]">
+                                <BedDouble className="w-8 h-8 opacity-40" />
+                                <span className="text-[11px] text-slate-500 font-medium mt-1">Verified Stay Partner</span>
+                              </div>
+                            )}
                             <div className="absolute top-2 left-2 px-2 py-0.5 rounded text-[11px] font-semibold bg-black/60 text-white backdrop-blur-xs">
                               {stay.nights} {stay.nights === 1 ? "Night" : "Nights"}
                             </div>
@@ -810,7 +818,8 @@ export default function TourContentTabs({ tour }: TourContentTabsProps) {
                     const driver = seg.driver;
 
                     if (isAssigned && vehicle) {
-                      const vehicleTitle = `${vehicle.make ? vehicle.make + " " : ""}${vehicle.model}`;
+                      const make = vehicle.make && vehicle.make.toLowerCase() !== "default" ? `${vehicle.make} ` : "";
+                      const vehicleTitle = `${make}${vehicle.model}`;
                       const vehicleImg = vehicle.images && vehicle.images.length > 0 ? vehicle.images[0] : null;
 
                       return (

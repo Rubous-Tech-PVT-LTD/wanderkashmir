@@ -237,6 +237,8 @@ async function verifyAdminAuth(): Promise<{ authorized: boolean; error?: string;
 function revalidateTourPaths(slug?: string, prevSlug?: string) {
   try {
     revalidatePath("/tours");
+    revalidatePath("/tour");
+    revalidatePath("/");
     if (slug) revalidatePath(`/tours/${slug}`);
     if (prevSlug && prevSlug !== slug) revalidatePath(`/tours/${prevSlug}`);
     revalidatePath("/admin/tours");
