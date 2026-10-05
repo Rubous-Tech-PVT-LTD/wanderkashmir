@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use server";
 
 import prisma from "@/lib/prisma";
@@ -39,11 +40,13 @@ export interface TourTravelGuideInput {
   displayOrder?: number;
 }
 
+export type FixedContentValue = string | { time?: number; blocks: any[]; version?: string } | any;
+
 export interface TourItineraryInputDay {
   day: string;
   title: string;
-  description?: string;
-  desc?: string;
+  description?: FixedContentValue;
+  desc?: FixedContentValue;
   image?: string;
   location?: string;
   stay?: string;
@@ -52,11 +55,11 @@ export interface TourItineraryInputDay {
 }
 
 export interface TourContentSectionsInput {
-  bestTime?: string;
-  food?: string;
-  shopping?: string;
-  nearby?: string;
-  faqs?: { question: string; answer: string }[];
+  bestTime?: FixedContentValue;
+  food?: FixedContentValue;
+  shopping?: FixedContentValue;
+  nearby?: FixedContentValue;
+  faqs?: { question: string; answer: FixedContentValue }[];
 }
 
 export interface TourDynamicBlockInput {
@@ -128,7 +131,7 @@ function packTourItineraryPayload(
   dynamicBlocks?: TourDynamicBlockInput[],
   existingItinerary?: any
 ): Prisma.InputJsonValue | typeof Prisma.JsonNull {
-  let existingDaysMap: Record<string, any> = {};
+  const existingDaysMap: Record<string, any> = {};
   if (existingItinerary) {
     const rawDays = Array.isArray(existingItinerary)
       ? existingItinerary
@@ -148,16 +151,17 @@ function packTourItineraryPayload(
         const dayLabel = d.day ? String(d.day).trim() : `Day ${idx + 1}`;
         const existingDay = existingDaysMap[dayLabel.toLowerCase()] || {};
 
+        const rawDesc =
+          d.description !== undefined
+            ? d.description
+            : d.desc !== undefined
+            ? d.desc
+            : existingDay.desc || existingDay.description || "";
+
         return {
           day: dayLabel,
           title: String(d.title !== undefined ? d.title : existingDay.title || "").trim(),
-          desc: String(
-            d.description !== undefined
-              ? d.description
-              : d.desc !== undefined
-              ? d.desc
-              : existingDay.desc || existingDay.description || ""
-          ).trim(),
+          desc: typeof rawDesc === "string" ? rawDesc.trim() : rawDesc,
           image:
             d.image !== undefined
               ? d.image

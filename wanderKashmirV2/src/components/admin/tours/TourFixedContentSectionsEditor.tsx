@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import {
@@ -12,6 +13,7 @@ import {
   ChevronDown,
 } from "lucide-react";
 import { TourContentSectionsInput } from "@/actions/adminTours";
+import EditorJsField from "@/components/admin/editor/EditorJsField";
 
 interface TourFixedContentSectionsEditorProps {
   contentSections: TourContentSectionsInput;
@@ -36,7 +38,7 @@ export default function TourFixedContentSectionsEditor({
     updateField("faqs", updated);
   };
 
-  const updateFaq = (index: number, field: "question" | "answer", val: string) => {
+  const updateFaq = (index: number, field: "question" | "answer", val: any) => {
     const updated = [...faqs];
     updated[index] = { ...updated[index], [field]: val };
     updateField("faqs", updated);
@@ -64,73 +66,69 @@ export default function TourFixedContentSectionsEditor({
           Fixed Template Content Sections
         </h2>
         <p className="text-xs text-slate-400 mt-1">
-          Configure the text and guidance rendered inside the fixed accordion tabs on the public Tour page. Empty sections gracefully display the default seasonal placeholder.
+          Full rich content authoring inside the fixed accordion tabs on the public Tour page. Use headings, lists, tables, quotes, and links. Empty sections gracefully display the default seasonal placeholder.
         </p>
       </div>
 
-      <div className="space-y-5">
+      <div className="space-y-6">
         {/* 1. Best Time to Visit */}
-        <div className="space-y-1.5">
+        <div className="space-y-2">
           <label className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-slate-300">
             <Clock className="w-3.5 h-3.5 text-emerald-400" />
             <span>Best Time to Visit</span>
           </label>
-          <textarea
-            rows={3}
-            value={contentSections.bestTime || ""}
-            onChange={(e) => updateField("bestTime", e.target.value)}
-            placeholder="e.g. April to October offers pleasant weather, blossoming gardens, and open passes. For snow lovers, December to February is ideal..."
-            className="w-full rounded-lg border border-slate-700 bg-slate-800/80 px-3.5 py-2.5 text-xs text-white focus:border-emerald-500 focus:outline-none leading-relaxed"
+          <EditorJsField
+            value={contentSections.bestTime}
+            onChange={(val: any) => updateField("bestTime", val)}
+            placeholder="Describe the best seasons, weather patterns, and seasonal highlights..."
+            minHeight={120}
           />
         </div>
 
         {/* 2. Food Recommendations */}
-        <div className="space-y-1.5">
+        <div className="space-y-2">
           <label className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-slate-300">
             <UtensilsCrossed className="w-3.5 h-3.5 text-emerald-400" />
             <span>Food & Dining Recommendations</span>
           </label>
-          <textarea
-            rows={3}
-            value={contentSections.food || ""}
-            onChange={(e) => updateField("food", e.target.value)}
-            placeholder="e.g. Authentic Kashmiri Wazwan (Rogan Josh, Gushtaba, Rista), fresh Dal Lake lotus stem (Nadru), and traditional saffron Kahwa..."
-            className="w-full rounded-lg border border-slate-700 bg-slate-800/80 px-3.5 py-2.5 text-xs text-white focus:border-emerald-500 focus:outline-none leading-relaxed"
+          <EditorJsField
+            value={contentSections.food}
+            onChange={(val: any) => updateField("food", val)}
+            placeholder="Recommend Kashmiri specialties, Wazwan, vegetarian choices, and top cafes..."
+            minHeight={140}
           />
         </div>
 
         {/* 3. Shopping Recommendations */}
-        <div className="space-y-1.5">
+        <div className="space-y-2">
           <label className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-slate-300">
             <Sparkles className="w-3.5 h-3.5 text-emerald-400" />
             <span>Shopping & Local Souvenirs</span>
           </label>
-          <textarea
-            rows={3}
-            value={contentSections.shopping || ""}
-            onChange={(e) => updateField("shopping", e.target.value)}
-            placeholder="e.g. Pure Pashmina shawls, hand-knotted silk carpets, walnut wood carvings, saffron, dried morels (Gucchi), and paper-mâché handicrafts..."
-            className="w-full rounded-lg border border-slate-700 bg-slate-800/80 px-3.5 py-2.5 text-xs text-white focus:border-emerald-500 focus:outline-none leading-relaxed"
+          <EditorJsField
+            value={contentSections.shopping}
+            onChange={(val: any) => updateField("shopping", val)}
+            placeholder="Highlight authentic Pashmina, walnut wood, saffron, paper-mâché, and local bazaars..."
+            minHeight={140}
           />
         </div>
 
         {/* 4. Nearby Places */}
-        <div className="space-y-1.5">
+        <div className="space-y-2">
           <label className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-slate-300">
             <MapPin className="w-3.5 h-3.5 text-emerald-400" />
             <span>Nearby Places to Explore</span>
           </label>
-          <textarea
-            rows={3}
-            value={contentSections.nearby || ""}
-            onChange={(e) => updateField("nearby", e.target.value)}
-            placeholder="e.g. Doodhpathri (Valley of Milk), Yusmarg alpine meadows, Verinag Spring, and Daksum forest retreat..."
-            className="w-full rounded-lg border border-slate-700 bg-slate-800/80 px-3.5 py-2.5 text-xs text-white focus:border-emerald-500 focus:outline-none leading-relaxed"
+          <EditorJsField
+            value={contentSections.nearby}
+            onChange={(val: any) => updateField("nearby", val)}
+            placeholder="Suggest scenic day excursions, offbeat valleys, and hidden gems..."
+            minHeight={120}
           />
         </div>
 
         {/* 5. Frequently Asked Questions */}
-        <div className="space-y-3 pt-2 border-t border-slate-800">
+        <div className="space-y-3 pt-3 border-t border-slate-800">
           <div className="flex items-center justify-between">
             <label className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-slate-300">
               <HelpCircle className="w-3.5 h-3.5 text-emerald-400" />
@@ -150,11 +148,11 @@ export default function TourFixedContentSectionsEditor({
               No tour-specific FAQs configured. Click &quot;Add FAQ&quot; to answer questions about permits, clothing, or transfers.
             </p>
           ) : (
-            <div className="space-y-3">
+            <div className="space-y-4">
               {faqs.map((faq, idx) => (
                 <div
                   key={idx}
-                  className="rounded-lg border border-slate-800 bg-slate-900/60 p-3.5 space-y-2.5"
+                  className="rounded-lg border border-slate-800 bg-slate-900/60 p-4 space-y-3"
                 >
                   <div className="flex items-center justify-between gap-2">
                     <span className="w-5 h-5 rounded bg-slate-800 text-slate-300 text-[10px] font-bold flex items-center justify-center shrink-0 border border-slate-700">
@@ -165,7 +163,7 @@ export default function TourFixedContentSectionsEditor({
                       value={faq.question}
                       onChange={(e) => updateFaq(idx, "question", e.target.value)}
                       placeholder="e.g. Is a Shikara ride included in this package?"
-                      className="flex-1 rounded border border-slate-700 bg-slate-800 px-2.5 py-1 text-xs font-semibold text-white focus:border-emerald-500 focus:outline-none"
+                      className="flex-1 rounded border border-slate-700 bg-slate-800 px-2.5 py-1.5 text-xs font-semibold text-white focus:border-emerald-500 focus:outline-none"
                     />
                     <div className="flex items-center gap-0.5">
                       <button
@@ -197,13 +195,17 @@ export default function TourFixedContentSectionsEditor({
                     </div>
                   </div>
 
-                  <textarea
-                    rows={2}
-                    value={faq.answer}
-                    onChange={(e) => updateFaq(idx, "answer", e.target.value)}
-                    placeholder="e.g. Yes, a 1-hour private Shikara ride on Dal Lake is included for all travelers..."
-                    className="w-full rounded border border-slate-700 bg-slate-800 px-2.5 py-1.5 text-xs text-white focus:border-emerald-500 focus:outline-none"
-                  />
+                  <div className="space-y-1">
+                    <label className="text-[10px] uppercase font-semibold tracking-wider text-slate-400">
+                      Answer Details
+                    </label>
+                    <EditorJsField
+                      value={faq.answer}
+                      onChange={(val: any) => updateFaq(idx, "answer", val)}
+                      placeholder="e.g. Yes, a 1-hour private Shikara ride on Dal Lake is included for all travelers..."
+                      minHeight={80}
+                    />
+                  </div>
                 </div>
               ))}
             </div>

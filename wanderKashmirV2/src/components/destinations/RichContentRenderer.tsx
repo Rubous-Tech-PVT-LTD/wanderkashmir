@@ -1,5 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any, @next/next/no-img-element */
 import React from "react";
-import Image from "next/image";
 import { marked } from "marked";
 import { 
   Info, 
@@ -7,9 +7,7 @@ import {
   AlertTriangle, 
   Quote, 
   ExternalLink, 
-  CheckCircle2, 
-  Play, 
-  Video 
+  CheckCircle2 
 } from "lucide-react";
 
 export type RichContentNode =
@@ -51,31 +49,114 @@ export function hasRichContent(content: SectionRichContent): boolean {
   return false;
 }
 
+export function normalizeEditorJsBlock(b: any): RichContentNode | null {
+  if (!b || typeof b !== "object") return null;
+  const type = String(b.type || "").toLowerCase();
+  const data = b.data || {};
+
+  switch (type) {
+    case "header":
+    case "heading": {
+      return {
+        type: "heading",
+        level: (data.level || 3) as 2 | 3 | 4,
+        text: data.text || "",
+      };
+    }
+    case "paragraph": {
+      return {
+        type: "paragraph",
+        text: data.text || "",
+      };
+    }
+    case "list": {
+      const rawItems = Array.isArray(data.items) ? data.items : [];
+      const flatItems = rawItems.map((item: any) =>
+        typeof item === "string" ? item : item?.content || String(item || "")
+      );
+      return {
+        type: "list",
+        style: data.style === "ordered" ? "numbered" : "bullet",
+        items: flatItems,
+      };
+    }
+    case "quote": {
+      return {
+        type: "callout",
+        variant: "quote",
+        title: data.caption || "Quote",
+        text: data.text || "",
+      };
+    }
+    case "table": {
+      const content = Array.isArray(data.content) ? data.content : [];
+      const withHeadings = Boolean(data.withHeadings);
+      if (content.length === 0) return null;
+      let headers: string[] = [];
+      let rows: string[][] = [];
+      if (withHeadings && content.length > 0) {
+        headers = content[0] || [];
+        rows = content.slice(1);
+      } else {
+        rows = content;
+      }
+      return {
+        type: "table",
+        headers,
+        rows,
+      };
+    }
+    case "delimiter": {
+      return {
+        type: "paragraph",
+        text: "✦ ✦ ✦",
+      };
+    }
+    default:
+      if (data.text) {
+        return {
+          type: "paragraph",
+          text: data.text,
+        };
+      }
+      return null;
+  }
+}
+
 /**
  * Parses raw input into a normalized array of RichContentNode or null
  */
 export function normalizeRichBlocks(content: SectionRichContent): RichContentNode[] | null {
   if (!content) return null;
 
+  let rawBlocks: any[] | null = null;
+
   if (Array.isArray(content)) {
-    return content;
-  }
-
-  if (typeof content === "object" && Array.isArray(content.blocks)) {
-    return content.blocks;
-  }
-
-  if (typeof content === "string") {
+    rawBlocks = content;
+  } else if (typeof content === "object" && Array.isArray((content as any).blocks)) {
+    rawBlocks = (content as any).blocks;
+  } else if (typeof content === "string") {
     const trimmed = content.trim();
     if ((trimmed.startsWith("[") && trimmed.endsWith("]")) || (trimmed.startsWith("{") && trimmed.endsWith("}"))) {
       try {
         const parsed = JSON.parse(trimmed);
-        if (Array.isArray(parsed)) return parsed;
-        if (parsed && Array.isArray(parsed.blocks)) return parsed.blocks;
+        if (Array.isArray(parsed)) rawBlocks = parsed;
+        else if (parsed && Array.isArray(parsed.blocks)) rawBlocks = parsed.blocks;
       } catch {
         // Fall back to markdown text
       }
     }
+  }
+
+  if (rawBlocks && Array.isArray(rawBlocks)) {
+    const isEditorJs = rawBlocks.some((b) => b && typeof b === "object" && "data" in b);
+    if (isEditorJs) {
+      const converted = rawBlocks
+        .map((b) => (b && typeof b === "object" && "data" in b ? normalizeEditorJsBlock(b) : b))
+        .filter(Boolean) as RichContentNode[];
+      return converted.length > 0 ? converted : null;
+    }
+    return rawBlocks as RichContentNode[];
   }
 
   return null;
@@ -264,9 +345,11 @@ function RichBlockItem({ block }: { block: RichContentNode }) {
                 {rows.map((row, rIdx) => (
                   <tr key={rIdx} className="hover:bg-slate-50/50 transition-colors">
                     {(Array.isArray(row) ? row : []).map((cell, cIdx) => (
-                      <td key={cIdx} className="px-4 py-3 text-slate-600">
-                        {cell}
-                      </td>
+                      <td
+                        key={cIdx}
+                        className="px-4 py-3 text-slate-600"
+                        dangerouslySetInnerHTML={{ __html: sanitizeHtml(String(cell || "")) }}
+                      />
                     ))}
                   </tr>
                 ))}
@@ -289,7 +372,7 @@ function RichBlockItem({ block }: { block: RichContentNode }) {
                 <span className="shrink-0 flex items-center justify-center w-6 h-6 rounded-full bg-orange-100 text-orange-600 font-bold text-xs mt-0.5">
                   {iIdx + 1}
                 </span>
-                <span>{item}</span>
+                <span dangerouslySetInnerHTML={{ __html: sanitizeHtml(String(item || "")) }} />
               </li>
             ))}
           </ol>
@@ -304,7 +387,7 @@ function RichBlockItem({ block }: { block: RichContentNode }) {
               <span className="shrink-0 flex items-center justify-center w-5 h-5 rounded-full bg-slate-100 text-orange-500 mt-1">
                 <CheckCircle2 className="w-3.5 h-3.5" />
               </span>
-              <span>{item}</span>
+              <span dangerouslySetInnerHTML={{ __html: sanitizeHtml(String(item || "")) }} />
             </li>
           ))}
         </ul>
@@ -348,7 +431,10 @@ function RichBlockItem({ block }: { block: RichContentNode }) {
                 {block.title || cfg.defaultTitle}
               </h5>
             )}
-            <p className="text-sm sm:text-base leading-relaxed">{block.text}</p>
+            <div
+              className="text-sm sm:text-base leading-relaxed"
+              dangerouslySetInnerHTML={{ __html: sanitizeHtml(String(block.text || "")) }}
+            />
           </div>
         </div>
       );

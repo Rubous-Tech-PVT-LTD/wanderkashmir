@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import { useState } from "react";
@@ -20,10 +21,8 @@ import {
   Car,
   Sparkles,
   BookOpen,
-  ArrowRight,
   ImageIcon,
   MapPin,
-  UtensilsCrossed,
 } from "lucide-react";
 import {
   createTourAction,
@@ -39,6 +38,7 @@ import {
 } from "@/actions/adminTours";
 import TourFixedContentSectionsEditor from "./TourFixedContentSectionsEditor";
 import TourDynamicBlocksEditor from "./TourDynamicBlocksEditor";
+import EditorJsField from "@/components/admin/editor/EditorJsField";
 
 interface TourCategoryOption {
   id: string;
@@ -212,7 +212,7 @@ export default function TourForm({
     {
       day: string;
       title: string;
-      description: string;
+      description: any;
       image: string;
       location: string;
       stay: string;
@@ -344,7 +344,7 @@ export default function TourForm({
       | "stay"
       | "meals"
       | "activities",
-    val: string
+    val: any
   ) => {
     const updated = [...itinerary];
     updated[index][field] = val;
@@ -1226,16 +1226,15 @@ export default function TourForm({
                 </div>
 
                 {/* Row 5: Detailed Description */}
-                <div>
+                <div className="space-y-1">
                   <label className="block text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1">
                     Day Schedule Details
                   </label>
-                  <textarea
-                    rows={3}
+                  <EditorJsField
                     value={item.description}
-                    onChange={(e) => updateItineraryItem(idx, "description", e.target.value)}
+                    onChange={(val: any) => updateItineraryItem(idx, "description", val)}
                     placeholder="Full day narrative, schedule milestones, meeting points, sightseeing notes..."
-                    className="w-full rounded border border-slate-700 bg-slate-800 px-2.5 py-2 text-xs text-slate-200 focus:border-emerald-500 focus:outline-none leading-relaxed"
+                    minHeight={100}
                   />
                 </div>
               </div>

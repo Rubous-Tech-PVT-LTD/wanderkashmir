@@ -1,7 +1,8 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 export interface TourItineraryDay {
   day: number | string;
   title: string;
-  desc: string;
+  desc: string | any;
   activities?: string[];
   location?: string;
   stay?: string;
@@ -130,17 +131,19 @@ export interface TourPackageDetail {
   maxPersons: number;
 }
 
+export type FixedContentValue = string | { time?: number; blocks: any[]; version?: string } | any;
+
 export interface TourFaqItem {
   id?: string;
   question: string;
-  answer: string;
+  answer: FixedContentValue;
 }
 
 export interface TourContentSections {
-  bestTime?: string;
-  food?: string;
-  shopping?: string;
-  nearby?: string;
+  bestTime?: FixedContentValue;
+  food?: FixedContentValue;
+  shopping?: FixedContentValue;
+  nearby?: FixedContentValue;
   faqs?: TourFaqItem[];
 }
 
