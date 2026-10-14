@@ -56,6 +56,13 @@ interface NearbyPlacesEditorProps {
   availablePlaces: AvailablePlaceOption[];
 }
 
+function generateCustomId(): string {
+  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+    return `custom_${crypto.randomUUID()}`;
+  }
+  return `custom_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
+}
+
 export default function NearbyPlacesEditor({
   introContent,
   onChangeIntroContent,
@@ -68,7 +75,6 @@ export default function NearbyPlacesEditor({
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
   // Custom place form state
-  const [showCustomForm, setShowCustomForm] = useState(false);
   const [customName, setCustomName] = useState("");
   const [customDescription, setCustomDescription] = useState("");
   const [customUrl, setCustomUrl] = useState("");
@@ -143,7 +149,7 @@ export default function NearbyPlacesEditor({
   const handleAddDatabasePlace = (place: AvailablePlaceOption) => {
     if (selectedPlaceIds.has(place.id)) return;
     const newItem: NearbyPlaceItemConfig = {
-      id: `db_${place.id}_${Date.now()}`,
+      id: `db_${place.id}`,
       type: "database",
       placeId: place.id,
     };
@@ -166,7 +172,7 @@ export default function NearbyPlacesEditor({
     }
 
     const newItem: NearbyPlaceItemConfig = {
-      id: `custom_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
+      id: generateCustomId(),
       type: "custom",
       name: trimmedName,
       description: customDescription.trim() || null,
@@ -178,7 +184,6 @@ export default function NearbyPlacesEditor({
     setCustomDescription("");
     setCustomUrl("");
     setCustomUrlError(null);
-    setShowCustomForm(false);
   };
 
   // Start editing custom item
@@ -267,34 +272,19 @@ export default function NearbyPlacesEditor({
       </div>
 
       {/* 2. Controls & Actions Bar */}
-      <div className="pt-2 border-t border-slate-800/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+      <div className="pt-2 border-t border-slate-800/80 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Compass className="w-4 h-4 text-emerald-400" />
           <span className="text-xs font-semibold text-slate-200">
             Configured Places & Suggestions ({items.length})
           </span>
         </div>
-
-        <div className="flex items-center gap-2">
-          {/* Custom Place Toggle */}
-          <button
-            type="button"
-            onClick={() => {
-              setShowCustomForm(!showCustomForm);
-              setCustomUrlError(null);
-            }}
-            className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium text-amber-300 bg-amber-500/10 border border-amber-500/20 hover:bg-amber-500/20 transition-colors"
-          >
-            <Plus className="w-3.5 h-3.5" />
-            {showCustomForm ? "Close Custom Form" : "Add Custom Suggestion"}
-          </button>
-        </div>
       </div>
 
       {/* 3. Searchable Multi-Select for Real Database Places */}
       <div className="relative">
-        <label className="block text-[11px] font-medium text-slate-400 mb-1">
-          Select From Existing Database Places:
+        <label className="block text-xs font-medium text-slate-300 mb-1">
+          Select existing places
         </label>
         <div className="relative">
           <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
@@ -320,6 +310,14 @@ export default function NearbyPlacesEditor({
           )}
         </div>
 
+        {/* Visible message when database has no records */}
+        {availablePlaces.length === 0 && (
+          <div className="mt-2 p-2.5 rounded-lg bg-slate-900 border border-slate-800 text-xs text-slate-400 flex items-center gap-2">
+            <span className="w-1.5 h-1.5 rounded-full bg-amber-400 shrink-0" />
+            <span>No database places available. Add places under Destinations → Places, or create a custom suggestion below.</span>
+          </div>
+        )}
+
         {/* Dropdown Options */}
         {isDropdownOpen && (
           <>
@@ -329,9 +327,9 @@ export default function NearbyPlacesEditor({
             />
             <div className="absolute z-20 w-full mt-1.5 bg-slate-900 border border-slate-700/80 rounded-xl shadow-2xl max-h-60 overflow-y-auto divide-y divide-slate-800">
               {filteredAvailablePlaces.length === 0 ? (
-                <div className="p-3 text-center text-xs text-slate-500">
+                <div className="p-3 text-center text-xs text-slate-400">
                   {availablePlaces.length === 0
-                    ? "No database place records found. Add places under the Places tab or create custom suggestions below."
+                    ? "No database places available. Add places under Destinations → Places, or create a custom suggestion below."
                     : "No matching database places found."}
                 </div>
               ) : (
@@ -401,89 +399,81 @@ export default function NearbyPlacesEditor({
         )}
       </div>
 
-      {/* 4. Custom Nearby Place Input Form */}
-      {showCustomForm && (
-        <div className="p-3.5 bg-slate-950/80 border border-amber-500/30 rounded-xl space-y-3">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-amber-300 flex items-center gap-1.5">
-              <Sparkles className="w-3.5 h-3.5" />
-              New Custom Nearby Place Suggestion
-            </span>
-            <span className="text-[10px] text-slate-400">
-              Does not create DB place record; saved safely in this destination config
-            </span>
-          </div>
+      {/* 4. Custom Nearby Place Input Form (Always Visible) */}
+      <div className="p-3.5 bg-slate-950/80 border border-slate-800 rounded-xl space-y-3">
+        <div className="flex items-center justify-between">
+          <span className="text-xs font-semibold text-amber-300 flex items-center gap-1.5">
+            <Sparkles className="w-3.5 h-3.5" />
+            Add Custom Nearby Place Suggestion
+          </span>
+          <span className="text-[10px] text-slate-400">
+            For unlisted or external spots (saved directly with this destination)
+          </span>
+        </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div>
-              <label className="block text-[11px] font-medium text-slate-300 mb-1">
-                Place Name <span className="text-red-400">*</span>
-              </label>
-              <input
-                type="text"
-                value={customName}
-                onChange={(e) => setCustomName(e.target.value)}
-                placeholder="e.g. Doodhpathri Valley"
-                className="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-amber-400"
-              />
-            </div>
-
-            <div>
-              <label className="block text-[11px] font-medium text-slate-300 mb-1">
-                Destination / Guide URL (Optional)
-              </label>
-              <input
-                type="text"
-                value={customUrl}
-                onChange={(e) => {
-                  setCustomUrl(e.target.value);
-                  setCustomUrlError(null);
-                }}
-                placeholder="/destinations/doodhpathri or https://..."
-                className={`w-full bg-slate-900 border rounded-lg px-2.5 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none ${
-                  customUrlError
-                    ? "border-red-500 focus:border-red-400"
-                    : "border-slate-700 focus:border-amber-400"
-                }`}
-              />
-              {customUrlError && (
-                <p className="text-[10px] text-red-400 mt-1">{customUrlError}</p>
-              )}
-            </div>
-          </div>
-
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
             <label className="block text-[11px] font-medium text-slate-300 mb-1">
-              Short Description / SEO Support Text
+              Place Name <span className="text-red-400">*</span>
             </label>
             <input
               type="text"
-              value={customDescription}
-              onChange={(e) => setCustomDescription(e.target.value)}
-              placeholder="e.g. Untouched alpine meadow 42 km away with grazing herds along Shaliganga River."
+              value={customName}
+              onChange={(e) => setCustomName(e.target.value)}
+              placeholder="e.g. Doodhpathri Valley"
               className="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-amber-400"
             />
           </div>
 
-          <div className="flex items-center justify-end gap-2 pt-1">
-            <button
-              type="button"
-              onClick={() => setShowCustomForm(false)}
-              className="px-2.5 py-1 rounded-lg text-xs font-medium text-slate-400 hover:text-slate-200"
-            >
-              Cancel
-            </button>
-            <button
-              type="button"
-              onClick={handleAddCustomPlace}
-              disabled={!customName.trim()}
-              className="px-3 py-1.5 rounded-lg text-xs font-semibold text-white bg-amber-600 hover:bg-amber-500 disabled:opacity-50 transition-colors cursor-pointer"
-            >
-              Add Custom Suggestion
-            </button>
+          <div>
+            <label className="block text-[11px] font-medium text-slate-300 mb-1">
+              Destination / Guide URL (Optional)
+            </label>
+            <input
+              type="text"
+              value={customUrl}
+              onChange={(e) => {
+                setCustomUrl(e.target.value);
+                setCustomUrlError(null);
+              }}
+              placeholder="/destinations/doodhpathri or https://..."
+              className={`w-full bg-slate-900 border rounded-lg px-2.5 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none ${
+                customUrlError
+                  ? "border-red-500 focus:border-red-400"
+                  : "border-slate-700 focus:border-amber-400"
+              }`}
+            />
+            {customUrlError && (
+              <p className="text-[10px] text-red-400 mt-1">{customUrlError}</p>
+            )}
           </div>
         </div>
-      )}
+
+        <div>
+          <label className="block text-[11px] font-medium text-slate-300 mb-1">
+            Short Description / SEO Support Text
+          </label>
+          <input
+            type="text"
+            value={customDescription}
+            onChange={(e) => setCustomDescription(e.target.value)}
+            placeholder="e.g. Untouched alpine meadow 42 km away with grazing herds along Shaliganga River."
+            className="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-amber-400"
+          />
+        </div>
+
+        <div className="flex items-center justify-end gap-2 pt-1">
+          <button
+            type="button"
+            onClick={handleAddCustomPlace}
+            disabled={!customName.trim()}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-white bg-amber-600 hover:bg-amber-500 disabled:opacity-50 transition-colors cursor-pointer"
+          >
+            <Plus className="w-3.5 h-3.5" />
+            Add Custom Suggestion
+          </button>
+        </div>
+      </div>
 
       {/* 5. Combined Items List */}
       <div className="space-y-2">
