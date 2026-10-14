@@ -1,5 +1,6 @@
 import prisma from "@/lib/prisma";
 import { SeoWorkflowState } from "@prisma/client";
+export type { AvailablePlaceOption } from "@/components/admin/destinations/NearbyPlacesEditor";
 
 export interface AdminDestinationListItem {
   id: string;

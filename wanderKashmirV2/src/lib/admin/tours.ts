@@ -1,4 +1,5 @@
 import prisma from "@/lib/prisma";
+import { getAllAvailablePlaces, AvailablePlaceOption } from "@/lib/admin/destinations";
 
 export interface AdminTourListItem {
   id: string;
@@ -187,9 +188,18 @@ export async function getAdminTourById(id: string) {
  * Fetch available categories, travel styles, properties, vehicles, drivers, experiences,
  * and travel guides for the tour editor form.
  */
-export async function getAdminTourFormOptions() {
+export async function getAdminTourFormOptions(): Promise<{
+  categories: { id: string; name: string; slug: string }[];
+  travelStyles: { id: string; name: string; slug: string; displayOrder: number }[];
+  properties: { id: string; name: string; location: string; propertyType: string }[];
+  vehicles: { id: string; make: string; model: string; type: string; registrationNum: string }[];
+  drivers: { id: string; name: string; phone: string }[];
+  experiences: { id: string; title: string; duration: string | null }[];
+  travelGuides: { id: string; title: string; slug: string }[];
+  availablePlaces: AvailablePlaceOption[];
+}> {
   try {
-    const [categories, travelStyles, properties, vehicles, drivers, experiences, travelGuides] =
+    const [categories, travelStyles, properties, vehicles, drivers, experiences, travelGuides, availablePlaces] =
       await Promise.all([
         prisma.tourCategory.findMany({
           select: { id: true, name: true, slug: true },
@@ -223,6 +233,7 @@ export async function getAdminTourFormOptions() {
           select: { id: true, title: true, slug: true },
           orderBy: { title: "asc" },
         }),
+        getAllAvailablePlaces(),
       ]);
 
     return {
@@ -233,6 +244,7 @@ export async function getAdminTourFormOptions() {
       drivers,
       experiences,
       travelGuides,
+      availablePlaces,
     };
   } catch (error) {
     console.error("Error fetching admin tour form options:", error);
@@ -244,6 +256,7 @@ export async function getAdminTourFormOptions() {
       drivers: [],
       experiences: [],
       travelGuides: [],
+      availablePlaces: [],
     };
   }
 }

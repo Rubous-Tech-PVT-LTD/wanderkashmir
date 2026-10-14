@@ -39,6 +39,7 @@ import {
 import TourFixedContentSectionsEditor from "./TourFixedContentSectionsEditor";
 import TourDynamicBlocksEditor from "./TourDynamicBlocksEditor";
 import EditorJsField from "@/components/admin/editor/EditorJsField";
+import { AvailablePlaceOption } from "@/components/admin/destinations/NearbyPlacesEditor";
 
 interface TourCategoryOption {
   id: string;
@@ -85,36 +86,38 @@ interface TravelGuideOption {
   slug: string;
 }
 
-interface TourFormProps {
-  initialData?: {
-    id: string;
-    title: string;
-    slug: string;
-    duration: string;
-    price: number;
-    originalPrice: number | null;
-    category: string;
-    categoryId: string | null;
-    maxPersons: number;
-    badge: string | null;
-    overview: string | null;
-    destinations: string[];
-    images: string[];
-    highlights: string[];
-    inclusions: string[];
-    exclusions: string[];
-    itinerary: any;
-    contentSections?: TourContentSectionsInput;
-    dynamicBlocks?: TourDynamicBlockInput[];
-    travelStyleIds: string[];
-    stays?: TourStayInput[];
-    transports?: TourTransportInput[];
-    experiences?: TourExperienceInput[];
-    travelGuides?: TourTravelGuideInput[];
-    isLive: boolean;
-    isPopular?: boolean;
-    popularOrder?: number | null;
-  };
+export type TourFormInitialData = {
+  id: string;
+  title: string;
+  slug: string;
+  duration: string;
+  price: number;
+  originalPrice: number | null;
+  category: string;
+  categoryId: string | null;
+  maxPersons: number;
+  badge: string | null;
+  overview: string | null;
+  destinations: string[];
+  images: string[];
+  highlights: string[];
+  inclusions: string[];
+  exclusions: string[];
+  itinerary: any;
+  contentSections?: TourContentSectionsInput;
+  dynamicBlocks?: TourDynamicBlockInput[];
+  travelStyleIds: string[];
+  stays?: TourStayInput[];
+  transports?: TourTransportInput[];
+  experiences?: TourExperienceInput[];
+  travelGuides?: TourTravelGuideInput[];
+  isLive: boolean;
+  isPopular?: boolean;
+  popularOrder?: number | null;
+};
+
+export interface TourFormProps {
+  initialData?: Partial<TourFormInitialData>;
   categories: TourCategoryOption[];
   travelStyles: TravelStyleOption[];
   properties?: PropertyOption[];
@@ -122,6 +125,7 @@ interface TourFormProps {
   drivers?: DriverOption[];
   experiences?: ExperienceOption[];
   travelGuides?: TravelGuideOption[];
+  availablePlaces?: AvailablePlaceOption[];
   isEdit?: boolean;
 }
 
@@ -134,6 +138,7 @@ export default function TourForm({
   drivers = [],
   experiences = [],
   travelGuides = [],
+  availablePlaces = [],
   isEdit = false,
 }: TourFormProps) {
   const router = useRouter();
@@ -1258,6 +1263,7 @@ export default function TourForm({
       <TourFixedContentSectionsEditor
         contentSections={contentSections}
         onChange={setContentSections}
+        availablePlaces={availablePlaces}
       />
 
       {/* 7. Dynamic Tour Content Blocks (Rich CMS Blocks) */}

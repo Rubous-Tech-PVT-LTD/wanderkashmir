@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
+import { useState } from "react";
 import {
   Clock,
   UtensilsCrossed,
@@ -15,17 +16,64 @@ import {
 } from "lucide-react";
 import { TourContentSectionsInput } from "@/actions/adminTours";
 import EditorJsField from "@/components/admin/editor/EditorJsField";
+import NearbyPlacesEditor, {
+  NearbyPlaceItemConfig,
+  AvailablePlaceOption,
+} from "@/components/admin/destinations/NearbyPlacesEditor";
 
 interface TourFixedContentSectionsEditorProps {
   contentSections: TourContentSectionsInput;
   onChange: (updated: TourContentSectionsInput) => void;
+  availablePlaces?: AvailablePlaceOption[];
 }
 
 export default function TourFixedContentSectionsEditor({
   contentSections = {},
   onChange,
+  availablePlaces = [],
 }: TourFixedContentSectionsEditorProps) {
   const faqs = contentSections.faqs || [];
+
+  // Nearby places state initialization
+  const initialNearbyConfig = contentSections.nearbyPlacesConfig;
+  const initialNearbyIntro =
+    initialNearbyConfig?.introContent !== undefined
+      ? initialNearbyConfig.introContent || ""
+      : typeof contentSections.nearby === "string"
+      ? contentSections.nearby
+      : contentSections.nearby?.blocks
+      ? contentSections.nearby.blocks.map((b: any) => b.data?.text || "").filter(Boolean).join("\n\n")
+      : "";
+  const initialNearbyItems = Array.isArray(initialNearbyConfig?.items)
+    ? initialNearbyConfig.items
+    : [];
+
+  const [nearbyIntro, setNearbyIntro] = useState<string>(initialNearbyIntro);
+  const [nearbyItems, setNearbyItems] = useState<NearbyPlaceItemConfig[]>(initialNearbyItems);
+
+  const handleNearbyIntroChange = (newIntro: string) => {
+    setNearbyIntro(newIntro);
+    onChange({
+      ...contentSections,
+      nearby: newIntro,
+      nearbyPlacesConfig: {
+        introContent: newIntro,
+        items: nearbyItems,
+      },
+    });
+  };
+
+  const handleNearbyItemsChange = (newItems: NearbyPlaceItemConfig[]) => {
+    setNearbyItems(newItems);
+    onChange({
+      ...contentSections,
+      nearby: nearbyIntro,
+      nearbyPlacesConfig: {
+        introContent: nearbyIntro,
+        items: newItems,
+      },
+    });
+  };
 
   const updateField = (field: keyof TourContentSectionsInput, val: any) => {
     onChange({
@@ -149,17 +197,18 @@ export default function TourFixedContentSectionsEditor({
           />
         </div>
 
-        {/* 5. Nearby Places */}
-        <div className="space-y-2">
+        {/* 5. Nearby Places to Explore */}
+        <div className="space-y-2 pt-2 border-t border-slate-800">
           <label className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-slate-300">
             <MapPin className="w-3.5 h-3.5 text-emerald-400" />
             <span>Nearby Places to Explore</span>
           </label>
-          <EditorJsField
-            value={contentSections.nearby}
-            onChange={(val: any) => updateField("nearby", val)}
-            placeholder="Suggest scenic day excursions, offbeat valleys, and hidden gems..."
-            minHeight={120}
+          <NearbyPlacesEditor
+            introContent={nearbyIntro}
+            onChangeIntroContent={handleNearbyIntroChange}
+            items={nearbyItems}
+            onChangeItems={handleNearbyItemsChange}
+            availablePlaces={availablePlaces}
           />
         </div>
 

@@ -103,6 +103,7 @@ export default async function EditTourPage({
       drivers={formOptions.drivers}
       experiences={formOptions.experiences}
       travelGuides={formOptions.travelGuides}
+      availablePlaces={formOptions.availablePlaces}
       isEdit={true}
     />
   );

@@ -1,5 +1,5 @@
 import { getAdminTourFormOptions } from "@/lib/admin/tours";
-import TourForm from "@/components/admin/tours/TourForm";
+import TourForm, { TourFormInitialData } from "@/components/admin/tours/TourForm";
 
 export const revalidate = 0;
 
@@ -19,11 +19,11 @@ export default async function NewTourPage({ searchParams }: NewTourPageProps) {
     ? formOptions.categories.find((c) => c.id === resolvedParams.categoryId)
     : undefined;
 
-  const initialData = preselectedCat
-    ? ({
+  const initialData: Partial<TourFormInitialData> | undefined = preselectedCat
+    ? {
         categoryId: preselectedCat.id,
         category: preselectedCat.name,
-      } as any)
+      }
     : undefined;
 
   return (
@@ -35,6 +35,7 @@ export default async function NewTourPage({ searchParams }: NewTourPageProps) {
       drivers={formOptions.drivers}
       experiences={formOptions.experiences}
       travelGuides={formOptions.travelGuides}
+      availablePlaces={formOptions.availablePlaces}
       initialData={initialData}
       isEdit={false}
     />

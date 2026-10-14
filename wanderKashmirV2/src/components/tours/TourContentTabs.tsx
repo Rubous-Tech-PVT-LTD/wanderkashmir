@@ -196,8 +196,8 @@ export default function TourContentTabs({ tour }: TourContentTabsProps) {
                 <div className="flex flex-wrap gap-2">
                   {(tour.resolvedDestinations && tour.resolvedDestinations.length > 0
                     ? tour.resolvedDestinations
-                    : tour.destinations.map((d: any) => ({ name: d, hasPublicPage: false, slug: undefined }))
-                  ).map((dest: any, idx: number) => (
+                    : tour.destinations.map((d: string) => ({ name: d, hasPublicPage: false, slug: undefined }))
+                  ).map((dest: { name: string; hasPublicPage?: boolean; slug?: string }, idx: number) => (
                     <span key={`${dest.name}-${idx}`}>
                       {dest.hasPublicPage && dest.slug ? (
                         <Link
@@ -428,7 +428,7 @@ export default function TourContentTabs({ tour }: TourContentTabsProps) {
               ) : (
                 <div className="p-6 rounded-lg border border-slate-200/80 bg-slate-50/50 flex flex-col items-center justify-center text-center space-y-1.5 min-h-[140px]">
                   <Clock className="w-6 h-6 text-slate-300" />
-                  <p className="text-xs text-slate-500 font-medium">Best time information hasn't been configured for this tour yet.</p>
+                  <p className="text-xs text-slate-500 font-medium">Best time information haven&apos;t been configured for this tour yet.</p>
                 </div>
               )}
             </div>
@@ -1117,7 +1117,7 @@ export default function TourContentTabs({ tour }: TourContentTabsProps) {
               ) : (
                 <div className="p-6 rounded-lg border border-slate-200/80 bg-slate-50/50 flex flex-col items-center justify-center text-center space-y-1.5 min-h-[140px]">
                   <Sparkles className="w-6 h-6 text-slate-300" />
-                  <p className="text-xs text-slate-500 font-medium">Shopping recommendations haven't been configured yet.</p>
+                  <p className="text-xs text-slate-500 font-medium">Shopping recommendations haven&apos;t been configured yet.</p>
                 </div>
               )}
             </div>
@@ -1260,7 +1260,95 @@ export default function TourContentTabs({ tour }: TourContentTabsProps) {
               id="content-nearby"
               className="px-4 pb-4 sm:px-4.5 sm:pb-4.5 pt-3.5 border-t border-slate-100/90 space-y-4 animate-in fade-in slide-in-from-top-1 duration-200"
             >
-              {tour.contentSections?.nearby ? (
+              {tour.contentSections?.nearbyPlacesConfig?.items && tour.contentSections.nearbyPlacesConfig.items.length > 0 ? (
+                <div className="space-y-4">
+                  {/* Intro Copy */}
+                  {(tour.contentSections.nearbyPlacesConfig.introContent || typeof tour.contentSections.nearby === "string") && (
+                    <div className="p-4 rounded-xl border border-slate-200/80 bg-slate-50/50 text-slate-700 text-xs sm:text-[13.5px] leading-relaxed">
+                      <RichContentRenderer
+                        content={tour.contentSections.nearbyPlacesConfig.introContent || (tour.contentSections.nearby as string)}
+                        className="prose-sm max-w-none text-slate-700"
+                      />
+                    </div>
+                  )}
+
+                  {/* Places Grid */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {tour.contentSections.nearbyPlacesConfig.items.map((place) => {
+                      const isDatabase = place.type === "database";
+                      const card = (
+                        <div className="group flex flex-col bg-white rounded-xl overflow-hidden border border-slate-200/80 hover:border-slate-300 shadow-2xs hover:shadow-xs transition-all h-full">
+                          <div className="relative aspect-[16/9] w-full overflow-hidden bg-slate-100">
+                            {place.imageUrl ? (
+                              <Image
+                                src={place.imageUrl}
+                                alt={place.name || "Nearby place"}
+                                fill
+                                className="object-cover transition-transform duration-500 group-hover:scale-105"
+                                sizes="(max-width: 768px) 100vw, 33vw"
+                              />
+                            ) : (
+                              <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100 text-slate-400 p-4">
+                                <MapPin className="w-6 h-6 text-emerald-600/70 mb-1" />
+                                <span className="text-[10px] font-medium text-slate-500 uppercase tracking-wider">
+                                  {place.destinationContext || "Scenic Excursion"}
+                                </span>
+                              </div>
+                            )}
+
+                            <div className="absolute top-2.5 left-2.5 bg-white/95 backdrop-blur-xs px-2 py-0.5 rounded-full text-[10px] font-semibold text-slate-700 shadow-2xs flex items-center gap-1">
+                              {isDatabase ? (
+                                <>
+                                  <MapPin className="w-3 h-3 text-emerald-600" />
+                                  <span>{place.destinationContext || "Place"}</span>
+                                </>
+                              ) : (
+                                <>
+                                  <Sparkles className="w-3 h-3 text-amber-500" />
+                                  <span>Suggested Spot</span>
+                                </>
+                              )}
+                            </div>
+                          </div>
+
+                          <div className="p-3.5 flex-1 flex flex-col">
+                            <h3 className="font-semibold text-xs sm:text-[13px] text-slate-900 group-hover:text-emerald-700 transition-colors line-clamp-1 mb-1">
+                              {place.name}
+                            </h3>
+                            {place.description && (
+                              <p className="text-slate-500 text-[11px] sm:text-xs line-clamp-2 leading-relaxed">
+                                {place.description}
+                              </p>
+                            )}
+                            {place.canonicalUrl && (
+                              <span className="mt-auto pt-2.5 text-[11px] font-medium text-[var(--season-primary)] flex items-center gap-1 group-hover:translate-x-0.5 transition-transform">
+                                Explore place <ArrowRight className="w-3 h-3" />
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      );
+
+                      if (place.canonicalUrl) {
+                        return (
+                          <Link
+                            key={place.id}
+                            href={place.canonicalUrl}
+                            className="block h-full"
+                            {...(place.canonicalUrl.startsWith("http")
+                              ? { target: "_blank", rel: "noopener noreferrer" }
+                              : {})}
+                          >
+                            {card}
+                          </Link>
+                        );
+                      }
+
+                      return <div key={place.id} className="h-full">{card}</div>;
+                    })}
+                  </div>
+                </div>
+              ) : tour.contentSections?.nearby ? (
                 <div className="p-4 sm:p-5 rounded-lg border border-slate-200/80 bg-slate-50/40 text-slate-700 text-xs sm:text-[13.5px] leading-relaxed">
                   <RichContentRenderer content={tour.contentSections.nearby} className="prose-sm max-w-none text-slate-700" />
                 </div>

@@ -147,6 +147,20 @@ export interface TourContentSections {
   food?: FixedContentValue;
   shopping?: FixedContentValue;
   nearby?: FixedContentValue;
+  nearbyPlacesConfig?: {
+    introContent?: string | null;
+    items: Array<{
+      id: string;
+      type: "database" | "custom";
+      placeId?: string;
+      name?: string;
+      description?: string | null;
+      url?: string | null;
+      canonicalUrl?: string | null;
+      imageUrl?: string | null;
+      destinationContext?: string | null;
+    }>;
+  };
   faqs?: TourFaqItem[];
 }
 

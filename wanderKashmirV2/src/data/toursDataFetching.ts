@@ -1,5 +1,6 @@
 import prisma from "../lib/prisma";
 import { TourPackageDetail } from "./liveToursData";
+import { NearbyPlaceItemConfig } from "@/components/admin/destinations/NearbyPlacesEditor";
 import { cache } from "react";
 
 export const getTourFromDB = cache(async function(slug: string): Promise<TourPackageDetail | null> {
@@ -119,6 +120,86 @@ export const getTourFromDB = cache(async function(slug: string): Promise<TourPac
     }
     if (Array.isArray((tour as any).dynamicBlocks) && (tour as any).dynamicBlocks.length > 0) {
       extractedDynamicBlocks = (tour as any).dynamicBlocks;
+    }
+
+    // Resolve nearbyPlacesConfig items for rich display
+    if (
+      extractedContentSections?.nearbyPlacesConfig &&
+      Array.isArray(extractedContentSections.nearbyPlacesConfig.items) &&
+      extractedContentSections.nearbyPlacesConfig.items.length > 0
+    ) {
+      try {
+        const placeIds = (extractedContentSections.nearbyPlacesConfig.items as NearbyPlaceItemConfig[])
+          .filter((it) => it.type === "database" && it.placeId)
+          .map((it) => it.placeId as string);
+
+        if (placeIds.length > 0) {
+          const dbPlaces = await prisma.place.findMany({
+            where: { id: { in: placeIds } },
+            select: {
+              id: true,
+              name: true,
+              slug: true,
+              imageUrl: true,
+              description: true,
+              destination: true,
+              destinationPlaces: {
+                select: {
+                  destination: {
+                    select: { slug: true, title: true },
+                  },
+                },
+                take: 1,
+              },
+            },
+          });
+
+          const dbPlacesMap = new Map<string, (typeof dbPlaces)[number]>();
+          for (const p of dbPlaces) {
+            dbPlacesMap.set(p.id, p);
+          }
+
+          extractedContentSections.nearbyPlacesConfig.items = (extractedContentSections.nearbyPlacesConfig.items as NearbyPlaceItemConfig[]).map(
+            (it) => {
+              if (it.type === "database" && it.placeId) {
+                const dbP = dbPlacesMap.get(it.placeId);
+                if (dbP) {
+                  const destSlug = dbP.destinationPlaces?.[0]?.destination?.slug;
+                  const canonicalUrl = destSlug
+                    ? `/destinations/${destSlug}/${dbP.slug}`
+                    : `/places/${dbP.slug}`;
+                  const destContext =
+                    dbP.destinationPlaces?.[0]?.destination?.title || dbP.destination || null;
+
+                  return {
+                    ...it,
+                    name: dbP.name || it.name,
+                    description: dbP.description || it.description || null,
+                    imageUrl: dbP.imageUrl || null,
+                    canonicalUrl,
+                    destinationContext: destContext,
+                  };
+                }
+              }
+              return {
+                ...it,
+                canonicalUrl: it.url || null,
+                destinationContext: "Scenic Excursion",
+              };
+            }
+          );
+        } else {
+          extractedContentSections.nearbyPlacesConfig.items = extractedContentSections.nearbyPlacesConfig.items.map(
+            (it: any) => ({
+              ...it,
+              canonicalUrl: it.url || null,
+              destinationContext: "Scenic Excursion",
+            })
+          );
+        }
+      } catch (err) {
+        console.warn("Could not resolve database places for tour nearbyPlacesConfig:", err);
+      }
     }
 
     const mappedItinerary = rawDays.map((item, idx) => ({

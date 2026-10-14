@@ -61,6 +61,17 @@ export interface TourContentSectionsInput {
   food?: FixedContentValue;
   shopping?: FixedContentValue;
   nearby?: FixedContentValue;
+  nearbyPlacesConfig?: {
+    introContent?: string | null;
+    items: Array<{
+      id: string;
+      type: "database" | "custom";
+      placeId?: string;
+      name?: string;
+      description?: string | null;
+      url?: string | null;
+    }>;
+  };
   faqs?: { question: string; answer: FixedContentValue }[];
 }
 
