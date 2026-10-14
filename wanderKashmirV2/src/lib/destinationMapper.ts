@@ -38,6 +38,30 @@ export interface DestinationNearbyItem {
   description?: string | null;
 }
 
+export interface NearbyPlaceItemConfig {
+  id: string;
+  type: "database" | "custom";
+  placeId?: string;
+  name?: string;
+  description?: string | null;
+  url?: string | null;
+}
+
+export interface NearbyPlacesConfig {
+  introContent?: string | null;
+  items: NearbyPlaceItemConfig[];
+}
+
+export interface DestinationNearbyPlaceItem {
+  id: string;
+  type: "database" | "custom";
+  name: string;
+  description: string | null;
+  imageUrl?: string | null;
+  canonicalUrl: string | null;
+  destinationContext?: string | null;
+}
+
 export interface DestinationFaqItem {
   question: string;
   answer: string;
@@ -84,6 +108,7 @@ export interface DestinationPageData {
   shopping: SectionRichContent;
   activities: SectionRichContent;
   nearbyPlacesContent: SectionRichContent;
+  nearbyPlaces: DestinationNearbyPlaceItem[];
 
   // First-Class Explicit Relationships
   places: DestinationPlaceItem[];
@@ -130,10 +155,19 @@ export async function getDestinationData(slug: string): Promise<DestinationPageD
     return null;
   }
 
+  return mapDestinationDoc(page);
+}
+
+export async function mapDestinationDoc(
+  page: any,
+  customCmsDoc?: any
+): Promise<DestinationPageData> {
   // 1. Extract Structured CMS Document (stored in seoStrategy or dedicated CMS payload)
-  const cmsDoc: any = (typeof page.seoStrategy === "object" && page.seoStrategy !== null)
-    ? page.seoStrategy
-    : {};
+  const cmsDoc: any =
+    customCmsDoc ||
+    (typeof page.seoStrategy === "object" && page.seoStrategy !== null
+      ? page.seoStrategy
+      : {});
 
   // 2. Resolve Canonical Destination Clean Name
   const cleanName = cmsDoc.cleanName || (page.title ? page.title.split("|")[0].replace(/\s*Travel Guide.*$/i, "").trim() : "") || (page.slug.charAt(0).toUpperCase() + page.slug.slice(1));
@@ -288,10 +322,114 @@ export async function getDestinationData(slug: string): Promise<DestinationPageD
     return [];
   })();
 
-  const [featuredProperties, featuredTours, nearbyDestinations] = await Promise.all([
+  const nearbyPlacesPromise = (async (): Promise<DestinationNearbyPlaceItem[]> => {
+    const rawConfig = cmsDoc.nearbyPlacesConfig;
+    const items: NearbyPlaceItemConfig[] =
+      rawConfig && Array.isArray(rawConfig.items) ? rawConfig.items : [];
+
+    if (items.length === 0) {
+      return [];
+    }
+
+    // Collect all database placeIds to resolve in a single batch query (avoid N+1)
+    const dbPlaceIds = items
+      .filter((it) => it.type === "database" && it.placeId)
+      .map((it) => it.placeId as string);
+
+    const placesMap = new Map<string, any>();
+    if (dbPlaceIds.length > 0) {
+      const dbPlaces = await prisma.place.findMany({
+        where: {
+          id: { in: dbPlaceIds },
+          status: "ACTIVE",
+        },
+        include: {
+          destinationPlaces: {
+            include: {
+              destination: {
+                select: { id: true, slug: true, title: true, workflowState: true },
+              },
+            },
+          },
+        },
+      });
+
+      for (const p of dbPlaces) {
+        placesMap.set(p.id, p);
+      }
+    }
+
+    const resolvedItems: DestinationNearbyPlaceItem[] = [];
+
+    for (const item of items) {
+      if (item.type === "database" && item.placeId) {
+        const place = placesMap.get(item.placeId);
+        // If place is missing or inactive, omit it safely (prevent broken links)
+        if (!place) continue;
+
+        // Resolve canonical destination link safely
+        const currentLink = place.destinationPlaces?.find(
+          (dp: any) =>
+            dp.destination?.slug === page.slug && dp.destination?.workflowState === "PUBLISHED"
+        );
+        const otherPublishedLink = place.destinationPlaces?.find(
+          (dp: any) => dp.destination?.workflowState === "PUBLISHED"
+        );
+        const resolvedDest = currentLink?.destination || otherPublishedLink?.destination;
+
+        const canonicalUrl = resolvedDest
+          ? `/destinations/${resolvedDest.slug}/${place.slug}`
+          : null;
+
+        const destinationContext = resolvedDest?.title || place.destination || null;
+
+        resolvedItems.push({
+          id: item.id || `db-${place.id}`,
+          type: "database",
+          name: place.name,
+          description: place.description || null,
+          imageUrl: place.imageUrl || null,
+          canonicalUrl,
+          destinationContext,
+        });
+      } else if (item.type === "custom" && item.name?.trim()) {
+        let safeUrl: string | null = null;
+        if (item.url && typeof item.url === "string") {
+          const trimmed = item.url.trim();
+          if (trimmed.startsWith("/") && !trimmed.startsWith("//") && !trimmed.includes("javascript:")) {
+            safeUrl = trimmed;
+          } else if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) {
+            try {
+              const parsed = new URL(trimmed);
+              if (parsed.protocol === "http:" || parsed.protocol === "https:") {
+                safeUrl = parsed.toString();
+              }
+            } catch {
+              safeUrl = null;
+            }
+          }
+        }
+
+        resolvedItems.push({
+          id: item.id || `custom-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`,
+          type: "custom",
+          name: item.name.trim(),
+          description: item.description?.trim() || null,
+          imageUrl: null,
+          canonicalUrl: safeUrl,
+          destinationContext: null,
+        });
+      }
+    }
+
+    return resolvedItems;
+  })();
+
+  const [featuredProperties, featuredTours, nearbyDestinations, nearbyPlaces] = await Promise.all([
     propertiesPromise,
     toursPromise,
     nearbyPromise,
+    nearbyPlacesPromise,
   ]);
 
   // 7. Structured Content Fields (Dedicated CMS fields, no regex parsing!)
@@ -302,7 +440,10 @@ export async function getDestinationData(slug: string): Promise<DestinationPageD
   const food = cmsDoc.food || null;
   const shopping = cmsDoc.shopping || null;
   const activities = cmsDoc.activities || null;
-  const nearbyPlacesContent = cmsDoc.nearbyPlacesContent || null;
+  const nearbyPlacesContent =
+    cmsDoc.nearbyPlacesConfig?.introContent !== undefined
+      ? cmsDoc.nearbyPlacesConfig.introContent
+      : (cmsDoc.nearbyPlacesContent || null);
 
   // 8. FAQs (Structured array)
   const faqs: DestinationFaqItem[] = Array.isArray(cmsDoc.faqs) && cmsDoc.faqs.length > 0
@@ -346,6 +487,7 @@ export async function getDestinationData(slug: string): Promise<DestinationPageD
     shopping,
     activities,
     nearbyPlacesContent,
+    nearbyPlaces,
     places,
     featuredProperties,
     featuredTours,

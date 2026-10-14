@@ -296,8 +296,20 @@ export async function getAllAvailablePlaces() {
         name: true,
         slug: true,
         status: true,
+        description: true,
         destination: true,
         imageUrl: true,
+        destinationPlaces: {
+          select: {
+            destination: {
+              select: {
+                id: true,
+                slug: true,
+                title: true,
+              },
+            },
+          },
+        },
       },
       orderBy: { name: "asc" },
     });

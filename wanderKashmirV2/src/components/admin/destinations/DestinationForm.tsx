@@ -30,14 +30,25 @@ import {
   reorderDestinationPlacesAction,
   DestinationFormInput,
 } from "@/actions/adminDestinations";
+import NearbyPlacesEditor, {
+  NearbyPlaceItemConfig,
+  AvailablePlaceOption,
+} from "./NearbyPlacesEditor";
 
-interface PlaceOption {
+interface PlaceOption extends AvailablePlaceOption {
   id: string;
   name: string;
   slug: string;
   status: string;
   destination: string | null;
   imageUrl: string | null;
+  destinationPlaces?: {
+    destination: {
+      id: string;
+      slug: string;
+      title: string;
+    };
+  }[];
 }
 
 interface LinkedPlaceItem {
@@ -102,7 +113,15 @@ export default function DestinationForm({
   const [food, setFood] = useState(strategy.food || "");
   const [shopping, setShopping] = useState(strategy.shopping || "");
   const [activities, setActivities] = useState(strategy.activities || "");
-  const [nearbyPlacesContent, setNearbyPlacesContent] = useState(strategy.nearbyPlacesContent || "");
+  const initialNearbyConfig = strategy.nearbyPlacesConfig;
+  const [nearbyPlacesIntro, setNearbyPlacesIntro] = useState<string>(
+    initialNearbyConfig?.introContent !== undefined
+      ? initialNearbyConfig.introContent || ""
+      : strategy.nearbyPlacesContent || ""
+  );
+  const [nearbyPlacesItems, setNearbyPlacesItems] = useState<NearbyPlaceItemConfig[]>(
+    Array.isArray(initialNearbyConfig?.items) ? initialNearbyConfig.items : []
+  );
 
   // Gallery
   const initialGalleryStr = Array.isArray(strategy.gallery)
@@ -185,7 +204,11 @@ export default function DestinationForm({
       food: food || null,
       shopping: shopping || null,
       activities: activities || null,
-      nearbyPlacesContent: nearbyPlacesContent || null,
+      nearbyPlacesContent: nearbyPlacesIntro || null,
+      nearbyPlacesConfig: {
+        introContent: nearbyPlacesIntro || null,
+        items: nearbyPlacesItems,
+      },
     };
 
     try {
@@ -578,16 +601,16 @@ export default function DestinationForm({
               />
             </div>
 
-            <div>
-              <label className="block text-xs font-medium text-slate-300 mb-1.5">
-                Nearby Places & Day Excursions
+            <div className="pt-2 border-t border-slate-800/80">
+              <label className="block text-xs font-semibold text-slate-200 uppercase tracking-wider mb-2">
+                8. Nearby Places & Day Excursions
               </label>
-              <textarea
-                rows={4}
-                value={nearbyPlacesContent}
-                onChange={(e) => setNearbyPlacesContent(e.target.value)}
-                placeholder="Excursions to neighboring valleys, passes, and lakes..."
-                className="w-full bg-slate-950 border border-slate-800 rounded-lg p-3 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500"
+              <NearbyPlacesEditor
+                introContent={nearbyPlacesIntro}
+                onChangeIntroContent={setNearbyPlacesIntro}
+                items={nearbyPlacesItems}
+                onChangeItems={setNearbyPlacesItems}
+                availablePlaces={availablePlaces}
               />
             </div>
           </div>

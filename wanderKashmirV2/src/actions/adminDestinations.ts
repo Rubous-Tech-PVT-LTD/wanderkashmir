@@ -24,6 +24,17 @@ export interface DestinationFormInput {
   shopping?: string | null;
   activities?: string | null;
   nearbyPlacesContent?: string | null;
+  nearbyPlacesConfig?: {
+    introContent?: string | null;
+    items?: Array<{
+      id: string;
+      type: "database" | "custom";
+      placeId?: string;
+      name?: string;
+      description?: string | null;
+      url?: string | null;
+    }>;
+  } | null;
 }
 
 export interface PlaceFormInput {
@@ -47,6 +58,85 @@ function sanitizeSlug(slug: string): string {
     .trim()
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/(^-|-$)+/g, "");
+}
+
+function sanitizeNearbyPlacesConfig(inputConfig: any): {
+  introContent: string | null;
+  items: Array<{
+    id: string;
+    type: "database" | "custom";
+    placeId?: string;
+    name?: string;
+    description?: string | null;
+    url?: string | null;
+  }>;
+} | null {
+  if (!inputConfig || typeof inputConfig !== "object") return null;
+
+  const introContent =
+    typeof inputConfig.introContent === "string" && inputConfig.introContent.trim()
+      ? inputConfig.introContent.trim()
+      : null;
+
+  const rawItems = Array.isArray(inputConfig.items) ? inputConfig.items : [];
+  const items: Array<{
+    id: string;
+    type: "database" | "custom";
+    placeId?: string;
+    name?: string;
+    description?: string | null;
+    url?: string | null;
+  }> = [];
+
+  for (let i = 0; i < rawItems.length; i++) {
+    const it = rawItems[i];
+    if (!it || typeof it !== "object") continue;
+
+    const id = typeof it.id === "string" && it.id.trim() ? it.id.trim() : `item-${i}-${Date.now()}`;
+
+    if (it.type === "database") {
+      const placeId = typeof it.placeId === "string" ? it.placeId.trim() : "";
+      if (placeId) {
+        items.push({
+          id,
+          type: "database",
+          placeId,
+        });
+      }
+    } else if (it.type === "custom") {
+      const name = typeof it.name === "string" ? it.name.trim() : "";
+      if (name) {
+        const description =
+          typeof it.description === "string" && it.description.trim() ? it.description.trim() : null;
+        let url: string | null = null;
+        if (typeof it.url === "string" && it.url.trim()) {
+          const trimmed = it.url.trim();
+          if (trimmed.startsWith("/") && !trimmed.startsWith("//") && !trimmed.includes("javascript:")) {
+            url = trimmed;
+          } else if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) {
+            try {
+              const parsed = new URL(trimmed);
+              if (parsed.protocol === "http:" || parsed.protocol === "https:") {
+                url = parsed.toString();
+              }
+            } catch {
+              url = null;
+            }
+          }
+        }
+
+        items.push({
+          id,
+          type: "custom",
+          name,
+          description,
+          url,
+        });
+      }
+    }
+  }
+
+  return { introContent, items };
 }
 
 /**
@@ -83,6 +173,14 @@ export async function createDestinationAction(
       return { success: false, error: `A page with the slug "${rawSlug}" already exists.` };
     }
 
+    const sanitizedNearbyConfig = input.nearbyPlacesConfig !== undefined
+      ? sanitizeNearbyPlacesConfig(input.nearbyPlacesConfig)
+      : null;
+
+    const nearbyPlacesContent = sanitizedNearbyConfig?.introContent !== undefined
+      ? sanitizedNearbyConfig.introContent
+      : (input.nearbyPlacesContent?.trim() || null);
+
     const seoStrategy = {
       cleanName: input.cleanName?.trim() || title.split("|")[0].replace(/\s*Travel Guide.*$/i, "").trim(),
       gallery: Array.isArray(input.gallery) ? input.gallery.filter(Boolean) : [],
@@ -93,7 +191,8 @@ export async function createDestinationAction(
       food: input.food?.trim() || null,
       shopping: input.shopping?.trim() || null,
       activities: input.activities?.trim() || null,
-      nearbyPlacesContent: input.nearbyPlacesContent?.trim() || null,
+      nearbyPlacesContent,
+      nearbyPlacesConfig: sanitizedNearbyConfig,
     };
 
     const newDest = await prisma.seoLandingPage.create({
@@ -177,6 +276,16 @@ export async function updateDestinationAction(
         ? existing.seoStrategy
         : {};
 
+    const sanitizedNearbyConfig = input.nearbyPlacesConfig !== undefined
+      ? sanitizeNearbyPlacesConfig(input.nearbyPlacesConfig)
+      : existingStrategy.nearbyPlacesConfig;
+
+    const nearbyPlacesContent = input.nearbyPlacesContent !== undefined
+      ? input.nearbyPlacesContent?.trim() || null
+      : (sanitizedNearbyConfig?.introContent !== undefined
+          ? sanitizedNearbyConfig.introContent
+          : existingStrategy.nearbyPlacesContent);
+
     const updatedStrategy = {
       ...existingStrategy,
       cleanName: input.cleanName?.trim() || title.split("|")[0].replace(/\s*Travel Guide.*$/i, "").trim(),
@@ -188,7 +297,8 @@ export async function updateDestinationAction(
       food: input.food !== undefined ? input.food?.trim() || null : existingStrategy.food,
       shopping: input.shopping !== undefined ? input.shopping?.trim() || null : existingStrategy.shopping,
       activities: input.activities !== undefined ? input.activities?.trim() || null : existingStrategy.activities,
-      nearbyPlacesContent: input.nearbyPlacesContent !== undefined ? input.nearbyPlacesContent?.trim() || null : existingStrategy.nearbyPlacesContent,
+      nearbyPlacesContent,
+      nearbyPlacesConfig: sanitizedNearbyConfig,
     };
 
     await prisma.seoLandingPage.update({
