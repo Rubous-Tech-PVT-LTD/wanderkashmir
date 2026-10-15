@@ -24,6 +24,7 @@ export interface NearbyPlaceItemConfig {
   name?: string;
   description?: string | null;
   url?: string | null;
+  entityType?: "DESTINATION" | "PLACE";
 }
 
 export interface NearbyPlacesConfig {
@@ -37,8 +38,9 @@ export interface AvailablePlaceOption {
   slug: string;
   status: string;
   description?: string | null;
-  destination?: string | null;
-  imageUrl?: string | null;
+  destination: string | null;
+  imageUrl: string | null;
+  entityType?: "DESTINATION" | "PLACE";
   destinationPlaces?: {
     destination: {
       id: string;
@@ -152,6 +154,10 @@ export default function NearbyPlacesEditor({
       id: `db_${place.id}`,
       type: "database",
       placeId: place.id,
+      name: place.name,
+      description: place.description || null,
+      url: place.entityType === "DESTINATION" ? `/destinations/${place.slug}` : undefined,
+      entityType: place.entityType || "PLACE",
     };
     onChangeItems([...items, newItem]);
     setSearchTerm("");
@@ -366,14 +372,23 @@ export default function NearbyPlacesEditor({
                             <MapPin className="w-3.5 h-3.5" />
                           </div>
                         )}
-                        <div className="truncate">
-                          <span className="font-medium text-white">{place.name}</span>
-                          {linkedDestTitle && (
-                            <span className="ml-1.5 text-[11px] text-slate-400">
+                        <div className="truncate flex items-center gap-1.5 min-w-0">
+                          <span className="font-medium text-white truncate">{place.name}</span>
+                          {place.entityType === "DESTINATION" ? (
+                            <span className="text-[9.5px] font-semibold text-purple-300 bg-purple-500/20 px-1.5 py-0.5 rounded border border-purple-500/30 shrink-0">
+                              Destination
+                            </span>
+                          ) : (
+                            <span className="text-[9.5px] font-semibold text-emerald-300 bg-emerald-500/20 px-1.5 py-0.5 rounded border border-emerald-500/30 shrink-0">
+                              Attraction
+                            </span>
+                          )}
+                          {linkedDestTitle && place.entityType !== "DESTINATION" && (
+                            <span className="text-[11px] text-slate-400 truncate">
                               ({linkedDestTitle})
                             </span>
                           )}
-                          <span className="ml-2 font-mono text-[10px] text-slate-500">
+                          <span className="font-mono text-[10px] text-slate-500 shrink-0">
                             /{place.slug}
                           </span>
                         </div>
@@ -624,7 +639,11 @@ export default function NearbyPlacesEditor({
                             </span>
 
                             {/* Badge */}
-                            {isDatabase ? (
+                            {item.entityType === "DESTINATION" || dbPlace?.entityType === "DESTINATION" ? (
+                              <span className="text-[10px] font-semibold text-purple-300 bg-purple-500/20 px-1.5 py-0.5 rounded border border-purple-500/30">
+                                Destination
+                              </span>
+                            ) : isDatabase ? (
                               <span className="text-[10px] font-semibold text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/20">
                                 Database Place
                               </span>

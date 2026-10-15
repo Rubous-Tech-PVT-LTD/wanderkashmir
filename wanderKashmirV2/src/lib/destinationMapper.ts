@@ -359,39 +359,71 @@ export async function mapDestinationDoc(
       }
     }
 
+    const missingPlaceIds = dbPlaceIds.filter((id) => !placesMap.has(id));
+    const destsMap = new Map<string, any>();
+    if (missingPlaceIds.length > 0) {
+      const dbDests = await prisma.seoLandingPage.findMany({
+        where: {
+          id: { in: missingPlaceIds },
+          type: "DESTINATION",
+          workflowState: "PUBLISHED",
+        },
+        select: { id: true, slug: true, title: true, h1Heading: true, description: true, imageUrl: true },
+      });
+      for (const d of dbDests) {
+        destsMap.set(d.id, d);
+      }
+    }
+
     const resolvedItems: DestinationNearbyPlaceItem[] = [];
 
     for (const item of items) {
       if (item.type === "database" && item.placeId) {
         const place = placesMap.get(item.placeId);
-        // If place is missing or inactive, omit it safely (prevent broken links)
-        if (!place) continue;
+        if (place) {
+          // Resolve canonical destination link safely
+          const currentLink = place.destinationPlaces?.find(
+            (dp: any) =>
+              dp.destination?.slug === page.slug && dp.destination?.workflowState === "PUBLISHED"
+          );
+          const otherPublishedLink = place.destinationPlaces?.find(
+            (dp: any) => dp.destination?.workflowState === "PUBLISHED"
+          );
+          const resolvedDest = currentLink?.destination || otherPublishedLink?.destination;
 
-        // Resolve canonical destination link safely
-        const currentLink = place.destinationPlaces?.find(
-          (dp: any) =>
-            dp.destination?.slug === page.slug && dp.destination?.workflowState === "PUBLISHED"
-        );
-        const otherPublishedLink = place.destinationPlaces?.find(
-          (dp: any) => dp.destination?.workflowState === "PUBLISHED"
-        );
-        const resolvedDest = currentLink?.destination || otherPublishedLink?.destination;
+          const canonicalUrl = resolvedDest
+            ? `/destinations/${resolvedDest.slug}/${place.slug}`
+            : null;
 
-        const canonicalUrl = resolvedDest
-          ? `/destinations/${resolvedDest.slug}/${place.slug}`
-          : null;
+          const destinationContext = resolvedDest?.title || place.destination || null;
 
-        const destinationContext = resolvedDest?.title || place.destination || null;
+          resolvedItems.push({
+            id: item.id || `db-${place.id}`,
+            type: "database",
+            name: place.name,
+            description: place.description || null,
+            imageUrl: place.imageUrl || null,
+            canonicalUrl,
+            destinationContext,
+          });
+          continue;
+        }
 
-        resolvedItems.push({
-          id: item.id || `db-${place.id}`,
-          type: "database",
-          name: place.name,
-          description: place.description || null,
-          imageUrl: place.imageUrl || null,
-          canonicalUrl,
-          destinationContext,
-        });
+        const dest = destsMap.get(item.placeId);
+        if (dest) {
+          const cleanName =
+            dest.title?.split("|")[0]?.replace(/Travel Guide/i, "")?.trim() || dest.h1Heading;
+          resolvedItems.push({
+            id: item.id || `db-${dest.id}`,
+            type: "database",
+            name: cleanName,
+            description: dest.description?.replace(/^Meta\s*Description:\s*/i, "") || null,
+            imageUrl: dest.imageUrl || null,
+            canonicalUrl: `/destinations/${dest.slug}`,
+            destinationContext: "Major Destination",
+          });
+          continue;
+        }
       } else if (item.type === "custom" && item.name?.trim()) {
         let safeUrl: string | null = null;
         if (item.url && typeof item.url === "string") {

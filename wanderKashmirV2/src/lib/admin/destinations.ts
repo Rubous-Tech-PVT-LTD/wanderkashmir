@@ -1,6 +1,7 @@
 import prisma from "@/lib/prisma";
 import { SeoWorkflowState } from "@prisma/client";
-export type { AvailablePlaceOption } from "@/components/admin/destinations/NearbyPlacesEditor";
+import type { AvailablePlaceOption } from "@/components/admin/destinations/NearbyPlacesEditor";
+export type { AvailablePlaceOption };
 
 export interface AdminDestinationListItem {
   id: string;
@@ -289,32 +290,67 @@ export async function getAdminPlaceById(id: string) {
 /**
  * Fetch all available places for linking to a destination.
  */
-export async function getAllAvailablePlaces() {
+export async function getAllAvailablePlaces(): Promise<AvailablePlaceOption[]> {
   try {
-    const places = await prisma.place.findMany({
-      select: {
-        id: true,
-        name: true,
-        slug: true,
-        status: true,
-        description: true,
-        destination: true,
-        imageUrl: true,
-        destinationPlaces: {
-          select: {
-            destination: {
-              select: {
-                id: true,
-                slug: true,
-                title: true,
+    const [places, destinations] = await Promise.all([
+      prisma.place.findMany({
+        select: {
+          id: true,
+          name: true,
+          slug: true,
+          status: true,
+          description: true,
+          destination: true,
+          imageUrl: true,
+          destinationPlaces: {
+            select: {
+              destination: {
+                select: {
+                  id: true,
+                  slug: true,
+                  title: true,
+                },
               },
             },
           },
         },
-      },
-      orderBy: { name: "asc" },
+        orderBy: { name: "asc" },
+      }),
+      prisma.seoLandingPage.findMany({
+        where: { type: "DESTINATION" },
+        select: {
+          id: true,
+          slug: true,
+          title: true,
+          h1Heading: true,
+          description: true,
+          imageUrl: true,
+        },
+        orderBy: { title: "asc" },
+      }),
+    ]);
+
+    const destinationOptions: AvailablePlaceOption[] = destinations.map((dest) => {
+      const cleanName = dest.title.split("|")[0].replace(/Travel Guide/i, "").trim() || dest.h1Heading;
+      return {
+        id: dest.id,
+        name: cleanName,
+        slug: dest.slug,
+        status: "ACTIVE",
+        description: dest.description?.replace(/^Meta\s*Description:\s*/i, "") || null,
+        destination: "Major Destination",
+        imageUrl: dest.imageUrl || null,
+        entityType: "DESTINATION",
+        destinationPlaces: [],
+      };
     });
-    return places;
+
+    const placeOptions: AvailablePlaceOption[] = places.map((p) => ({
+      ...p,
+      entityType: "PLACE" as const,
+    }));
+
+    return [...destinationOptions, ...placeOptions];
   } catch (error) {
     console.error("Error fetching all available places:", error);
     return [];

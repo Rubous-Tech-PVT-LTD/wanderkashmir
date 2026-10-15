@@ -159,6 +159,36 @@ export const getTourFromDB = cache(async function(slug: string): Promise<TourPac
             dbPlacesMap.set(p.id, p);
           }
 
+          const missingIds = placeIds.filter((id) => !dbPlacesMap.has(id));
+          const dbDestsMap = new Map<
+            string,
+            { id: string; name: string; slug: string; imageUrl: string | null; description: string | null }
+          >();
+          if (missingIds.length > 0) {
+            const dbDests = await prisma.seoLandingPage.findMany({
+              where: { id: { in: missingIds } },
+              select: {
+                id: true,
+                slug: true,
+                title: true,
+                h1Heading: true,
+                description: true,
+                imageUrl: true,
+              },
+            });
+            for (const d of dbDests) {
+              const cleanName =
+                d.title.split("|")[0].replace(/Travel Guide/i, "").trim() || d.h1Heading;
+              dbDestsMap.set(d.id, {
+                id: d.id,
+                name: cleanName,
+                slug: d.slug,
+                imageUrl: d.imageUrl || null,
+                description: d.description?.replace(/^Meta\s*Description:\s*/i, "") || null,
+              });
+            }
+          }
+
           extractedContentSections.nearbyPlacesConfig.items = (extractedContentSections.nearbyPlacesConfig.items as NearbyPlaceItemConfig[]).map(
             (it) => {
               if (it.type === "database" && it.placeId) {
@@ -178,6 +208,18 @@ export const getTourFromDB = cache(async function(slug: string): Promise<TourPac
                     imageUrl: dbP.imageUrl || null,
                     canonicalUrl,
                     destinationContext: destContext,
+                  };
+                }
+
+                const dbDest = dbDestsMap.get(it.placeId);
+                if (dbDest) {
+                  return {
+                    ...it,
+                    name: dbDest.name || it.name,
+                    description: dbDest.description || it.description || null,
+                    imageUrl: dbDest.imageUrl || null,
+                    canonicalUrl: `/destinations/${dbDest.slug}`,
+                    destinationContext: "Major Destination",
                   };
                 }
               }
