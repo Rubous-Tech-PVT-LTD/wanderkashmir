@@ -1469,9 +1469,25 @@ export default function TourForm({
         <div className="rounded-xl border border-slate-800 bg-slate-950/60 p-6 space-y-4">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-sm font-semibold text-white flex items-center gap-2">
-                <Sparkles className="w-4 h-4 text-amber-400" /> Experiences ({tourExperiences.length})
-              </h2>
+              <div className="flex items-center gap-2">
+                <h2 className="text-sm font-semibold text-white flex items-center gap-2">
+                  <Sparkles className="w-4 h-4 text-amber-400" /> Experiences ({tourExperiences.length})
+                </h2>
+                <span
+                  className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${
+                    experiences.length > 0
+                      ? "bg-slate-800 text-slate-300 border border-slate-700"
+                      : "bg-amber-500/10 text-amber-400 border border-amber-500/30"
+                  }`}
+                  title={
+                    experiences.length > 0
+                      ? `${experiences.length} master experiences in catalog`
+                      : "0 master experiences in DB catalog"
+                  }
+                >
+                  Catalog: {experiences.length} in DB
+                </span>
+              </div>
               <p className="text-[11px] text-slate-400 mt-0.5">
                 Link curated master activities from catalog
               </p>
@@ -1490,7 +1506,12 @@ export default function TourForm({
                 type="button"
                 onClick={addExperience}
                 disabled={experiences.length === 0}
-                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold text-amber-400 bg-amber-500/10 border border-amber-500/20 hover:bg-amber-500/20 transition-colors disabled:opacity-40"
+                title={
+                  experiences.length === 0
+                    ? "Cannot add: 0 master experiences in catalog. Create one first."
+                    : "Add an experience to this tour"
+                }
+                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold text-amber-400 bg-amber-500/10 border border-amber-500/20 hover:bg-amber-500/20 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 <Plus className="w-3 h-3" /> Add
               </button>
@@ -1556,9 +1577,27 @@ export default function TourForm({
                 </div>
               ))}
             </div>
+          ) : experiences.length === 0 ? (
+            <div className="text-center py-6 px-4 border border-dashed border-amber-500/25 bg-amber-500/5 rounded-xl text-xs space-y-2">
+              <div className="text-amber-400 font-medium flex items-center justify-center gap-1.5">
+                <Sparkles className="w-4 h-4" /> 0 Experiences in Database Catalog
+              </div>
+              <p className="text-slate-400 text-[11px] max-w-sm mx-auto leading-relaxed">
+                The &quot;+ Add&quot; button is disabled because no master activities exist in the catalog yet. Click below to create your first experience in the catalog.
+              </p>
+              <div className="pt-1">
+                <Link
+                  href="/admin/experiences/new"
+                  target="_blank"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-amber-300 bg-amber-500/15 border border-amber-500/30 hover:bg-amber-500/25 transition-colors"
+                >
+                  <Plus className="w-3.5 h-3.5" /> Create Master Experience <ExternalLink className="w-3 h-3 ml-0.5" />
+                </Link>
+              </div>
+            </div>
           ) : (
             <div className="text-center py-6 border border-dashed border-slate-800 rounded-xl text-xs text-slate-500">
-              No experiences linked yet.
+              No experiences linked yet. Click &quot;Add&quot; to link from {experiences.length} available catalog items.
             </div>
           )}
         </div>
@@ -1567,9 +1606,25 @@ export default function TourForm({
         <div className="rounded-xl border border-slate-800 bg-slate-950/60 p-6 space-y-4">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-sm font-semibold text-white flex items-center gap-2">
-                <BookOpen className="w-4 h-4 text-purple-400" /> Travel Guides ({tourGuides.length})
-              </h2>
+              <div className="flex items-center gap-2">
+                <h2 className="text-sm font-semibold text-white flex items-center gap-2">
+                  <BookOpen className="w-4 h-4 text-purple-400" /> Travel Guides ({tourGuides.length})
+                </h2>
+                <span
+                  className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${
+                    travelGuides.length > 0
+                      ? "bg-slate-800 text-slate-300 border border-slate-700"
+                      : "bg-purple-500/10 text-purple-400 border border-purple-500/30"
+                  }`}
+                  title={
+                    travelGuides.length > 0
+                      ? `${travelGuides.length} published articles available`
+                      : "0 published articles in DB"
+                  }
+                >
+                  Catalog: {travelGuides.length} in DB
+                </span>
+              </div>
               <p className="text-[11px] text-slate-400 mt-0.5">
                 Link published blog guides & field notes
               </p>
@@ -1588,7 +1643,12 @@ export default function TourForm({
                 type="button"
                 onClick={addTravelGuide}
                 disabled={travelGuides.length === 0}
-                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold text-purple-400 bg-purple-500/10 border border-purple-500/20 hover:bg-purple-500/20 transition-colors disabled:opacity-40"
+                title={
+                  travelGuides.length === 0
+                    ? "Cannot add: 0 published articles in catalog."
+                    : "Add an article to this tour"
+                }
+                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold text-purple-400 bg-purple-500/10 border border-purple-500/20 hover:bg-purple-500/20 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 <Plus className="w-3 h-3" /> Add
               </button>
@@ -1625,7 +1685,7 @@ export default function TourForm({
             </div>
           ) : (
             <div className="text-center py-6 border border-dashed border-slate-800 rounded-xl text-xs text-slate-500">
-              No travel guides linked.
+              No travel guides linked yet.
             </div>
           )}
         </div>
