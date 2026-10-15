@@ -20,6 +20,7 @@ import {
   ArrowDown,
   ShieldAlert,
   Image as ImageIcon,
+  Camera,
 } from "lucide-react";
 import {
   createDestinationAction,
@@ -139,6 +140,54 @@ export default function DestinationForm({
   const [faqs, setFaqs] = useState<{ question: string; answer: string }[]>(initialFaqs);
   const [newQuestion, setNewQuestion] = useState("");
   const [newAnswer, setNewAnswer] = useState("");
+  // Photography Spots (Dynamic Section)
+  const initialPhotoBlock = Array.isArray(strategy.dynamicSections)
+    ? strategy.dynamicSections.find((b: any) => b.blockType === "photographySpots")
+    : null;
+  const [photoSectionTitle, setPhotoSectionTitle] = useState(
+    initialPhotoBlock?.sectionTitle || "Top Photography & Sunset Frames"
+  );
+  const [photoSectionSubtitle, setPhotoSectionSubtitle] = useState(
+    initialPhotoBlock?.sectionSubtitle || "Iconic vantage points for capturing the golden glow of the valley."
+  );
+  const [photoSpots, setPhotoSpots] = useState<
+    Array<{ spotName: string; bestTime: string; image: string; tip: string }>
+  >(
+    Array.isArray(initialPhotoBlock?.spots)
+      ? initialPhotoBlock.spots.map((s: any) => ({
+          spotName: s.spotName || "",
+          bestTime: s.bestTime || "",
+          image: typeof s.image === "string" ? s.image : s.image?.url || "",
+          tip: s.tip || "",
+        }))
+      : []
+  );
+
+  const handleAddPhotoSpot = () => {
+    setPhotoSpots((prev) => [
+      ...prev,
+      { spotName: "", bestTime: "Golden Hour (5:30 PM - 6:30 PM)", image: "", tip: "" },
+    ]);
+  };
+
+  const handleUpdatePhotoSpot = (index: number, field: string, value: string) => {
+    setPhotoSpots((prev) =>
+      prev.map((spot, i) => (i === index ? { ...spot, [field]: value } : spot))
+    );
+  };
+
+  const handleRemovePhotoSpot = (index: number) => {
+    setPhotoSpots((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const handleMovePhotoSpot = (index: number, direction: "up" | "down") => {
+    const newIdx = direction === "up" ? index - 1 : index + 1;
+    if (newIdx < 0 || newIdx >= photoSpots.length) return;
+    const updated = [...photoSpots];
+    const [moved] = updated.splice(index, 1);
+    updated.splice(newIdx, 0, moved);
+    setPhotoSpots(updated);
+  };
 
   // Linked Places State
   const [linkedPlaces, setLinkedPlaces] = useState<LinkedPlaceItem[]>(
@@ -208,6 +257,11 @@ export default function DestinationForm({
       nearbyPlacesConfig: {
         introContent: nearbyPlacesIntro || null,
         items: nearbyPlacesItems,
+      },
+      photographySpots: {
+        sectionTitle: photoSectionTitle,
+        sectionSubtitle: photoSectionSubtitle,
+        spots: photoSpots,
       },
     };
 
@@ -651,6 +705,167 @@ export default function DestinationForm({
                     <Image src={url} alt={`Gallery preview ${idx + 1}`} fill className="object-cover" sizes="80px" />
                   </div>
                 ))}
+            </div>
+          )}
+        </div>
+
+        {/* Section: Photography & Sunset Spots (Dynamic Section) */}
+        <div className="bg-slate-900/60 border border-slate-800 rounded-xl p-5 space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-slate-800/80 pb-3">
+            <div>
+              <h2 className="text-base font-semibold text-white flex items-center gap-2">
+                <Camera className="w-4 h-4 text-emerald-400" />
+                Photography & Sunset Spots ({photoSpots.length})
+              </h2>
+              <p className="text-xs text-slate-400 mt-0.5">
+                Curate prime camera angles, golden hour timings, and vantage points with photos.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={handleAddPhotoSpot}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600 text-white text-xs font-semibold hover:bg-emerald-500 transition-colors cursor-pointer self-start sm:self-auto"
+            >
+              <Plus className="w-3.5 h-3.5" /> Add Photography Spot
+            </button>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-medium text-slate-300 mb-1">
+                Section Heading
+              </label>
+              <input
+                type="text"
+                value={photoSectionTitle}
+                onChange={(e) => setPhotoSectionTitle(e.target.value)}
+                placeholder="Top Photography & Sunset Frames"
+                className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-emerald-500"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-slate-300 mb-1">
+                Section Subtitle
+              </label>
+              <input
+                type="text"
+                value={photoSectionSubtitle}
+                onChange={(e) => setPhotoSectionSubtitle(e.target.value)}
+                placeholder="Iconic vantage points for capturing the golden glow of the valley."
+                className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-emerald-500"
+              />
+            </div>
+          </div>
+
+          {photoSpots.length === 0 ? (
+            <div className="p-6 rounded-lg border border-dashed border-slate-800 text-center text-xs text-slate-500">
+              No photography spots configured yet. Click &quot;Add Photography Spot&quot; above to add viewpoints and golden hour spots.
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {photoSpots.map((spot, index) => (
+                <div
+                  key={index}
+                  className="p-3.5 rounded-lg bg-slate-950 border border-slate-800/90 space-y-3 relative"
+                >
+                  <div className="flex items-center justify-between gap-2 border-b border-slate-800/60 pb-2">
+                    <div className="flex items-center gap-2">
+                      <div className="flex gap-1">
+                        <button
+                          type="button"
+                          disabled={index === 0}
+                          onClick={() => handleMovePhotoSpot(index, "up")}
+                          className="p-1 rounded text-slate-400 hover:text-white disabled:opacity-30 cursor-pointer"
+                          title="Move Up"
+                        >
+                          <ArrowUp className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          type="button"
+                          disabled={index === photoSpots.length - 1}
+                          onClick={() => handleMovePhotoSpot(index, "down")}
+                          className="p-1 rounded text-slate-400 hover:text-white disabled:opacity-30 cursor-pointer"
+                          title="Move Down"
+                        >
+                          <ArrowDown className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                      <span className="text-xs font-semibold text-slate-300">
+                        Spot #{index + 1}: {spot.spotName || "Untitled Spot"}
+                      </span>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => handleRemovePhotoSpot(index)}
+                      className="p-1 rounded text-slate-400 hover:text-rose-400 cursor-pointer transition-colors"
+                      title="Delete Spot"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-[11px] font-medium text-slate-400 mb-1">
+                        Spot / Viewpoint Name *
+                      </label>
+                      <input
+                        type="text"
+                        value={spot.spotName}
+                        onChange={(e) => handleUpdatePhotoSpot(index, "spotName", e.target.value)}
+                        placeholder="e.g. Char Chinar Island at Sunset"
+                        className="w-full bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-emerald-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-medium text-slate-400 mb-1">
+                        Best Time To Shoot *
+                      </label>
+                      <input
+                        type="text"
+                        value={spot.bestTime}
+                        onChange={(e) => handleUpdatePhotoSpot(index, "bestTime", e.target.value)}
+                        placeholder="e.g. Golden Hour (5:30 PM - 6:30 PM)"
+                        className="w-full bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-emerald-500"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-medium text-slate-400 mb-1">
+                      Photo / Image URL (Cloudinary or Web URL)
+                    </label>
+                    <div className="flex gap-2 items-center">
+                      <input
+                        type="text"
+                        value={spot.image}
+                        onChange={(e) => handleUpdatePhotoSpot(index, "image", e.target.value)}
+                        placeholder="https://res.cloudinary.com/..."
+                        className="flex-1 bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-emerald-500 font-mono text-[11px]"
+                      />
+                      {spot.image && (
+                        <div className="w-10 h-8 rounded bg-slate-800 relative overflow-hidden border border-slate-700 shrink-0">
+                          <Image src={spot.image} alt={spot.spotName || "preview"} fill className="object-cover" sizes="40px" />
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-medium text-slate-400 mb-1">
+                      Framing Advice & Photography Tip
+                    </label>
+                    <textarea
+                      rows={2}
+                      value={spot.tip}
+                      onChange={(e) => handleUpdatePhotoSpot(index, "tip", e.target.value)}
+                      placeholder="e.g. Position your camera from an approaching Shikara with the Zabarwan silhouette behind the trees..."
+                      className="w-full bg-slate-900 border border-slate-800 rounded-lg p-2 text-xs text-white focus:outline-none focus:border-emerald-500"
+                    />
+                  </div>
+                </div>
+              ))}
             </div>
           )}
         </div>

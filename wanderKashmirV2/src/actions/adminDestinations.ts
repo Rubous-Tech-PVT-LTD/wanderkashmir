@@ -35,6 +35,16 @@ export interface DestinationFormInput {
       url?: string | null;
     }>;
   } | null;
+  photographySpots?: {
+    sectionTitle?: string;
+    sectionSubtitle?: string;
+    spots: Array<{
+      spotName: string;
+      bestTime?: string;
+      image?: string;
+      tip?: string;
+    }>;
+  } | null;
 }
 
 export interface PlaceFormInput {
@@ -181,6 +191,24 @@ export async function createDestinationAction(
       ? sanitizedNearbyConfig.introContent
       : (input.nearbyPlacesContent?.trim() || null);
 
+    let dynamicSections: any[] = [];
+    if (input.photographySpots && Array.isArray(input.photographySpots.spots) && input.photographySpots.spots.length > 0) {
+      dynamicSections.push({
+        blockType: "photographySpots",
+        displayOrder: 30,
+        sectionTitle: input.photographySpots.sectionTitle?.trim() || "Top Photography & Sunset Frames",
+        sectionSubtitle: input.photographySpots.sectionSubtitle?.trim() || "Iconic vantage points for capturing the golden glow of the valley.",
+        spots: input.photographySpots.spots
+          .map((s) => ({
+            spotName: s.spotName?.trim() || "",
+            bestTime: s.bestTime?.trim() || "",
+            image: s.image?.trim() || "",
+            tip: s.tip?.trim() || "",
+          }))
+          .filter((s) => s.spotName || s.image),
+      });
+    }
+
     const seoStrategy = {
       cleanName: input.cleanName?.trim() || title.split("|")[0].replace(/\s*Travel Guide.*$/i, "").trim(),
       gallery: Array.isArray(input.gallery) ? input.gallery.filter(Boolean) : [],
@@ -193,6 +221,7 @@ export async function createDestinationAction(
       activities: input.activities?.trim() || null,
       nearbyPlacesContent,
       nearbyPlacesConfig: sanitizedNearbyConfig,
+      dynamicSections,
     };
 
     const newDest = await prisma.seoLandingPage.create({
@@ -286,6 +315,46 @@ export async function updateDestinationAction(
           ? sanitizedNearbyConfig.introContent
           : existingStrategy.nearbyPlacesContent);
 
+    const existingDynamicSections = Array.isArray(existingStrategy.dynamicSections)
+      ? [...existingStrategy.dynamicSections]
+      : [];
+
+    let updatedDynamicSections = existingDynamicSections;
+    if (input.photographySpots !== undefined) {
+      const nonPhotoBlocks = existingDynamicSections.filter(
+        (b: any) => b.blockType !== "photographySpots"
+      );
+      if (
+        input.photographySpots &&
+        Array.isArray(input.photographySpots.spots) &&
+        input.photographySpots.spots.length > 0
+      ) {
+        const photoBlock = {
+          blockType: "photographySpots",
+          displayOrder: 30,
+          sectionTitle:
+            input.photographySpots.sectionTitle?.trim() ||
+            "Top Photography & Sunset Frames",
+          sectionSubtitle:
+            input.photographySpots.sectionSubtitle?.trim() ||
+            "Iconic vantage points for capturing the golden glow of the valley.",
+          spots: input.photographySpots.spots
+            .map((s) => ({
+              spotName: s.spotName?.trim() || "",
+              bestTime: s.bestTime?.trim() || "",
+              image: s.image?.trim() || "",
+              tip: s.tip?.trim() || "",
+            }))
+            .filter((s) => s.spotName || s.image),
+        };
+        updatedDynamicSections = [photoBlock, ...nonPhotoBlocks].sort(
+          (a: any, b: any) => (a.displayOrder || 50) - (b.displayOrder || 50)
+        );
+      } else {
+        updatedDynamicSections = nonPhotoBlocks;
+      }
+    }
+
     const updatedStrategy = {
       ...existingStrategy,
       cleanName: input.cleanName?.trim() || title.split("|")[0].replace(/\s*Travel Guide.*$/i, "").trim(),
@@ -299,6 +368,7 @@ export async function updateDestinationAction(
       activities: input.activities !== undefined ? input.activities?.trim() || null : existingStrategy.activities,
       nearbyPlacesContent,
       nearbyPlacesConfig: sanitizedNearbyConfig,
+      dynamicSections: updatedDynamicSections,
     };
 
     await prisma.seoLandingPage.update({
