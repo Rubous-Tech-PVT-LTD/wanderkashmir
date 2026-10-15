@@ -1,6 +1,10 @@
 import Link from "next/link";
 import { ArrowLeft, AlertCircle } from "lucide-react";
-import { getAdminDestinationById, getAllAvailablePlaces } from "@/lib/admin/destinations";
+import {
+  getAdminDestinationById,
+  getAllAvailablePlaces,
+  getAllAvailableProperties,
+} from "@/lib/admin/destinations";
 import DestinationForm from "@/components/admin/destinations/DestinationForm";
 
 export const revalidate = 0;
@@ -12,9 +16,10 @@ export default async function EditDestinationPage({
 }) {
   const { id } = await params;
 
-  const [destination, availablePlaces] = await Promise.all([
+  const [destination, availablePlaces, availableProperties] = await Promise.all([
     getAdminDestinationById(id),
     getAllAvailablePlaces(),
+    getAllAvailableProperties(),
   ]);
 
   if (!destination) {
@@ -68,6 +73,7 @@ export default async function EditDestinationPage({
     <DestinationForm
       initialData={initialData}
       availablePlaces={availablePlaces}
+      availableProperties={availableProperties}
       isEdit={true}
     />
   );

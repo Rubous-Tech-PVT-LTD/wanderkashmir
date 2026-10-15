@@ -357,6 +357,49 @@ export async function getAllAvailablePlaces(): Promise<AvailablePlaceOption[]> {
   }
 }
 
+export interface AvailablePropertyOption {
+  id: string;
+  name: string;
+  location: string;
+  pricePerNight: number;
+  imageUrl: string | null;
+  propertyType: string;
+}
+
+/**
+ * Fetch all verified/approved properties to populate the "Where to Stay" selector in the Destination Editor.
+ */
+export async function getAllAvailableProperties(): Promise<AvailablePropertyOption[]> {
+  try {
+    const properties = await prisma.property.findMany({
+      where: {
+        isApproved: true,
+      },
+      select: {
+        id: true,
+        name: true,
+        location: true,
+        pricePerNight: true,
+        images: true,
+        propertyType: true,
+      },
+      orderBy: { name: "asc" },
+    });
+
+    return properties.map((p) => ({
+      id: p.id,
+      name: p.name,
+      location: p.location,
+      pricePerNight: p.pricePerNight,
+      imageUrl: p.images && p.images.length > 0 ? p.images[0] : null,
+      propertyType: p.propertyType,
+    }));
+  } catch (error) {
+    console.error("Error fetching available properties:", error);
+    return [];
+  }
+}
+
 /**
  * Get aggregate statistics across destinations and places.
  */

@@ -1,10 +1,22 @@
-import { getAllAvailablePlaces } from "@/lib/admin/destinations";
+import {
+  getAllAvailablePlaces,
+  getAllAvailableProperties,
+} from "@/lib/admin/destinations";
 import DestinationForm from "@/components/admin/destinations/DestinationForm";
 
 export const revalidate = 0;
 
 export default async function NewDestinationPage() {
-  const availablePlaces = await getAllAvailablePlaces();
+  const [availablePlaces, availableProperties] = await Promise.all([
+    getAllAvailablePlaces(),
+    getAllAvailableProperties(),
+  ]);
 
-  return <DestinationForm availablePlaces={availablePlaces} isEdit={false} />;
+  return (
+    <DestinationForm
+      availablePlaces={availablePlaces}
+      availableProperties={availableProperties}
+      isEdit={false}
+    />
+  );
 }

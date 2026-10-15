@@ -45,6 +45,7 @@ export interface DestinationFormInput {
       tip?: string;
     }>;
   } | null;
+  featuredPropertyIds?: string[];
 }
 
 export interface PlaceFormInput {
@@ -222,6 +223,9 @@ export async function createDestinationAction(
       nearbyPlacesContent,
       nearbyPlacesConfig: sanitizedNearbyConfig,
       dynamicSections,
+      featuredPropertyIds: Array.isArray(input.featuredPropertyIds)
+        ? input.featuredPropertyIds.filter(Boolean)
+        : [],
     };
 
     const newDest = await prisma.seoLandingPage.create({
@@ -369,6 +373,10 @@ export async function updateDestinationAction(
       nearbyPlacesContent,
       nearbyPlacesConfig: sanitizedNearbyConfig,
       dynamicSections: updatedDynamicSections,
+      featuredPropertyIds:
+        input.featuredPropertyIds !== undefined
+          ? (Array.isArray(input.featuredPropertyIds) ? input.featuredPropertyIds.filter(Boolean) : [])
+          : (existingStrategy.featuredPropertyIds || []),
     };
 
     await prisma.seoLandingPage.update({
