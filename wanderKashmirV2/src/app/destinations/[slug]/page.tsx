@@ -486,10 +486,9 @@ export default async function DestinationSeoPage({ params }: { params: Promise<{
         {/* 14. NEARBY PLACES (Hybrid Database Places, Custom Suggestions, and Nearby Destinations) */}
         {(() => {
           const hasNearbyPlaces = Boolean(destination.nearbyPlaces && destination.nearbyPlaces.length > 0);
-          const hasNearbyDestinations = Boolean(destination.nearbyDestinations && destination.nearbyDestinations.length > 0);
           const hasIntro = hasRichContent(destination.nearbyPlacesContent);
 
-          if (!hasNearbyPlaces && !hasNearbyDestinations && !hasIntro) {
+          if (!hasNearbyPlaces && !hasIntro) {
             return null;
           }
 
@@ -512,7 +511,7 @@ export default async function DestinationSeoPage({ params }: { params: Promise<{
 
               {/* Hybrid Nearby Places Grid */}
               {hasNearbyPlaces && (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {destination.nearbyPlaces.map((place) => {
                     const cardContent = (
                       <div className="group flex flex-col bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-all border border-slate-100 h-full">
@@ -577,55 +576,6 @@ export default async function DestinationSeoPage({ params }: { params: Promise<{
                       </div>
                     );
                   })}
-                </div>
-              )}
-
-              {/* Nearby Destination Cards */}
-              {hasNearbyDestinations && (
-                <div className="space-y-4">
-                  {hasNearbyPlaces && (
-                    <h3 className="text-sm font-semibold text-slate-600 uppercase tracking-wider">
-                      Neighboring Valleys & Major Destinations
-                    </h3>
-                  )}
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                    {destination.nearbyDestinations.map((nearby) => (
-                      <Link
-                        href={`/destinations/${nearby.slug}`}
-                        key={nearby.id}
-                        className="group flex flex-col bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-all border border-slate-100"
-                      >
-                        <div className="relative aspect-[4/3] w-full overflow-hidden bg-slate-100">
-                          {nearby.imageUrl ? (
-                            <Image
-                              src={nearby.imageUrl}
-                              alt={nearby.title}
-                              fill
-                              className="object-cover transition-transform duration-700 group-hover:scale-105"
-                              sizes="(max-width: 768px) 100vw, 25vw"
-                            />
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center text-slate-300">
-                              <Map className="w-8 h-8" />
-                            </div>
-                          )}
-                        </div>
-                        <div className="p-5 flex-1 flex flex-col">
-                          <h3 className="font-bold text-base text-slate-900 group-hover:text-indigo-600 transition-colors mb-1.5">
-                            {nearby.title}
-                          </h3>
-                          {nearby.description && (
-                            <p className="text-slate-500 text-xs line-clamp-2 leading-relaxed">
-                              {nearby.description}
-                            </p>
-                          )}
-                          <span className="mt-auto pt-3 text-xs font-semibold text-[var(--season-primary)] flex items-center gap-1">
-                            Explore guide →
-                          </span>
-                        </div>
-                      </Link>
-                    ))}
-                  </div>
                 </div>
               )}
             </div>

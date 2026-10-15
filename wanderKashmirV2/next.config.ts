@@ -41,21 +41,6 @@ const nextConfig: NextConfig = {
   async redirects() {
     return [
       {
-        source: "/destinations/dal-lake",
-        destination: "/destinations/srinagar/dal-lake",
-        permanent: true,
-      },
-      {
-        source: "/destinations/betaab-valley",
-        destination: "/destinations/pahalgam/betaab-valley",
-        permanent: true,
-      },
-      {
-        source: "/destinations/aru-valley",
-        destination: "/destinations/pahalgam/aru-valley",
-        permanent: true,
-      },
-      {
         source: "/kashmir-tour-packages",
         destination: "/tours",
         permanent: true,

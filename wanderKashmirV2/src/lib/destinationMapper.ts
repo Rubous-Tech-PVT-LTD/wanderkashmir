@@ -315,7 +315,7 @@ export async function mapDestinationDoc(
         .filter(Boolean)
         .map((p: any) => ({
           id: p.id,
-          title: p.title,
+          title: p.title?.split("|")[0]?.replace(/Travel Guide/i, "")?.trim() || p.title,
           slug: p.slug,
           imageUrl: p.imageUrl,
           description: p.description?.replace(/^Meta\s*Description:\s*/i, ""),
