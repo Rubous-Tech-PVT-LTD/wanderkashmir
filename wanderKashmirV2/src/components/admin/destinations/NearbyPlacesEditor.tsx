@@ -24,6 +24,7 @@ export interface NearbyPlaceItemConfig {
   name?: string;
   description?: string | null;
   url?: string | null;
+  imageUrl?: string | null;
   entityType?: "DESTINATION" | "PLACE";
 }
 
@@ -80,6 +81,7 @@ export default function NearbyPlacesEditor({
   const [customName, setCustomName] = useState("");
   const [customDescription, setCustomDescription] = useState("");
   const [customUrl, setCustomUrl] = useState("");
+  const [customImageUrl, setCustomImageUrl] = useState("");
   const [customUrlError, setCustomUrlError] = useState<string | null>(null);
 
   // Editing existing custom item state
@@ -87,6 +89,7 @@ export default function NearbyPlacesEditor({
   const [editName, setEditName] = useState("");
   const [editDescription, setEditDescription] = useState("");
   const [editUrl, setEditUrl] = useState("");
+  const [editImageUrl, setEditImageUrl] = useState("");
   const [editUrlError, setEditUrlError] = useState<string | null>(null);
 
   // Set of selected place IDs for quick lookup
@@ -183,12 +186,14 @@ export default function NearbyPlacesEditor({
       name: trimmedName,
       description: customDescription.trim() || null,
       url: customUrl.trim() || null,
+      imageUrl: customImageUrl.trim() || null,
     };
 
     onChangeItems([...items, newItem]);
     setCustomName("");
     setCustomDescription("");
     setCustomUrl("");
+    setCustomImageUrl("");
     setCustomUrlError(null);
   };
 
@@ -198,6 +203,7 @@ export default function NearbyPlacesEditor({
     setEditName(item.name || "");
     setEditDescription(item.description || "");
     setEditUrl(item.url || "");
+    setEditImageUrl(item.imageUrl || "");
     setEditUrlError(null);
   };
 
@@ -221,6 +227,7 @@ export default function NearbyPlacesEditor({
           name: trimmedName,
           description: editDescription.trim() || null,
           url: editUrl.trim() || null,
+          imageUrl: editImageUrl.trim() || null,
         };
       }
       return it;
@@ -236,6 +243,7 @@ export default function NearbyPlacesEditor({
     setEditName("");
     setEditDescription("");
     setEditUrl("");
+    setEditImageUrl("");
     setEditUrlError(null);
   };
 
@@ -464,17 +472,32 @@ export default function NearbyPlacesEditor({
           </div>
         </div>
 
-        <div>
-          <label className="block text-[11px] font-medium text-slate-300 mb-1">
-            Short Description / SEO Support Text
-          </label>
-          <input
-            type="text"
-            value={customDescription}
-            onChange={(e) => setCustomDescription(e.target.value)}
-            placeholder="e.g. Untouched alpine meadow 42 km away with grazing herds along Shaliganga River."
-            className="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-amber-400"
-          />
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label className="block text-[11px] font-medium text-slate-300 mb-1">
+              Short Description / SEO Support Text
+            </label>
+            <input
+              type="text"
+              value={customDescription}
+              onChange={(e) => setCustomDescription(e.target.value)}
+              placeholder="e.g. Historic Mughal garden beside Dal Lake..."
+              className="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-amber-400"
+            />
+          </div>
+
+          <div>
+            <label className="block text-[11px] font-medium text-slate-300 mb-1">
+              Image URL (Optional - Cloudinary / Web)
+            </label>
+            <input
+              type="text"
+              value={customImageUrl}
+              onChange={(e) => setCustomImageUrl(e.target.value)}
+              placeholder="https://res.cloudinary.com/... or image link"
+              className="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-amber-400"
+            />
+          </div>
         </div>
 
         <div className="flex items-center justify-end gap-2 pt-1">
@@ -559,13 +582,22 @@ export default function NearbyPlacesEditor({
                       {editUrlError && (
                         <p className="text-[10px] text-red-400">{editUrlError}</p>
                       )}
-                      <input
-                        type="text"
-                        value={editDescription}
-                        onChange={(e) => setEditDescription(e.target.value)}
-                        placeholder="Short Description"
-                        className="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1 text-xs text-white focus:outline-none focus:border-amber-400"
-                      />
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        <input
+                          type="text"
+                          value={editDescription}
+                          onChange={(e) => setEditDescription(e.target.value)}
+                          placeholder="Short Description"
+                          className="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1 text-xs text-white focus:outline-none focus:border-amber-400"
+                        />
+                        <input
+                          type="text"
+                          value={editImageUrl}
+                          onChange={(e) => setEditImageUrl(e.target.value)}
+                          placeholder="Image URL (Cloudinary / Web)"
+                          className="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1 text-xs text-white focus:outline-none focus:border-amber-400"
+                        />
+                      </div>
                       <div className="flex items-center justify-end gap-2 pt-1">
                         <button
                           type="button"
@@ -609,11 +641,11 @@ export default function NearbyPlacesEditor({
                           </button>
                         </div>
 
-                        {/* Thumbnail if DB place */}
-                        {isDatabase && dbPlace?.imageUrl ? (
+                        {/* Thumbnail if DB place or custom place has imageUrl */}
+                        {(isDatabase && dbPlace?.imageUrl) || item.imageUrl ? (
                           <div className="w-9 h-9 rounded-lg bg-slate-800 relative overflow-hidden shrink-0 border border-slate-700 mt-0.5">
                             <Image
-                              src={dbPlace.imageUrl}
+                              src={(isDatabase && dbPlace?.imageUrl) || item.imageUrl!}
                               alt={displayName}
                               fill
                               className="object-cover"

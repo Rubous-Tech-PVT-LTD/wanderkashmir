@@ -225,8 +225,9 @@ export const getTourFromDB = cache(async function(slug: string): Promise<TourPac
               }
               return {
                 ...it,
+                imageUrl: it.imageUrl || null,
                 canonicalUrl: it.url || null,
-                destinationContext: "Scenic Excursion",
+                destinationContext: "Sightseeing Spot",
               };
             }
           );
@@ -234,8 +235,9 @@ export const getTourFromDB = cache(async function(slug: string): Promise<TourPac
           extractedContentSections.nearbyPlacesConfig.items = extractedContentSections.nearbyPlacesConfig.items.map(
             (it: any) => ({
               ...it,
+              imageUrl: it.imageUrl || null,
               canonicalUrl: it.url || null,
-              destinationContext: "Scenic Excursion",
+              destinationContext: "Sightseeing Spot",
             })
           );
         }

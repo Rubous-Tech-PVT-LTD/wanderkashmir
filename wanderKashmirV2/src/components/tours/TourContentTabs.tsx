@@ -1297,17 +1297,8 @@ export default function TourContentTabs({ tour }: TourContentTabsProps) {
                             )}
 
                             <div className="absolute top-2.5 left-2.5 bg-white/95 backdrop-blur-xs px-2 py-0.5 rounded-full text-[10px] font-semibold text-slate-700 shadow-2xs flex items-center gap-1">
-                              {isDatabase ? (
-                                <>
-                                  <MapPin className="w-3 h-3 text-emerald-600" />
-                                  <span>{place.destinationContext || "Place"}</span>
-                                </>
-                              ) : (
-                                <>
-                                  <Sparkles className="w-3 h-3 text-amber-500" />
-                                  <span>Suggested Spot</span>
-                                </>
-                              )}
+                              <MapPin className="w-3 h-3 text-emerald-600" />
+                              <span>{place.destinationContext || (isDatabase ? "Place" : "Sightseeing Spot")}</span>
                             </div>
                           </div>
 

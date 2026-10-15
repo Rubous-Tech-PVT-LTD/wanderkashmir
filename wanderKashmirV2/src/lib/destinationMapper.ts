@@ -45,6 +45,8 @@ export interface NearbyPlaceItemConfig {
   name?: string;
   description?: string | null;
   url?: string | null;
+  imageUrl?: string | null;
+  entityType?: "DESTINATION" | "PLACE";
 }
 
 export interface NearbyPlacesConfig {
@@ -447,9 +449,9 @@ export async function mapDestinationDoc(
           type: "custom",
           name: item.name.trim(),
           description: item.description?.trim() || null,
-          imageUrl: null,
+          imageUrl: item.imageUrl || null,
           canonicalUrl: safeUrl,
-          destinationContext: null,
+          destinationContext: "Sightseeing Spot",
         });
       }
     }
