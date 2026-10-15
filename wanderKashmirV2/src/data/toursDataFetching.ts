@@ -39,46 +39,44 @@ export const getTourFromDB = cache(async function(slug: string): Promise<TourPac
 
     if (!tour) return null;
 
-    // Batch resolve destinations against published SeoLandingPage (type = "DESTINATION")
+    // Batch resolve destinations against published SeoLandingPage (type = "DESTINATION", workflowState = "PUBLISHED")
+    let publishedDestPages: { id: string; slug: string; title: string; h1Heading: string | null }[] = [];
+    try {
+      publishedDestPages = await prisma.seoLandingPage.findMany({
+        where: {
+          type: "DESTINATION",
+          workflowState: "PUBLISHED",
+        },
+        select: { id: true, slug: true, title: true, h1Heading: true },
+      });
+    } catch (destErr) {
+      console.warn("Could not query published destination SEO pages:", destErr);
+    }
+    const publishedDestSlugSet = new Set(publishedDestPages.map((p: { slug: string }) => p.slug.toLowerCase()));
+
     let resolvedDestinations: { name: string; slug?: string; hasPublicPage: boolean }[] = [];
     if (Array.isArray(tour.destinations) && tour.destinations.length > 0) {
-      try {
-        const destPages = await prisma.seoLandingPage.findMany({
-          where: {
-            type: "DESTINATION",
-            workflowState: "PUBLISHED",
-          },
-          select: { slug: true, title: true, h1Heading: true },
+      resolvedDestinations = tour.destinations.map((dName: string) => {
+        const cleanName = dName.trim();
+        const norm = cleanName.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+        const matched = publishedDestPages.find((p: { slug: string; title: string; h1Heading: string | null }) => {
+          const pSlug = p.slug.toLowerCase();
+          const pTitle = p.title.toLowerCase();
+          return pSlug === norm || pSlug === `destinations-${norm}` || pTitle.includes(cleanName.toLowerCase());
         });
 
-        resolvedDestinations = tour.destinations.map((dName: string) => {
-          const cleanName = dName.trim();
-          const norm = cleanName.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
-          const matched = destPages.find((p: { slug: string; title: string; h1Heading: string | null }) => {
-            const pSlug = p.slug.toLowerCase();
-            const pTitle = p.title.toLowerCase();
-            return pSlug === norm || pSlug === `destinations-${norm}` || pTitle.includes(cleanName.toLowerCase());
-          });
-
-          if (matched) {
-            return {
-              name: cleanName,
-              slug: matched.slug,
-              hasPublicPage: true,
-            };
-          }
+        if (matched) {
           return {
             name: cleanName,
-            hasPublicPage: false,
+            slug: matched.slug,
+            hasPublicPage: true,
           };
-        });
-      } catch (destErr) {
-        console.warn("Could not query destination SEO pages, using unlinked destinations:", destErr);
-        resolvedDestinations = tour.destinations.map((dName: string) => ({
-          name: dName.trim(),
+        }
+        return {
+          name: cleanName,
           hasPublicPage: false,
-        }));
-      }
+        };
+      });
     }
 
     // Filter and map travel guides for valid, published BLOG pages only
@@ -162,11 +160,14 @@ export const getTourFromDB = cache(async function(slug: string): Promise<TourPac
           const missingIds = placeIds.filter((id) => !dbPlacesMap.has(id));
           const dbDestsMap = new Map<
             string,
-            { id: string; name: string; slug: string; imageUrl: string | null; description: string | null }
+            { id: string; name: string; slug: string; imageUrl: string | null; description: string | null; isPublished: boolean }
           >();
           if (missingIds.length > 0) {
             const dbDests = await prisma.seoLandingPage.findMany({
-              where: { id: { in: missingIds } },
+              where: {
+                id: { in: missingIds },
+                type: "DESTINATION",
+              },
               select: {
                 id: true,
                 slug: true,
@@ -174,6 +175,7 @@ export const getTourFromDB = cache(async function(slug: string): Promise<TourPac
                 h1Heading: true,
                 description: true,
                 imageUrl: true,
+                workflowState: true,
               },
             });
             for (const d of dbDests) {
@@ -185,6 +187,7 @@ export const getTourFromDB = cache(async function(slug: string): Promise<TourPac
                 slug: d.slug,
                 imageUrl: d.imageUrl || null,
                 description: d.description?.replace(/^Meta\s*Description:\s*/i, "") || null,
+                isPublished: d.workflowState === "PUBLISHED",
               });
             }
           }
@@ -195,9 +198,10 @@ export const getTourFromDB = cache(async function(slug: string): Promise<TourPac
                 const dbP = dbPlacesMap.get(it.placeId);
                 if (dbP) {
                   const destSlug = dbP.destinationPlaces?.[0]?.destination?.slug;
-                  const canonicalUrl = destSlug
+                  const isParentDestPublished = destSlug ? publishedDestSlugSet.has(destSlug.toLowerCase()) : false;
+                  const canonicalUrl = isParentDestPublished && destSlug
                     ? `/destinations/${destSlug}/${dbP.slug}`
-                    : `/places/${dbP.slug}`;
+                    : null;
                   const destContext =
                     dbP.destinationPlaces?.[0]?.destination?.title || dbP.destination || null;
 
@@ -217,28 +221,53 @@ export const getTourFromDB = cache(async function(slug: string): Promise<TourPac
                     ...it,
                     name: dbDest.name || it.name,
                     description: dbDest.description || it.description || null,
-                    imageUrl: dbDest.imageUrl || null,
-                    canonicalUrl: `/destinations/${dbDest.slug}`,
+                    imageUrl: dbDest.imageUrl || it.imageUrl || null,
+                    // Strictly require workflowState === "PUBLISHED" to output public clickable link
+                    canonicalUrl: dbDest.isPublished ? `/destinations/${dbDest.slug}` : null,
                     destinationContext: "Major Destination",
                   };
                 }
               }
+
+              // Custom or non-database item fallback
+              // Validate that if canonicalUrl or it.url points to an internal /destinations/[slug],
+              // the target destination is actually PUBLISHED
+              let safeCanonicalUrl: string | null = it.url || null;
+              if (safeCanonicalUrl && safeCanonicalUrl.startsWith("/destinations/")) {
+                const targetSlug = safeCanonicalUrl.replace(/^\/destinations\//, "").split("/")[0].toLowerCase();
+                const isPublished = publishedDestSlugSet.has(targetSlug);
+                if (!isPublished) {
+                  safeCanonicalUrl = null;
+                }
+              }
+
               return {
                 ...it,
                 imageUrl: it.imageUrl || null,
-                canonicalUrl: it.url || null,
+                canonicalUrl: safeCanonicalUrl,
                 destinationContext: "Sightseeing Spot",
               };
             }
           );
         } else {
           extractedContentSections.nearbyPlacesConfig.items = extractedContentSections.nearbyPlacesConfig.items.map(
-            (it: any) => ({
-              ...it,
-              imageUrl: it.imageUrl || null,
-              canonicalUrl: it.url || null,
-              destinationContext: "Sightseeing Spot",
-            })
+            (it: any) => {
+              let safeCanonicalUrl: string | null = it.url || null;
+              if (safeCanonicalUrl && safeCanonicalUrl.startsWith("/destinations/")) {
+                const targetSlug = safeCanonicalUrl.replace(/^\/destinations\//, "").split("/")[0].toLowerCase();
+                const isPublished = publishedDestSlugSet.has(targetSlug);
+                if (!isPublished) {
+                  safeCanonicalUrl = null;
+                }
+              }
+
+              return {
+                ...it,
+                imageUrl: it.imageUrl || null,
+                canonicalUrl: safeCanonicalUrl,
+                destinationContext: "Sightseeing Spot",
+              };
+            }
           );
         }
       } catch (err) {
