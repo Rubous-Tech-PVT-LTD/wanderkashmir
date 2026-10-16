@@ -498,6 +498,39 @@ export async function createPlaceAction(
       select: { id: true, slug: true },
     });
 
+    if (input.destination?.trim()) {
+      const destTerm = input.destination.trim();
+      const parentDest = await prisma.seoLandingPage.findFirst({
+        where: {
+          type: "DESTINATION",
+          OR: [
+            { slug: sanitizeSlug(destTerm) },
+            { title: { contains: destTerm, mode: "insensitive" } },
+            { h1Heading: { contains: destTerm, mode: "insensitive" } },
+          ],
+        },
+        select: { id: true, slug: true },
+      });
+
+      if (parentDest) {
+        await prisma.destinationPlace.upsert({
+          where: {
+            destinationId_placeId: {
+              destinationId: parentDest.id,
+              placeId: newPlace.id,
+            },
+          },
+          create: {
+            destinationId: parentDest.id,
+            placeId: newPlace.id,
+            displayOrder: 0,
+          },
+          update: {},
+        });
+        revalidatePath(`/destinations/${parentDest.slug}`);
+      }
+    }
+
     revalidatePath("/destinations");
     revalidatePath("/sitemap.xml");
     revalidatePath("/admin/destinations");
@@ -572,6 +605,39 @@ export async function updatePlaceAction(
         status: input.status || "ACTIVE",
       },
     });
+
+    if (input.destination?.trim()) {
+      const destTerm = input.destination.trim();
+      const parentDest = await prisma.seoLandingPage.findFirst({
+        where: {
+          type: "DESTINATION",
+          OR: [
+            { slug: sanitizeSlug(destTerm) },
+            { title: { contains: destTerm, mode: "insensitive" } },
+            { h1Heading: { contains: destTerm, mode: "insensitive" } },
+          ],
+        },
+        select: { id: true, slug: true },
+      });
+
+      if (parentDest) {
+        await prisma.destinationPlace.upsert({
+          where: {
+            destinationId_placeId: {
+              destinationId: parentDest.id,
+              placeId: id,
+            },
+          },
+          create: {
+            destinationId: parentDest.id,
+            placeId: id,
+            displayOrder: 0,
+          },
+          update: {},
+        });
+        revalidatePath(`/destinations/${parentDest.slug}`);
+      }
+    }
 
     // Revalidate parent destinations and child routes
     for (const dp of existing.destinationPlaces) {

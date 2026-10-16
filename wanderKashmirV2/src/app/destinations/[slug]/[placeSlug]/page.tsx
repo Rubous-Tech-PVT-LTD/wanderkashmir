@@ -92,18 +92,51 @@ async function resolveEntity(
   }
 
   // Find the specific DestinationPlace link for this placeSlug
+  let place: any = null;
   const linkedEntry = destination.places.find(
     (dp: (typeof destination.places)[number]) => dp.place.slug === placeSlug
   );
 
-  if (!linkedEntry) {
-    return null;
+  if (linkedEntry) {
+    place = linkedEntry.place;
+  } else {
+    // Fallback: check if Place exists in the Place table for this destination
+    const dbPlace = await prisma.place.findFirst({
+      where: {
+        slug: placeSlug,
+        status: "ACTIVE",
+      },
+      select: {
+        id: true,
+        name: true,
+        slug: true,
+        description: true,
+        imageUrl: true,
+        status: true,
+      },
+    });
+
+    if (dbPlace) {
+      place = dbPlace;
+      // Auto-heal: create the missing DestinationPlace join record in background
+      prisma.destinationPlace.upsert({
+        where: {
+          destinationId_placeId: {
+            destinationId: destination.id,
+            placeId: dbPlace.id,
+          },
+        },
+        create: {
+          destinationId: destination.id,
+          placeId: dbPlace.id,
+          displayOrder: destination.places.length,
+        },
+        update: {},
+      }).catch((err: any) => console.error("Auto-heal DestinationPlace failed:", err));
+    }
   }
 
-  const place = linkedEntry.place;
-
-  // Place must be ACTIVE
-  if (place.status !== "ACTIVE") {
+  if (!place || place.status !== "ACTIVE") {
     return null;
   }
 

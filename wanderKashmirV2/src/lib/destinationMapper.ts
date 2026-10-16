@@ -393,11 +393,15 @@ export async function mapDestinationDoc(
           );
           const resolvedDest = currentLink?.destination || otherPublishedLink?.destination;
 
-          const canonicalUrl = resolvedDest
-            ? `/destinations/${resolvedDest.slug}/${place.slug}`
-            : null;
+          const targetDestSlug =
+            resolvedDest?.slug ||
+            (place.destination && (cleanName || page.h1Heading || page.slug).toLowerCase().includes(place.destination.toLowerCase())
+              ? page.slug
+              : page.slug);
 
-          const destinationContext = resolvedDest?.title || place.destination || null;
+          const canonicalUrl = `/destinations/${targetDestSlug}/${place.slug}`;
+
+          const destinationContext = resolvedDest?.title || place.destination || cleanName || null;
 
           resolvedItems.push({
             id: item.id || `db-${place.id}`,
