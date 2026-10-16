@@ -2,6 +2,7 @@ import prisma from "../lib/prisma";
 import { TourPackageDetail } from "./liveToursData";
 import { NearbyPlaceItemConfig } from "@/components/admin/destinations/NearbyPlacesEditor";
 import { cache } from "react";
+import { sanitizeTourHighlights } from "@/lib/tours/highlightUtils";
 
 export const getTourFromDB = cache(async function(slug: string): Promise<TourPackageDetail | null> {
   try {
@@ -328,7 +329,7 @@ export const getTourFromDB = cache(async function(slug: string): Promise<TourPac
         .sort((a, b) => (a.displayOrder ?? 50) - (b.displayOrder ?? 50)),
       inclusions: tour.inclusions || [],
       exclusions: tour.exclusions || [],
-      highlights: tour.highlights || [],
+      highlights: sanitizeTourHighlights(tour.highlights),
       reviewsList: tour.reviews?.map((r: { user?: { name: string | null } | null; createdAt: Date; rating: number; comment?: string | null }) => ({
         name: r.user?.name || "Traveler",
         avatar: "",
@@ -494,7 +495,7 @@ export const getOtherToursFromDB = cache(async function(excludeSlug: string): Pr
         : [],
       inclusions: tour.inclusions || [],
       exclusions: tour.exclusions || [],
-      highlights: tour.highlights || [],
+      highlights: sanitizeTourHighlights(tour.highlights),
       reviewsList: [],
       stays: [],
       transports: [],
@@ -578,7 +579,7 @@ export const getToursByTravelStyle = cache(async function(
         itinerary: Array.isArray(tour.itinerary) ? (tour.itinerary as any[]) : [],
         inclusions: tour.inclusions || [],
         exclusions: tour.exclusions || [],
-        highlights: tour.highlights || [],
+        highlights: sanitizeTourHighlights(tour.highlights),
         reviewsList: [],
         stays: (tour.stays || []).map((s: { id: string; destination: string; nights: number; stayType?: string | null; displayOrder: number; propertyId?: string | null }) => ({
           id: s.id,
@@ -701,7 +702,7 @@ export const getToursByCategory = cache(async function(
       itinerary: Array.isArray(tour.itinerary) ? (tour.itinerary as any[]) : [],
       inclusions: tour.inclusions || [],
       exclusions: tour.exclusions || [],
-      highlights: tour.highlights || [],
+      highlights: sanitizeTourHighlights(tour.highlights),
       reviewsList: [],
       stays: (tour.stays || []).map((s: { id: string; destination: string; nights: number; stayType?: string | null; displayOrder: number; propertyId?: string | null }) => ({
         id: s.id,

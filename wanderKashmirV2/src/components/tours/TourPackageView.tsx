@@ -2,13 +2,14 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { ChevronRight, Star, Sparkles, CheckCircle2, XCircle, BookOpen } from "lucide-react";
+import { ChevronRight, Star, MapPin, CheckCircle2, XCircle, BookOpen } from "lucide-react";
 import HotelGallery from "@/components/stays/detail/HotelGallery";
 import TourStickyBookingCard from "./TourStickyBookingCard";
 import TourContentTabs from "./TourContentTabs";
 import TourCardCompact from "./TourCardCompact";
 import TourDynamicBlocksRenderer from "./TourDynamicBlocksRenderer";
 import { TourPackageDetail } from "@/data/liveToursData";
+import { sanitizeTourHighlights } from "@/lib/tours/highlightUtils";
 
 interface TourPackageViewProps {
   tour: TourPackageDetail;
@@ -96,25 +97,40 @@ export default function TourPackageView({ tour, otherTours }: TourPackageViewPro
               )}
             </div>
 
-            {/* Key Highlights (Rendered if populated in DB) */}
-            {tour.highlights && tour.highlights.length > 0 && (
-              <div className="p-4 sm:p-5 rounded-xl border border-slate-200/90 bg-slate-50/50 space-y-3">
-                <div className="flex items-center gap-2">
-                  <Sparkles className="w-4 h-4 text-[var(--season-primary,#065F46)]" />
-                  <h2 className="text-sm sm:text-base font-bold text-slate-900 tracking-tight">
-                    Tour Highlights
-                  </h2>
-                </div>
-                <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-xs sm:text-[13px] text-slate-700">
-                  {tour.highlights.map((h, i) => (
-                    <li key={i} className="flex items-start gap-2">
-                      <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
-                      <span className="leading-snug">{h}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
+            {/* Key Highlights (Editorial presentation with location icon and balanced 2-column grid) */}
+            {(() => {
+              const highlights = sanitizeTourHighlights(tour.highlights);
+              if (highlights.length === 0) return null;
+              return (
+                <section
+                  aria-labelledby="tour-highlights-heading"
+                  className="rounded-xl border border-slate-200/80 bg-slate-50/40 p-4 sm:p-5 md:p-6 space-y-3.5"
+                >
+                  <div className="flex items-center gap-2 pb-1 border-b border-slate-200/60">
+                    <MapPin className="w-4 h-4 text-[var(--season-primary,#065F46)] shrink-0" aria-hidden="true" />
+                    <h2
+                      id="tour-highlights-heading"
+                      className="text-sm sm:text-base font-semibold text-slate-900 tracking-tight"
+                    >
+                      Tour Highlights
+                    </h2>
+                  </div>
+                  <ul className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-3 pt-0.5">
+                    {highlights.map((highlight, index) => (
+                      <li key={index} className="flex items-start gap-2.5">
+                        <span
+                          className="mt-2 h-1.5 w-1.5 rounded-full bg-[var(--season-primary,#065F46)] shrink-0"
+                          aria-hidden="true"
+                        />
+                        <span className="text-xs sm:text-[13.5px] leading-relaxed text-slate-700">
+                          {highlight}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                </section>
+              );
+            })()}
 
             {/* Horizontal Tabs & Detailed Content (Overview, 5 Feature Cards, Route Map, etc.) */}
             <TourContentTabs tour={tour} />
@@ -123,7 +139,7 @@ export default function TourPackageView({ tour, otherTours }: TourPackageViewPro
             {((tour.inclusions && tour.inclusions.length > 0) || (tour.exclusions && tour.exclusions.length > 0)) && (
               <div className="rounded-xl border border-slate-200/90 bg-white p-4 sm:p-5 space-y-4">
                 <h2 className="text-base sm:text-lg font-bold text-slate-900 tracking-tight">
-                  What's Included & Excluded
+                  What&apos;s Included &amp; Excluded
                 </h2>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {tour.inclusions && tour.inclusions.length > 0 && (
