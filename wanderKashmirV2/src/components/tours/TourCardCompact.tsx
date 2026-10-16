@@ -75,13 +75,6 @@ export default function TourCardCompact({ tour }: TourCardCompactProps) {
         >
           <Heart className={`w-4 h-4 ${isSaved ? "fill-current" : ""}`} />
         </button>
-
-        {/* Route chips or pill indicator on bottom of image */}
-        <div className="absolute bottom-2.5 left-3 right-3 flex items-center justify-between text-white text-[11px] font-medium pointer-events-none">
-          <span className="bg-black/50 backdrop-blur-xs px-2 py-0.5 rounded-md">
-            {tour.destinations.join(" • ")}
-          </span>
-        </div>
       </div>
 
       {/* 2. Card Content Body */}
