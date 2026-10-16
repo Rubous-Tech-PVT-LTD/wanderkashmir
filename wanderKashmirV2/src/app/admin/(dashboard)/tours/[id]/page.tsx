@@ -91,6 +91,9 @@ export default async function EditTourPage({
     isLive: tour.isLive,
     isPopular: tour.isPopular ?? false,
     popularOrder: tour.popularOrder ?? null,
+    h1Heading: tour.h1Heading ?? null,
+    seoTitle: tour.seoTitle ?? null,
+    metaDescription: tour.metaDescription ?? null,
   };
 
   return (

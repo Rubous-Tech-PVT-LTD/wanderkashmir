@@ -89,22 +89,25 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     };
   }
 
+  const metaTitle = tour.seoTitle?.trim() || `${tour.title} (${tour.duration}) | WanderKashmir`;
+  const metaDesc = tour.metaDescription?.trim() || tour.overview;
+
   return {
-    title: `${tour.title} (${tour.duration}) | WanderKashmir`,
-    description: tour.overview,
+    title: metaTitle,
+    description: metaDesc,
     alternates: {
       canonical: `https://www.wanderkashmir.com/tours/${slug}`,
     },
     openGraph: {
-      title: `${tour.title} - ${tour.duration}`,
-      description: tour.overview,
+      title: metaTitle,
+      description: metaDesc,
       url: `https://www.wanderkashmir.com/tours/${slug}`,
       images: tour.images && tour.images[0] ? [tour.images[0]] : [],
     },
     twitter: {
       card: "summary_large_image",
-      title: `${tour.title} - ${tour.duration}`,
-      description: tour.overview,
+      title: metaTitle,
+      description: metaDesc,
     },
   };
 }

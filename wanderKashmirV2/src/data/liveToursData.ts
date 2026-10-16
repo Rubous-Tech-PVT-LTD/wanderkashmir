@@ -94,6 +94,9 @@ export interface TourPackageDetail {
   id: string;
   slug: string;
   title: string;
+  h1Heading?: string | null;
+  seoTitle?: string | null;
+  metaDescription?: string | null;
   duration: string;
   daysCount: number;
   nightsCount: number;

@@ -351,6 +351,9 @@ model Tour {
   updatedAt     DateTime      @updatedAt
   isLive        Boolean       @default(true)
   categoryId    String?
+  h1Heading     String?
+  seoTitle      String?
+  metaDescription String?
   bookings      Booking[]
   promoCodes    PromoCode[]
   reviews       Review[]

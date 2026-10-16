@@ -122,6 +122,9 @@ export interface TourFormInput {
   isLive: boolean;
   isPopular?: boolean;
   popularOrder?: number | null;
+  h1Heading?: string | null;
+  seoTitle?: string | null;
+  metaDescription?: string | null;
 }
 
 export interface ActionResult<T = unknown> {
@@ -387,6 +390,9 @@ export async function createTourAction(
             input.isPopular && typeof input.popularOrder === "number" && input.popularOrder > 0
               ? Math.floor(input.popularOrder)
               : null,
+          h1Heading: input.h1Heading ? input.h1Heading.trim() : null,
+          seoTitle: input.seoTitle ? input.seoTitle.trim() : null,
+          metaDescription: input.metaDescription ? input.metaDescription.trim() : null,
         },
       });
 
@@ -616,6 +622,9 @@ export async function updateTourAction(
             input.isPopular && typeof input.popularOrder === "number" && input.popularOrder > 0
               ? Math.floor(input.popularOrder)
               : null,
+          h1Heading: input.h1Heading ? input.h1Heading.trim() : null,
+          seoTitle: input.seoTitle ? input.seoTitle.trim() : null,
+          metaDescription: input.metaDescription ? input.metaDescription.trim() : null,
         },
       });
 

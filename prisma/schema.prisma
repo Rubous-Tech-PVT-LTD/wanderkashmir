@@ -370,6 +370,9 @@ model Tour {
   isPopular     Boolean       @default(false)
   popularOrder  Int?
   categoryId    String?
+  h1Heading     String?
+  seoTitle      String?
+  metaDescription String?
   bookings      Booking[]
   promoCodes    PromoCode[]
   reviews       Review[]

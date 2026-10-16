@@ -47,5 +47,20 @@ export const ToursCollection = {
       hasMany: true,
       label: "Gallery / Hero Images",
     },
+    {
+      name: "h1Heading",
+      type: "text",
+      label: "H1 / Package Title Heading",
+    },
+    {
+      name: "seoTitle",
+      type: "text",
+      label: "SEO Title (Meta Title)",
+    },
+    {
+      name: "metaDescription",
+      type: "textarea",
+      label: "Meta Description",
+    },
   ],
 };

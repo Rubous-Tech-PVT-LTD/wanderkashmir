@@ -23,6 +23,8 @@ import {
   BookOpen,
   ImageIcon,
   MapPin,
+  Search,
+  Globe,
 } from "lucide-react";
 import {
   createTourAction,
@@ -114,6 +116,9 @@ export type TourFormInitialData = {
   isLive: boolean;
   isPopular?: boolean;
   popularOrder?: number | null;
+  h1Heading?: string | null;
+  seoTitle?: string | null;
+  metaDescription?: string | null;
 };
 
 export interface TourFormProps {
@@ -207,6 +212,9 @@ export default function TourForm({
   );
   const [badge, setBadge] = useState(initialData?.badge || "");
   const [overview, setOverview] = useState(initialData?.overview || "");
+  const [h1Heading, setH1Heading] = useState(initialData?.h1Heading || "");
+  const [seoTitle, setSeoTitle] = useState(initialData?.seoTitle || "");
+  const [metaDescription, setMetaDescription] = useState(initialData?.metaDescription || "");
   const [destinationsStr, setDestinationsStr] = useState(
     initialData?.destinations?.join(", ") || ""
   );
@@ -549,6 +557,9 @@ export default function TourForm({
           isPopular && popularOrder && parseInt(popularOrder, 10) > 0
             ? Math.max(1, parseInt(popularOrder, 10))
             : null,
+        h1Heading: h1Heading.trim() || null,
+        seoTitle: seoTitle.trim() || null,
+        metaDescription: metaDescription.trim() || null,
       };
 
       if (isEdit && initialData?.id) {
@@ -865,7 +876,133 @@ export default function TourForm({
         </div>
       </div>
 
-      {/* 2. Travel Styles */}
+      {/* 2. Search Engine Optimization (SEO) & Headings */}
+      <div className="rounded-xl border border-slate-800 bg-slate-950/60 p-6 space-y-6">
+        <div className="flex items-start justify-between border-b border-slate-800/80 pb-4">
+          <div>
+            <div className="flex items-center gap-2">
+              <Search className="w-4 h-4 text-emerald-400" />
+              <h2 className="text-sm font-semibold text-white">Search Engine Optimization (SEO) & Headings</h2>
+            </div>
+            <p className="text-xs text-slate-400 mt-1">
+              Configure dedicated H1 page heading and Google search metadata. If left empty, intelligent fallbacks will be used automatically.
+            </p>
+          </div>
+          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-[11px] font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+            <Globe className="w-3 h-3" /> Search Ready
+          </span>
+        </div>
+
+        <div className="space-y-5">
+          {/* H1 Heading */}
+          <div>
+            <div className="flex items-center justify-between mb-1.5">
+              <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300">
+                H1 / Package Title Heading
+              </label>
+              <span className="text-[11px] text-slate-400">
+                Fallback: <span className="font-mono text-slate-300">{title ? `"${title}"` : "Tour Title"}</span>
+              </span>
+            </div>
+            <input
+              type="text"
+              value={h1Heading}
+              onChange={(e) => setH1Heading(e.target.value)}
+              placeholder={title ? `Fallback: ${title}` : "e.g. 5 Days Kashmir Honeymoon Tour: Gulmarg & Pahalgam"}
+              className="w-full rounded-lg border border-slate-700 bg-slate-800/80 px-3.5 py-2.5 text-sm text-white focus:border-emerald-500 focus:outline-none"
+            />
+            <p className="text-[11px] text-slate-400 mt-1">
+              Primary <code className="text-emerald-400">&lt;h1&gt;</code> heading displayed prominently at the top of the tour detail page.
+            </p>
+          </div>
+
+          {/* SEO Title */}
+          <div>
+            <div className="flex items-center justify-between mb-1.5">
+              <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300">
+                SEO Title (Meta Title)
+              </label>
+              <div className="flex items-center gap-2 text-[11px]">
+                <span className={seoTitle.length > 60 ? "text-amber-400 font-semibold" : "text-slate-400"}>
+                  {seoTitle.length}/60 chars
+                </span>
+                <span className="text-slate-500">•</span>
+                <span className="text-slate-400">
+                  Fallback: <span className="font-mono text-slate-300">&quot;Title (Duration) | WanderKashmir&quot;</span>
+                </span>
+              </div>
+            </div>
+            <input
+              type="text"
+              value={seoTitle}
+              onChange={(e) => setSeoTitle(e.target.value)}
+              placeholder={
+                title
+                  ? `Fallback: ${title} (${duration || "Duration"}) | WanderKashmir`
+                  : "e.g. 5 Days Kashmir Tour Package | WanderKashmir"
+              }
+              className="w-full rounded-lg border border-slate-700 bg-slate-800/80 px-3.5 py-2.5 text-sm text-white focus:border-emerald-500 focus:outline-none"
+            />
+            <p className="text-[11px] text-slate-400 mt-1">
+              Browser tab title and Google search result headline. Optimal length: 50–60 characters.
+            </p>
+          </div>
+
+          {/* Meta Description */}
+          <div>
+            <div className="flex items-center justify-between mb-1.5">
+              <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300">
+                Meta Description
+              </label>
+              <div className="flex items-center gap-2 text-[11px]">
+                <span className={metaDescription.length > 160 ? "text-amber-400 font-semibold" : "text-slate-400"}>
+                  {metaDescription.length}/160 chars
+                </span>
+                <span className="text-slate-500">•</span>
+                <span className="text-slate-400">
+                  Fallback: <span className="font-mono text-slate-300">Tour Overview</span>
+                </span>
+              </div>
+            </div>
+            <textarea
+              rows={3}
+              value={metaDescription}
+              onChange={(e) => setMetaDescription(e.target.value)}
+              placeholder={
+                overview
+                  ? `Fallback to Tour Overview (${overview.slice(0, 100)}...)`
+                  : "e.g. Experience the magical valleys of Kashmir on our curated 5-day tour with private chauffeurs, verified stays, and 24/7 local support."
+              }
+              className="w-full rounded-lg border border-slate-700 bg-slate-800/80 px-3.5 py-2.5 text-sm text-white focus:border-emerald-500 focus:outline-none"
+            />
+            <p className="text-[11px] text-slate-400 mt-1">
+              Appears in Google search snippets beneath the title. Optimal length: 140–160 characters.
+            </p>
+          </div>
+
+          {/* Live Google Search Snippet Preview */}
+          <div className="pt-2">
+            <label className="block text-[11px] font-semibold uppercase tracking-wider text-slate-400 mb-2">
+              Google Search Snippet Preview
+            </label>
+            <div className="p-4 rounded-xl border border-slate-800 bg-slate-900/90 space-y-1 text-left">
+              <div className="flex items-center gap-2 text-xs text-slate-400">
+                <span className="text-emerald-400 font-medium">wanderkashmir.com</span>
+                <span>› tours ›</span>
+                <span className="font-mono text-slate-300">{slug || "tour-slug"}</span>
+              </div>
+              <div className="text-base font-semibold text-blue-400 hover:underline cursor-pointer truncate">
+                {seoTitle.trim() || (title ? `${title} (${duration || "Duration"}) | WanderKashmir` : "Tour Title | WanderKashmir")}
+              </div>
+              <p className="text-xs text-slate-300 line-clamp-2 leading-relaxed">
+                {metaDescription.trim() || overview.trim() || "Experience hand-crafted Kashmir tour packages with local guides, private chauffeurs, verified stays, and transparent pricing."}
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* 3. Travel Styles */}
       <div className="rounded-xl border border-slate-800 bg-slate-950/60 p-6 space-y-4">
         <div>
           <h2 className="text-sm font-semibold text-white">Travel Styles</h2>

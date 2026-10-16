@@ -67,7 +67,7 @@ export default function TourPackageView({ tour, otherTours }: TourPackageViewPro
               {/* Title + Badge */}
               <div className="flex flex-wrap items-center gap-2.5 sm:gap-3">
                 <h1 className="text-lg sm:text-xl md:text-[22px] lg:text-[23px] font-bold text-slate-900 font-display tracking-tight leading-tight">
-                  {tour.title}
+                  {tour.h1Heading?.trim() || tour.title}
                 </h1>
                 {tour.badge && (
                   <span className="px-2.5 py-0.5 rounded-md text-xs font-semibold bg-[#FEF3C7] text-[#92400E] border border-[#FDE68A]">
