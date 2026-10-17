@@ -242,6 +242,7 @@ export default function QuickLeadFormModal() {
                   <div>
                     <label className="block text-xs font-medium text-slate-300 mb-1 flex items-center justify-between">
                       <span>Travel Duration / Dates</span>
+                      <span className="text-[10px] text-slate-500 font-normal">Optional</span>
                     </label>
                     <div className="flex flex-wrap gap-1.5 mb-2">
                       {QUICK_DURATION_OPTIONS.map((opt) => (

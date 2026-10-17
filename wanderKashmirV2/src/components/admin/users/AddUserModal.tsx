@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { UserPlus, X, CheckCircle, Loader2, Phone, Mail, User, Shield } from "lucide-react";
+import { UserPlus, X, CheckCircle, Loader2, Phone, Mail, User, Shield, Calendar } from "lucide-react";
 import { createAdminUserAction } from "@/actions/adminUsers";
 import { useRouter } from "next/navigation";
 
@@ -16,12 +16,14 @@ export default function AddUserModal() {
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
+  const [travelDate, setTravelDate] = useState("");
   const [role, setRole] = useState<"CUSTOMER" | "VENDOR">("CUSTOMER");
 
   const resetForm = () => {
     setName("");
     setPhone("");
     setEmail("");
+    setTravelDate("");
     setRole("CUSTOMER");
     setError(null);
     setSuccess(false);
@@ -52,6 +54,7 @@ export default function AddUserModal() {
         name: name.trim() || undefined,
         phone: phone.trim(),
         email: email.trim() || undefined,
+        travelDate: travelDate.trim() || undefined,
         role,
       });
 
@@ -203,6 +206,24 @@ export default function AddUserModal() {
                     <p className="text-[10px] text-slate-500 mt-1">
                       Agar email nahi hai, to system automatically unique marketing identifier assign kar dega.
                     </p>
+                  </div>
+
+                  {/* Planned Travel Date (Optional - NOT mandatory) */}
+                  <div>
+                    <label className="block text-xs font-medium text-slate-300 mb-1 flex items-center justify-between">
+                      <span>Planned Travel Date</span>
+                      <span className="text-[10px] text-slate-500 font-normal">Optional</span>
+                    </label>
+                    <div className="relative">
+                      <Calendar className="w-4 h-4 text-slate-500 absolute left-3 top-2.5" />
+                      <input
+                        type="text"
+                        value={travelDate}
+                        onChange={(e) => setTravelDate(e.target.value)}
+                        placeholder="e.g. May 2027, Diwali, or 15-20 Oct"
+                        className="w-full pl-9 pr-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs sm:text-sm text-white placeholder-slate-500 focus:outline-hidden focus:border-emerald-500"
+                      />
+                    </div>
                   </div>
 
                   {/* 4. Role */}

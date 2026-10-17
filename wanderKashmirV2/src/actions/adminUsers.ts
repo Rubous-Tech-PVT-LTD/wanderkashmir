@@ -153,6 +153,7 @@ export interface CreateAdminUserInput {
   name?: string;
   phone: string;
   email?: string;
+  travelDate?: string;
   role?: "CUSTOMER" | "VENDOR";
 }
 
@@ -192,6 +193,7 @@ export async function createAdminUserAction(
 
     // Check existing email or construct valid unique placeholder email
     let finalEmail = trimmedEmail;
+    const cleanPhone = (trimmedPhone || "user").replace(/[^0-9]/g, "");
     if (finalEmail) {
       const existingEmail = await prisma.user.findUnique({
         where: { email: finalEmail },
@@ -201,7 +203,6 @@ export async function createAdminUserAction(
         return { success: false, error: `User with email ${finalEmail} already exists.` };
       }
     } else {
-      const cleanPhone = (trimmedPhone || "user").replace(/[^0-9]/g, "");
       finalEmail = `${cleanPhone || Date.now()}@customer.wanderkashmir.com`;
       const collision = await prisma.user.findUnique({ where: { email: finalEmail } });
       if (collision) {
@@ -217,6 +218,30 @@ export async function createAdminUserAction(
         role: input.role === "VENDOR" ? "VENDOR" : "CUSTOMER",
       },
     });
+
+    // If travel date provided, also record in CustomTourRequest so it's tracked in Leads & Marketing
+    if (input.travelDate?.trim()) {
+      try {
+        await prisma.customTourRequest.create({
+          data: {
+            name: trimmedName || "Marketing Customer",
+            phone: trimmedPhone || cleanPhone,
+            email: finalEmail,
+            travelDates: input.travelDate.trim(),
+            guestsCount: "2 Adults",
+            destinations: ["Srinagar", "Gulmarg", "Pahalgam"],
+            hotelType: "3 Star Standard",
+            cabType: "Sedan / SUV",
+            specialRequests: `[Marketing Contact User] Planned Travel Date: ${input.travelDate.trim()}`,
+            adminNotes: "Added via Admin Users form with planned travel date",
+            status: "PENDING",
+          },
+        });
+        revalidatePath("/admin/leads");
+      } catch (leadSyncErr) {
+        console.warn("Lead sync notice:", leadSyncErr);
+      }
+    }
 
     revalidateUserPaths();
     return { success: true, data: { id: newUser.id } };
