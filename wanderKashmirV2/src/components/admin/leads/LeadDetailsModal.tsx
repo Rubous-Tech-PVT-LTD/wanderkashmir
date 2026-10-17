@@ -17,9 +17,13 @@ import {
   CheckCircle2,
   AlertCircle,
   Loader2,
+  Trash2,
+  Send,
+  DollarSign,
+  CalendarDays,
 } from "lucide-react";
 import { AdminLeadItem } from "@/lib/admin/data";
-import { updateAdminLeadStatusAction } from "@/actions/adminLeads";
+import { updateAdminLeadStatusAction, deleteAdminLeadAction } from "@/actions/adminLeads";
 import { useRouter } from "next/navigation";
 
 interface LeadDetailsModalProps {
@@ -39,7 +43,10 @@ export default function LeadDetailsModal({ lead, isOpen, onClose }: LeadDetailsM
   const router = useRouter();
   const [currentStatus, setCurrentStatus] = useState<string>(lead?.status || "PENDING");
   const [adminNotes, setAdminNotes] = useState<string>(lead?.adminNotes || "");
+  const [quotedPrice, setQuotedPrice] = useState<string>("");
+  const [followUpDate, setFollowUpDate] = useState<string>("");
   const [isUpdating, setIsUpdating] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [updateMsg, setUpdateMsg] = useState<string | null>(null);
 
   React.useEffect(() => {
@@ -60,9 +67,17 @@ export default function LeadDetailsModal({ lead, isOpen, onClose }: LeadDetailsM
     setIsUpdating(true);
     setUpdateMsg(null);
     try {
-      const res = await updateAdminLeadStatusAction(lead.id, currentStatus, adminNotes);
+      const extraNotesParts = [
+        adminNotes.trim() || null,
+        quotedPrice ? `[Quoted: ₹${quotedPrice}]` : null,
+        followUpDate ? `[FollowUp: ${followUpDate}]` : null,
+      ]
+        .filter(Boolean)
+        .join(" | ");
+
+      const res = await updateAdminLeadStatusAction(lead.id, currentStatus, extraNotesParts);
       if (res.success) {
-        setUpdateMsg("Status updated successfully!");
+        setUpdateMsg("Status & Notes saved!");
         router.refresh();
       } else {
         setUpdateMsg(res.error || "Failed to update.");
@@ -73,6 +88,42 @@ export default function LeadDetailsModal({ lead, isOpen, onClose }: LeadDetailsM
       setIsUpdating(false);
     }
   };
+
+  const handleDelete = async () => {
+    if (!confirm(`Are you sure you want to permanently delete lead WK-${lead.id.slice(-6).toUpperCase()} (${lead.name})?`)) {
+      return;
+    }
+    setIsDeleting(true);
+    try {
+      const res = await deleteAdminLeadAction(lead.id);
+      if (res.success) {
+        onClose();
+        router.refresh();
+      } else {
+        alert(res.error || "Failed to delete lead.");
+      }
+    } catch (err: unknown) {
+      alert(err instanceof Error ? err.message : "Error deleting lead.");
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  // Generate WhatsApp Quick Itinerary / Proposal Text
+  const destinationsText = Array.isArray(lead.destinations) && lead.destinations.length > 0
+    ? lead.destinations.join(" - ")
+    : "Srinagar - Gulmarg - Pahalgam";
+
+  const prefilledProposal = encodeURIComponent(
+    `Hello ${lead.name.trim().split(" ")[0]}! Greetings from WanderKashmir.\n\n` +
+    `Regarding your ${lead.travelDates || "Kashmir"} trip inquiry (Ref: ${refId}):\n` +
+    `• Travelers: ${lead.guestsCount}\n` +
+    `• Destinations: ${destinationsText}\n` +
+    `• Hotel Category: ${lead.hotelType}\n` +
+    `• Transport: ${lead.cabType} (Private cab with mountain driver)\n` +
+    (quotedPrice ? `• Package Price: ₹${quotedPrice}\n` : "") +
+    `\nWould you like me to share the detailed day-by-day itinerary?`
+  );
 
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-slate-950/80 backdrop-blur-xs animate-in fade-in duration-200">
@@ -110,8 +161,8 @@ export default function LeadDetailsModal({ lead, isOpen, onClose }: LeadDetailsM
 
         {/* Content Body */}
         <div className="p-5 sm:p-6 space-y-5 overflow-y-auto flex-1">
-          {/* Quick Contact CTA Row */}
-          <div className="p-3.5 rounded-xl bg-slate-950 border border-slate-800 flex flex-wrap items-center justify-between gap-3">
+          {/* Quick Contact & WhatsApp Proposal Row */}
+          <div className="p-3.5 rounded-xl bg-slate-950 border border-slate-800 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
             <div>
               <div className="text-[11px] text-slate-400">Direct Customer Contact</div>
               <div className="font-mono text-sm sm:text-base font-bold text-white flex items-center gap-2 mt-0.5">
@@ -119,19 +170,20 @@ export default function LeadDetailsModal({ lead, isOpen, onClose }: LeadDetailsM
                 {lead.email && <span className="text-xs text-slate-400 font-normal">({lead.email})</span>}
               </div>
             </div>
-            <div className="flex items-center gap-2 w-full sm:w-auto">
+            <div className="flex flex-wrap items-center gap-2">
               <a
-                href={`https://wa.me/${cleanPhone}`}
+                href={`https://wa.me/${cleanPhone}?text=${prefilledProposal}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#25D366] hover:bg-[#20ba59] text-white text-xs font-bold shadow-xs active:scale-95 transition-all"
+                className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-[#25D366] hover:bg-[#20ba59] text-white text-xs font-bold shadow-xs active:scale-95 transition-all"
+                title="Send pre-filled itinerary quote on WhatsApp"
               >
-                <MessageSquare className="w-4 h-4" />
-                <span>Chat on WhatsApp</span>
+                <Send className="w-3.5 h-3.5" />
+                <span>Send WhatsApp Quote</span>
               </a>
               <a
                 href={`tel:${lead.phone}`}
-                className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold active:scale-95 transition-all"
+                className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold active:scale-95 transition-all"
               >
                 <Phone className="w-3.5 h-3.5 text-emerald-400" />
                 <span>Call</span>
@@ -213,19 +265,19 @@ export default function LeadDetailsModal({ lead, isOpen, onClose }: LeadDetailsM
             </div>
           </div>
 
-          {/* Status & Admin Notes Manager */}
-          <div className="p-4 rounded-xl bg-slate-950/80 border border-slate-800 space-y-3">
+          {/* Status & Operational Notes Manager */}
+          <div className="p-4 rounded-xl bg-slate-950/80 border border-slate-800 space-y-3.5">
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold text-white uppercase tracking-wider">
-                Manage Lead Status
+                Follow-up & Quotation Tracker
               </span>
               <span className="text-[11px] text-slate-500 flex items-center gap-1">
                 <Clock className="w-3 h-3" /> Received: {new Date(lead.createdAt).toLocaleString()}
               </span>
             </div>
 
-            <div className="flex flex-col sm:flex-row gap-3">
-              <div className="flex-1">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div>
                 <label className="block text-[11px] text-slate-400 mb-1">Status</label>
                 <select
                   value={currentStatus}
@@ -233,22 +285,49 @@ export default function LeadDetailsModal({ lead, isOpen, onClose }: LeadDetailsM
                   className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-xs text-white focus:outline-hidden focus:border-emerald-500"
                 >
                   <option value="PENDING">PENDING (Action Required)</option>
-                  <option value="CONTACTED">CONTACTED (WhatsApp / Call done)</option>
-                  <option value="CONFIRMED">CONFIRMED (Booked / Advance paid)</option>
-                  <option value="CANCELLED">CANCELLED (Not interested / Closed)</option>
+                  <option value="CONTACTED">CONTACTED (Follow-up ongoing)</option>
+                  <option value="CONFIRMED">CONFIRMED (Booked / Paid)</option>
+                  <option value="CANCELLED">CANCELLED (Closed / Inactive)</option>
                 </select>
               </div>
 
-              <div className="flex-2">
-                <label className="block text-[11px] text-slate-400 mb-1">Admin Internal Note</label>
+              <div>
+                <label className="block text-[11px] text-slate-400 mb-1 flex items-center gap-1">
+                  <DollarSign className="w-3 h-3 text-emerald-400" />
+                  <span>Quoted Price (₹)</span>
+                </label>
                 <input
                   type="text"
-                  value={adminNotes}
-                  onChange={(e) => setAdminNotes(e.target.value)}
-                  placeholder="e.g. Quoted 25k for 5D, waiting for flight tickets"
-                  className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-xs text-white placeholder-slate-500 focus:outline-hidden focus:border-emerald-500"
+                  value={quotedPrice}
+                  onChange={(e) => setQuotedPrice(e.target.value)}
+                  placeholder="e.g. 28000"
+                  className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-xs text-white placeholder-slate-500 focus:outline-hidden focus:border-emerald-500 font-mono"
                 />
               </div>
+
+              <div>
+                <label className="block text-[11px] text-slate-400 mb-1 flex items-center gap-1">
+                  <CalendarDays className="w-3 h-3 text-blue-400" />
+                  <span>Next Follow-up Date</span>
+                </label>
+                <input
+                  type="date"
+                  value={followUpDate}
+                  onChange={(e) => setFollowUpDate(e.target.value)}
+                  className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-xs text-white focus:outline-hidden focus:border-emerald-500"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-[11px] text-slate-400 mb-1">Internal Admin Note</label>
+              <input
+                type="text"
+                value={adminNotes}
+                onChange={(e) => setAdminNotes(e.target.value)}
+                placeholder="e.g. Sent 5D itinerary with Innova, client asking for 2k discount"
+                className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-xs text-white placeholder-slate-500 focus:outline-hidden focus:border-emerald-500"
+              />
             </div>
 
             <div className="flex items-center justify-between pt-1">
@@ -262,14 +341,23 @@ export default function LeadDetailsModal({ lead, isOpen, onClose }: LeadDetailsM
                 className="px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white text-xs font-semibold transition cursor-pointer flex items-center gap-1.5"
               >
                 {isUpdating && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
-                <span>Save Status</span>
+                <span>Save Status & Notes</span>
               </button>
             </div>
           </div>
         </div>
 
-        {/* Footer */}
-        <div className="px-5 py-3.5 border-t border-slate-800 bg-slate-900/90 flex justify-end">
+        {/* Footer with Delete Spam option */}
+        <div className="px-5 py-3.5 border-t border-slate-800 bg-slate-900/90 flex items-center justify-between">
+          <button
+            type="button"
+            onClick={handleDelete}
+            disabled={isDeleting}
+            className="inline-flex items-center gap-1.5 text-xs text-rose-400 hover:text-rose-300 hover:bg-rose-950/40 px-3 py-1.5 rounded-lg border border-transparent hover:border-rose-900/60 transition cursor-pointer"
+          >
+            <Trash2 className="w-3.5 h-3.5" />
+            <span>{isDeleting ? "Deleting..." : "Delete / Spam"}</span>
+          </button>
           <button
             type="button"
             onClick={onClose}

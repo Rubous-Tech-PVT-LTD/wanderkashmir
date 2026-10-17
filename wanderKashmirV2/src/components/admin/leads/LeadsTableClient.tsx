@@ -8,9 +8,12 @@ import {
   Phone,
   Calendar,
   Users,
-  Filter,
+  Download,
+  Trash2,
 } from "lucide-react";
 import { AdminLeadItem } from "@/lib/admin/data";
+import { deleteAdminLeadAction } from "@/actions/adminLeads";
+import { useRouter } from "next/navigation";
 import LeadDetailsModal from "./LeadDetailsModal";
 
 interface LeadsTableClientProps {
@@ -18,9 +21,11 @@ interface LeadsTableClientProps {
 }
 
 export default function LeadsTableClient({ initialLeads }: LeadsTableClientProps) {
+  const router = useRouter();
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("ALL");
   const [selectedLead, setSelectedLead] = useState<AdminLeadItem | null>(null);
+  const [isExporting, setIsExporting] = useState(false);
 
   const filteredLeads = useMemo(() => {
     return initialLeads.filter((lead) => {
@@ -40,9 +45,75 @@ export default function LeadsTableClient({ initialLeads }: LeadsTableClientProps
     });
   }, [initialLeads, search, statusFilter]);
 
+  // Export filtered leads to CSV
+  const handleExportCsv = () => {
+    setIsExporting(true);
+    try {
+      const headers = [
+        "Ref ID",
+        "Customer Name",
+        "Phone",
+        "Email",
+        "Travel Dates",
+        "Guests",
+        "Destinations",
+        "Hotel Category",
+        "Vehicle Type",
+        "Status",
+        "Special Requests / Notes",
+        "Received Date",
+      ];
+
+      const rows = filteredLeads.map((l) => [
+        `WK-${l.id.slice(-6).toUpperCase()}`,
+        `"${(l.name || "").replace(/"/g, '""')}"`,
+        `"${l.phone || ""}"`,
+        `"${l.email || ""}"`,
+        `"${l.travelDates || ""}"`,
+        `"${l.guestsCount || ""}"`,
+        `"${(l.destinations || []).join(", ")}"`,
+        `"${l.hotelType || ""}"`,
+        `"${l.cabType || ""}"`,
+        `"${l.status || ""}"`,
+        `"${(l.specialRequests || "").replace(/"/g, '""').replace(/\n/g, " ")}"`,
+        `"${new Date(l.createdAt).toLocaleDateString()}"`,
+      ]);
+
+      const csvContent = "data:text/csv;charset=utf-8," + [headers.join(","), ...rows.map((e) => e.join(","))].join("\n");
+      const encodedUri = encodeURI(csvContent);
+      const link = document.createElement("a");
+      link.setAttribute("href", encodedUri);
+      link.setAttribute("download", `wanderkashmir-leads-${new Date().toISOString().split("T")[0]}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (e) {
+      console.error("Export error:", e);
+      alert("Failed to export leads.");
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
+  const handleDeleteLead = async (e: React.MouseEvent, lead: AdminLeadItem) => {
+    e.stopPropagation();
+    if (!confirm(`Delete test/spam lead for ${lead.name} (${lead.phone})?`)) return;
+
+    try {
+      const res = await deleteAdminLeadAction(lead.id);
+      if (res.success) {
+        router.refresh();
+      } else {
+        alert(res.error || "Failed to delete lead.");
+      }
+    } catch (err: unknown) {
+      alert(err instanceof Error ? err.message : "Error deleting lead.");
+    }
+  };
+
   return (
     <div className="space-y-4">
-      {/* Search & Filter Bar */}
+      {/* Search, Filter & CSV Export Bar */}
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 p-3.5 rounded-xl bg-slate-900/60 border border-slate-800">
         <div className="relative flex-1">
           <Search className="w-4 h-4 text-slate-500 absolute left-3 top-2.5" />
@@ -55,7 +126,7 @@ export default function LeadsTableClient({ initialLeads }: LeadsTableClientProps
           />
         </div>
 
-        {/* Filter Pills */}
+        {/* Filter Pills & Export Button */}
         <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0">
           {["ALL", "PENDING", "CONTACTED", "CONFIRMED"].map((st) => (
             <button
@@ -70,6 +141,17 @@ export default function LeadsTableClient({ initialLeads }: LeadsTableClientProps
               {st}
             </button>
           ))}
+
+          <button
+            type="button"
+            onClick={handleExportCsv}
+            disabled={isExporting}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-950 hover:bg-slate-800 border border-slate-700 text-slate-200 hover:text-white text-xs font-semibold whitespace-nowrap transition cursor-pointer shadow-xs ml-1"
+            title="Download Leads Excel/CSV"
+          >
+            <Download className="w-3.5 h-3.5 text-emerald-400" />
+            <span>Export CSV</span>
+          </button>
         </div>
       </div>
 
@@ -79,7 +161,7 @@ export default function LeadsTableClient({ initialLeads }: LeadsTableClientProps
         </div>
       ) : (
         <>
-          {/* MOBILE VIEW: Cards with prominent "View Details" button */}
+          {/* MOBILE VIEW: Cards with prominent "View Details" and "Delete" actions */}
           <div className="grid grid-cols-1 gap-3 sm:hidden">
             {filteredLeads.map((lead) => (
               <div
@@ -93,13 +175,18 @@ export default function LeadsTableClient({ initialLeads }: LeadsTableClientProps
                     </span>
                     <h4 className="text-base font-bold text-white mt-1.5">{lead.name}</h4>
                   </div>
-                  <div className="text-right">
+                  <div className="flex items-center gap-2">
                     <span className="inline-block px-2 py-0.5 text-[9px] font-bold uppercase rounded-full bg-slate-800 text-emerald-400 border border-slate-700">
                       {lead.status}
                     </span>
-                    <div className="text-[10px] font-mono text-slate-500 mt-1">
-                      {new Date(lead.createdAt).toLocaleDateString()}
-                    </div>
+                    <button
+                      type="button"
+                      onClick={(e) => handleDeleteLead(e, lead)}
+                      className="p-1 rounded text-slate-500 hover:text-rose-400 transition"
+                      title="Delete Lead"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
                   </div>
                 </div>
 
@@ -142,13 +229,13 @@ export default function LeadsTableClient({ initialLeads }: LeadsTableClientProps
                   className="w-full py-2 px-3 rounded-lg bg-emerald-950/60 border border-emerald-800/80 hover:bg-emerald-900/60 text-emerald-300 text-xs font-bold flex items-center justify-center gap-1.5 transition active:scale-95 cursor-pointer"
                 >
                   <Eye className="w-3.5 h-3.5" />
-                  <span>View Full Details</span>
+                  <span>View Full Details & Quote</span>
                 </button>
               </div>
             ))}
           </div>
 
-          {/* DESKTOP VIEW: Table with View action button */}
+          {/* DESKTOP VIEW: Table with View and Delete action buttons */}
           <div className="hidden sm:block rounded-xl border border-slate-800 bg-slate-950/60 overflow-hidden shadow-sm">
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs sm:text-sm">
@@ -220,15 +307,25 @@ export default function LeadsTableClient({ initialLeads }: LeadsTableClientProps
                         {new Date(lead.createdAt).toLocaleDateString()}
                       </td>
                       <td className="px-5 py-4 text-right whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
-                        <button
-                          type="button"
-                          onClick={() => setSelectedLead(lead)}
-                          className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-emerald-950/70 hover:bg-emerald-900 border border-emerald-800/80 text-emerald-300 text-xs font-semibold transition cursor-pointer shadow-xs active:scale-95"
-                          title="View Full Lead Details"
-                        >
-                          <Eye className="w-3.5 h-3.5" />
-                          <span>View</span>
-                        </button>
+                        <div className="inline-flex items-center gap-1.5">
+                          <button
+                            type="button"
+                            onClick={() => setSelectedLead(lead)}
+                            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-emerald-950/70 hover:bg-emerald-900 border border-emerald-800/80 text-emerald-300 text-xs font-semibold transition cursor-pointer shadow-xs active:scale-95"
+                            title="View Full Lead Details"
+                          >
+                            <Eye className="w-3.5 h-3.5" />
+                            <span>View</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={(e) => handleDeleteLead(e, lead)}
+                            className="p-1.5 rounded-lg text-slate-500 hover:text-rose-400 hover:bg-rose-950/30 transition cursor-pointer"
+                            title="Delete Lead"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))}

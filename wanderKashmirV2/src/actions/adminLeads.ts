@@ -190,3 +190,34 @@ export async function updateAdminLeadStatusAction(
   }
 }
 
+/**
+ * Server Action: Delete lead (e.g. spam/test lead)
+ */
+export async function deleteAdminLeadAction(leadId: string): Promise<MutationResult> {
+  try {
+    const auth = await verifyAdminAuth();
+    if (!auth.authorized) {
+      return { success: false, error: auth.error };
+    }
+
+    if (!leadId) {
+      return { success: false, error: "Lead ID is required." };
+    }
+
+    await prisma.customTourRequest.delete({
+      where: { id: leadId },
+    });
+
+    revalidatePath("/admin/leads");
+    revalidatePath("/wander-admin");
+    return { success: true };
+  } catch (err: unknown) {
+    console.error("Error deleting lead:", err);
+    return {
+      success: false,
+      error: err instanceof Error ? err.message : "Failed to delete lead.",
+    };
+  }
+}
+
+
