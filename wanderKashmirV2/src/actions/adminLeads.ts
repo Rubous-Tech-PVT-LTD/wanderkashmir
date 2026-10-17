@@ -151,3 +151,42 @@ export async function createAdminLeadAction(
     };
   }
 }
+
+/**
+ * Server Action: Update lead status and admin notes
+ */
+export async function updateAdminLeadStatusAction(
+  leadId: string,
+  status: string,
+  adminNotes?: string
+): Promise<MutationResult> {
+  try {
+    const auth = await verifyAdminAuth();
+    if (!auth.authorized) {
+      return { success: false, error: auth.error };
+    }
+
+    if (!leadId) {
+      return { success: false, error: "Lead ID is required." };
+    }
+
+    await prisma.customTourRequest.update({
+      where: { id: leadId },
+      data: {
+        status,
+        ...(adminNotes !== undefined ? { adminNotes } : {}),
+      },
+    });
+
+    revalidatePath("/admin/leads");
+    revalidatePath("/wander-admin");
+    return { success: true };
+  } catch (err: unknown) {
+    console.error("Error updating lead status:", err);
+    return {
+      success: false,
+      error: err instanceof Error ? err.message : "Failed to update lead status.",
+    };
+  }
+}
+
