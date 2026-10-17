@@ -120,3 +120,34 @@ export async function getAdminLeads(limit: number = 50): Promise<AdminLeadItem[]
     return [];
   }
 }
+
+/**
+ * Fetch a single lead by ID for voucher/receipt rendering.
+ */
+export async function getAdminLeadById(id: string): Promise<AdminLeadItem | null> {
+  try {
+    const lead = await prisma.customTourRequest.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        name: true,
+        phone: true,
+        email: true,
+        travelDates: true,
+        guestsCount: true,
+        destinations: true,
+        hotelType: true,
+        cabType: true,
+        specialRequests: true,
+        status: true,
+        adminNotes: true,
+        createdAt: true,
+      },
+    });
+    return lead;
+  } catch (error) {
+    console.error("Error fetching lead by id:", error);
+    return null;
+  }
+}
+

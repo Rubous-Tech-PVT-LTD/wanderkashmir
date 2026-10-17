@@ -21,9 +21,12 @@ import {
   Send,
   DollarSign,
   CalendarDays,
+  Printer,
+  FileCheck,
 } from "lucide-react";
 import { AdminLeadItem } from "@/lib/admin/data";
 import { updateAdminLeadStatusAction, deleteAdminLeadAction } from "@/actions/adminLeads";
+import { saveLeadPaymentAction, sendLeadReceiptEmailAction } from "@/actions/adminReceipt";
 import { useRouter } from "next/navigation";
 
 interface LeadDetailsModalProps {
@@ -43,49 +46,110 @@ export default function LeadDetailsModal({ lead, isOpen, onClose }: LeadDetailsM
   const router = useRouter();
   const [currentStatus, setCurrentStatus] = useState<string>(lead?.status || "PENDING");
   const [adminNotes, setAdminNotes] = useState<string>(lead?.adminNotes || "");
-  const [quotedPrice, setQuotedPrice] = useState<string>("");
+  const [totalCost, setTotalCost] = useState<string>("10000");
+  const [advancePaid, setAdvancePaid] = useState<string>("3000");
   const [followUpDate, setFollowUpDate] = useState<string>("");
+  const [customerEmail, setCustomerEmail] = useState<string>(lead?.email || "");
+
   const [isUpdating, setIsUpdating] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isSendingEmail, setIsSendingEmail] = useState(false);
   const [updateMsg, setUpdateMsg] = useState<string | null>(null);
+  const [emailMsg, setEmailMsg] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
   React.useEffect(() => {
     if (lead) {
       setCurrentStatus(lead.status);
       setAdminNotes(lead.adminNotes || "");
+      setCustomerEmail(lead.email || "");
       setUpdateMsg(null);
+      setEmailMsg(null);
+
+      // Parse existing payment details from adminNotes
+      if (lead.adminNotes) {
+        const matchTotal = lead.adminNotes.match(/Total=₹?([0-9,]+)/i);
+        const matchAdvance = lead.adminNotes.match(/Advance=₹?([0-9,]+)/i);
+        if (matchTotal) {
+          const tot = matchTotal[1].replace(/,/g, "");
+          setTotalCost(tot);
+          if (matchAdvance) {
+            setAdvancePaid(matchAdvance[1].replace(/,/g, ""));
+          } else {
+            setAdvancePaid(String(Math.round(parseInt(tot, 10) * 0.3)));
+          }
+        }
+      }
     }
   }, [lead]);
 
   if (!isOpen || !lead) return null;
 
+  const totalNum = parseInt(totalCost, 10) || 0;
+  const advanceNum = parseInt(advancePaid, 10) || 0;
+  const balanceDue = Math.max(0, totalNum - advanceNum);
+
   const refId = `WK-${lead.id.slice(-6).toUpperCase()}`;
   const cleanPhone = lead.phone.replace(/[^0-9]/g, "");
   const statusStyle = STATUS_COLORS[currentStatus] || STATUS_COLORS.PENDING;
 
-  const handleUpdateStatus = async () => {
+  // Auto percentage calculators
+  const setPercentageAdvance = (pct: number) => {
+    const calculated = Math.round(totalNum * (pct / 100));
+    setAdvancePaid(String(calculated));
+  };
+
+  const handleSavePaymentAndStatus = async () => {
     setIsUpdating(true);
     setUpdateMsg(null);
     try {
-      const extraNotesParts = [
-        adminNotes.trim() || null,
-        quotedPrice ? `[Quoted: ₹${quotedPrice}]` : null,
-        followUpDate ? `[FollowUp: ${followUpDate}]` : null,
-      ]
-        .filter(Boolean)
-        .join(" | ");
+      const res = await saveLeadPaymentAction({
+        leadId: lead.id,
+        totalAmount: totalNum,
+        advanceAmount: advanceNum,
+        balanceAmount: balanceDue,
+        paymentStatus: balanceDue === 0 ? "FULLY_PAID" : "ADVANCE_PAID",
+        adminNotes: adminNotes.trim(),
+      });
 
-      const res = await updateAdminLeadStatusAction(lead.id, currentStatus, extraNotesParts);
       if (res.success) {
-        setUpdateMsg("Status & Notes saved!");
+        setCurrentStatus("CONFIRMED");
+        setUpdateMsg("Payment & Booking Locked!");
         router.refresh();
       } else {
-        setUpdateMsg(res.error || "Failed to update.");
+        setUpdateMsg(res.error || "Failed to save.");
       }
     } catch (e: unknown) {
-      setUpdateMsg(e instanceof Error ? e.message : "Error updating status.");
+      setUpdateMsg(e instanceof Error ? e.message : "Error saving payment.");
     } finally {
       setIsUpdating(false);
+    }
+  };
+
+  const handleSendEmailReceipt = async () => {
+    if (!customerEmail.trim()) {
+      setEmailMsg({ type: "error", text: "Please enter customer email." });
+      return;
+    }
+    setIsSendingEmail(true);
+    setEmailMsg(null);
+    try {
+      const res = await sendLeadReceiptEmailAction({
+        leadId: lead.id,
+        customerEmail: customerEmail.trim(),
+        totalAmount: totalNum,
+        advanceAmount: advanceNum,
+        balanceAmount: balanceDue,
+      });
+
+      if (res.success) {
+        setEmailMsg({ type: "success", text: "Branded PDF receipt sent to customer email!" });
+      } else {
+        setEmailMsg({ type: "error", text: res.error || "Failed to send email." });
+      }
+    } catch (e: unknown) {
+      setEmailMsg({ type: "error", text: e instanceof Error ? e.message : "Error sending email." });
+    } finally {
+      setIsSendingEmail(false);
     }
   };
 
@@ -109,20 +173,28 @@ export default function LeadDetailsModal({ lead, isOpen, onClose }: LeadDetailsM
     }
   };
 
-  // Generate WhatsApp Quick Itinerary / Proposal Text
+  // Generate WhatsApp Quick Itinerary & Payment Voucher Text
   const destinationsText = Array.isArray(lead.destinations) && lead.destinations.length > 0
-    ? lead.destinations.join(" - ")
-    : "Srinagar - Gulmarg - Pahalgam";
+    ? lead.destinations.join(" • ")
+    : "Srinagar • Gulmarg • Pahalgam";
 
   const prefilledProposal = encodeURIComponent(
-    `Hello ${lead.name.trim().split(" ")[0]}! Greetings from WanderKashmir.\n\n` +
-    `Regarding your ${lead.travelDates || "Kashmir"} trip inquiry (Ref: ${refId}):\n` +
-    `• Travelers: ${lead.guestsCount}\n` +
-    `• Destinations: ${destinationsText}\n` +
-    `• Hotel Category: ${lead.hotelType}\n` +
-    `• Transport: ${lead.cabType} (Private cab with mountain driver)\n` +
-    (quotedPrice ? `• Package Price: ₹${quotedPrice}\n` : "") +
-    `\nWould you like me to share the detailed day-by-day itinerary?`
+    `*Booking Confirmed!* ✅\n` +
+    `*WanderKashmir Official Tour Voucher*\n\n` +
+    `• *Ref ID:* ${refId}\n` +
+    `• *Lead Guest:* ${lead.name}\n` +
+    `• *Dates / Duration:* ${lead.travelDates || "Upcoming"}\n` +
+    `• *No. of Travelers:* ${lead.guestsCount}\n` +
+    `• *Route:* ${destinationsText}\n` +
+    `• *Stay Category:* ${lead.hotelType}\n` +
+    `• *Transport:* ${lead.cabType} (Private Cab + Driver)\n\n` +
+    `*💰 Official Payment Breakdown:*\n` +
+    `• *Total Package Cost:* ₹${totalNum.toLocaleString("en-IN")}\n` +
+    `• *Advance Received (30%):* ₹${advanceNum.toLocaleString("en-IN")} (CONFIRMED & PAID)\n` +
+    `• *Balance Due on Arrival:* ₹${balanceDue.toLocaleString("en-IN")} (Payable at Srinagar)\n\n` +
+    `Your dedicated driver contact & hotel check-in vouchers will be shared 24 hours prior to travel.\n` +
+    `24/7 Srinagar Helpline: +91 60058 88754\n` +
+    `Thank you for choosing WanderKashmir!`
   );
 
   return (
@@ -161,13 +233,13 @@ export default function LeadDetailsModal({ lead, isOpen, onClose }: LeadDetailsM
 
         {/* Content Body */}
         <div className="p-5 sm:p-6 space-y-5 overflow-y-auto flex-1">
-          {/* Quick Contact & WhatsApp Proposal Row */}
+          {/* Quick Contact & WhatsApp Actions */}
           <div className="p-3.5 rounded-xl bg-slate-950 border border-slate-800 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
             <div>
               <div className="text-[11px] text-slate-400">Direct Customer Contact</div>
               <div className="font-mono text-sm sm:text-base font-bold text-white flex items-center gap-2 mt-0.5">
                 <span>{lead.phone}</span>
-                {lead.email && <span className="text-xs text-slate-400 font-normal">({lead.email})</span>}
+                {customerEmail && <span className="text-xs text-slate-400 font-normal">({customerEmail})</span>}
               </div>
             </div>
             <div className="flex flex-wrap items-center gap-2">
@@ -175,15 +247,15 @@ export default function LeadDetailsModal({ lead, isOpen, onClose }: LeadDetailsM
                 href={`https://wa.me/${cleanPhone}?text=${prefilledProposal}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-[#25D366] hover:bg-[#20ba59] text-white text-xs font-bold shadow-xs active:scale-95 transition-all"
-                title="Send pre-filled itinerary quote on WhatsApp"
+                className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#25D366] hover:bg-[#20ba59] text-white text-xs font-bold shadow-xs active:scale-95 transition-all"
+                title="Send WhatsApp Booking Confirmation with 30% Advance details"
               >
                 <Send className="w-3.5 h-3.5" />
-                <span>Send WhatsApp Quote</span>
+                <span>Send WhatsApp Receipt</span>
               </a>
               <a
                 href={`tel:${lead.phone}`}
-                className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold active:scale-95 transition-all"
+                className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold active:scale-95 transition-all"
               >
                 <Phone className="w-3.5 h-3.5 text-emerald-400" />
                 <span>Call</span>
@@ -254,7 +326,7 @@ export default function LeadDetailsModal({ lead, isOpen, onClose }: LeadDetailsM
             </div>
           )}
 
-          {/* Full Notes / Special Requests (Zero Truncation!) */}
+          {/* Full Notes / Special Requests */}
           <div>
             <div className="text-xs font-semibold text-slate-300 mb-1.5 flex items-center gap-1.5">
               <FileText className="w-3.5 h-3.5 text-emerald-400" />
@@ -265,84 +337,171 @@ export default function LeadDetailsModal({ lead, isOpen, onClose }: LeadDetailsM
             </div>
           </div>
 
-          {/* Status & Operational Notes Manager */}
-          <div className="p-4 rounded-xl bg-slate-950/80 border border-slate-800 space-y-3.5">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-white uppercase tracking-wider">
-                Follow-up & Quotation Tracker
-              </span>
-              <span className="text-[11px] text-slate-500 flex items-center gap-1">
-                <Clock className="w-3 h-3" /> Received: {new Date(lead.createdAt).toLocaleString()}
-              </span>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              <div>
-                <label className="block text-[11px] text-slate-400 mb-1">Status</label>
-                <select
-                  value={currentStatus}
-                  onChange={(e) => setCurrentStatus(e.target.value)}
-                  className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-xs text-white focus:outline-hidden focus:border-emerald-500"
-                >
-                  <option value="PENDING">PENDING (Action Required)</option>
-                  <option value="CONTACTED">CONTACTED (Follow-up ongoing)</option>
-                  <option value="CONFIRMED">CONFIRMED (Booked / Paid)</option>
-                  <option value="CANCELLED">CANCELLED (Closed / Inactive)</option>
-                </select>
+          {/* 🌟 ADVANCE & ON-ARRIVAL PAYMENT SPLIT CALCULATOR */}
+          <div className="p-4 rounded-xl bg-slate-950/90 border-2 border-emerald-500/40 space-y-4">
+            <div className="flex items-center justify-between border-b border-slate-800 pb-2.5">
+              <div className="flex items-center gap-2">
+                <div className="w-6 h-6 rounded-md bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold text-xs">
+                  ₹
+                </div>
+                <div>
+                  <h4 className="text-xs font-bold text-white uppercase tracking-wider">
+                    Payment & Advance Split Tracker
+                  </h4>
+                  <p className="text-[10px] text-slate-400">
+                    30% Advance & Remaining On-Arrival Split
+                  </p>
+                </div>
               </div>
 
-              <div>
-                <label className="block text-[11px] text-slate-400 mb-1 flex items-center gap-1">
-                  <DollarSign className="w-3 h-3 text-emerald-400" />
-                  <span>Quoted Price (₹)</span>
-                </label>
-                <input
-                  type="text"
-                  value={quotedPrice}
-                  onChange={(e) => setQuotedPrice(e.target.value)}
-                  placeholder="e.g. 28000"
-                  className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-xs text-white placeholder-slate-500 focus:outline-hidden focus:border-emerald-500 font-mono"
-                />
-              </div>
-
-              <div>
-                <label className="block text-[11px] text-slate-400 mb-1 flex items-center gap-1">
-                  <CalendarDays className="w-3 h-3 text-blue-400" />
-                  <span>Next Follow-up Date</span>
-                </label>
-                <input
-                  type="date"
-                  value={followUpDate}
-                  onChange={(e) => setFollowUpDate(e.target.value)}
-                  className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-xs text-white focus:outline-hidden focus:border-emerald-500"
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-[11px] text-slate-400 mb-1">Internal Admin Note</label>
-              <input
-                type="text"
-                value={adminNotes}
-                onChange={(e) => setAdminNotes(e.target.value)}
-                placeholder="e.g. Sent 5D itinerary with Innova, client asking for 2k discount"
-                className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-xs text-white placeholder-slate-500 focus:outline-hidden focus:border-emerald-500"
-              />
-            </div>
-
-            <div className="flex items-center justify-between pt-1">
-              {updateMsg ? (
-                <span className="text-xs text-emerald-400 font-medium">{updateMsg}</span>
-              ) : <span />}
-              <button
-                type="button"
-                onClick={handleUpdateStatus}
-                disabled={isUpdating}
-                className="px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white text-xs font-semibold transition cursor-pointer flex items-center gap-1.5"
+              {/* Status Selector */}
+              <select
+                value={currentStatus}
+                onChange={(e) => setCurrentStatus(e.target.value)}
+                className="px-2.5 py-1.5 bg-slate-900 border border-slate-700 rounded-lg text-xs font-semibold text-emerald-300 focus:outline-hidden"
               >
-                {isUpdating && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
-                <span>Save Status & Notes</span>
-              </button>
+                <option value="CONFIRMED">CONFIRMED (Advance Locked)</option>
+                <option value="PENDING">PENDING PAYMENT</option>
+                <option value="CONTACTED">CONTACTED</option>
+                <option value="CANCELLED">CANCELLED</option>
+              </select>
+            </div>
+
+            {/* Inputs Grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label className="block text-xs font-medium text-slate-300 mb-1">
+                  Total Package Deal Cost (₹)
+                </label>
+                <div className="relative">
+                  <span className="absolute left-3 top-2 text-slate-500 text-xs font-bold">₹</span>
+                  <input
+                    type="number"
+                    value={totalCost}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setTotalCost(val);
+                      const num = parseInt(val, 10) || 0;
+                      setAdvancePaid(String(Math.round(num * 0.3)));
+                    }}
+                    placeholder="e.g. 10000"
+                    className="w-full pl-7 pr-3 py-2 bg-slate-900 border border-slate-700 rounded-xl text-xs sm:text-sm text-white font-mono font-bold focus:outline-hidden focus:border-emerald-500"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="block text-xs font-medium text-slate-300">
+                    Advance Received (₹)
+                  </label>
+                  <div className="flex gap-1 text-[10px]">
+                    <button
+                      type="button"
+                      onClick={() => setPercentageAdvance(30)}
+                      className="px-1.5 py-0.5 rounded bg-slate-800 hover:bg-emerald-800 text-emerald-300 cursor-pointer font-mono"
+                    >
+                      30%
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setPercentageAdvance(50)}
+                      className="px-1.5 py-0.5 rounded bg-slate-800 hover:bg-emerald-800 text-emerald-300 cursor-pointer font-mono"
+                    >
+                      50%
+                    </button>
+                  </div>
+                </div>
+                <div className="relative">
+                  <span className="absolute left-3 top-2 text-emerald-500 text-xs font-bold">₹</span>
+                  <input
+                    type="number"
+                    value={advancePaid}
+                    onChange={(e) => setAdvancePaid(e.target.value)}
+                    placeholder="e.g. 3000"
+                    className="w-full pl-7 pr-3 py-2 bg-slate-900 border border-slate-700 rounded-xl text-xs sm:text-sm text-emerald-400 font-mono font-bold focus:outline-hidden focus:border-emerald-500"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Auto-Calculated Balance Due Card */}
+            <div className="p-3 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-between">
+              <div>
+                <div className="text-[11px] text-amber-400 font-semibold uppercase tracking-wider flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
+                  <span>Balance Due on Arrival in Srinagar:</span>
+                </div>
+                <div className="text-[11px] text-slate-400 mt-0.5">
+                  Collect from customer upon check-in or airport pickup
+                </div>
+              </div>
+              <div className="text-right">
+                <span className="text-base sm:text-lg font-mono font-black text-amber-300">
+                  ₹{balanceDue.toLocaleString("en-IN")}
+                </span>
+              </div>
+            </div>
+
+            {/* Email Voucher Field */}
+            <div>
+              <label className="block text-[11px] text-slate-400 mb-1">
+                Customer Email for Voucher / PDF Receipt
+              </label>
+              <div className="flex gap-2">
+                <div className="relative flex-1">
+                  <Mail className="w-4 h-4 text-slate-500 absolute left-3 top-2.5" />
+                  <input
+                    type="email"
+                    value={customerEmail}
+                    onChange={(e) => setCustomerEmail(e.target.value)}
+                    placeholder="customer@gmail.com"
+                    className="w-full pl-9 pr-3 py-2 bg-slate-900 border border-slate-700 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-hidden focus:border-emerald-500"
+                  />
+                </div>
+                <button
+                  type="button"
+                  onClick={handleSendEmailReceipt}
+                  disabled={isSendingEmail}
+                  className="px-3 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white text-xs font-semibold flex items-center gap-1.5 transition active:scale-95 cursor-pointer whitespace-nowrap"
+                >
+                  {isSendingEmail ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Mail className="w-3.5 h-3.5" />}
+                  <span>Email Voucher</span>
+                </button>
+              </div>
+              {emailMsg && (
+                <div className={`text-xs mt-1.5 font-medium ${emailMsg.type === "success" ? "text-emerald-400" : "text-rose-400"}`}>
+                  {emailMsg.text}
+                </div>
+              )}
+            </div>
+
+            {/* Save & Print Actions */}
+            <div className="pt-2 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2 border-t border-slate-800">
+              <a
+                href={`/admin/leads/${lead.id}/receipt?total=${totalCost}&advance=${advancePaid}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center justify-center gap-1.5 py-2 px-3.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-emerald-300 text-xs font-bold transition active:scale-95"
+              >
+                <Printer className="w-4 h-4 text-emerald-400" />
+                <span>View / Print Luxury PDF Voucher</span>
+              </a>
+
+              <div className="flex items-center gap-2">
+                {updateMsg && (
+                  <span className="text-xs text-emerald-400 font-semibold">{updateMsg}</span>
+                )}
+                <button
+                  type="button"
+                  onClick={handleSavePaymentAndStatus}
+                  disabled={isUpdating}
+                  className="py-2 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white text-xs font-bold transition cursor-pointer flex items-center justify-center gap-1.5 shadow-sm active:scale-95"
+                >
+                  {isUpdating && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+                  <span>Save Payment & Confirm</span>
+                </button>
+              </div>
             </div>
           </div>
         </div>
