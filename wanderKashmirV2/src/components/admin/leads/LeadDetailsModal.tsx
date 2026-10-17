@@ -344,6 +344,51 @@ export default function LeadDetailsModal({ lead, isOpen, onClose }: LeadDetailsM
             </div>
           </div>
 
+          {/* 🏷️ LEAD PIPELINE & WORKFLOW STATUS (SEPARATE DEDICATED SECTION) */}
+          <div className="p-3.5 rounded-xl bg-slate-950 border border-slate-800 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 shadow-xs">
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0">
+                <FileCheck className="w-4 h-4" />
+              </div>
+              <div>
+                <div className="text-xs font-bold text-white flex items-center gap-2">
+                  <span>Lead Pipeline Status</span>
+                  <span
+                    className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border ${statusStyle.bg} ${statusStyle.text} ${statusStyle.border}`}
+                  >
+                    {getStatusLabel(currentStatus)}
+                  </span>
+                </div>
+                <div className="text-[11px] text-slate-400 mt-0.5">
+                  Update customer stage in CRM sales pipeline
+                </div>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <label className="text-[11px] text-slate-400 whitespace-nowrap font-medium">Select Stage:</label>
+              <select
+                value={currentStatus}
+                onChange={async (e) => {
+                  const newSt = e.target.value;
+                  setCurrentStatus(newSt);
+                  try {
+                    await updateAdminLeadStatusAction(lead.id, newSt);
+                    router.refresh();
+                  } catch (err) {
+                    console.error("Status update error:", err);
+                  }
+                }}
+                className="w-full sm:w-auto px-3 py-1.5 bg-slate-900 border border-slate-700 hover:border-emerald-500 rounded-lg text-xs font-bold text-emerald-300 focus:outline-hidden cursor-pointer shadow-xs"
+              >
+                <option value="PENDING">PENDING (New Lead)</option>
+                <option value="CONTACTED">Quote to Client</option>
+                <option value="CONFIRMED">CONFIRMED (Advance Locked)</option>
+                <option value="CANCELLED">CANCELLED</option>
+              </select>
+            </div>
+          </div>
+
           {/* Key Requirement Details (Editable) */}
           <div>
             <div className="flex items-center justify-between mb-2">
@@ -489,41 +534,18 @@ export default function LeadDetailsModal({ lead, isOpen, onClose }: LeadDetailsM
 
           {/* 🌟 ADVANCE & ON-ARRIVAL PAYMENT SPLIT CALCULATOR */}
           <div className="p-4 rounded-xl bg-slate-950/90 border-2 border-emerald-500/40 space-y-4">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-2.5">
-              <div className="flex items-center gap-2">
-                <div className="w-6 h-6 rounded-md bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold text-xs">
-                  ₹
-                </div>
-                <div>
-                  <h4 className="text-xs font-bold text-white uppercase tracking-wider">
-                    Payment & Advance Split Tracker
-                  </h4>
-                  <p className="text-[10px] text-slate-400">
-                    30% Advance & Remaining On-Arrival Split
-                  </p>
-                </div>
+            <div className="flex items-center gap-2.5 border-b border-slate-800 pb-2.5">
+              <div className="w-7 h-7 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold text-sm">
+                ₹
               </div>
-
-              {/* Status Selector */}
-              <select
-                value={currentStatus}
-                onChange={async (e) => {
-                  const newSt = e.target.value;
-                  setCurrentStatus(newSt);
-                  try {
-                    await updateAdminLeadStatusAction(lead.id, newSt);
-                    router.refresh();
-                  } catch (err) {
-                    console.error("Status update error:", err);
-                  }
-                }}
-                className="px-2.5 py-1.5 bg-slate-900 border border-slate-700 rounded-lg text-xs font-semibold text-emerald-300 focus:outline-hidden cursor-pointer"
-              >
-                <option value="CONFIRMED">CONFIRMED (Advance Locked)</option>
-                <option value="PENDING">PENDING PAYMENT</option>
-                <option value="CONTACTED">Quote to Client</option>
-                <option value="CANCELLED">CANCELLED</option>
-              </select>
+              <div>
+                <h4 className="text-xs font-bold text-white uppercase tracking-wider">
+                  Payment & Advance Split Tracker
+                </h4>
+                <p className="text-[10px] text-slate-400">
+                  30% Advance Deposit & Remaining On-Arrival Split
+                </p>
+              </div>
             </div>
 
             {/* Inputs Grid */}
@@ -658,7 +680,7 @@ export default function LeadDetailsModal({ lead, isOpen, onClose }: LeadDetailsM
                   className="py-2 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white text-xs font-bold transition cursor-pointer flex items-center justify-center gap-1.5 shadow-sm active:scale-95"
                 >
                   {isUpdating && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
-                  <span>Save Payment & Confirm</span>
+                  <span>Save Payment Details</span>
                 </button>
               </div>
             </div>
