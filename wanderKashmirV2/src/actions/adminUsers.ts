@@ -148,3 +148,84 @@ export async function unbanUserAction(targetUserId: string): Promise<MutationRes
     return { success: false, error: "Failed to unban user." };
   }
 }
+
+export interface CreateAdminUserInput {
+  name?: string;
+  phone: string;
+  email?: string;
+  role?: "CUSTOMER" | "VENDOR";
+}
+
+/**
+ * Server Action: Create User / Tourist Account directly for database & marketing purposes.
+ */
+export async function createAdminUserAction(
+  input: CreateAdminUserInput
+): Promise<MutationResult<{ id: string }>> {
+  try {
+    const auth = await verifyAdminAuth();
+    if (!auth.authorized) {
+      return { success: false, error: auth.error };
+    }
+
+    const trimmedPhone = input.phone?.trim();
+    const trimmedEmail = input.email?.trim().toLowerCase();
+    const trimmedName = input.name?.trim() || null;
+
+    if (!trimmedPhone && !trimmedEmail) {
+      return { success: false, error: "Either a phone number or email is required." };
+    }
+
+    // Check existing phone
+    if (trimmedPhone) {
+      const existingPhone = await prisma.user.findFirst({
+        where: { phone: trimmedPhone },
+        select: { id: true, name: true, phone: true },
+      });
+      if (existingPhone) {
+        return {
+          success: false,
+          error: `User with phone ${trimmedPhone} already exists (${existingPhone.name || "Customer"}).`,
+        };
+      }
+    }
+
+    // Check existing email or construct valid unique placeholder email
+    let finalEmail = trimmedEmail;
+    if (finalEmail) {
+      const existingEmail = await prisma.user.findUnique({
+        where: { email: finalEmail },
+        select: { id: true },
+      });
+      if (existingEmail) {
+        return { success: false, error: `User with email ${finalEmail} already exists.` };
+      }
+    } else {
+      const cleanPhone = (trimmedPhone || "user").replace(/[^0-9]/g, "");
+      finalEmail = `${cleanPhone || Date.now()}@customer.wanderkashmir.com`;
+      const collision = await prisma.user.findUnique({ where: { email: finalEmail } });
+      if (collision) {
+        finalEmail = `${cleanPhone}_${Date.now()}@customer.wanderkashmir.com`;
+      }
+    }
+
+    const newUser = await prisma.user.create({
+      data: {
+        name: trimmedName,
+        phone: trimmedPhone || null,
+        email: finalEmail,
+        role: input.role === "VENDOR" ? "VENDOR" : "CUSTOMER",
+      },
+    });
+
+    revalidateUserPaths();
+    return { success: true, data: { id: newUser.id } };
+  } catch (error: unknown) {
+    console.error("Error creating user:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to create user in database.",
+    };
+  }
+}
+

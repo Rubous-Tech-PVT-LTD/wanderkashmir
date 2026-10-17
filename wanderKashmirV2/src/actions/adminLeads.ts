@@ -21,6 +21,7 @@ export interface CreateAdminLeadInput {
   cabType?: string;
   notes?: string;
   source?: string;
+  createUser?: boolean;
 }
 
 async function verifyAdminAuth(): Promise<{ authorized: boolean; error?: string; adminId?: string }> {
@@ -95,6 +96,40 @@ export async function createAdminLeadAction(
         status: "PENDING",
       },
     });
+
+    // Optionally ensure User account exists for marketing campaigns
+    if (input.createUser !== false) {
+      try {
+        const existingUser = await prisma.user.findFirst({
+          where: {
+            OR: [
+              { phone: trimmedPhone },
+              ...(input.email?.trim() ? [{ email: input.email.trim().toLowerCase() }] : []),
+            ],
+          },
+          select: { id: true },
+        });
+
+        if (!existingUser) {
+          const cleanPhone = trimmedPhone.replace(/[^0-9]/g, "");
+          const emailPlaceholder =
+            input.email?.trim().toLowerCase() ||
+            `${cleanPhone || Date.now()}@customer.wanderkashmir.com`;
+
+          await prisma.user.create({
+            data: {
+              name: trimmedName,
+              phone: trimmedPhone,
+              email: emailPlaceholder,
+              role: "CUSTOMER",
+            },
+          });
+          revalidatePath("/admin/users");
+        }
+      } catch (userSyncErr) {
+        console.warn("User marketing auto-sync notice:", userSyncErr);
+      }
+    }
 
     const referenceId = `WK-${newLead.id.slice(-6).toUpperCase()}`;
 

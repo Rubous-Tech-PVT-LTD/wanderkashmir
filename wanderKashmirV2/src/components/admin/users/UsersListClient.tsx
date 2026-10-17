@@ -26,6 +26,7 @@ import {
   AdminUserDetail,
 } from "@/lib/admin/users";
 import { banUserAction, unbanUserAction } from "@/actions/adminUsers";
+import AddUserModal from "./AddUserModal";
 
 interface UsersListClientProps {
   users: AdminUserItem[];
@@ -170,14 +171,17 @@ export default function UsersListClient({
           </p>
         </div>
 
-        <button
-          onClick={handleExportCsv}
-          disabled={isExporting}
-          className="inline-flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-medium bg-slate-900 border border-slate-700 text-slate-200 hover:bg-slate-800 hover:text-white transition disabled:opacity-50"
-        >
-          <Download className="w-4 h-4 text-emerald-400" />
-          {isExporting ? "Exporting..." : "Export Users (CSV)"}
-        </button>
+        <div className="flex items-center gap-2.5">
+          <AddUserModal />
+          <button
+            onClick={handleExportCsv}
+            disabled={isExporting}
+            className="inline-flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-medium bg-slate-900 border border-slate-700 text-slate-200 hover:bg-slate-800 hover:text-white transition disabled:opacity-50 cursor-pointer"
+          >
+            <Download className="w-4 h-4 text-emerald-400" />
+            {isExporting ? "Exporting..." : "Export Users (CSV)"}
+          </button>
+        </div>
       </div>
 
       {/* Notifications */}
