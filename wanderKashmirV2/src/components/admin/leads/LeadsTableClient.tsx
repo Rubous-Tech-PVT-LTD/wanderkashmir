@@ -20,6 +20,12 @@ interface LeadsTableClientProps {
   initialLeads: AdminLeadItem[];
 }
 
+function formatStatusBadge(status: string): string {
+  const u = (status || "").toUpperCase();
+  if (u === "CONTACTED" || u === "QUOTE TO CLIENT" || u === "QUOTED") return "Quote to Client";
+  return status;
+}
+
 export default function LeadsTableClient({ initialLeads }: LeadsTableClientProps) {
   const router = useRouter();
   const [search, setSearch] = useState("");
@@ -39,7 +45,12 @@ export default function LeadsTableClient({ initialLeads }: LeadsTableClientProps
         refId.includes(q);
 
       const matchesStatus =
-        statusFilter === "ALL" || lead.status.toUpperCase() === statusFilter.toUpperCase();
+        statusFilter === "ALL" ||
+        (statusFilter === "CONTACTED" &&
+          (lead.status.toUpperCase() === "CONTACTED" ||
+            lead.status.toUpperCase() === "QUOTE TO CLIENT" ||
+            lead.status.toUpperCase() === "QUOTED")) ||
+        lead.status.toUpperCase() === statusFilter.toUpperCase();
 
       return matchesSearch && matchesStatus;
     });
@@ -128,17 +139,22 @@ export default function LeadsTableClient({ initialLeads }: LeadsTableClientProps
 
         {/* Filter Pills & Export Button */}
         <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0">
-          {["ALL", "PENDING", "CONTACTED", "CONFIRMED"].map((st) => (
+          {[
+            { id: "ALL", label: "ALL" },
+            { id: "PENDING", label: "PENDING" },
+            { id: "CONTACTED", label: "Quote to Client" },
+            { id: "CONFIRMED", label: "CONFIRMED" },
+          ].map((item) => (
             <button
-              key={st}
-              onClick={() => setStatusFilter(st)}
+              key={item.id}
+              onClick={() => setStatusFilter(item.id)}
               className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition cursor-pointer ${
-                statusFilter === st
+                statusFilter === item.id
                   ? "bg-emerald-600 text-white"
                   : "bg-slate-950 border border-slate-800 text-slate-400 hover:text-white"
               }`}
             >
-              {st}
+              {item.label}
             </button>
           ))}
 
@@ -177,7 +193,7 @@ export default function LeadsTableClient({ initialLeads }: LeadsTableClientProps
                   </div>
                   <div className="flex items-center gap-2">
                     <span className="inline-block px-2 py-0.5 text-[9px] font-bold uppercase rounded-full bg-slate-800 text-emerald-400 border border-slate-700">
-                      {lead.status}
+                      {formatStatusBadge(lead.status)}
                     </span>
                     <button
                       type="button"
@@ -300,7 +316,7 @@ export default function LeadsTableClient({ initialLeads }: LeadsTableClientProps
                       </td>
                       <td className="px-5 py-4 whitespace-nowrap">
                         <span className="inline-flex items-center rounded-full bg-slate-800 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-emerald-400 border border-slate-700">
-                          {lead.status}
+                          {formatStatusBadge(lead.status)}
                         </span>
                       </td>
                       <td className="px-5 py-4 text-slate-400 text-xs font-mono whitespace-nowrap">

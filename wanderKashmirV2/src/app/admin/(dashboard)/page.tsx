@@ -245,7 +245,7 @@ export default async function AdminDashboardPage() {
                             : "bg-amber-500/10 text-amber-400 border border-amber-500/20"
                         }`}
                       >
-                        {lead.status}
+                        {lead.status === "CONTACTED" ? "Quote to Client" : lead.status}
                       </span>
                     </td>
                     <td className="py-3 px-4 text-xs text-slate-400">

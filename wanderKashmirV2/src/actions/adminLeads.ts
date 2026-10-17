@@ -190,6 +190,59 @@ export async function updateAdminLeadStatusAction(
   }
 }
 
+export interface UpdateAdminLeadDetailsInput {
+  leadId: string;
+  travelDates?: string;
+  guestsCount?: string;
+  hotelType?: string;
+  cabType?: string;
+  destinations?: string[];
+  status?: string;
+  adminNotes?: string;
+}
+
+/**
+ * Server Action: Update editable lead requirement details (Dates, Guests, Hotel, Cab)
+ */
+export async function updateAdminLeadDetailsAction(
+  input: UpdateAdminLeadDetailsInput
+): Promise<MutationResult> {
+  try {
+    const auth = await verifyAdminAuth();
+    if (!auth.authorized) {
+      return { success: false, error: auth.error };
+    }
+
+    const { leadId, travelDates, guestsCount, hotelType, cabType, destinations, status, adminNotes } = input;
+    if (!leadId) {
+      return { success: false, error: "Lead ID is required." };
+    }
+
+    await prisma.customTourRequest.update({
+      where: { id: leadId },
+      data: {
+        ...(travelDates !== undefined ? { travelDates } : {}),
+        ...(guestsCount !== undefined ? { guestsCount } : {}),
+        ...(hotelType !== undefined ? { hotelType } : {}),
+        ...(cabType !== undefined ? { cabType } : {}),
+        ...(destinations !== undefined ? { destinations } : {}),
+        ...(status !== undefined ? { status } : {}),
+        ...(adminNotes !== undefined ? { adminNotes } : {}),
+      },
+    });
+
+    revalidatePath("/admin/leads");
+    revalidatePath("/wander-admin");
+    return { success: true };
+  } catch (err: unknown) {
+    console.error("Error updating lead details:", err);
+    return {
+      success: false,
+      error: err instanceof Error ? err.message : "Failed to update lead details.",
+    };
+  }
+}
+
 /**
  * Server Action: Delete lead (e.g. spam/test lead)
  */

@@ -25,7 +25,11 @@ import {
   FileCheck,
 } from "lucide-react";
 import { AdminLeadItem } from "@/lib/admin/data";
-import { updateAdminLeadStatusAction, deleteAdminLeadAction } from "@/actions/adminLeads";
+import {
+  updateAdminLeadStatusAction,
+  updateAdminLeadDetailsAction,
+  deleteAdminLeadAction,
+} from "@/actions/adminLeads";
 import { saveLeadPaymentAction, sendLeadReceiptEmailAction } from "@/actions/adminReceipt";
 import { useRouter } from "next/navigation";
 
@@ -38,9 +42,19 @@ interface LeadDetailsModalProps {
 const STATUS_COLORS: Record<string, { bg: string; text: string; border: string }> = {
   PENDING: { bg: "bg-amber-950/60", text: "text-amber-400", border: "border-amber-800/80" },
   CONTACTED: { bg: "bg-blue-950/60", text: "text-blue-400", border: "border-blue-800/80" },
+  "Quote to Client": { bg: "bg-blue-950/60", text: "text-blue-400", border: "border-blue-800/80" },
   CONFIRMED: { bg: "bg-emerald-950/60", text: "text-emerald-400", border: "border-emerald-800/80" },
   CANCELLED: { bg: "bg-rose-950/60", text: "text-rose-400", border: "border-rose-800/80" },
 };
+
+function getStatusLabel(st: string): string {
+  const upper = (st || "").toUpperCase();
+  if (upper === "CONTACTED" || upper === "QUOTE TO CLIENT" || upper === "QUOTED") return "Quote to Client";
+  if (upper === "CONFIRMED") return "CONFIRMED";
+  if (upper === "PENDING") return "PENDING";
+  if (upper === "CANCELLED") return "CANCELLED";
+  return st;
+}
 
 export default function LeadDetailsModal({ lead, isOpen, onClose }: LeadDetailsModalProps) {
   const router = useRouter();
@@ -48,13 +62,20 @@ export default function LeadDetailsModal({ lead, isOpen, onClose }: LeadDetailsM
   const [adminNotes, setAdminNotes] = useState<string>(lead?.adminNotes || "");
   const [totalCost, setTotalCost] = useState<string>("10000");
   const [advancePaid, setAdvancePaid] = useState<string>("3000");
-  const [followUpDate, setFollowUpDate] = useState<string>("");
   const [customerEmail, setCustomerEmail] = useState<string>(lead?.email || "");
 
+  // Editable Requirement Fields
+  const [travelDates, setTravelDates] = useState<string>(lead?.travelDates || "");
+  const [guestsCount, setGuestsCount] = useState<string>(lead?.guestsCount || "");
+  const [hotelType, setHotelType] = useState<string>(lead?.hotelType || "");
+  const [cabType, setCabType] = useState<string>(lead?.cabType || "");
+
   const [isUpdating, setIsUpdating] = useState(false);
+  const [isSavingDetails, setIsSavingDetails] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isSendingEmail, setIsSendingEmail] = useState(false);
   const [updateMsg, setUpdateMsg] = useState<string | null>(null);
+  const [detailsSavedMsg, setDetailsSavedMsg] = useState<string | null>(null);
   const [emailMsg, setEmailMsg] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
   React.useEffect(() => {
@@ -62,7 +83,12 @@ export default function LeadDetailsModal({ lead, isOpen, onClose }: LeadDetailsM
       setCurrentStatus(lead.status);
       setAdminNotes(lead.adminNotes || "");
       setCustomerEmail(lead.email || "");
+      setTravelDates(lead.travelDates || "");
+      setGuestsCount(lead.guestsCount || "");
+      setHotelType(lead.hotelType || "");
+      setCabType(lead.cabType || "");
       setUpdateMsg(null);
+      setDetailsSavedMsg(null);
       setEmailMsg(null);
 
       // Parse existing payment details from adminNotes
@@ -98,22 +124,56 @@ export default function LeadDetailsModal({ lead, isOpen, onClose }: LeadDetailsM
     setAdvancePaid(String(calculated));
   };
 
+  const handleSaveDetails = async () => {
+    setIsSavingDetails(true);
+    setDetailsSavedMsg(null);
+    try {
+      const res = await updateAdminLeadDetailsAction({
+        leadId: lead.id,
+        travelDates: travelDates.trim(),
+        guestsCount: guestsCount.trim(),
+        hotelType: hotelType.trim(),
+        cabType: cabType.trim(),
+      });
+      if (res.success) {
+        setDetailsSavedMsg("Saved!");
+        setTimeout(() => setDetailsSavedMsg(null), 3000);
+        router.refresh();
+      } else {
+        alert(res.error || "Failed to update details.");
+      }
+    } catch (err: unknown) {
+      alert(err instanceof Error ? err.message : "Error saving details.");
+    } finally {
+      setIsSavingDetails(false);
+    }
+  };
+
   const handleSavePaymentAndStatus = async () => {
     setIsUpdating(true);
     setUpdateMsg(null);
     try {
+      // Also update any edited trip requirements
+      await updateAdminLeadDetailsAction({
+        leadId: lead.id,
+        travelDates: travelDates.trim(),
+        guestsCount: guestsCount.trim(),
+        hotelType: hotelType.trim(),
+        cabType: cabType.trim(),
+      });
+
       const res = await saveLeadPaymentAction({
         leadId: lead.id,
         totalAmount: totalNum,
         advanceAmount: advanceNum,
         balanceAmount: balanceDue,
         paymentStatus: balanceDue === 0 ? "FULLY_PAID" : "ADVANCE_PAID",
+        leadStatus: currentStatus,
         adminNotes: adminNotes.trim(),
       });
 
       if (res.success) {
-        setCurrentStatus("CONFIRMED");
-        setUpdateMsg("Payment & Booking Locked!");
+        setUpdateMsg("Payment & Details Updated!");
         router.refresh();
       } else {
         setUpdateMsg(res.error || "Failed to save.");
@@ -173,29 +233,50 @@ export default function LeadDetailsModal({ lead, isOpen, onClose }: LeadDetailsM
     }
   };
 
-  // Generate WhatsApp Quick Itinerary & Payment Voucher Text
+  // Generate WhatsApp Quick Itinerary & Payment Voucher / Quotation Text
   const destinationsText = Array.isArray(lead.destinations) && lead.destinations.length > 0
     ? lead.destinations.join(" • ")
     : "Srinagar • Gulmarg • Pahalgam";
 
-  const prefilledProposal = encodeURIComponent(
-    `*Booking Confirmed!* ✅\n` +
-    `*WanderKashmir Official Tour Voucher*\n\n` +
-    `• *Ref ID:* ${refId}\n` +
-    `• *Lead Guest:* ${lead.name}\n` +
-    `• *Dates / Duration:* ${lead.travelDates || "Upcoming"}\n` +
-    `• *No. of Travelers:* ${lead.guestsCount}\n` +
-    `• *Route:* ${destinationsText}\n` +
-    `• *Stay Category:* ${lead.hotelType}\n` +
-    `• *Transport:* ${lead.cabType} (Private Cab + Driver)\n\n` +
-    `*💰 Official Payment Breakdown:*\n` +
-    `• *Total Package Cost:* ₹${totalNum.toLocaleString("en-IN")}\n` +
-    `• *Advance Received (30%):* ₹${advanceNum.toLocaleString("en-IN")} (CONFIRMED & PAID)\n` +
-    `• *Balance Due on Arrival:* ₹${balanceDue.toLocaleString("en-IN")} (Payable at Srinagar)\n\n` +
-    `Your dedicated driver contact & hotel check-in vouchers will be shared 24 hours prior to travel.\n` +
-    `24/7 Srinagar Helpline: +91 60058 88754\n` +
-    `Thank you for choosing WanderKashmir!`
-  );
+  const isQuoting = currentStatus === "CONTACTED";
+
+  const prefilledWhatsApp = isQuoting
+    ? encodeURIComponent(
+        `*Trip Quotation from WanderKashmir* 🏔️\n` +
+        `*Ref ID:* ${refId}\n\n` +
+        `Dear *${lead.name}*,\n` +
+        `Greetings from WanderKashmir! Here is your customized Kashmir tour proposal:\n\n` +
+        `• *Dates / Duration:* ${travelDates || "Upcoming"}\n` +
+        `• *No. of Travelers:* ${guestsCount || lead.guestsCount}\n` +
+        `• *Route:* ${destinationsText}\n` +
+        `• *Stay Category:* ${hotelType || lead.hotelType}\n` +
+        `• *Transport:* ${cabType || lead.cabType} (Dedicated Cab + Driver)\n\n` +
+        `*💰 Package Price & Payment Terms:*\n` +
+        `• *Total Package Cost:* ₹${totalNum.toLocaleString("en-IN")}\n` +
+        `• *Advance to Confirm Booking (30%):* ₹${advanceNum.toLocaleString("en-IN")}\n` +
+        `• *Balance Due on Arrival:* ₹${balanceDue.toLocaleString("en-IN")} (Payable in Srinagar)\n\n` +
+        `Please let us know if you would like to reserve this package!\n` +
+        `24/7 Srinagar Helpline: +91 60058 88754\n` +
+        `WanderKashmir - Your Trusted Kashmir Host`
+      )
+    : encodeURIComponent(
+        `*Booking Confirmed!* ✅\n` +
+        `*WanderKashmir Official Tour Voucher*\n\n` +
+        `• *Ref ID:* ${refId}\n` +
+        `• *Lead Guest:* ${lead.name}\n` +
+        `• *Dates / Duration:* ${travelDates || "Upcoming"}\n` +
+        `• *No. of Travelers:* ${guestsCount || lead.guestsCount}\n` +
+        `• *Route:* ${destinationsText}\n` +
+        `• *Stay Category:* ${hotelType || lead.hotelType}\n` +
+        `• *Transport:* ${cabType || lead.cabType} (Private Cab + Driver)\n\n` +
+        `*💰 Official Payment Breakdown:*\n` +
+        `• *Total Package Cost:* ₹${totalNum.toLocaleString("en-IN")}\n` +
+        `• *Advance Received (30%):* ₹${advanceNum.toLocaleString("en-IN")} (CONFIRMED & PAID)\n` +
+        `• *Balance Due on Arrival:* ₹${balanceDue.toLocaleString("en-IN")} (Payable at Srinagar)\n\n` +
+        `Your dedicated driver contact & hotel check-in vouchers will be shared 24 hours prior to travel.\n` +
+        `24/7 Srinagar Helpline: +91 60058 88754\n` +
+        `Thank you for choosing WanderKashmir!`
+      );
 
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-slate-950/80 backdrop-blur-xs animate-in fade-in duration-200">
@@ -214,7 +295,7 @@ export default function LeadDetailsModal({ lead, isOpen, onClose }: LeadDetailsM
                 <span
                   className={`px-2.5 py-0.5 rounded-full text-[11px] font-bold uppercase tracking-wider border ${statusStyle.bg} ${statusStyle.text} ${statusStyle.border}`}
                 >
-                  {currentStatus}
+                  {getStatusLabel(currentStatus)}
                 </span>
               </div>
               <h3 className="text-base sm:text-lg font-bold text-white mt-1">
@@ -244,14 +325,14 @@ export default function LeadDetailsModal({ lead, isOpen, onClose }: LeadDetailsM
             </div>
             <div className="flex flex-wrap items-center gap-2">
               <a
-                href={`https://wa.me/${cleanPhone}?text=${prefilledProposal}`}
+                href={`https://wa.me/${cleanPhone}?text=${prefilledWhatsApp}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#25D366] hover:bg-[#20ba59] text-white text-xs font-bold shadow-xs active:scale-95 transition-all"
-                title="Send WhatsApp Booking Confirmation with 30% Advance details"
+                title={isQuoting ? "Send WhatsApp Quotation with 30% Advance details" : "Send WhatsApp Booking Confirmation"}
               >
                 <Send className="w-3.5 h-3.5" />
-                <span>Send WhatsApp Receipt</span>
+                <span>{isQuoting ? "Send WhatsApp Quote" : "Send WhatsApp Receipt"}</span>
               </a>
               <a
                 href={`tel:${lead.phone}`}
@@ -263,45 +344,114 @@ export default function LeadDetailsModal({ lead, isOpen, onClose }: LeadDetailsM
             </div>
           </div>
 
-          {/* Key Requirement Details */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            <div className="p-3 rounded-xl bg-slate-950/60 border border-slate-800">
-              <div className="flex items-center gap-1.5 text-xs text-slate-400 mb-1">
-                <Calendar className="w-3.5 h-3.5 text-slate-500" />
-                <span>Duration / Dates</span>
+          {/* Key Requirement Details (Editable) */}
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <div className="text-xs font-semibold text-slate-300 flex items-center gap-1.5">
+                <span>Trip Requirements & Preferences</span>
+                <span className="text-[10px] text-emerald-400 font-medium bg-emerald-950/60 px-2 py-0.5 rounded border border-emerald-800/60">
+                  Editable
+                </span>
               </div>
-              <div className="text-sm font-semibold text-white">
-                {lead.travelDates || "Upcoming"}
-              </div>
-            </div>
-
-            <div className="p-3 rounded-xl bg-slate-950/60 border border-slate-800">
-              <div className="flex items-center gap-1.5 text-xs text-slate-400 mb-1">
-                <Users className="w-3.5 h-3.5 text-slate-500" />
-                <span>Guests Count</span>
-              </div>
-              <div className="text-sm font-semibold text-white">
-                {lead.guestsCount}
-              </div>
-            </div>
-
-            <div className="p-3 rounded-xl bg-slate-950/60 border border-slate-800">
-              <div className="flex items-center gap-1.5 text-xs text-slate-400 mb-1">
-                <Hotel className="w-3.5 h-3.5 text-slate-500" />
-                <span>Hotel Type</span>
-              </div>
-              <div className="text-xs font-semibold text-white truncate" title={lead.hotelType}>
-                {lead.hotelType}
+              <div className="flex items-center gap-2">
+                {detailsSavedMsg && (
+                  <span className="text-[11px] text-emerald-400 font-semibold">{detailsSavedMsg}</span>
+                )}
+                <button
+                  type="button"
+                  onClick={handleSaveDetails}
+                  disabled={isSavingDetails}
+                  className="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-emerald-300 text-[11px] font-semibold flex items-center gap-1 transition cursor-pointer active:scale-95"
+                >
+                  {isSavingDetails ? <Loader2 className="w-3 h-3 animate-spin" /> : <CheckCircle2 className="w-3 h-3 text-emerald-400" />}
+                  <span>Save Details</span>
+                </button>
               </div>
             </div>
 
-            <div className="p-3 rounded-xl bg-slate-950/60 border border-slate-800">
-              <div className="flex items-center gap-1.5 text-xs text-slate-400 mb-1">
-                <Car className="w-3.5 h-3.5 text-slate-500" />
-                <span>Vehicle / Cab</span>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              {/* Duration / Dates */}
+              <div className="p-2.5 rounded-xl bg-slate-950/80 border border-slate-800 focus-within:border-emerald-500/80 transition-all">
+                <div className="flex items-center justify-between text-[11px] text-slate-400 mb-1">
+                  <div className="flex items-center gap-1.5">
+                    <Calendar className="w-3.5 h-3.5 text-emerald-400" />
+                    <span>Duration / Dates</span>
+                  </div>
+                </div>
+                <input
+                  type="text"
+                  value={travelDates}
+                  onChange={(e) => setTravelDates(e.target.value)}
+                  placeholder="e.g. 5D/4N or 15 March"
+                  className="w-full bg-slate-900 border border-slate-700/80 rounded-lg px-2 py-1 text-xs font-semibold text-white focus:outline-hidden focus:border-emerald-500 transition-colors"
+                />
               </div>
-              <div className="text-xs font-semibold text-white truncate" title={lead.cabType}>
-                {lead.cabType}
+
+              {/* Guests Count */}
+              <div className="p-2.5 rounded-xl bg-slate-950/80 border border-slate-800 focus-within:border-emerald-500/80 transition-all">
+                <div className="flex items-center justify-between text-[11px] text-slate-400 mb-1">
+                  <div className="flex items-center gap-1.5">
+                    <Users className="w-3.5 h-3.5 text-emerald-400" />
+                    <span>Guests Count</span>
+                  </div>
+                </div>
+                <input
+                  type="text"
+                  value={guestsCount}
+                  onChange={(e) => setGuestsCount(e.target.value)}
+                  placeholder="e.g. Couple (2 Adults)"
+                  className="w-full bg-slate-900 border border-slate-700/80 rounded-lg px-2 py-1 text-xs font-semibold text-white focus:outline-hidden focus:border-emerald-500 transition-colors"
+                />
+              </div>
+
+              {/* Hotel Type */}
+              <div className="p-2.5 rounded-xl bg-slate-950/80 border border-slate-800 focus-within:border-emerald-500/80 transition-all">
+                <div className="flex items-center justify-between text-[11px] text-slate-400 mb-1">
+                  <div className="flex items-center gap-1.5">
+                    <Hotel className="w-3.5 h-3.5 text-emerald-400" />
+                    <span>Hotel Type</span>
+                  </div>
+                </div>
+                <input
+                  type="text"
+                  list="hotel-type-options"
+                  value={hotelType}
+                  onChange={(e) => setHotelType(e.target.value)}
+                  placeholder="e.g. 3 Star Standard"
+                  className="w-full bg-slate-900 border border-slate-700/80 rounded-lg px-2 py-1 text-xs font-semibold text-white focus:outline-hidden focus:border-emerald-500 transition-colors"
+                />
+                <datalist id="hotel-type-options">
+                  <option value="3 Star Standard" />
+                  <option value="4 Star Deluxe" />
+                  <option value="5 Star Luxury" />
+                  <option value="Houseboat Premium" />
+                  <option value="Budget Stay" />
+                </datalist>
+              </div>
+
+              {/* Vehicle / Cab */}
+              <div className="p-2.5 rounded-xl bg-slate-950/80 border border-slate-800 focus-within:border-emerald-500/80 transition-all">
+                <div className="flex items-center justify-between text-[11px] text-slate-400 mb-1">
+                  <div className="flex items-center gap-1.5">
+                    <Car className="w-3.5 h-3.5 text-emerald-400" />
+                    <span>Vehicle / Cab</span>
+                  </div>
+                </div>
+                <input
+                  type="text"
+                  list="cab-type-options"
+                  value={cabType}
+                  onChange={(e) => setCabType(e.target.value)}
+                  placeholder="e.g. Sedan / SUV"
+                  className="w-full bg-slate-900 border border-slate-700/80 rounded-lg px-2 py-1 text-xs font-semibold text-white focus:outline-hidden focus:border-emerald-500 transition-colors"
+                />
+                <datalist id="cab-type-options">
+                  <option value="Sedan / SUV" />
+                  <option value="Innova Crysta (Luxury)" />
+                  <option value="Toyota Etios (Sedan)" />
+                  <option value="Tempo Traveller (12-16)" />
+                  <option value="Urbania (Super Luxury)" />
+                </datalist>
               </div>
             </div>
           </div>
@@ -357,12 +507,21 @@ export default function LeadDetailsModal({ lead, isOpen, onClose }: LeadDetailsM
               {/* Status Selector */}
               <select
                 value={currentStatus}
-                onChange={(e) => setCurrentStatus(e.target.value)}
-                className="px-2.5 py-1.5 bg-slate-900 border border-slate-700 rounded-lg text-xs font-semibold text-emerald-300 focus:outline-hidden"
+                onChange={async (e) => {
+                  const newSt = e.target.value;
+                  setCurrentStatus(newSt);
+                  try {
+                    await updateAdminLeadStatusAction(lead.id, newSt);
+                    router.refresh();
+                  } catch (err) {
+                    console.error("Status update error:", err);
+                  }
+                }}
+                className="px-2.5 py-1.5 bg-slate-900 border border-slate-700 rounded-lg text-xs font-semibold text-emerald-300 focus:outline-hidden cursor-pointer"
               >
                 <option value="CONFIRMED">CONFIRMED (Advance Locked)</option>
                 <option value="PENDING">PENDING PAYMENT</option>
-                <option value="CONTACTED">CONTACTED</option>
+                <option value="CONTACTED">Quote to Client</option>
                 <option value="CANCELLED">CANCELLED</option>
               </select>
             </div>

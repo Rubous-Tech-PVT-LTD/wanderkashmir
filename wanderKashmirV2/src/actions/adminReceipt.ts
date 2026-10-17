@@ -24,6 +24,7 @@ export interface SavePaymentInput {
   advanceAmount: number;
   balanceAmount: number;
   paymentStatus: "ADVANCE_PAID" | "PENDING_ARRIVAL" | "FULLY_PAID";
+  leadStatus?: string;
   adminNotes?: string;
 }
 
@@ -37,7 +38,7 @@ export async function saveLeadPaymentAction(input: SavePaymentInput): Promise<Mu
       return { success: false, error: auth.error };
     }
 
-    const { leadId, totalAmount, advanceAmount, balanceAmount, paymentStatus, adminNotes } = input;
+    const { leadId, totalAmount, advanceAmount, balanceAmount, paymentStatus, leadStatus, adminNotes } = input;
 
     const lead = await prisma.customTourRequest.findUnique({
       where: { id: leadId },
@@ -57,7 +58,7 @@ export async function saveLeadPaymentAction(input: SavePaymentInput): Promise<Mu
     await prisma.customTourRequest.update({
       where: { id: leadId },
       data: {
-        status: "CONFIRMED",
+        status: leadStatus || "CONFIRMED",
         adminNotes: finalAdminNotes,
       },
     });
