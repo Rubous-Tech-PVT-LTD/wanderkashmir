@@ -32,22 +32,22 @@ export const metadata: Metadata = {
   icons: {
     icon: [
       {
-        url: "https://res.cloudinary.com/dcmoseix9/image/upload/v1790940410/favicon_fbpa6r.ico",
+        url: "/favicon.ico",
         sizes: "32x32",
       },
       {
-        url: "https://res.cloudinary.com/dcmoseix9/image/upload/v1790940411/favicon_px8xdy.svg",
+        url: "/favicon.svg",
         type: "image/svg+xml",
       },
       {
-        url: "https://res.cloudinary.com/dcmoseix9/image/upload/v1790940410/favicon-96x96_jtczpk.png",
+        url: "/favicon-96x96.png",
         sizes: "96x96",
         type: "image/png",
       },
     ],
     apple: [
       {
-        url: "https://res.cloudinary.com/dcmoseix9/image/upload/v1790940409/apple-touch-icon_gkpbmz.png",
+        url: "/apple-touch-icon.png",
         sizes: "180x180",
         type: "image/png",
       },
