@@ -110,7 +110,7 @@ export async function sendLeadReceiptEmailAction(input: SendReceiptEmailInput): 
     const refId = `WK-${lead.id.slice(-6).toUpperCase()}`;
     const destinationsText = Array.isArray(lead.destinations) && lead.destinations.length > 0
       ? lead.destinations.join(" • ")
-      : "Srinagar • Gulmarg • Pahalgam";
+      : "";
 
     const emailHtml = `
       <!DOCTYPE html>
@@ -169,7 +169,7 @@ export async function sendLeadReceiptEmailAction(input: SendReceiptEmailInput): 
               <div class="row"><span class="label">Contact Phone</span><span class="val">${lead.phone}</span></div>
               <div class="row"><span class="label">Travel Dates / Duration</span><span class="val">${lead.travelDates || "Upcoming"}</span></div>
               <div class="row"><span class="label">Guests</span><span class="val">${lead.guestsCount}</span></div>
-              <div class="row"><span class="label">Route Plan</span><span class="val">${destinationsText}</span></div>
+              ${destinationsText ? `<div class="row"><span class="label">Route Plan</span><span class="val">${destinationsText}</span></div>` : ""}
               <div class="row"><span class="label">Stay Category</span><span class="val">${lead.hotelType}</span></div>
               <div class="row"><span class="label">Private Vehicle</span><span class="val">${lead.cabType}</span></div>
             </div>

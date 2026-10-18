@@ -48,7 +48,7 @@ export default async function LeadReceiptPage({
   const refId = `WK-${lead.id.slice(-6).toUpperCase()}`;
   const destinationsText = Array.isArray(lead.destinations) && lead.destinations.length > 0
     ? lead.destinations.join(" • ")
-    : "Srinagar • Gulmarg • Pahalgam";
+    : "";
 
   // Check if adminNotes has saved experiences / inclusions
   let savedExp = "";

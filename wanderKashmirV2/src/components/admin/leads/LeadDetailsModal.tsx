@@ -24,6 +24,7 @@ import {
   Printer,
   FileCheck,
   Sparkles,
+  Plus,
 } from "lucide-react";
 import { AdminLeadItem } from "@/lib/admin/data";
 import {
@@ -47,6 +48,16 @@ const STATUS_COLORS: Record<string, { bg: string; text: string; border: string }
   CONFIRMED: { bg: "bg-emerald-950/60", text: "text-emerald-400", border: "border-emerald-800/80" },
   CANCELLED: { bg: "bg-rose-950/60", text: "text-rose-400", border: "border-rose-800/80" },
 };
+
+const POPULAR_DESTINATIONS = [
+  "Srinagar",
+  "Gulmarg",
+  "Pahalgam",
+  "Sonamarg",
+  "Doodhpathri",
+  "Yusmarg",
+  "Gurez Valley",
+];
 
 function getStatusLabel(st: string): string {
   const upper = (st || "").toUpperCase();
@@ -107,6 +118,8 @@ export default function LeadDetailsModal({ lead, isOpen, onClose }: LeadDetailsM
   const [cabType, setCabType] = useState<string>(lead?.cabType || "");
   const [experiences, setExperiences] = useState<string>("");
   const [customInclusions, setCustomInclusions] = useState<string>("");
+  const [destinations, setDestinations] = useState<string[]>([]);
+  const [customDestInput, setCustomDestInput] = useState<string>("");
 
   const [isUpdating, setIsUpdating] = useState(false);
   const [isSavingDetails, setIsSavingDetails] = useState(false);
@@ -129,6 +142,8 @@ export default function LeadDetailsModal({ lead, isOpen, onClose }: LeadDetailsM
       setGuestsCount(lead.guestsCount || "");
       setHotelType(lead.hotelType || "");
       setCabType(lead.cabType || "");
+      setDestinations(Array.isArray(lead.destinations) ? [...lead.destinations] : []);
+      setCustomDestInput("");
       setUpdateMsg(null);
       setDetailsSavedMsg(null);
       setEmailMsg(null);
@@ -192,6 +207,7 @@ export default function LeadDetailsModal({ lead, isOpen, onClose }: LeadDetailsM
         guestsCount: guestsCount.trim(),
         hotelType: hotelType.trim(),
         cabType: cabType.trim(),
+        destinations,
         adminNotes: updatedNotes,
       });
       if (res.success) {
@@ -227,6 +243,7 @@ export default function LeadDetailsModal({ lead, isOpen, onClose }: LeadDetailsM
         guestsCount: guestsCount.trim(),
         hotelType: hotelType.trim(),
         cabType: cabType.trim(),
+        destinations,
         adminNotes: updatedNotes,
       });
 
@@ -302,9 +319,9 @@ export default function LeadDetailsModal({ lead, isOpen, onClose }: LeadDetailsM
   };
 
   // Generate WhatsApp Quick Itinerary & Payment Voucher / Quotation Text
-  const destinationsText = Array.isArray(lead.destinations) && lead.destinations.length > 0
-    ? lead.destinations.join(" • ")
-    : "Srinagar • Gulmarg • Pahalgam";
+  const currentDestinationsText = destinations.length > 0
+    ? destinations.join(" • ")
+    : "";
 
   const isQuoting = currentStatus === "CONTACTED";
   const hasHotel = hotelType && !["none", "n/a", "not required", "no hotel", "not included"].includes(hotelType.toLowerCase().trim());
@@ -314,7 +331,7 @@ export default function LeadDetailsModal({ lead, isOpen, onClose }: LeadDetailsM
     `• *Travel Date:* ${travelDate || "Upcoming / Flexible"}`,
     `• *Trip Duration:* ${duration || "5D/4N"}`,
     `• *No. of Travelers:* ${guestsCount || lead.guestsCount}`,
-    destinationsText ? `• *Route:* ${destinationsText}` : null,
+    currentDestinationsText ? `• *Route:* ${currentDestinationsText}` : null,
     hasHotel ? `• *Stay Category:* ${hotelType}` : null,
     hasCab ? `• *Transport:* ${cabType} (Private Cab + Driver)` : null,
     experiences.trim() ? `• *Activities & Experiences:* ${experiences.trim()}` : null,
@@ -640,25 +657,133 @@ export default function LeadDetailsModal({ lead, isOpen, onClose }: LeadDetailsM
             </div>
           </div>
 
-          {/* Destinations */}
-          {Array.isArray(lead.destinations) && lead.destinations.length > 0 && (
-            <div>
-              <div className="text-xs font-semibold text-slate-300 mb-2 flex items-center gap-1.5">
+          {/* Editable Destinations Section */}
+          <div className="p-3.5 rounded-xl bg-slate-950/80 border border-slate-800 space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-300">
                 <MapPin className="w-3.5 h-3.5 text-emerald-400" />
                 <span>Selected Destinations:</span>
+                <span className="text-[10px] text-emerald-400 font-medium bg-emerald-950/60 px-2 py-0.5 rounded border border-emerald-800/60">
+                  Editable
+                </span>
+                {destinations.length > 0 ? (
+                  <span className="text-[11px] text-slate-400 font-normal">
+                    ({destinations.length} places)
+                  </span>
+                ) : (
+                  <span className="text-[11px] text-amber-400 font-medium">
+                    (Blank — Hidden from PDF Voucher)
+                  </span>
+                )}
               </div>
+
+              {destinations.length > 0 && (
+                <button
+                  type="button"
+                  onClick={() => setDestinations([])}
+                  className="text-[11px] text-rose-400 hover:text-rose-300 transition-colors font-medium cursor-pointer"
+                >
+                  Clear All
+                </button>
+              )}
+            </div>
+
+            {/* Active Selected Destination Badges with Remove 'X' */}
+            {destinations.length > 0 ? (
               <div className="flex flex-wrap gap-1.5">
-                {lead.destinations.map((dest, idx) => (
+                {destinations.map((dest, idx) => (
                   <span
                     key={idx}
-                    className="px-2.5 py-1 rounded-lg bg-slate-950 border border-slate-800 text-xs font-medium text-slate-300"
+                    className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-950/70 border border-emerald-800/70 text-xs font-medium text-emerald-300 animate-in fade-in duration-150"
                   >
-                    {dest}
+                    <span>{dest}</span>
+                    <button
+                      type="button"
+                      onClick={() => setDestinations((prev) => prev.filter((d) => d !== dest))}
+                      className="hover:text-white transition-colors cursor-pointer text-emerald-400"
+                      title={`Remove ${dest}`}
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
                   </span>
                 ))}
               </div>
+            ) : (
+              <div className="p-2.5 rounded-lg bg-slate-900/60 border border-dashed border-slate-800 text-[11px] text-slate-400">
+                ⚠️ No destinations selected. &quot;Covered Destinations&quot; will not appear in the PDF voucher.
+              </div>
+            )}
+
+            {/* Quick Toggle / Add Popular Kashmir Spots */}
+            <div className="pt-2 border-t border-slate-800/80">
+              <div className="text-[11px] text-slate-400 mb-1.5 font-medium flex items-center justify-between">
+                <span>Quick Add / Toggle Popular Spots:</span>
+                <span className="text-[10px] text-slate-500">Click to toggle</span>
+              </div>
+              <div className="flex flex-wrap gap-1.5">
+                {POPULAR_DESTINATIONS.map((spot) => {
+                  const isSelected = destinations.includes(spot);
+                  return (
+                    <button
+                      key={spot}
+                      type="button"
+                      onClick={() => {
+                        if (isSelected) {
+                          setDestinations((prev) => prev.filter((d) => d !== spot));
+                        } else {
+                          setDestinations((prev) => [...prev, spot]);
+                        }
+                      }}
+                      className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md text-xs font-medium transition cursor-pointer ${
+                        isSelected
+                          ? "bg-emerald-600 text-white shadow-xs"
+                          : "bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-800"
+                      }`}
+                    >
+                      {isSelected ? <CheckCircle2 className="w-3 h-3" /> : <Plus className="w-3 h-3 text-slate-400" />}
+                      <span>{spot}</span>
+                    </button>
+                  );
+                })}
+              </div>
             </div>
-          )}
+
+            {/* Custom Destination Input */}
+            <div className="flex gap-2 pt-1">
+              <input
+                type="text"
+                value={customDestInput}
+                onChange={(e) => setCustomDestInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    const trimmed = customDestInput.trim();
+                    if (trimmed && !destinations.includes(trimmed)) {
+                      setDestinations((prev) => [...prev, trimmed]);
+                      setCustomDestInput("");
+                    }
+                  }
+                }}
+                placeholder="Add custom place (e.g. Aru Valley, Betaab Valley, Sinthan Top) + Enter"
+                className="flex-1 bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-hidden focus:border-emerald-500 transition-colors"
+              />
+              <button
+                type="button"
+                onClick={() => {
+                  const trimmed = customDestInput.trim();
+                  if (trimmed && !destinations.includes(trimmed)) {
+                    setDestinations((prev) => [...prev, trimmed]);
+                    setCustomDestInput("");
+                  }
+                }}
+                disabled={!customDestInput.trim()}
+                className="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 disabled:opacity-40 text-white text-xs font-semibold flex items-center gap-1 transition cursor-pointer"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                <span>Add</span>
+              </button>
+            </div>
+          </div>
 
           {/* Full Notes / Special Requests */}
           <div>
@@ -799,7 +924,7 @@ export default function LeadDetailsModal({ lead, isOpen, onClose }: LeadDetailsM
             {/* Save & Print Actions */}
             <div className="pt-2 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2 border-t border-slate-800">
               <a
-                href={`/admin/leads/${lead.id}/receipt?total=${totalCost}&advance=${advancePaid}&hotel=${encodeURIComponent(hotelType)}&cab=${encodeURIComponent(cabType)}&exp=${encodeURIComponent(experiences)}&inc=${encodeURIComponent(customInclusions)}`}
+                href={`/admin/leads/${lead.id}/receipt?total=${totalCost}&advance=${advancePaid}&hotel=${encodeURIComponent(hotelType)}&cab=${encodeURIComponent(cabType)}&exp=${encodeURIComponent(experiences)}&inc=${encodeURIComponent(customInclusions)}&route=${encodeURIComponent(destinations.join(" • "))}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center justify-center gap-1.5 py-2 px-3.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-emerald-300 text-xs font-bold transition active:scale-95"
