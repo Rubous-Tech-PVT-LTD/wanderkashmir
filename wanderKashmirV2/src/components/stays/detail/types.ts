@@ -225,7 +225,11 @@ export function mapPropertyToHotelViewModel(
         bedType: null,
         size: null,
         amenities: [],
-        mealPlan: rt.priceCP ? "Breakfast Included (CP)" : rt.priceMAP ? "Half Board (MAP)" : "Room Only (EP)",
+        mealPlan: rt.priceCP
+          ? "Breakfast Included (CP)"
+          : rt.priceMAP
+          ? "Half Board (MAP)"
+          : null,
         images: [],
       }))
     : [];

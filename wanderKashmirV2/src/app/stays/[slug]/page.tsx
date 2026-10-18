@@ -101,7 +101,17 @@ export default async function HotelDetailPage({ params }: HotelDetailPageProps) 
           phone: true,
         },
       },
-      roomTypes: true,
+      roomTypes: {
+        select: {
+          id: true,
+          propertyId: true,
+          name: true,
+          description: true,
+          basePrice: true,
+          capacity: true,
+          totalUnits: true,
+        },
+      },
       reviews: {
         include: {
           user: {
