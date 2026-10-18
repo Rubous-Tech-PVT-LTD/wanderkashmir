@@ -141,3 +141,63 @@ export async function getRealGoogleReviews(): Promise<GoogleReviewsData> {
     };
   }
 }
+
+/**
+ * Fetch real Google Place reviews for a specific property/hotel by place_id.
+ * Returns only real verified reviews directly from Google Maps (no generic fallbacks).
+ */
+export async function getGooglePlaceReviews(placeId: string): Promise<GoogleReviewsData | null> {
+  if (!placeId || !placeId.trim()) return null;
+  const apiKey = process.env.GOOGLE_PLACES_API_KEY;
+  if (!apiKey) {
+    console.warn("GOOGLE_PLACES_API_KEY is not configured.");
+    return null;
+  }
+
+  try {
+    const cleanPlaceId = encodeURIComponent(placeId.trim());
+    const url = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${cleanPlaceId}&fields=reviews,rating,user_ratings_total&reviews_sort=newest&key=${apiKey}`;
+
+    const response = await fetch(url, {
+      next: { revalidate: 3600 },
+    });
+
+    if (!response.ok) {
+      console.error("Google Places API error for place", placeId, response.statusText);
+      return null;
+    }
+
+    const data = await response.json();
+
+    if (data.status !== "OK" || !data.result) {
+      console.warn("Google Places API returned status:", data.status, "for placeId:", placeId);
+      return null;
+    }
+
+    const rawReviews: any[] = data.result.reviews || [];
+
+    const reviews: GoogleReviewItem[] = rawReviews.map((r, index) => ({
+      id: `google-${placeId}-${index}-${r.time || index}`,
+      author_name: r.author_name || "Verified Traveler",
+      profile_photo_url: r.profile_photo_url,
+      rating: typeof r.rating === "number" ? r.rating : 5,
+      relative_time_description: r.relative_time_description || "Recent",
+      tripType: "Verified Google Guest",
+      text: r.text || "",
+      author_url: r.author_url,
+      isGoogleVerified: true,
+    }));
+
+    return {
+      rating: typeof data.result.rating === "number" ? data.result.rating : undefined,
+      userRatingsTotal:
+        typeof data.result.user_ratings_total === "number"
+          ? data.result.user_ratings_total
+          : undefined,
+      reviews,
+    };
+  } catch (error) {
+    console.error("Failed to fetch Google reviews for placeId:", placeId, error);
+    return null;
+  }
+}

@@ -72,15 +72,21 @@ export interface HotelMediaInfo {
 export interface HotelReviewItem {
   id: string;
   author: string;
+  avatarUrl?: string;
   rating: number;
   date?: string;
   content: string;
+  source?: "google" | "direct";
+  authorUrl?: string;
 }
 
 export interface HotelReviewSummary {
   rating?: number | null;
   reviewCount: number;
   reviews: HotelReviewItem[];
+  googleRating?: number | null;
+  googleReviewCount?: number;
+  googlePlaceId?: string | null;
 }
 
 export interface HotelPoliciesInfo {
@@ -142,7 +148,12 @@ export interface HotelDetailViewModel {
  */
 export function mapPropertyToHotelViewModel(
   property: any,
-  requestedSlug: string
+  requestedSlug: string,
+  googleReviewsData?: {
+    rating?: number;
+    userRatingsTotal?: number;
+    reviews?: any[];
+  } | null
 ): HotelDetailViewModel | null {
   if (!property) return null;
 
@@ -239,21 +250,49 @@ export function mapPropertyToHotelViewModel(
     ? property.images.filter((img: any) => typeof img === "string" && img.startsWith("http"))
     : [];
 
-  // Real reviews
-  const rawReviews: HotelReviewItem[] = Array.isArray(property.reviews)
-    ? property.reviews.map((r: any) => ({
+  // Reviews: Direct internal DB reviews + Google Place reviews
+  const rawReviews: HotelReviewItem[] = [];
+
+  // 1. Direct internal DB reviews
+  if (Array.isArray(property.reviews)) {
+    property.reviews.forEach((r: any) => {
+      rawReviews.push({
         id: r.id,
         author: r.user?.name || "Verified Traveler",
         rating: typeof r.rating === "number" ? r.rating : 5,
-        date: r.createdAt ? new Date(r.createdAt).toLocaleDateString("en-US", { month: "short", year: "numeric" }) : undefined,
+        date: r.createdAt
+          ? new Date(r.createdAt).toLocaleDateString("en-US", { month: "short", year: "numeric" })
+          : undefined,
         content: r.comment || r.review || "",
-      }))
-    : [];
+        source: "direct",
+      });
+    });
+  }
+
+  // 2. Real Google Place reviews
+  if (googleReviewsData && Array.isArray(googleReviewsData.reviews)) {
+    googleReviewsData.reviews.forEach((g: any) => {
+      rawReviews.push({
+        id: g.id,
+        author: g.author_name || "Verified Traveler",
+        avatarUrl: g.profile_photo_url,
+        rating: typeof g.rating === "number" ? g.rating : 5,
+        date: g.relative_time_description,
+        content: g.text || "",
+        source: "google",
+        authorUrl: g.author_url,
+      });
+    });
+  }
 
   const avgRating =
-    rawReviews.length > 0
+    googleReviewsData?.rating ??
+    (rawReviews.length > 0
       ? rawReviews.reduce((sum, r) => sum + r.rating, 0) / rawReviews.length
-      : null;
+      : null);
+
+  const totalReviewCount =
+    googleReviewsData?.userRatingsTotal ?? rawReviews.length;
 
   // Real dining info
   const hasDining = Boolean(
@@ -324,8 +363,11 @@ export function mapPropertyToHotelViewModel(
     },
     reviews: {
       rating: avgRating,
-      reviewCount: rawReviews.length,
+      reviewCount: totalReviewCount,
       reviews: rawReviews,
+      googleRating: googleReviewsData?.rating || null,
+      googleReviewCount: googleReviewsData?.userRatingsTotal || 0,
+      googlePlaceId: property.googlePlaceId || null,
     },
     policies: {
       checkIn: "12:00 PM",

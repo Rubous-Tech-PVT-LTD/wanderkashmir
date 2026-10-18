@@ -7,6 +7,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import HotelDetailView from "@/components/stays/detail/HotelDetailView";
 import { mapPropertyToHotelViewModel } from "@/components/stays/detail/types";
+import { getGooglePlaceReviews } from "@/lib/googleReviews";
 import { JsonLd } from "@/components/JsonLd";
 
 export const revalidate = 60;
@@ -127,8 +128,14 @@ export default async function HotelDetailPage({ params }: HotelDetailPageProps) 
     notFound();
   }
 
+  // Fetch real Google Place reviews if googlePlaceId is configured
+  let googleReviewsData = null;
+  if (property.googlePlaceId) {
+    googleReviewsData = await getGooglePlaceReviews(property.googlePlaceId);
+  }
+
   // Map to strongly typed view model
-  const hotel = mapPropertyToHotelViewModel(property, slug);
+  const hotel = mapPropertyToHotelViewModel(property, slug, googleReviewsData);
 
   const ogImg =
     Array.isArray(property.images) && property.images.length > 0 && typeof property.images[0] === "string" && property.images[0].startsWith("http")
@@ -150,6 +157,15 @@ export default async function HotelDetailPage({ params }: HotelDetailPageProps) 
     ...(ogImg ? { image: ogImg } : {}),
     ...(property.pricePerNight
       ? { priceRange: `₹${Math.round(property.pricePerNight)}` }
+      : {}),
+    ...(hotel?.reviews?.rating && (hotel?.reviews?.reviewCount || 0) > 0
+      ? {
+          aggregateRating: {
+            "@type": "AggregateRating",
+            ratingValue: Number(hotel.reviews.rating.toFixed(1)),
+            reviewCount: hotel.reviews.reviewCount,
+          },
+        }
       : {}),
   };
 

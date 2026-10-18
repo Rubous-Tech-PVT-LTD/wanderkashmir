@@ -2,6 +2,7 @@ import React from "react";
 import { Info, Languages, Sparkles } from "lucide-react";
 import { HotelOverviewInfo } from "./types";
 import { SectionEmptyState } from "./HotelEmptyState";
+import { RichContentRenderer } from "@/components/destinations/RichContentRenderer";
 
 interface HotelOverviewProps {
   hotelName: string;
@@ -24,9 +25,10 @@ export default function HotelOverview({ hotelName, overview }: HotelOverviewProp
 
       <div className="rounded-2xl border border-[var(--season-border,#E5E7EB)] bg-white p-5 sm:p-6 shadow-2xs space-y-5">
         {hasDescription ? (
-          <div className="text-sm text-[var(--season-text,#374151)] leading-relaxed whitespace-pre-line font-sans">
-            {overview.description}
-          </div>
+          <RichContentRenderer
+            content={overview.description}
+            className="prose-sm sm:prose-base max-w-none text-[var(--season-text,#374151)] leading-relaxed prose-headings:font-display prose-headings:font-bold prose-headings:text-slate-900 prose-headings:tracking-tight prose-h3:text-lg prose-h3:mt-6 prose-h3:mb-3 prose-p:my-3 prose-ul:my-3 prose-ul:list-disc prose-ul:pl-5 prose-li:my-1.5 prose-strong:text-slate-900 font-sans"
+          />
         ) : (
           <SectionEmptyState
             icon={Info}

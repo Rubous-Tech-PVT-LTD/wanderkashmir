@@ -213,7 +213,7 @@ export function RichContentRenderer({
     return null;
   }
 
-  const parsedHtml = sanitizeHtml(marked.parse(markdownText) as string);
+  const parsedHtml = sanitizeHtml(marked.parse(markdownText, { breaks: true, gfm: true }) as string);
 
   return (
     <div
@@ -252,7 +252,7 @@ function RichBlockItem({ block }: { block: RichContentNode }) {
 
     case "paragraph": {
       if (!block.text) return null;
-      const parsedParagraph = sanitizeHtml(marked.parse(block.text) as string);
+      const parsedParagraph = sanitizeHtml(marked.parse(block.text, { breaks: true, gfm: true }) as string);
       return (
         <div
           className="font-sans text-inherit leading-relaxed"
