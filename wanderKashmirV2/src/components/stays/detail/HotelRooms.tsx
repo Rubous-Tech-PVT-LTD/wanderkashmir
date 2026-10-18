@@ -7,9 +7,10 @@ import { SectionEmptyState } from "./HotelEmptyState";
 interface HotelRoomsProps {
   hotelName: string;
   rooms: HotelRoomItem[];
+  onSelectRoom?: (roomId: string) => void;
 }
 
-export default function HotelRooms({ hotelName, rooms }: HotelRoomsProps) {
+export default function HotelRooms({ hotelName, rooms, onSelectRoom }: HotelRoomsProps) {
   const hasRooms = rooms && rooms.length > 0;
 
   return (
@@ -31,7 +32,12 @@ export default function HotelRooms({ hotelName, rooms }: HotelRoomsProps) {
       {hasRooms ? (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {rooms.map((room) => (
-            <HotelRoomCard key={room.id} room={room} hotelName={hotelName} />
+            <HotelRoomCard
+              key={room.id}
+              room={room}
+              hotelName={hotelName}
+              onSelectRoom={onSelectRoom}
+            />
           ))}
         </div>
       ) : (

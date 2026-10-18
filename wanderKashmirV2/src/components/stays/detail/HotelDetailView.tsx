@@ -26,6 +26,9 @@ interface HotelDetailViewProps {
 }
 
 export default function HotelDetailView({ hotel, slug }: HotelDetailViewProps) {
+  const [selectedRoomId, setSelectedRoomId] = React.useState<string | null>(null);
+  const [isBookingOpen, setIsBookingOpen] = React.useState(false);
+
   if (!hotel) {
     return <PageHotelEmptyState slug={slug} />;
   }
@@ -75,6 +78,10 @@ export default function HotelDetailView({ hotel, slug }: HotelDetailViewProps) {
         <HotelRooms
           hotelName={hotel.basic.name}
           rooms={hotel.rooms}
+          onSelectRoom={(roomId) => {
+            setSelectedRoomId(roomId);
+            setIsBookingOpen(true);
+          }}
         />
 
         {/* Amenities */}
@@ -128,6 +135,11 @@ export default function HotelDetailView({ hotel, slug }: HotelDetailViewProps) {
           conversion={hotel.conversion}
           hotelName={hotel.basic.name}
           destinationHub={hotel.location.destinationHub}
+          rooms={hotel.rooms}
+          selectedRoomId={selectedRoomId}
+          onSelectRoomId={setSelectedRoomId}
+          isOpen={isBookingOpen}
+          onOpenChange={setIsBookingOpen}
         />
 
         {/* Internal Linking */}

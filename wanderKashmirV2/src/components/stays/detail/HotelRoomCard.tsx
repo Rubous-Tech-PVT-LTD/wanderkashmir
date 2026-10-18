@@ -5,9 +5,10 @@ import { HotelRoomItem } from "./types";
 interface HotelRoomCardProps {
   room: HotelRoomItem;
   hotelName: string;
+  onSelectRoom?: (roomId: string) => void;
 }
 
-export default function HotelRoomCard({ room, hotelName }: HotelRoomCardProps) {
+export default function HotelRoomCard({ room, hotelName, onSelectRoom }: HotelRoomCardProps) {
   return (
     <div className="rounded-2xl border border-[var(--season-border,#E5E7EB)] bg-white p-5 sm:p-6 shadow-2xs hover:border-[var(--season-primary)] transition-all flex flex-col justify-between space-y-4">
       <div className="space-y-3">
@@ -72,14 +73,22 @@ export default function HotelRoomCard({ room, hotelName }: HotelRoomCardProps) {
           </div>
         </div>
 
-        <a
-          href="#booking"
+        <button
+          type="button"
+          onClick={() => {
+            if (onSelectRoom) {
+              onSelectRoom(room.id);
+            } else {
+              const el = document.getElementById("booking");
+              if (el) el.scrollIntoView({ behavior: "smooth" });
+            }
+          }}
           className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold text-white shadow-2xs hover:shadow-xs transition-all cursor-pointer"
           style={{ backgroundColor: "var(--season-primary)" }}
         >
           <span>Select Room</span>
           <ArrowRight className="w-3.5 h-3.5" />
-        </a>
+        </button>
       </div>
     </div>
   );
