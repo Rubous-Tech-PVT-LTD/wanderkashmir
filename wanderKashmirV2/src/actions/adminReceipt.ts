@@ -75,6 +75,95 @@ export async function saveLeadPaymentAction(input: SavePaymentInput): Promise<Mu
   }
 }
 
+import { SeasonId } from "@/lib/theme/seasonalThemes";
+import { getSeasonFromDate } from "@/lib/theme/seasonUtils";
+
+function resolveSeasonFromTravelDates(travelDates?: string | null): SeasonId {
+  if (travelDates) {
+    const s = travelDates.toLowerCase();
+    if (s.includes("mar") || s.includes("apr") || s.includes("may") || s.includes("spring") || s.includes("sonth")) return "spring";
+    if (s.includes("jun") || s.includes("jul") || s.includes("aug") || s.includes("summer") || s.includes("grishm")) return "summer";
+    if (s.includes("sep") || s.includes("oct") || s.includes("nov") || s.includes("autumn") || s.includes("harud") || s.includes("fall")) return "autumn";
+    if (s.includes("dec") || s.includes("jan") || s.includes("feb") || s.includes("winter") || s.includes("wandh")) return "winter";
+  }
+  return getSeasonFromDate(new Date());
+}
+
+const EMAIL_SEASON_STYLES: Record<
+  SeasonId,
+  {
+    headerBg: string;
+    badgeBg: string;
+    subtextColor: string;
+    sectionTitleColor: string;
+    paymentBoxBg: string;
+    paymentBoxBorder: string;
+    payTotalColor: string;
+    advanceColor: string;
+    stampBg: string;
+    stampBorder: string;
+    stampText: string;
+    footerLinkColor: string;
+  }
+> = {
+  autumn: {
+    headerBg: "#3b1111",
+    badgeBg: "#b91c1c",
+    subtextColor: "#fef3c7",
+    sectionTitleColor: "#991b1b",
+    paymentBoxBg: "#fffbeb",
+    paymentBoxBorder: "#fde68a",
+    payTotalColor: "#7f1d1d",
+    advanceColor: "#c2410c",
+    stampBg: "#fff7ed",
+    stampBorder: "#fed7aa",
+    stampText: "#c2410c",
+    footerLinkColor: "#fbbf24",
+  },
+  spring: {
+    headerBg: "#42122b",
+    badgeBg: "#db2777",
+    subtextColor: "#fce7f3",
+    sectionTitleColor: "#9d174d",
+    paymentBoxBg: "#fdf2f8",
+    paymentBoxBorder: "#fbcfe8",
+    payTotalColor: "#831843",
+    advanceColor: "#be185d",
+    stampBg: "#fdf2f8",
+    stampBorder: "#fbcfe8",
+    stampText: "#be185d",
+    footerLinkColor: "#f472b6",
+  },
+  summer: {
+    headerBg: "#064e3b",
+    badgeBg: "#059669",
+    subtextColor: "#d1fae5",
+    sectionTitleColor: "#047857",
+    paymentBoxBg: "#f0fdf4",
+    paymentBoxBorder: "#bbf7d0",
+    payTotalColor: "#064e3b",
+    advanceColor: "#059669",
+    stampBg: "#ecfdf5",
+    stampBorder: "#a7f3d0",
+    stampText: "#059669",
+    footerLinkColor: "#34d399",
+  },
+  winter: {
+    headerBg: "#0f2d47",
+    badgeBg: "#0284c7",
+    subtextColor: "#e0f2fe",
+    sectionTitleColor: "#0369a1",
+    paymentBoxBg: "#f0f9ff",
+    paymentBoxBorder: "#bae6fd",
+    payTotalColor: "#0c4a6e",
+    advanceColor: "#0284c7",
+    stampBg: "#f0f9ff",
+    stampBorder: "#bae6fd",
+    stampText: "#0284c7",
+    footerLinkColor: "#38bdf8",
+  },
+};
+
 export interface SendReceiptEmailInput {
   leadId: string;
   customerEmail: string;
@@ -82,6 +171,7 @@ export interface SendReceiptEmailInput {
   advanceAmount: number;
   balanceAmount: number;
   paymentMethod?: string;
+  season?: string;
 }
 
 /**
@@ -112,6 +202,13 @@ export async function sendLeadReceiptEmailAction(input: SendReceiptEmailInput): 
       ? lead.destinations.join(" • ")
       : "";
 
+    const validSeasons: SeasonId[] = ["spring", "summer", "autumn", "winter"];
+    const seasonKey: SeasonId = input.season && validSeasons.includes(input.season as SeasonId)
+      ? (input.season as SeasonId)
+      : resolveSeasonFromTravelDates(lead.travelDates);
+
+    const sStyle = EMAIL_SEASON_STYLES[seasonKey] || EMAIL_SEASON_STYLES.autumn;
+
     const emailHtml = `
       <!DOCTYPE html>
       <html>
@@ -122,26 +219,26 @@ export async function sendLeadReceiptEmailAction(input: SendReceiptEmailInput): 
         <style>
           body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f8fafc; margin: 0; padding: 20px; color: #1e293b; }
           .container { max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 16px; overflow: hidden; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
-          .header { background: #064e3b; padding: 32px 24px; text-align: center; color: #ffffff; }
-          .header h1 { margin: 0 0 6px; font-size: 24px; font-weight: 800; letter-spacing: -0.5px; color: #ecfdf5; }
-          .header p { margin: 0; font-size: 13px; color: #a7f3d0; text-transform: uppercase; letter-spacing: 1px; font-weight: 600; }
+          .header { background: ${sStyle.headerBg}; padding: 32px 24px; text-align: center; color: #ffffff; }
+          .header h1 { margin: 0 0 6px; font-size: 24px; font-weight: 800; letter-spacing: -0.5px; color: #ffffff; }
+          .header p { margin: 0; font-size: 13px; color: ${sStyle.subtextColor}; text-transform: uppercase; letter-spacing: 1px; font-weight: 600; }
           .badge-row { text-align: center; margin-top: -16px; }
-          .badge { display: inline-block; background: #059669; color: #ffffff; font-size: 11px; font-weight: 700; padding: 6px 14px; rounded-full; border-radius: 20px; text-transform: uppercase; letter-spacing: 1px; border: 2px solid #ffffff; }
+          .badge { display: inline-block; background: ${sStyle.badgeBg}; color: #ffffff; font-size: 11px; font-weight: 700; padding: 6px 14px; border-radius: 20px; text-transform: uppercase; letter-spacing: 1px; border: 2px solid #ffffff; }
           .content { padding: 32px 24px; }
-          .section-title { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: #047857; margin-bottom: 12px; }
+          .section-title { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: ${sStyle.sectionTitleColor}; margin-bottom: 12px; }
           .card { background: #f8fafc; border-radius: 12px; padding: 16px; border: 1px solid #f1f5f9; margin-bottom: 24px; }
           .row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px dashed #e2e8f0; font-size: 13px; }
           .row:last-child { border-bottom: none; }
           .label { color: #64748b; font-weight: 500; }
           .val { color: #0f172a; font-weight: 600; text-align: right; }
-          .payment-box { background: #f0fdf4; border: 1.5px solid #bbf7d0; border-radius: 12px; padding: 18px; margin-bottom: 24px; }
+          .payment-box { background: ${sStyle.paymentBoxBg}; border: 1.5px solid ${sStyle.paymentBoxBorder}; border-radius: 12px; padding: 18px; margin-bottom: 24px; }
           .pay-row { display: flex; justify-content: space-between; padding: 6px 0; font-size: 14px; }
-          .pay-total { font-size: 16px; font-weight: 800; color: #064e3b; border-bottom: 1px solid #bbf7d0; padding-bottom: 8px; margin-bottom: 8px; }
-          .pay-advance { color: #059669; font-weight: 700; }
+          .pay-total { font-size: 16px; font-weight: 800; color: ${sStyle.payTotalColor}; border-bottom: 1px solid ${sStyle.paymentBoxBorder}; padding-bottom: 8px; margin-bottom: 8px; }
+          .pay-advance { color: ${sStyle.advanceColor}; font-weight: 700; }
           .pay-balance { color: #b45309; font-weight: 800; font-size: 15px; border-top: 1px dashed #cbd5e1; padding-top: 8px; margin-top: 6px; }
           .footer { background: #0f172a; padding: 24px; text-align: center; color: #94a3b8; font-size: 12px; line-height: 1.6; }
-          .footer a { color: #34d399; text-decoration: none; font-weight: 600; }
-          .stamp { text-align: center; font-size: 11px; color: #059669; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-top: 16px; padding: 8px; background: #ecfdf5; border-radius: 8px; border: 1px solid #a7f3d0; }
+          .footer a { color: ${sStyle.footerLinkColor}; text-decoration: none; font-weight: 600; }
+          .stamp { text-align: center; font-size: 11px; color: ${sStyle.stampText}; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-top: 16px; padding: 8px; background: ${sStyle.stampBg}; border-radius: 8px; border: 1px solid ${sStyle.stampBorder}; }
         </style>
       </head>
       <body>
@@ -149,7 +246,7 @@ export async function sendLeadReceiptEmailAction(input: SendReceiptEmailInput): 
           <div class="header">
             <p>Official Travel Voucher & Receipt</p>
             <h1>WanderKashmir</h1>
-            <div style="font-size: 12px; color: #d1fae5; margin-top: 4px;">Srinagar, Jammu & Kashmir • Direct Local Operations</div>
+            <div style="font-size: 12px; color: ${sStyle.subtextColor}; margin-top: 4px;">Srinagar, Jammu & Kashmir • Direct Local Operations</div>
           </div>
           
           <div class="badge-row">

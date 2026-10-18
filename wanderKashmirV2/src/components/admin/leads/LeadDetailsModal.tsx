@@ -34,6 +34,7 @@ import {
 } from "@/actions/adminLeads";
 import { saveLeadPaymentAction, sendLeadReceiptEmailAction } from "@/actions/adminReceipt";
 import { useRouter } from "next/navigation";
+import { useSeasonalTheme } from "@/lib/theme/themeProvider";
 
 interface LeadDetailsModalProps {
   lead: AdminLeadItem | null;
@@ -104,6 +105,7 @@ function parseDatesAndDuration(raw: string | null | undefined): { date: string; 
 
 export default function LeadDetailsModal({ lead, isOpen, onClose }: LeadDetailsModalProps) {
   const router = useRouter();
+  const { selectedSeason } = useSeasonalTheme();
   const [currentStatus, setCurrentStatus] = useState<string>(lead?.status || "PENDING");
   const [adminNotes, setAdminNotes] = useState<string>(lead?.adminNotes || "");
   const [totalCost, setTotalCost] = useState<string>("10000");
@@ -284,6 +286,7 @@ export default function LeadDetailsModal({ lead, isOpen, onClose }: LeadDetailsM
         totalAmount: totalNum,
         advanceAmount: advanceNum,
         balanceAmount: balanceDue,
+        season: selectedSeason,
       });
 
       if (res.success) {
@@ -924,7 +927,7 @@ export default function LeadDetailsModal({ lead, isOpen, onClose }: LeadDetailsM
             {/* Save & Print Actions */}
             <div className="pt-2 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2 border-t border-slate-800">
               <a
-                href={`/admin/leads/${lead.id}/receipt?total=${totalCost}&advance=${advancePaid}&hotel=${encodeURIComponent(hotelType)}&cab=${encodeURIComponent(cabType)}&exp=${encodeURIComponent(experiences)}&inc=${encodeURIComponent(customInclusions)}&route=${encodeURIComponent(destinations.join(" • "))}`}
+                href={`/admin/leads/${lead.id}/receipt?total=${totalCost}&advance=${advancePaid}&hotel=${encodeURIComponent(hotelType)}&cab=${encodeURIComponent(cabType)}&exp=${encodeURIComponent(experiences)}&inc=${encodeURIComponent(customInclusions)}&route=${encodeURIComponent(destinations.join(" • "))}&season=${selectedSeason}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center justify-center gap-1.5 py-2 px-3.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-emerald-300 text-xs font-bold transition active:scale-95"

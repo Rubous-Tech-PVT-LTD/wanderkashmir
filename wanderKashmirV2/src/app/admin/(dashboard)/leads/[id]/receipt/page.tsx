@@ -1,10 +1,205 @@
 import { getAdminLeadById } from "@/lib/admin/data";
 import { notFound } from "next/navigation";
-import Link from "next/link";
-import { ArrowLeft, Printer, ShieldCheck, Phone, Mail, MapPin } from "lucide-react";
-import PrintButton from "./PrintButton";
+import { ShieldCheck } from "lucide-react";
+import VoucherToolbar from "./VoucherToolbar";
+import { SeasonId } from "@/lib/theme/seasonalThemes";
+import { getSeasonFromDate } from "@/lib/theme/seasonUtils";
 
 export const revalidate = 0;
+
+interface VoucherSeasonTheme {
+  id: SeasonId;
+  name: string;
+  kashmiriName: string;
+  tagline: string;
+  headerBg: string;
+  headerBorder: string;
+  headerBadgeBg: string;
+  headerBadgeBorder: string;
+  headerBadgeText: string;
+  headerSubtext: string;
+  headerMetaAccent: string;
+  sectionTitleText: string;
+  sectionBorder: string;
+  accentText: string;
+  tableBorder: string;
+  tableHeadBg: string;
+  tableHeadText: string;
+  advanceRowBg: string;
+  advanceRowText: string;
+  advanceAmountText: string;
+  advanceShieldColor: string;
+  arrivalRowBg: string;
+  arrivalRowText: string;
+  arrivalAmountText: string;
+  arrivalBorder: string;
+  instructionsBg: string;
+  instructionsBorder: string;
+  verifiedBadgeBg: string;
+  verifiedBadgeBorder: string;
+  verifiedBadgeText: string;
+  verifiedShieldColor: string;
+}
+
+const VOUCHER_SEASON_THEMES: Record<SeasonId, VoucherSeasonTheme> = {
+  autumn: {
+    id: "autumn",
+    name: "Autumn",
+    kashmiriName: "Harud",
+    tagline: "Chinar Rust & Saffron Gold",
+    headerBg: "bg-gradient-to-r from-[#2a0e0e] via-[#3d1313] to-[#4f1616]",
+    headerBorder: "border-[#D62828]",
+    headerBadgeBg: "bg-red-950/80",
+    headerBadgeBorder: "border-red-600/50",
+    headerBadgeText: "text-amber-200",
+    headerSubtext: "text-amber-100/90",
+    headerMetaAccent: "text-amber-300",
+    sectionTitleText: "text-[#991B1B]",
+    sectionBorder: "border-amber-200/80",
+    accentText: "text-[#C2410C]",
+    tableBorder: "border-amber-300/80",
+    tableHeadBg: "bg-[#7F1D1D]",
+    tableHeadText: "text-white",
+    advanceRowBg: "bg-amber-50/70",
+    advanceRowText: "text-amber-950",
+    advanceAmountText: "text-[#B45309]",
+    advanceShieldColor: "text-[#EA580C]",
+    arrivalRowBg: "bg-orange-50/90",
+    arrivalRowText: "text-orange-950",
+    arrivalAmountText: "text-[#9A3412]",
+    arrivalBorder: "border-orange-300",
+    instructionsBg: "bg-orange-50/40",
+    instructionsBorder: "border-orange-200/70",
+    verifiedBadgeBg: "bg-orange-100",
+    verifiedBadgeBorder: "border-orange-300",
+    verifiedBadgeText: "text-orange-900",
+    verifiedShieldColor: "text-[#EA580C]",
+  },
+  spring: {
+    id: "spring",
+    name: "Spring",
+    kashmiriName: "Sonth",
+    tagline: "Tulip Pink & Almond Blooms",
+    headerBg: "bg-gradient-to-r from-[#290d1c] via-[#3b1227] to-[#4c1633]",
+    headerBorder: "border-[#D91E63]",
+    headerBadgeBg: "bg-pink-950/80",
+    headerBadgeBorder: "border-pink-600/50",
+    headerBadgeText: "text-pink-200",
+    headerSubtext: "text-pink-100/90",
+    headerMetaAccent: "text-pink-300",
+    sectionTitleText: "text-[#9D174D]",
+    sectionBorder: "border-pink-200/80",
+    accentText: "text-[#D91E63]",
+    tableBorder: "border-pink-300/80",
+    tableHeadBg: "bg-[#831843]",
+    tableHeadText: "text-white",
+    advanceRowBg: "bg-pink-50/70",
+    advanceRowText: "text-pink-950",
+    advanceAmountText: "text-[#BE185D]",
+    advanceShieldColor: "text-[#D91E63]",
+    arrivalRowBg: "bg-rose-50/90",
+    arrivalRowText: "text-rose-950",
+    arrivalAmountText: "text-[#9F1239]",
+    arrivalBorder: "border-rose-300",
+    instructionsBg: "bg-pink-50/40",
+    instructionsBorder: "border-pink-200/70",
+    verifiedBadgeBg: "bg-pink-100",
+    verifiedBadgeBorder: "border-pink-300",
+    verifiedBadgeText: "text-pink-900",
+    verifiedShieldColor: "text-[#D91E63]",
+  },
+  summer: {
+    id: "summer",
+    name: "Summer",
+    kashmiriName: "Grishm",
+    tagline: "Pine Green & Dal Lake Blue",
+    headerBg: "bg-gradient-to-r from-[#064e3b] via-[#094132] to-[#0d3b2f]",
+    headerBorder: "border-[#10B981]",
+    headerBadgeBg: "bg-emerald-950/80",
+    headerBadgeBorder: "border-emerald-600/50",
+    headerBadgeText: "text-emerald-200",
+    headerSubtext: "text-emerald-100/90",
+    headerMetaAccent: "text-emerald-300",
+    sectionTitleText: "text-[#065F46]",
+    sectionBorder: "border-emerald-200/80",
+    accentText: "text-[#047857]",
+    tableBorder: "border-emerald-300/80",
+    tableHeadBg: "bg-[#064E3B]",
+    tableHeadText: "text-white",
+    advanceRowBg: "bg-emerald-50/70",
+    advanceRowText: "text-emerald-950",
+    advanceAmountText: "text-[#047857]",
+    advanceShieldColor: "text-[#059669]",
+    arrivalRowBg: "bg-amber-50/90",
+    arrivalRowText: "text-amber-950",
+    arrivalAmountText: "text-[#92400E]",
+    arrivalBorder: "border-amber-300",
+    instructionsBg: "bg-emerald-50/40",
+    instructionsBorder: "border-emerald-200/70",
+    verifiedBadgeBg: "bg-emerald-100",
+    verifiedBadgeBorder: "border-emerald-300",
+    verifiedBadgeText: "text-emerald-900",
+    verifiedShieldColor: "text-[#059669]",
+  },
+  winter: {
+    id: "winter",
+    name: "Winter",
+    kashmiriName: "Wandh",
+    tagline: "Glacier Cyan & Alpine Mountain Slate",
+    headerBg: "bg-gradient-to-r from-[#091b2b] via-[#0f2d47] to-[#143b5c]",
+    headerBorder: "border-[#00B4D8]",
+    headerBadgeBg: "bg-sky-950/80",
+    headerBadgeBorder: "border-sky-600/50",
+    headerBadgeText: "text-sky-200",
+    headerSubtext: "text-sky-100/90",
+    headerMetaAccent: "text-sky-300",
+    sectionTitleText: "text-[#0369A1]",
+    sectionBorder: "border-sky-200/80",
+    accentText: "text-[#0284C7]",
+    tableBorder: "border-sky-300/80",
+    tableHeadBg: "bg-[#0C4A6E]",
+    tableHeadText: "text-white",
+    advanceRowBg: "bg-sky-50/70",
+    advanceRowText: "text-sky-950",
+    advanceAmountText: "text-[#0284C7]",
+    advanceShieldColor: "text-[#00B4D8]",
+    arrivalRowBg: "bg-slate-100/90",
+    arrivalRowText: "text-slate-950",
+    arrivalAmountText: "text-[#1E293B]",
+    arrivalBorder: "border-slate-300",
+    instructionsBg: "bg-sky-50/40",
+    instructionsBorder: "border-sky-200/70",
+    verifiedBadgeBg: "bg-sky-100",
+    verifiedBadgeBorder: "border-sky-300",
+    verifiedBadgeText: "text-sky-900",
+    verifiedShieldColor: "text-[#00B4D8]",
+  },
+};
+
+function resolveSeason(seasonParam?: string, travelDates?: string | null): SeasonId {
+  const validSeasons: SeasonId[] = ["spring", "summer", "autumn", "winter"];
+  if (seasonParam && validSeasons.includes(seasonParam.toLowerCase() as SeasonId)) {
+    return seasonParam.toLowerCase() as SeasonId;
+  }
+
+  if (travelDates) {
+    const s = travelDates.toLowerCase();
+    if (s.includes("mar") || s.includes("apr") || s.includes("may") || s.includes("spring") || s.includes("sonth")) {
+      return "spring";
+    }
+    if (s.includes("jun") || s.includes("jul") || s.includes("aug") || s.includes("summer") || s.includes("grishm")) {
+      return "summer";
+    }
+    if (s.includes("sep") || s.includes("oct") || s.includes("nov") || s.includes("autumn") || s.includes("harud") || s.includes("fall")) {
+      return "autumn";
+    }
+    if (s.includes("dec") || s.includes("jan") || s.includes("feb") || s.includes("winter") || s.includes("wandh")) {
+      return "winter";
+    }
+  }
+
+  return getSeasonFromDate(new Date());
+}
 
 export default async function LeadReceiptPage({
   params,
@@ -19,6 +214,7 @@ export default async function LeadReceiptPage({
     route?: string;
     exp?: string;
     inc?: string;
+    season?: string;
   }>;
 }) {
   const { id } = await params;
@@ -111,46 +307,39 @@ export default async function LeadReceiptPage({
     return { date: raw || "Upcoming", duration: "5D/4N" };
   })();
 
+  const activeSeason = resolveSeason(sParams.season, lead.travelDates);
+  const voucherTheme = VOUCHER_SEASON_THEMES[activeSeason] || VOUCHER_SEASON_THEMES.autumn;
+
   return (
     <div className="min-h-screen bg-slate-950 py-8 px-4 sm:px-6">
-      {/* Top Floating Action Bar (Hidden when printing) */}
-      <div className="max-w-3xl mx-auto mb-6 flex items-center justify-between print:hidden">
-        <Link
-          href="/admin/leads"
-          className="inline-flex items-center gap-1.5 text-xs text-slate-400 hover:text-white transition-colors"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          <span>Back to Leads</span>
-        </Link>
-
-        <div className="flex items-center gap-2">
-          <PrintButton />
-        </div>
-      </div>
+      {/* Top Floating Action Bar with Season Switcher & Print Button (Hidden when printing) */}
+      <VoucherToolbar activeSeason={activeSeason} />
 
       {/* Luxury Printable Voucher Card (A4 Aspect Ratio Optimized) */}
       <div
         id="printable-voucher"
         className="max-w-3xl mx-auto bg-white text-slate-900 rounded-2xl shadow-2xl overflow-hidden border border-slate-200 print:shadow-none print:border-none print:rounded-none print:p-0 print:m-0"
       >
-        {/* Header Ribbon */}
-        <div className="bg-[#064e3b] text-white p-6 sm:p-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b-4 border-emerald-500">
+        {/* Header Ribbon with Dynamic Seasonal Palette */}
+        <div className={`${voucherTheme.headerBg} text-white p-6 sm:p-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b-4 ${voucherTheme.headerBorder}`}>
           <div>
-            <div className="inline-block px-2.5 py-0.5 rounded-full bg-emerald-800/80 text-[10px] font-bold tracking-widest uppercase text-emerald-200 mb-2 border border-emerald-600/40">
-              Official Booking Voucher
+            <div className={`inline-block px-2.5 py-0.5 rounded-full ${voucherTheme.headerBadgeBg} text-[10px] font-bold tracking-widest uppercase ${voucherTheme.headerBadgeText} mb-2 border ${voucherTheme.headerBadgeBorder}`}>
+              Official Booking Voucher • {voucherTheme.name} ({voucherTheme.kashmiriName})
             </div>
             <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white font-serif">
               WanderKashmir
             </h1>
-            <p className="text-xs text-emerald-200 font-medium mt-0.5">
-              Curated Local Kashmir Tour Packages & Stays
+            <p className={`text-xs ${voucherTheme.headerSubtext} font-medium mt-0.5`}>
+              Curated Local Kashmir Tour Packages & Stays • {voucherTheme.tagline}
             </p>
           </div>
 
-          <div className="text-left sm:text-right text-xs text-emerald-100 space-y-1 font-mono">
+          <div className={`text-left sm:text-right text-xs ${voucherTheme.headerSubtext} space-y-1 font-mono`}>
             <div><strong className="text-white">Ref ID:</strong> {refId}</div>
             <div><strong>Date:</strong> {new Date().toLocaleDateString("en-IN", { dateStyle: "long" })}</div>
-            <div className="text-[11px] text-emerald-300">Status: CONFIRMED & LOCKED</div>
+            <div className={`text-[11px] font-bold ${voucherTheme.headerMetaAccent}`}>
+              Status: CONFIRMED & LOCKED
+            </div>
           </div>
         </div>
 
@@ -158,7 +347,7 @@ export default async function LeadReceiptPage({
         <div className="p-6 sm:p-8 space-y-6">
           {/* Guest & Trip Summary */}
           <div>
-            <h3 className="text-xs font-bold uppercase tracking-wider text-emerald-800 border-b border-slate-200 pb-1.5 mb-3">
+            <h3 className={`text-xs font-bold uppercase tracking-wider ${voucherTheme.sectionTitleText} border-b ${voucherTheme.sectionBorder} pb-1.5 mb-3`}>
               1. Guest & Travel Details
             </h3>
             <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 text-xs">
@@ -176,7 +365,7 @@ export default async function LeadReceiptPage({
               </div>
               <div>
                 <span className="text-slate-500 block">Duration</span>
-                <strong className="text-emerald-700 font-bold">{datesParsed.duration}</strong>
+                <strong className={`${voucherTheme.accentText} font-bold`}>{datesParsed.duration}</strong>
               </div>
               <div>
                 <span className="text-slate-500 block">No. of Guests</span>
@@ -188,14 +377,14 @@ export default async function LeadReceiptPage({
           {/* Dynamic Itinerary & Ground Logistics (Only shows non-empty fields) */}
           {logisticsItems.length > 0 && (
             <div>
-              <h3 className="text-xs font-bold uppercase tracking-wider text-emerald-800 border-b border-slate-200 pb-1.5 mb-3">
+              <h3 className={`text-xs font-bold uppercase tracking-wider ${voucherTheme.sectionTitleText} border-b ${voucherTheme.sectionBorder} pb-1.5 mb-3`}>
                 2. Itinerary & Ground Logistics
               </h3>
               <div className="bg-slate-50 rounded-xl p-4 border border-slate-200/80 space-y-2.5 text-xs">
                 {logisticsItems.map((item, idx) => (
                   <div key={idx} className="flex justify-between items-start gap-4">
                     <span className="text-slate-600 shrink-0 font-medium">{item.label}:</span>
-                    <strong className={`text-right ${item.highlight ? "text-emerald-700" : "text-slate-900"}`}>
+                    <strong className={`text-right ${item.highlight ? voucherTheme.accentText : "text-slate-900"}`}>
                       {item.value}
                     </strong>
                   </div>
@@ -206,44 +395,44 @@ export default async function LeadReceiptPage({
 
           {/* Financial Breakdown Table */}
           <div>
-            <h3 className="text-xs font-bold uppercase tracking-wider text-emerald-800 border-b border-slate-200 pb-1.5 mb-3">
+            <h3 className={`text-xs font-bold uppercase tracking-wider ${voucherTheme.sectionTitleText} border-b ${voucherTheme.sectionBorder} pb-1.5 mb-3`}>
               3. Official Payment & Advance Receipt
             </h3>
-            <div className="rounded-xl border-2 border-emerald-200 overflow-hidden bg-emerald-50/40">
+            <div className={`rounded-xl border-2 ${voucherTheme.tableBorder} overflow-hidden ${voucherTheme.advanceRowBg}`}>
               <table className="w-full text-xs">
                 <thead>
-                  <tr className="bg-emerald-900 text-white font-semibold text-left">
+                  <tr className={`${voucherTheme.tableHeadBg} text-white font-semibold text-left`}>
                     <th className="p-3">Payment Component</th>
                     <th className="p-3">Details / Terms</th>
                     <th className="p-3 text-right">Amount (INR)</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-emerald-200/80 text-slate-800">
-                  <tr>
+                <tbody className={`divide-y ${voucherTheme.tableBorder} text-slate-800`}>
+                  <tr className="bg-white">
                     <td className="p-3 font-medium">Total Package Value</td>
                     <td className="p-3 text-slate-600">Inclusive of stays, private transport & assistance</td>
                     <td className="p-3 text-right font-bold text-slate-900">
                       ₹{totalAmount.toLocaleString("en-IN")}
                     </td>
                   </tr>
-                  <tr className="bg-emerald-100/60 font-semibold text-emerald-950">
+                  <tr className={`${voucherTheme.advanceRowBg} font-semibold ${voucherTheme.advanceRowText}`}>
                     <td className="p-3 flex items-center gap-1.5">
-                      <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
+                      <ShieldCheck className={`w-4 h-4 ${voucherTheme.advanceShieldColor} shrink-0`} />
                       <span>Advance Received</span>
                     </td>
-                    <td className="p-3 text-emerald-800">
+                    <td className="p-3 text-slate-700">
                       Booking locked & vehicle/hotel reserved
                     </td>
-                    <td className="p-3 text-right text-emerald-800 font-extrabold text-sm">
+                    <td className={`p-3 text-right ${voucherTheme.advanceAmountText} font-extrabold text-sm`}>
                       ₹{advanceAmount.toLocaleString("en-IN")} (PAID)
                     </td>
                   </tr>
-                  <tr className="bg-amber-50/80 text-amber-950 font-bold border-t-2 border-amber-300">
+                  <tr className={`${voucherTheme.arrivalRowBg} ${voucherTheme.arrivalRowText} font-bold border-t-2 ${voucherTheme.arrivalBorder}`}>
                     <td className="p-3">Balance to Pay on Arrival</td>
-                    <td className="p-3 text-amber-800 font-normal">
+                    <td className="p-3 text-slate-700 font-normal">
                       Payable at Srinagar arrival (cash or UPI to driver/hotel)
                     </td>
-                    <td className="p-3 text-right text-amber-900 font-extrabold text-sm">
+                    <td className={`p-3 text-right ${voucherTheme.arrivalAmountText} font-extrabold text-sm`}>
                       ₹{balanceAmount.toLocaleString("en-IN")}
                     </td>
                   </tr>
@@ -253,8 +442,8 @@ export default async function LeadReceiptPage({
           </div>
 
           {/* Inclusions & General Instructions */}
-          <div className="text-[11px] text-slate-500 space-y-1.5 bg-slate-50 p-4 rounded-xl border border-slate-200 leading-relaxed">
-            <div className="font-bold text-slate-700 uppercase tracking-wider text-[10px] mb-1">
+          <div className={`text-[11px] text-slate-600 space-y-1.5 ${voucherTheme.instructionsBg} p-4 rounded-xl border ${voucherTheme.instructionsBorder} leading-relaxed`}>
+            <div className="font-bold text-slate-800 uppercase tracking-wider text-[10px] mb-1">
               Important Ground Instructions:
             </div>
             <div>• Dedicated private driver details and cab registration number will be shared 24 hours prior to travel.</div>
@@ -265,8 +454,8 @@ export default async function LeadReceiptPage({
           {/* Verification Stamp & Sign */}
           <div className="pt-4 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="text-center sm:text-left">
-              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-md bg-emerald-100 text-emerald-800 font-bold text-[11px] uppercase tracking-wider border border-emerald-300">
-                <ShieldCheck className="w-4 h-4" />
+              <div className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-md ${voucherTheme.verifiedBadgeBg} ${voucherTheme.verifiedBadgeText} font-bold text-[11px] uppercase tracking-wider border ${voucherTheme.verifiedBadgeBorder}`}>
+                <ShieldCheck className={`w-4 h-4 ${voucherTheme.verifiedShieldColor}`} />
                 <span>Verified Local Srinagar Booking</span>
               </div>
               <div className="text-[10px] text-slate-400 mt-1">
