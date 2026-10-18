@@ -154,12 +154,9 @@ export default function AboutPage() {
             sizes="100vw"
             className="object-cover object-center"
           />
-          {/* Refined gradient scrim for optimal contrast & editorial warmth */}
-          <div className="absolute inset-0 bg-slate-950/70 bg-gradient-to-t from-slate-950 via-slate-900/60 to-slate-950/40" />
-
-          <div className="relative z-10 w-full max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-white">
+          <div className="relative z-10 w-full max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-white [text-shadow:0_2px_14px_rgba(0,0,0,0.85)]">
             {/* Seasonal Eyebrow Pill */}
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs sm:text-sm font-semibold tracking-wide uppercase bg-white/10 backdrop-blur-md border border-white/20 text-white mb-6">
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs sm:text-sm font-semibold tracking-wide uppercase bg-black/40 backdrop-blur-md border border-white/30 text-white mb-6 shadow-md">
               <span
                 className="w-2 h-2 rounded-full animate-pulse"
                 style={{ backgroundColor: "var(--season-secondary, #F4A261)" }}
@@ -168,7 +165,7 @@ export default function AboutPage() {
             </div>
 
             {/* Main Single H1 */}
-            <h1 className="font-display font-extrabold text-3xl sm:text-4xl md:text-5xl lg:text-6xl tracking-tight text-white max-w-4xl mx-auto leading-tight sm:leading-tight md:leading-tight">
+            <h1 className="font-display font-extrabold text-3xl sm:text-4xl md:text-5xl lg:text-6xl tracking-tight text-white max-w-4xl mx-auto leading-tight sm:leading-tight md:leading-tight drop-shadow-md">
               Discover Kashmir. Connect Locally.{" "}
               <span
                 className="block sm:inline"
@@ -178,9 +175,9 @@ export default function AboutPage() {
               </span>
             </h1>
 
-            <p className="mt-6 text-base sm:text-lg md:text-xl text-slate-200 max-w-3xl mx-auto font-light leading-relaxed">
+            <p className="mt-6 text-base sm:text-lg md:text-xl text-white max-w-3xl mx-auto font-normal leading-relaxed drop-shadow-md">
               WanderKashmir is the curated travel marketplace operated by{" "}
-              <strong className="font-semibold text-white">
+              <strong className="font-bold text-white underline decoration-[var(--season-secondary)] decoration-2 underline-offset-4">
                 GTM Adventures LLP
               </strong>
               , connecting travellers worldwide directly with verified Kashmir
@@ -189,19 +186,19 @@ export default function AboutPage() {
             </p>
 
             {/* Quick Stat Badges */}
-            <div className="mt-8 flex flex-wrap items-center justify-center gap-3 sm:gap-4 text-xs sm:text-sm font-medium text-slate-200">
-              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/10 backdrop-blur-xs border border-white/10">
+            <div className="mt-8 flex flex-wrap items-center justify-center gap-3 sm:gap-4 text-xs sm:text-sm font-semibold text-white">
+              <span className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-black/45 backdrop-blur-md border border-white/25 shadow-md">
                 <ShieldCheck className="w-4 h-4 text-emerald-400" />
                 Operated by GTM Adventures LLP
               </span>
-              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/10 backdrop-blur-xs border border-white/10">
+              <span className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-black/45 backdrop-blur-md border border-white/25 shadow-md">
                 <MapPin
                   className="w-4 h-4"
                   style={{ color: "var(--season-secondary, #F4A261)" }}
                 />
                 On-Ground Team in Anantnag, Kashmir
               </span>
-              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/10 backdrop-blur-xs border border-white/10">
+              <span className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-black/45 backdrop-blur-md border border-white/25 shadow-md">
                 <FileText className="w-4 h-4 text-sky-400" />
                 LLPIN: ACU-5017
               </span>
