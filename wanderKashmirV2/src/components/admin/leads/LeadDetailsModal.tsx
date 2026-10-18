@@ -23,6 +23,7 @@ import {
   CalendarDays,
   Printer,
   FileCheck,
+  Sparkles,
 } from "lucide-react";
 import { AdminLeadItem } from "@/lib/admin/data";
 import {
@@ -56,6 +57,40 @@ function getStatusLabel(st: string): string {
   return st;
 }
 
+function parseDatesAndDuration(raw: string | null | undefined): { date: string; duration: string } {
+  if (!raw) return { date: "", duration: "5D/4N" };
+  const s = raw.trim();
+
+  // If separated by bullet or pipe
+  if (s.includes("•") || s.includes("|")) {
+    const parts = s.split(/[•|]/).map((p) => p.trim()).filter(Boolean);
+    const durationPart = parts.find((p) => /\b\d+D\/?\d*N?\b/i.test(p));
+    const datePart = parts.find((p) => p !== durationPart);
+    return {
+      duration: durationPart || "5D/4N",
+      date: datePart || "",
+    };
+  }
+
+  // If contains a duration pattern like 5D/4N or 6D/5N
+  const durMatch = s.match(/\b\d+D\/?\d*N?\b/i);
+  if (durMatch) {
+    const dur = durMatch[0];
+    const remaining = s.replace(dur, "").replace(/[(),-]/g, "").trim();
+    return {
+      duration: dur,
+      date: remaining,
+    };
+  }
+
+  // If it contains "day" / "night"
+  if (/\b\d+\s*days?\b/i.test(s)) {
+    return { duration: s, date: "" };
+  }
+
+  return { date: s, duration: "5D/4N" };
+}
+
 export default function LeadDetailsModal({ lead, isOpen, onClose }: LeadDetailsModalProps) {
   const router = useRouter();
   const [currentStatus, setCurrentStatus] = useState<string>(lead?.status || "PENDING");
@@ -64,11 +99,14 @@ export default function LeadDetailsModal({ lead, isOpen, onClose }: LeadDetailsM
   const [advancePaid, setAdvancePaid] = useState<string>("3000");
   const [customerEmail, setCustomerEmail] = useState<string>(lead?.email || "");
 
-  // Editable Requirement Fields
-  const [travelDates, setTravelDates] = useState<string>(lead?.travelDates || "");
+  // Separated & Editable Requirement Fields
+  const [travelDate, setTravelDate] = useState<string>("");
+  const [duration, setDuration] = useState<string>("5D/4N");
   const [guestsCount, setGuestsCount] = useState<string>(lead?.guestsCount || "");
   const [hotelType, setHotelType] = useState<string>(lead?.hotelType || "");
   const [cabType, setCabType] = useState<string>(lead?.cabType || "");
+  const [experiences, setExperiences] = useState<string>("");
+  const [customInclusions, setCustomInclusions] = useState<string>("");
 
   const [isUpdating, setIsUpdating] = useState(false);
   const [isSavingDetails, setIsSavingDetails] = useState(false);
@@ -83,7 +121,11 @@ export default function LeadDetailsModal({ lead, isOpen, onClose }: LeadDetailsM
       setCurrentStatus(lead.status);
       setAdminNotes(lead.adminNotes || "");
       setCustomerEmail(lead.email || "");
-      setTravelDates(lead.travelDates || "");
+
+      const parsed = parseDatesAndDuration(lead.travelDates);
+      setTravelDate(parsed.date);
+      setDuration(parsed.duration);
+
       setGuestsCount(lead.guestsCount || "");
       setHotelType(lead.hotelType || "");
       setCabType(lead.cabType || "");
@@ -91,7 +133,7 @@ export default function LeadDetailsModal({ lead, isOpen, onClose }: LeadDetailsM
       setDetailsSavedMsg(null);
       setEmailMsg(null);
 
-      // Parse existing payment details from adminNotes
+      // Parse existing payment details and experiences from adminNotes
       if (lead.adminNotes) {
         const matchTotal = lead.adminNotes.match(/Total=₹?([0-9,]+)/i);
         const matchAdvance = lead.adminNotes.match(/Advance=₹?([0-9,]+)/i);
@@ -104,6 +146,14 @@ export default function LeadDetailsModal({ lead, isOpen, onClose }: LeadDetailsM
             setAdvancePaid(String(Math.round(parseInt(tot, 10) * 0.3)));
           }
         }
+
+        const matchExp = lead.adminNotes.match(/Exp=([^|\]]+)/i);
+        const matchInc = lead.adminNotes.match(/Perks=([^|\]]+)/i);
+        setExperiences(matchExp ? matchExp[1].trim() : "");
+        setCustomInclusions(matchInc ? matchInc[1].trim() : "");
+      } else {
+        setExperiences("");
+        setCustomInclusions("");
       }
     }
   }, [lead]);
@@ -128,12 +178,21 @@ export default function LeadDetailsModal({ lead, isOpen, onClose }: LeadDetailsM
     setIsSavingDetails(true);
     setDetailsSavedMsg(null);
     try {
+      const combinedDates = [travelDate.trim(), duration.trim()].filter(Boolean).join(" • ");
+      const existingCleanNotes = (adminNotes || lead.adminNotes || "").replace(/\[INCLUSIONS:[^\]]+\]/g, "").trim();
+      const inclusionsTag = (experiences.trim() || customInclusions.trim())
+        ? `[INCLUSIONS: Exp=${experiences.trim()} | Perks=${customInclusions.trim()}]`
+        : "";
+      const updatedNotes = [existingCleanNotes, inclusionsTag].filter(Boolean).join(" | ");
+      setAdminNotes(updatedNotes);
+
       const res = await updateAdminLeadDetailsAction({
         leadId: lead.id,
-        travelDates: travelDates.trim(),
+        travelDates: combinedDates,
         guestsCount: guestsCount.trim(),
         hotelType: hotelType.trim(),
         cabType: cabType.trim(),
+        adminNotes: updatedNotes,
       });
       if (res.success) {
         setDetailsSavedMsg("Saved!");
@@ -153,13 +212,22 @@ export default function LeadDetailsModal({ lead, isOpen, onClose }: LeadDetailsM
     setIsUpdating(true);
     setUpdateMsg(null);
     try {
+      const combinedDates = [travelDate.trim(), duration.trim()].filter(Boolean).join(" • ");
+      const existingCleanNotes = (adminNotes || lead.adminNotes || "").replace(/\[INCLUSIONS:[^\]]+\]/g, "").trim();
+      const inclusionsTag = (experiences.trim() || customInclusions.trim())
+        ? `[INCLUSIONS: Exp=${experiences.trim()} | Perks=${customInclusions.trim()}]`
+        : "";
+      const updatedNotes = [existingCleanNotes, inclusionsTag].filter(Boolean).join(" | ");
+      setAdminNotes(updatedNotes);
+
       // Also update any edited trip requirements
       await updateAdminLeadDetailsAction({
         leadId: lead.id,
-        travelDates: travelDates.trim(),
+        travelDates: combinedDates,
         guestsCount: guestsCount.trim(),
         hotelType: hotelType.trim(),
         cabType: cabType.trim(),
+        adminNotes: updatedNotes,
       });
 
       const res = await saveLeadPaymentAction({
@@ -169,7 +237,7 @@ export default function LeadDetailsModal({ lead, isOpen, onClose }: LeadDetailsM
         balanceAmount: balanceDue,
         paymentStatus: balanceDue === 0 ? "FULLY_PAID" : "ADVANCE_PAID",
         leadStatus: currentStatus,
-        adminNotes: adminNotes.trim(),
+        adminNotes: updatedNotes,
       });
 
       if (res.success) {
@@ -239,18 +307,27 @@ export default function LeadDetailsModal({ lead, isOpen, onClose }: LeadDetailsM
     : "Srinagar • Gulmarg • Pahalgam";
 
   const isQuoting = currentStatus === "CONTACTED";
+  const hasHotel = hotelType && !["none", "n/a", "not required", "no hotel", "not included"].includes(hotelType.toLowerCase().trim());
+  const hasCab = cabType && !["none", "n/a", "not required", "no cab", "no transport", "not included"].includes(cabType.toLowerCase().trim());
+
+  const dynamicLogisticsLines = [
+    `• *Travel Date:* ${travelDate || "Upcoming / Flexible"}`,
+    `• *Trip Duration:* ${duration || "5D/4N"}`,
+    `• *No. of Travelers:* ${guestsCount || lead.guestsCount}`,
+    destinationsText ? `• *Route:* ${destinationsText}` : null,
+    hasHotel ? `• *Stay Category:* ${hotelType}` : null,
+    hasCab ? `• *Transport:* ${cabType} (Private Cab + Driver)` : null,
+    experiences.trim() ? `• *Activities & Experiences:* ${experiences.trim()}` : null,
+    customInclusions.trim() ? `• *Special Perks:* ${customInclusions.trim()}` : null,
+  ].filter(Boolean).join("\n");
 
   const prefilledWhatsApp = isQuoting
     ? encodeURIComponent(
         `*Trip Quotation from WanderKashmir* 🏔️\n` +
         `*Ref ID:* ${refId}\n\n` +
         `Dear *${lead.name}*,\n` +
-        `Greetings from WanderKashmir! Here is your customized Kashmir tour proposal:\n\n` +
-        `• *Dates / Duration:* ${travelDates || "Upcoming"}\n` +
-        `• *No. of Travelers:* ${guestsCount || lead.guestsCount}\n` +
-        `• *Route:* ${destinationsText}\n` +
-        `• *Stay Category:* ${hotelType || lead.hotelType}\n` +
-        `• *Transport:* ${cabType || lead.cabType} (Dedicated Cab + Driver)\n\n` +
+        `Greetings from WanderKashmir! Here is your customized Kashmir proposal:\n\n` +
+        `${dynamicLogisticsLines}\n\n` +
         `*💰 Package Price & Payment Terms:*\n` +
         `• *Total Package Cost:* ₹${totalNum.toLocaleString("en-IN")}\n` +
         `• *Advance to Confirm Booking (30%):* ₹${advanceNum.toLocaleString("en-IN")}\n` +
@@ -264,11 +341,7 @@ export default function LeadDetailsModal({ lead, isOpen, onClose }: LeadDetailsM
         `*WanderKashmir Official Tour Voucher*\n\n` +
         `• *Ref ID:* ${refId}\n` +
         `• *Lead Guest:* ${lead.name}\n` +
-        `• *Dates / Duration:* ${travelDates || "Upcoming"}\n` +
-        `• *No. of Travelers:* ${guestsCount || lead.guestsCount}\n` +
-        `• *Route:* ${destinationsText}\n` +
-        `• *Stay Category:* ${hotelType || lead.hotelType}\n` +
-        `• *Transport:* ${cabType || lead.cabType} (Private Cab + Driver)\n\n` +
+        `${dynamicLogisticsLines}\n\n` +
         `*💰 Official Payment Breakdown:*\n` +
         `• *Total Package Cost:* ₹${totalNum.toLocaleString("en-IN")}\n` +
         `• *Advance Received (30%):* ₹${advanceNum.toLocaleString("en-IN")} (CONFIRMED & PAID)\n` +
@@ -414,25 +487,50 @@ export default function LeadDetailsModal({ lead, isOpen, onClose }: LeadDetailsM
               </div>
             </div>
 
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-              {/* Duration / Dates */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5">
+              {/* 1. Travel Date */}
               <div className="p-2.5 rounded-xl bg-slate-950/80 border border-slate-800 focus-within:border-emerald-500/80 transition-all">
                 <div className="flex items-center justify-between text-[11px] text-slate-400 mb-1">
                   <div className="flex items-center gap-1.5">
                     <Calendar className="w-3.5 h-3.5 text-emerald-400" />
-                    <span>Duration / Dates</span>
+                    <span>Travel Date</span>
                   </div>
                 </div>
                 <input
                   type="text"
-                  value={travelDates}
-                  onChange={(e) => setTravelDates(e.target.value)}
-                  placeholder="e.g. 5D/4N or 15 March"
+                  value={travelDate}
+                  onChange={(e) => setTravelDate(e.target.value)}
+                  placeholder="e.g. 15 March"
                   className="w-full bg-slate-900 border border-slate-700/80 rounded-lg px-2 py-1 text-xs font-semibold text-white focus:outline-hidden focus:border-emerald-500 transition-colors"
                 />
               </div>
 
-              {/* Guests Count */}
+              {/* 2. Trip Duration */}
+              <div className="p-2.5 rounded-xl bg-slate-950/80 border border-slate-800 focus-within:border-emerald-500/80 transition-all">
+                <div className="flex items-center justify-between text-[11px] text-slate-400 mb-1">
+                  <div className="flex items-center gap-1.5">
+                    <Clock className="w-3.5 h-3.5 text-emerald-400" />
+                    <span>Duration</span>
+                  </div>
+                </div>
+                <input
+                  type="text"
+                  list="duration-options"
+                  value={duration}
+                  onChange={(e) => setDuration(e.target.value)}
+                  placeholder="e.g. 5D/4N"
+                  className="w-full bg-slate-900 border border-slate-700/80 rounded-lg px-2 py-1 text-xs font-semibold text-white focus:outline-hidden focus:border-emerald-500 transition-colors"
+                />
+                <datalist id="duration-options">
+                  <option value="4D/3N" />
+                  <option value="5D/4N" />
+                  <option value="6D/5N" />
+                  <option value="7D/6N" />
+                  <option value="8D/7N" />
+                </datalist>
+              </div>
+
+              {/* 3. Guests Count */}
               <div className="p-2.5 rounded-xl bg-slate-950/80 border border-slate-800 focus-within:border-emerald-500/80 transition-all">
                 <div className="flex items-center justify-between text-[11px] text-slate-400 mb-1">
                   <div className="flex items-center gap-1.5">
@@ -449,7 +547,7 @@ export default function LeadDetailsModal({ lead, isOpen, onClose }: LeadDetailsM
                 />
               </div>
 
-              {/* Hotel Type */}
+              {/* 4. Hotel Type */}
               <div className="p-2.5 rounded-xl bg-slate-950/80 border border-slate-800 focus-within:border-emerald-500/80 transition-all">
                 <div className="flex items-center justify-between text-[11px] text-slate-400 mb-1">
                   <div className="flex items-center gap-1.5">
@@ -466,6 +564,7 @@ export default function LeadDetailsModal({ lead, isOpen, onClose }: LeadDetailsM
                   className="w-full bg-slate-900 border border-slate-700/80 rounded-lg px-2 py-1 text-xs font-semibold text-white focus:outline-hidden focus:border-emerald-500 transition-colors"
                 />
                 <datalist id="hotel-type-options">
+                  <option value="None / Not Required" />
                   <option value="3 Star Standard" />
                   <option value="4 Star Deluxe" />
                   <option value="5 Star Luxury" />
@@ -474,7 +573,7 @@ export default function LeadDetailsModal({ lead, isOpen, onClose }: LeadDetailsM
                 </datalist>
               </div>
 
-              {/* Vehicle / Cab */}
+              {/* 5. Vehicle / Cab */}
               <div className="p-2.5 rounded-xl bg-slate-950/80 border border-slate-800 focus-within:border-emerald-500/80 transition-all">
                 <div className="flex items-center justify-between text-[11px] text-slate-400 mb-1">
                   <div className="flex items-center gap-1.5">
@@ -487,16 +586,56 @@ export default function LeadDetailsModal({ lead, isOpen, onClose }: LeadDetailsM
                   list="cab-type-options"
                   value={cabType}
                   onChange={(e) => setCabType(e.target.value)}
-                  placeholder="e.g. Sedan / SUV"
+                  placeholder="e.g. Sedan / SUV or None"
                   className="w-full bg-slate-900 border border-slate-700/80 rounded-lg px-2 py-1 text-xs font-semibold text-white focus:outline-hidden focus:border-emerald-500 transition-colors"
                 />
                 <datalist id="cab-type-options">
+                  <option value="None / Not Required" />
                   <option value="Sedan / SUV" />
                   <option value="Innova Crysta (Luxury)" />
                   <option value="Toyota Etios (Sedan)" />
                   <option value="Tempo Traveller (12-16)" />
                   <option value="Urbania (Super Luxury)" />
                 </datalist>
+              </div>
+            </div>
+
+            {/* Optional Experiences & Custom Inclusions Grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 mt-2.5">
+              {/* Experiences & Activities */}
+              <div className="p-2.5 rounded-xl bg-slate-950/80 border border-slate-800 focus-within:border-emerald-500/80 transition-all">
+                <div className="flex items-center justify-between text-[11px] text-slate-400 mb-1">
+                  <div className="flex items-center gap-1.5">
+                    <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+                    <span>Activities / Experiences (Optional)</span>
+                  </div>
+                  <span className="text-[10px] text-slate-500">Leave blank if none</span>
+                </div>
+                <input
+                  type="text"
+                  value={experiences}
+                  onChange={(e) => setExperiences(e.target.value)}
+                  placeholder="e.g. Gondola Phase 1 & 2 • Shikara Ride • Trekking"
+                  className="w-full bg-slate-900 border border-slate-700/80 rounded-lg px-2.5 py-1 text-xs text-white focus:outline-hidden focus:border-emerald-500 transition-colors"
+                />
+              </div>
+
+              {/* Special Inclusions & Perks */}
+              <div className="p-2.5 rounded-xl bg-slate-950/80 border border-slate-800 focus-within:border-emerald-500/80 transition-all">
+                <div className="flex items-center justify-between text-[11px] text-slate-400 mb-1">
+                  <div className="flex items-center gap-1.5">
+                    <FileCheck className="w-3.5 h-3.5 text-emerald-400" />
+                    <span>Special Inclusions / Notes (Optional)</span>
+                  </div>
+                  <span className="text-[10px] text-slate-500">Leave blank if none</span>
+                </div>
+                <input
+                  type="text"
+                  value={customInclusions}
+                  onChange={(e) => setCustomInclusions(e.target.value)}
+                  placeholder="e.g. Breakfast & Dinner • Sightseeing Toll & Parking"
+                  className="w-full bg-slate-900 border border-slate-700/80 rounded-lg px-2.5 py-1 text-xs text-white focus:outline-hidden focus:border-emerald-500 transition-colors"
+                />
               </div>
             </div>
           </div>
@@ -660,7 +799,7 @@ export default function LeadDetailsModal({ lead, isOpen, onClose }: LeadDetailsM
             {/* Save & Print Actions */}
             <div className="pt-2 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2 border-t border-slate-800">
               <a
-                href={`/admin/leads/${lead.id}/receipt?total=${totalCost}&advance=${advancePaid}`}
+                href={`/admin/leads/${lead.id}/receipt?total=${totalCost}&advance=${advancePaid}&hotel=${encodeURIComponent(hotelType)}&cab=${encodeURIComponent(cabType)}&exp=${encodeURIComponent(experiences)}&inc=${encodeURIComponent(customInclusions)}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center justify-center gap-1.5 py-2 px-3.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-emerald-300 text-xs font-bold transition active:scale-95"

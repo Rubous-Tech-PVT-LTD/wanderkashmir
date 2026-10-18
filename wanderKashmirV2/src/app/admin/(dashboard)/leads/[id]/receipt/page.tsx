@@ -11,7 +11,15 @@ export default async function LeadReceiptPage({
   searchParams,
 }: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ total?: string; advance?: string }>;
+  searchParams: Promise<{
+    total?: string;
+    advance?: string;
+    hotel?: string;
+    cab?: string;
+    route?: string;
+    exp?: string;
+    inc?: string;
+  }>;
 }) {
   const { id } = await params;
   const sParams = await searchParams;
@@ -41,6 +49,67 @@ export default async function LeadReceiptPage({
   const destinationsText = Array.isArray(lead.destinations) && lead.destinations.length > 0
     ? lead.destinations.join(" • ")
     : "Srinagar • Gulmarg • Pahalgam";
+
+  // Check if adminNotes has saved experiences / inclusions
+  let savedExp = "";
+  let savedInc = "";
+  if (lead.adminNotes) {
+    const matchExp = lead.adminNotes.match(/Exp=([^|\]]+)/i);
+    const matchInc = lead.adminNotes.match(/Perks=([^|\]]+)/i);
+    if (matchExp) savedExp = matchExp[1].trim();
+    if (matchInc) savedInc = matchInc[1].trim();
+  }
+
+  const hotelVal = (sParams.hotel !== undefined ? sParams.hotel : lead.hotelType || "").trim();
+  const cabVal = (sParams.cab !== undefined ? sParams.cab : lead.cabType || "").trim();
+  const routeVal = (sParams.route !== undefined ? sParams.route : destinationsText).trim();
+  const expVal = (sParams.exp !== undefined ? sParams.exp : savedExp).trim();
+  const incVal = (sParams.inc !== undefined ? sParams.inc : savedInc).trim();
+
+  const isMeaningful = (val: string) => {
+    if (!val) return false;
+    const lower = val.toLowerCase().trim();
+    return !["none", "n/a", "not required", "no hotel", "no cab", "not included", "unspecified", "null", "undefined"].includes(lower);
+  };
+
+  const logisticsItems: { label: string; value: string; highlight?: boolean }[] = [];
+
+  if (isMeaningful(routeVal)) {
+    logisticsItems.push({ label: "Covered Destinations", value: routeVal });
+  }
+
+  if (isMeaningful(hotelVal)) {
+    logisticsItems.push({ label: "Stay Accommodation", value: hotelVal });
+  }
+
+  if (isMeaningful(cabVal)) {
+    logisticsItems.push({ label: "Assigned Transport", value: `${cabVal} (Private Dedicated Vehicle)` });
+  }
+
+  if (isMeaningful(expVal)) {
+    logisticsItems.push({ label: "Activities & Experiences", value: expVal, highlight: true });
+  }
+
+  if (isMeaningful(incVal)) {
+    logisticsItems.push({ label: "Package Inclusions & Perks", value: incVal, highlight: true });
+  }
+
+  const datesParsed = (() => {
+    const raw = lead.travelDates || "";
+    if (raw.includes("•") || raw.includes("|")) {
+      const parts = raw.split(/[•|]/).map((p) => p.trim()).filter(Boolean);
+      const durationPart = parts.find((p) => /\b\d+D\/?\d*N?\b/i.test(p));
+      const datePart = parts.find((p) => p !== durationPart);
+      return { duration: durationPart || "5D/4N", date: datePart || "Upcoming" };
+    }
+    const durMatch = raw.match(/\b\d+D\/?\d*N?\b/i);
+    if (durMatch) {
+      const dur = durMatch[0];
+      const rem = raw.replace(dur, "").replace(/[(),-]/g, "").trim();
+      return { duration: dur, date: rem || "Upcoming" };
+    }
+    return { date: raw || "Upcoming", duration: "5D/4N" };
+  })();
 
   return (
     <div className="min-h-screen bg-slate-950 py-8 px-4 sm:px-6">
@@ -92,7 +161,7 @@ export default async function LeadReceiptPage({
             <h3 className="text-xs font-bold uppercase tracking-wider text-emerald-800 border-b border-slate-200 pb-1.5 mb-3">
               1. Guest & Travel Details
             </h3>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs">
+            <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 text-xs">
               <div>
                 <span className="text-slate-500 block">Lead Guest</span>
                 <strong className="text-slate-900 text-sm">{lead.name}</strong>
@@ -102,8 +171,12 @@ export default async function LeadReceiptPage({
                 <strong className="font-mono text-slate-900">{lead.phone}</strong>
               </div>
               <div>
-                <span className="text-slate-500 block">Duration / Dates</span>
-                <strong className="text-slate-900">{lead.travelDates || "Upcoming"}</strong>
+                <span className="text-slate-500 block">Travel Date</span>
+                <strong className="text-slate-900">{datesParsed.date}</strong>
+              </div>
+              <div>
+                <span className="text-slate-500 block">Duration</span>
+                <strong className="text-emerald-700 font-bold">{datesParsed.duration}</strong>
               </div>
               <div>
                 <span className="text-slate-500 block">No. of Guests</span>
@@ -112,30 +185,24 @@ export default async function LeadReceiptPage({
             </div>
           </div>
 
-          {/* Route & Vehicle Details */}
-          <div>
-            <h3 className="text-xs font-bold uppercase tracking-wider text-emerald-800 border-b border-slate-200 pb-1.5 mb-3">
-              2. Itinerary & Ground Logistics
-            </h3>
-            <div className="bg-slate-50 rounded-xl p-4 border border-slate-200/80 space-y-2 text-xs">
-              <div className="flex justify-between">
-                <span className="text-slate-600">Covered Destinations:</span>
-                <strong className="text-slate-900">{destinationsText}</strong>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-slate-600">Stay Accommodation:</span>
-                <strong className="text-slate-900">{lead.hotelType}</strong>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-slate-600">Assigned Transport:</span>
-                <strong className="text-slate-900">{lead.cabType} (Private Cab with Mountain Driver)</strong>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-slate-600">Sightseeing & Fuel:</span>
-                <strong className="text-emerald-700">Included (Fuel, Toll, Parking, Driver Allowances)</strong>
+          {/* Dynamic Itinerary & Ground Logistics (Only shows non-empty fields) */}
+          {logisticsItems.length > 0 && (
+            <div>
+              <h3 className="text-xs font-bold uppercase tracking-wider text-emerald-800 border-b border-slate-200 pb-1.5 mb-3">
+                2. Itinerary & Ground Logistics
+              </h3>
+              <div className="bg-slate-50 rounded-xl p-4 border border-slate-200/80 space-y-2.5 text-xs">
+                {logisticsItems.map((item, idx) => (
+                  <div key={idx} className="flex justify-between items-start gap-4">
+                    <span className="text-slate-600 shrink-0 font-medium">{item.label}:</span>
+                    <strong className={`text-right ${item.highlight ? "text-emerald-700" : "text-slate-900"}`}>
+                      {item.value}
+                    </strong>
+                  </div>
+                ))}
               </div>
             </div>
-          </div>
+          )}
 
           {/* Financial Breakdown Table */}
           <div>
