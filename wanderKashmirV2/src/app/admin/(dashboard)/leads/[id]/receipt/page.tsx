@@ -201,6 +201,10 @@ function resolveSeason(seasonParam?: string, travelDates?: string | null): Seaso
   return getSeasonFromDate(new Date());
 }
 
+const DEFAULT_GROUND_INSTRUCTIONS = `Dedicated private driver details and cab registration number will be shared 24 hours prior to travel.
+Remaining balance must be settled upon arrival in Srinagar.
+For any flight delay or on-ground query, connect with our 24/7 Srinagar Operations Desk.`;
+
 export default async function LeadReceiptPage({
   params,
   searchParams,
@@ -215,6 +219,10 @@ export default async function LeadReceiptPage({
     exp?: string;
     inc?: string;
     season?: string;
+    instructions?: string;
+    termsPkg?: string;
+    termsAdv?: string;
+    termsBal?: string;
   }>;
 }) {
   const { id } = await params;
@@ -246,15 +254,56 @@ export default async function LeadReceiptPage({
     ? lead.destinations.join(" • ")
     : "";
 
-  // Check if adminNotes has saved experiences / inclusions
+  // Check if adminNotes has saved experiences / inclusions / instructions / terms
   let savedExp = "";
   let savedInc = "";
+  let savedInstructions = "";
+  let savedTermsPkg = "";
+  let savedTermsAdv = "";
+  let savedTermsBal = "";
   if (lead.adminNotes) {
     const matchExp = lead.adminNotes.match(/Exp=([^|\]]+)/i);
     const matchInc = lead.adminNotes.match(/Perks=([^|\]]+)/i);
+    const matchInst = lead.adminNotes.match(/\[INSTRUCTIONS:([\s\S]*?)\]/i);
+    const matchTermsPkg = lead.adminNotes.match(/TermsPkg=([^|\]]+)/i);
+    const matchTermsAdv = lead.adminNotes.match(/TermsAdv=([^|\]]+)/i);
+    const matchTermsBal = lead.adminNotes.match(/TermsBal=([^|\]]+)/i);
     if (matchExp) savedExp = matchExp[1].trim();
     if (matchInc) savedInc = matchInc[1].trim();
+    if (matchInst) savedInstructions = matchInst[1].trim();
+    if (matchTermsPkg) savedTermsPkg = matchTermsPkg[1].trim();
+    if (matchTermsAdv) savedTermsAdv = matchTermsAdv[1].trim();
+    if (matchTermsBal) savedTermsBal = matchTermsBal[1].trim();
   }
+
+  const termsPkgVal = sParams.termsPkg !== undefined
+    ? sParams.termsPkg
+    : (savedTermsPkg || "Inclusive of stays, private transport & assistance");
+
+  const termsAdvVal = sParams.termsAdv !== undefined
+    ? sParams.termsAdv
+    : (savedTermsAdv || "Booking locked & vehicle/hotel reserved");
+
+  const termsBalVal = sParams.termsBal !== undefined
+    ? sParams.termsBal
+    : (savedTermsBal || "Payable at Srinagar arrival (cash or UPI to driver/hotel)");
+
+  const rawInstructions = sParams.instructions !== undefined
+    ? sParams.instructions
+    : (savedInstructions || DEFAULT_GROUND_INSTRUCTIONS);
+
+  const isInstructionsMeaningful = (val: string) => {
+    if (!val) return false;
+    const lower = val.toLowerCase().trim();
+    return !["none", "n/a", "not required", "no", "hide", "blank", "null", "undefined"].includes(lower);
+  };
+
+  const parsedInstructionsLines = isInstructionsMeaningful(rawInstructions)
+    ? rawInstructions
+        .split(/[\n|]/)
+        .map((line) => line.replace(/^[•\s*-]+/, "").trim())
+        .filter(Boolean)
+    : [];
 
   const hotelVal = (sParams.hotel !== undefined ? sParams.hotel : lead.hotelType || "").trim();
   const cabVal = (sParams.cab !== undefined ? sParams.cab : lead.cabType || "").trim();
@@ -410,7 +459,7 @@ export default async function LeadReceiptPage({
                 <tbody className={`divide-y ${voucherTheme.tableBorder} text-slate-800`}>
                   <tr className="bg-white">
                     <td className="p-3 font-medium">Total Package Value</td>
-                    <td className="p-3 text-slate-600">Inclusive of stays, private transport & assistance</td>
+                    <td className="p-3 text-slate-600">{termsPkgVal}</td>
                     <td className="p-3 text-right font-bold text-slate-900">
                       ₹{totalAmount.toLocaleString("en-IN")}
                     </td>
@@ -421,7 +470,7 @@ export default async function LeadReceiptPage({
                       <span>Advance Received</span>
                     </td>
                     <td className="p-3 text-slate-700">
-                      Booking locked & vehicle/hotel reserved
+                      {termsAdvVal}
                     </td>
                     <td className={`p-3 text-right ${voucherTheme.advanceAmountText} font-extrabold text-sm`}>
                       ₹{advanceAmount.toLocaleString("en-IN")} (PAID)
@@ -430,7 +479,7 @@ export default async function LeadReceiptPage({
                   <tr className={`${voucherTheme.arrivalRowBg} ${voucherTheme.arrivalRowText} font-bold border-t-2 ${voucherTheme.arrivalBorder}`}>
                     <td className="p-3">Balance to Pay on Arrival</td>
                     <td className="p-3 text-slate-700 font-normal">
-                      Payable at Srinagar arrival (cash or UPI to driver/hotel)
+                      {termsBalVal}
                     </td>
                     <td className={`p-3 text-right ${voucherTheme.arrivalAmountText} font-extrabold text-sm`}>
                       ₹{balanceAmount.toLocaleString("en-IN")}
@@ -441,15 +490,23 @@ export default async function LeadReceiptPage({
             </div>
           </div>
 
-          {/* Inclusions & General Instructions */}
-          <div className={`text-[11px] text-slate-600 space-y-1.5 ${voucherTheme.instructionsBg} p-4 rounded-xl border ${voucherTheme.instructionsBorder} leading-relaxed`}>
-            <div className="font-bold text-slate-800 uppercase tracking-wider text-[10px] mb-1">
-              Important Ground Instructions:
+          {/* Important Ground Instructions (Dynamic - Omitted if blank) */}
+          {parsedInstructionsLines.length > 0 && (
+            <div className={`text-[11px] text-slate-600 space-y-1.5 ${voucherTheme.instructionsBg} p-4 rounded-xl border ${voucherTheme.instructionsBorder} leading-relaxed`}>
+              <div className="font-bold text-slate-800 uppercase tracking-wider text-[10px] mb-1">
+                Important Ground Instructions:
+              </div>
+              {parsedInstructionsLines.map((line, idx) => {
+                const formatted = line.replace("{balance}", `₹${balanceAmount.toLocaleString("en-IN")}`);
+                return (
+                  <div key={idx} className="flex items-start gap-1.5">
+                    <span className="text-slate-400 select-none">•</span>
+                    <span>{formatted}</span>
+                  </div>
+                );
+              })}
             </div>
-            <div>• Dedicated private driver details and cab registration number will be shared 24 hours prior to travel.</div>
-            <div>• Remaining balance of ₹{balanceAmount.toLocaleString("en-IN")} must be settled upon arrival in Srinagar.</div>
-            <div>• For any flight delay or on-ground query, connect with our 24/7 Srinagar Operations Desk.</div>
-          </div>
+          )}
 
           {/* Verification Stamp & Sign */}
           <div className="pt-4 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-4">

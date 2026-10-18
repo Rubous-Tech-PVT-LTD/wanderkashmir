@@ -172,6 +172,10 @@ export interface SendReceiptEmailInput {
   balanceAmount: number;
   paymentMethod?: string;
   season?: string;
+  instructions?: string;
+  termsPkg?: string;
+  termsAdv?: string;
+  termsBal?: string;
 }
 
 /**
@@ -208,6 +212,34 @@ export async function sendLeadReceiptEmailAction(input: SendReceiptEmailInput): 
       : resolveSeasonFromTravelDates(lead.travelDates);
 
     const sStyle = EMAIL_SEASON_STYLES[seasonKey] || EMAIL_SEASON_STYLES.autumn;
+
+    // Parse instructions for email if provided or from adminNotes
+    let savedInstructions = "";
+    if (lead.adminNotes) {
+      const matchInst = lead.adminNotes.match(/\[INSTRUCTIONS:([\s\S]*?)\]/i);
+      if (matchInst) savedInstructions = matchInst[1].trim();
+    }
+    const rawInstructions = input.instructions !== undefined
+      ? input.instructions
+      : savedInstructions;
+
+    const instructionsHtml = (() => {
+      if (!rawInstructions || ["none", "n/a", "no", "hide", "blank"].includes(rawInstructions.toLowerCase().trim())) {
+        return "";
+      }
+      const lines = rawInstructions.split(/[\n|]/).map(l => l.replace(/^[•\s*-]+/, "").trim()).filter(Boolean);
+      if (lines.length === 0) return "";
+      return `
+        <div style="margin-top: 24px; font-size: 12px; color: #64748b; line-height: 1.6;">
+          <strong>Important Ground Instructions:</strong><br>
+          ${lines.map(l => `• ${l.replace("{balance}", `₹${input.balanceAmount.toLocaleString("en-IN")}`)}`).join("<br>\n          ")}
+        </div>
+      `;
+    })();
+
+    const termsPkgText = input.termsPkg || "Inclusive of stays, private transport & assistance";
+    const termsAdvText = input.termsAdv || "Booking locked & vehicle/hotel reserved";
+    const termsBalText = input.termsBal || "Payable at Srinagar arrival (cash or UPI to driver/hotel)";
 
     const emailHtml = `
       <!DOCTYPE html>
@@ -274,16 +306,25 @@ export async function sendLeadReceiptEmailAction(input: SendReceiptEmailInput): 
             <div class="section-title">Payment & Advance Receipt</div>
             <div class="payment-box">
               <div class="pay-row pay-total">
-                <span>Total Package Cost:</span>
+                <div>
+                  <span style="display:block;">Total Package Cost:</span>
+                  <span style="font-size:11px; font-weight:normal; opacity:0.8;">${termsPkgText}</span>
+                </div>
                 <span>₹${input.totalAmount.toLocaleString("en-IN")}</span>
               </div>
               <div class="pay-row pay-advance">
-                <span>Advance Deposit Paid (Confirmed):</span>
+                <div>
+                  <span style="display:block;">Advance Deposit Paid (Confirmed):</span>
+                  <span style="font-size:11px; font-weight:normal; opacity:0.8;">${termsAdvText}</span>
+                </div>
                 <span>₹${input.advanceAmount.toLocaleString("en-IN")} (PAID)</span>
               </div>
               <div class="pay-row pay-balance">
-                <span>Balance Due on Arrival:</span>
-                <span>₹${input.balanceAmount.toLocaleString("en-IN")} (Payable at Srinagar)</span>
+                <div>
+                  <span style="display:block;">Balance Due on Arrival:</span>
+                  <span style="font-size:11px; font-weight:normal; opacity:0.8;">${termsBalText}</span>
+                </div>
+                <span>₹${input.balanceAmount.toLocaleString("en-IN")}</span>
               </div>
             </div>
 
@@ -291,12 +332,7 @@ export async function sendLeadReceiptEmailAction(input: SendReceiptEmailInput): 
               ✓ Verified Local Srinagar Booking • 24/7 Ground Assistance Included
             </div>
 
-            <div style="margin-top: 24px; font-size: 12px; color: #64748b; line-height: 1.6;">
-              <strong>Important Notes:</strong><br>
-              • Driver and cab details with contact number will be shared 24 hours prior to arrival.<br>
-              • The balance amount of ₹${input.balanceAmount.toLocaleString("en-IN")} is payable at Srinagar upon check-in / driver arrival.<br>
-              • For any assistance or changes, connect directly with our Srinagar operations helpline.
-            </div>
+            ${instructionsHtml}
           </div>
 
           <div class="footer">

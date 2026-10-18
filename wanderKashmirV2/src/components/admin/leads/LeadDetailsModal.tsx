@@ -103,6 +103,14 @@ function parseDatesAndDuration(raw: string | null | undefined): { date: string; 
   return { date: s, duration: "5D/4N" };
 }
 
+const DEFAULT_GROUND_INSTRUCTIONS = `Dedicated private driver details and cab registration number will be shared 24 hours prior to travel.
+Remaining balance must be settled upon arrival in Srinagar.
+For any flight delay or on-ground query, connect with our 24/7 Srinagar Operations Desk.`;
+
+const DEFAULT_TERMS_PKG = "Inclusive of stays, private transport & assistance";
+const DEFAULT_TERMS_ADV = "Booking locked & vehicle/hotel reserved";
+const DEFAULT_TERMS_BAL = "Payable at Srinagar arrival (cash or UPI to driver/hotel)";
+
 export default function LeadDetailsModal({ lead, isOpen, onClose }: LeadDetailsModalProps) {
   const router = useRouter();
   const { selectedSeason } = useSeasonalTheme();
@@ -111,6 +119,14 @@ export default function LeadDetailsModal({ lead, isOpen, onClose }: LeadDetailsM
   const [totalCost, setTotalCost] = useState<string>("10000");
   const [advancePaid, setAdvancePaid] = useState<string>("3000");
   const [customerEmail, setCustomerEmail] = useState<string>(lead?.email || "");
+
+  // Dynamic Details / Terms for Official Payment & Advance Receipt PDF Table
+  const [termsPkg, setTermsPkg] = useState<string>(DEFAULT_TERMS_PKG);
+  const [termsAdv, setTermsAdv] = useState<string>(DEFAULT_TERMS_ADV);
+  const [termsBal, setTermsBal] = useState<string>(DEFAULT_TERMS_BAL);
+
+  // Dynamic Ground Instructions for Section 4 in PDF Voucher
+  const [groundInstructions, setGroundInstructions] = useState<string>(DEFAULT_GROUND_INSTRUCTIONS);
 
   // Separated & Editable Requirement Fields
   const [travelDate, setTravelDate] = useState<string>("");
@@ -150,7 +166,7 @@ export default function LeadDetailsModal({ lead, isOpen, onClose }: LeadDetailsM
       setDetailsSavedMsg(null);
       setEmailMsg(null);
 
-      // Parse existing payment details and experiences from adminNotes
+      // Parse existing payment details, terms, ground instructions and experiences from adminNotes
       if (lead.adminNotes) {
         const matchTotal = lead.adminNotes.match(/Total=₹?([0-9,]+)/i);
         const matchAdvance = lead.adminNotes.match(/Advance=₹?([0-9,]+)/i);
@@ -168,9 +184,28 @@ export default function LeadDetailsModal({ lead, isOpen, onClose }: LeadDetailsM
         const matchInc = lead.adminNotes.match(/Perks=([^|\]]+)/i);
         setExperiences(matchExp ? matchExp[1].trim() : "");
         setCustomInclusions(matchInc ? matchInc[1].trim() : "");
+
+        const matchTermsPkg = lead.adminNotes.match(/TermsPkg=([^|\]]+)/i);
+        const matchTermsAdv = lead.adminNotes.match(/TermsAdv=([^|\]]+)/i);
+        const matchTermsBal = lead.adminNotes.match(/TermsBal=([^|\]]+)/i);
+        setTermsPkg(matchTermsPkg ? matchTermsPkg[1].trim() : DEFAULT_TERMS_PKG);
+        setTermsAdv(matchTermsAdv ? matchTermsAdv[1].trim() : DEFAULT_TERMS_ADV);
+        setTermsBal(matchTermsBal ? matchTermsBal[1].trim() : DEFAULT_TERMS_BAL);
+
+        const matchInst = lead.adminNotes.match(/\[INSTRUCTIONS:([\s\S]*?)\]/i);
+        if (matchInst) {
+          const raw = matchInst[1].trim();
+          setGroundInstructions(raw === "NONE" ? "" : raw);
+        } else {
+          setGroundInstructions(DEFAULT_GROUND_INSTRUCTIONS);
+        }
       } else {
         setExperiences("");
         setCustomInclusions("");
+        setTermsPkg(DEFAULT_TERMS_PKG);
+        setTermsAdv(DEFAULT_TERMS_ADV);
+        setTermsBal(DEFAULT_TERMS_BAL);
+        setGroundInstructions(DEFAULT_GROUND_INSTRUCTIONS);
       }
     }
   }, [lead]);
@@ -191,16 +226,32 @@ export default function LeadDetailsModal({ lead, isOpen, onClose }: LeadDetailsM
     setAdvancePaid(String(calculated));
   };
 
+  const buildSerializedNotes = (baseNotes: string) => {
+    const existingCleanNotes = (baseNotes || "")
+      .replace(/\[INCLUSIONS:[^\]]+\]/g, "")
+      .replace(/\[TERMS:[^\]]+\]/g, "")
+      .replace(/\[INSTRUCTIONS:[\s\S]*?\]/g, "")
+      .trim();
+
+    const inclusionsTag = (experiences.trim() || customInclusions.trim())
+      ? `[INCLUSIONS: Exp=${experiences.trim()} | Perks=${customInclusions.trim()}]`
+      : "";
+
+    const termsTag = `[TERMS: TermsPkg=${termsPkg.trim() || DEFAULT_TERMS_PKG} | TermsAdv=${termsAdv.trim() || DEFAULT_TERMS_ADV} | TermsBal=${termsBal.trim() || DEFAULT_TERMS_BAL}]`;
+
+    const instructionsTag = groundInstructions.trim()
+      ? `[INSTRUCTIONS: ${groundInstructions.trim()}]`
+      : `[INSTRUCTIONS: NONE]`;
+
+    return [existingCleanNotes, inclusionsTag, termsTag, instructionsTag].filter(Boolean).join(" | ");
+  };
+
   const handleSaveDetails = async () => {
     setIsSavingDetails(true);
     setDetailsSavedMsg(null);
     try {
       const combinedDates = [travelDate.trim(), duration.trim()].filter(Boolean).join(" • ");
-      const existingCleanNotes = (adminNotes || lead.adminNotes || "").replace(/\[INCLUSIONS:[^\]]+\]/g, "").trim();
-      const inclusionsTag = (experiences.trim() || customInclusions.trim())
-        ? `[INCLUSIONS: Exp=${experiences.trim()} | Perks=${customInclusions.trim()}]`
-        : "";
-      const updatedNotes = [existingCleanNotes, inclusionsTag].filter(Boolean).join(" | ");
+      const updatedNotes = buildSerializedNotes(adminNotes || lead.adminNotes || "");
       setAdminNotes(updatedNotes);
 
       const res = await updateAdminLeadDetailsAction({
@@ -231,11 +282,7 @@ export default function LeadDetailsModal({ lead, isOpen, onClose }: LeadDetailsM
     setUpdateMsg(null);
     try {
       const combinedDates = [travelDate.trim(), duration.trim()].filter(Boolean).join(" • ");
-      const existingCleanNotes = (adminNotes || lead.adminNotes || "").replace(/\[INCLUSIONS:[^\]]+\]/g, "").trim();
-      const inclusionsTag = (experiences.trim() || customInclusions.trim())
-        ? `[INCLUSIONS: Exp=${experiences.trim()} | Perks=${customInclusions.trim()}]`
-        : "";
-      const updatedNotes = [existingCleanNotes, inclusionsTag].filter(Boolean).join(" | ");
+      const updatedNotes = buildSerializedNotes(adminNotes || lead.adminNotes || "");
       setAdminNotes(updatedNotes);
 
       // Also update any edited trip requirements
@@ -287,6 +334,10 @@ export default function LeadDetailsModal({ lead, isOpen, onClose }: LeadDetailsM
         advanceAmount: advanceNum,
         balanceAmount: balanceDue,
         season: selectedSeason,
+        instructions: groundInstructions,
+        termsPkg,
+        termsAdv,
+        termsBal,
       });
 
       if (res.success) {
@@ -658,6 +709,52 @@ export default function LeadDetailsModal({ lead, isOpen, onClose }: LeadDetailsM
                 />
               </div>
             </div>
+
+            {/* 📋 Dynamic Important Ground Instructions */}
+            <div className="mt-3 p-3 rounded-xl bg-slate-950/80 border border-slate-800 space-y-2">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-300">
+                  <FileText className="w-3.5 h-3.5 text-amber-400" />
+                  <span>Important Ground Instructions:</span>
+                  <span className="text-[10px] text-emerald-400 font-medium bg-emerald-950/60 px-2 py-0.5 rounded border border-emerald-800/60">
+                    Dynamic PDF Section
+                  </span>
+                  {!groundInstructions.trim() && (
+                    <span className="text-[11px] text-amber-400 font-medium">
+                      (Hidden from PDF Voucher)
+                    </span>
+                  )}
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setGroundInstructions(DEFAULT_GROUND_INSTRUCTIONS)}
+                    className="text-[11px] text-slate-400 hover:text-slate-200 transition-colors font-medium cursor-pointer"
+                  >
+                    Reset Default
+                  </button>
+                  {groundInstructions.trim() && (
+                    <button
+                      type="button"
+                      onClick={() => setGroundInstructions("")}
+                      className="text-[11px] text-rose-400 hover:text-rose-300 transition-colors font-medium cursor-pointer"
+                    >
+                      Clear (Hide from PDF)
+                    </button>
+                  )}
+                </div>
+              </div>
+              <textarea
+                rows={3}
+                value={groundInstructions}
+                onChange={(e) => setGroundInstructions(e.target.value)}
+                placeholder="Enter instructions line by line. Leave blank to completely omit this section from the PDF voucher."
+                className="w-full bg-slate-900 border border-slate-700/80 rounded-lg p-2.5 text-xs text-slate-200 placeholder-slate-500 focus:outline-hidden focus:border-emerald-500 font-sans leading-relaxed transition-colors"
+              />
+              <div className="text-[10px] text-slate-500">
+                Each line will render as a bullet point in Section 4 &quot;Important Ground Instructions&quot; of the PDF voucher and customer receipt email.
+              </div>
+            </div>
           </div>
 
           {/* Editable Destinations Section */}
@@ -815,79 +912,127 @@ export default function LeadDetailsModal({ lead, isOpen, onClose }: LeadDetailsM
               </div>
             </div>
 
-            {/* Inputs Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div>
-                <label className="block text-xs font-medium text-slate-300 mb-1">
-                  Total Package Deal Cost (₹)
-                </label>
-                <div className="relative">
-                  <span className="absolute left-3 top-2 text-slate-500 text-xs font-bold">₹</span>
-                  <input
-                    type="number"
-                    value={totalCost}
-                    onChange={(e) => {
-                      const val = e.target.value;
-                      setTotalCost(val);
-                      const num = parseInt(val, 10) || 0;
-                      setAdvancePaid(String(Math.round(num * 0.3)));
-                    }}
-                    placeholder="e.g. 10000"
-                    className="w-full pl-7 pr-3 py-2 bg-slate-900 border border-slate-700 rounded-xl text-xs sm:text-sm text-white font-mono font-bold focus:outline-hidden focus:border-emerald-500"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <div className="flex items-center justify-between mb-1">
-                  <label className="block text-xs font-medium text-slate-300">
-                    Advance Received (₹)
-                  </label>
-                  <div className="flex gap-1 text-[10px]">
-                    <button
-                      type="button"
-                      onClick={() => setPercentageAdvance(30)}
-                      className="px-1.5 py-0.5 rounded bg-slate-800 hover:bg-emerald-800 text-emerald-300 cursor-pointer font-mono"
-                    >
-                      30%
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setPercentageAdvance(50)}
-                      className="px-1.5 py-0.5 rounded bg-slate-800 hover:bg-emerald-800 text-emerald-300 cursor-pointer font-mono"
-                    >
-                      50%
-                    </button>
+            {/* Inputs Grid with Dynamic Details / Terms */}
+            <div className="space-y-3">
+              {/* Row 1: Total Package Deal Cost + Terms */}
+              <div className="p-3 rounded-xl bg-slate-900/60 border border-slate-800 space-y-2">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 items-center">
+                  <div>
+                    <label className="block text-xs font-medium text-slate-300 mb-1">
+                      Total Package Deal Cost (₹)
+                    </label>
+                    <div className="relative">
+                      <span className="absolute left-3 top-2 text-slate-500 text-xs font-bold">₹</span>
+                      <input
+                        type="number"
+                        value={totalCost}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setTotalCost(val);
+                          const num = parseInt(val, 10) || 0;
+                          setAdvancePaid(String(Math.round(num * 0.3)));
+                        }}
+                        placeholder="e.g. 10000"
+                        className="w-full pl-7 pr-3 py-1.5 bg-slate-900 border border-slate-700 rounded-lg text-xs sm:text-sm text-white font-mono font-bold focus:outline-hidden focus:border-emerald-500"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-[11px] text-slate-400 mb-1">
+                      Details / Terms (PDF Column):
+                    </label>
+                    <input
+                      type="text"
+                      value={termsPkg}
+                      onChange={(e) => setTermsPkg(e.target.value)}
+                      placeholder="e.g. Inclusive of stays, private transport & assistance"
+                      className="w-full px-2.5 py-1.5 bg-slate-900 border border-slate-700 rounded-lg text-xs text-slate-200 focus:outline-hidden focus:border-emerald-500"
+                    />
                   </div>
                 </div>
-                <div className="relative">
-                  <span className="absolute left-3 top-2 text-emerald-500 text-xs font-bold">₹</span>
+              </div>
+
+              {/* Row 2: Advance Received + Terms */}
+              <div className="p-3 rounded-xl bg-slate-900/60 border border-slate-800 space-y-2">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 items-center">
+                  <div>
+                    <div className="flex items-center justify-between mb-1">
+                      <label className="block text-xs font-medium text-slate-300">
+                        Advance Received (₹)
+                      </label>
+                      <div className="flex gap-1 text-[10px]">
+                        <button
+                          type="button"
+                          onClick={() => setPercentageAdvance(30)}
+                          className="px-1.5 py-0.5 rounded bg-slate-800 hover:bg-emerald-800 text-emerald-300 cursor-pointer font-mono"
+                        >
+                          30%
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setPercentageAdvance(50)}
+                          className="px-1.5 py-0.5 rounded bg-slate-800 hover:bg-emerald-800 text-emerald-300 cursor-pointer font-mono"
+                        >
+                          50%
+                        </button>
+                      </div>
+                    </div>
+                    <div className="relative">
+                      <span className="absolute left-3 top-2 text-emerald-500 text-xs font-bold">₹</span>
+                      <input
+                        type="number"
+                        value={advancePaid}
+                        onChange={(e) => setAdvancePaid(e.target.value)}
+                        placeholder="e.g. 3000"
+                        className="w-full pl-7 pr-3 py-1.5 bg-slate-900 border border-slate-700 rounded-lg text-xs sm:text-sm text-emerald-400 font-mono font-bold focus:outline-hidden focus:border-emerald-500"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-[11px] text-slate-400 mb-1">
+                      Details / Terms (PDF Column):
+                    </label>
+                    <input
+                      type="text"
+                      value={termsAdv}
+                      onChange={(e) => setTermsAdv(e.target.value)}
+                      placeholder="e.g. Booking locked & vehicle/hotel reserved"
+                      className="w-full px-2.5 py-1.5 bg-slate-900 border border-slate-700 rounded-lg text-xs text-slate-200 focus:outline-hidden focus:border-emerald-500"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Row 3: Auto-Calculated Balance Due Card + Terms */}
+              <div className="p-3 rounded-xl bg-slate-900 border border-slate-800 space-y-2">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <div className="text-[11px] text-amber-400 font-semibold uppercase tracking-wider flex items-center gap-1.5">
+                      <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
+                      <span>Balance Due on Arrival in Srinagar:</span>
+                    </div>
+                    <div className="text-[11px] text-slate-400 mt-0.5">
+                      Collect from customer upon check-in or airport pickup
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <span className="text-base sm:text-lg font-mono font-black text-amber-300">
+                      ₹{balanceDue.toLocaleString("en-IN")}
+                    </span>
+                  </div>
+                </div>
+                <div className="pt-2 border-t border-slate-800/80">
+                  <label className="block text-[11px] text-slate-400 mb-1">
+                    Balance Details / Terms (PDF Column):
+                  </label>
                   <input
-                    type="number"
-                    value={advancePaid}
-                    onChange={(e) => setAdvancePaid(e.target.value)}
-                    placeholder="e.g. 3000"
-                    className="w-full pl-7 pr-3 py-2 bg-slate-900 border border-slate-700 rounded-xl text-xs sm:text-sm text-emerald-400 font-mono font-bold focus:outline-hidden focus:border-emerald-500"
+                    type="text"
+                    value={termsBal}
+                    onChange={(e) => setTermsBal(e.target.value)}
+                    placeholder="e.g. Payable at Srinagar arrival (cash or UPI to driver/hotel)"
+                    className="w-full px-2.5 py-1.5 bg-slate-900 border border-slate-700 rounded-lg text-xs text-slate-200 focus:outline-hidden focus:border-emerald-500"
                   />
                 </div>
-              </div>
-            </div>
-
-            {/* Auto-Calculated Balance Due Card */}
-            <div className="p-3 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-between">
-              <div>
-                <div className="text-[11px] text-amber-400 font-semibold uppercase tracking-wider flex items-center gap-1.5">
-                  <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
-                  <span>Balance Due on Arrival in Srinagar:</span>
-                </div>
-                <div className="text-[11px] text-slate-400 mt-0.5">
-                  Collect from customer upon check-in or airport pickup
-                </div>
-              </div>
-              <div className="text-right">
-                <span className="text-base sm:text-lg font-mono font-black text-amber-300">
-                  ₹{balanceDue.toLocaleString("en-IN")}
-                </span>
               </div>
             </div>
 
@@ -927,7 +1072,7 @@ export default function LeadDetailsModal({ lead, isOpen, onClose }: LeadDetailsM
             {/* Save & Print Actions */}
             <div className="pt-2 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2 border-t border-slate-800">
               <a
-                href={`/admin/leads/${lead.id}/receipt?total=${totalCost}&advance=${advancePaid}&hotel=${encodeURIComponent(hotelType)}&cab=${encodeURIComponent(cabType)}&exp=${encodeURIComponent(experiences)}&inc=${encodeURIComponent(customInclusions)}&route=${encodeURIComponent(destinations.join(" • "))}&season=${selectedSeason}`}
+                href={`/admin/leads/${lead.id}/receipt?total=${totalCost}&advance=${advancePaid}&hotel=${encodeURIComponent(hotelType)}&cab=${encodeURIComponent(cabType)}&exp=${encodeURIComponent(experiences)}&inc=${encodeURIComponent(customInclusions)}&route=${encodeURIComponent(destinations.join(" • "))}&season=${selectedSeason}&instructions=${encodeURIComponent(groundInstructions)}&termsPkg=${encodeURIComponent(termsPkg)}&termsAdv=${encodeURIComponent(termsAdv)}&termsBal=${encodeURIComponent(termsBal)}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center justify-center gap-1.5 py-2 px-3.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-emerald-300 text-xs font-bold transition active:scale-95"
