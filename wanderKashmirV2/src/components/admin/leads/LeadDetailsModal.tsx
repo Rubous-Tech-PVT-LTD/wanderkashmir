@@ -185,12 +185,22 @@ export default function LeadDetailsModal({ lead, isOpen, onClose }: LeadDetailsM
         setExperiences(matchExp ? matchExp[1].trim() : "");
         setCustomInclusions(matchInc ? matchInc[1].trim() : "");
 
-        const matchTermsPkg = lead.adminNotes.match(/TermsPkg=([^|\]]+)/i);
-        const matchTermsAdv = lead.adminNotes.match(/TermsAdv=([^|\]]+)/i);
-        const matchTermsBal = lead.adminNotes.match(/TermsBal=([^|\]]+)/i);
-        setTermsPkg(matchTermsPkg ? matchTermsPkg[1].trim() : DEFAULT_TERMS_PKG);
-        setTermsAdv(matchTermsAdv ? matchTermsAdv[1].trim() : DEFAULT_TERMS_ADV);
-        setTermsBal(matchTermsBal ? matchTermsBal[1].trim() : DEFAULT_TERMS_BAL);
+        const matchTerms = lead.adminNotes.match(/\[TERMS:([\s\S]*?)\]/i);
+        if (matchTerms) {
+          const matchTermsPkg = matchTerms[1].match(/TermsPkg=([^|\]]*)/i);
+          const matchTermsAdv = matchTerms[1].match(/TermsAdv=([^|\]]*)/i);
+          const matchTermsBal = matchTerms[1].match(/TermsBal=([^|\]]*)/i);
+          const pkgVal = matchTermsPkg ? matchTermsPkg[1].trim() : "";
+          const advVal = matchTermsAdv ? matchTermsAdv[1].trim() : "";
+          const balVal = matchTermsBal ? matchTermsBal[1].trim() : "";
+          setTermsPkg(pkgVal === "NONE" ? "" : pkgVal);
+          setTermsAdv(advVal === "NONE" ? "" : advVal);
+          setTermsBal(balVal === "NONE" ? "" : balVal);
+        } else {
+          setTermsPkg(DEFAULT_TERMS_PKG);
+          setTermsAdv(DEFAULT_TERMS_ADV);
+          setTermsBal(DEFAULT_TERMS_BAL);
+        }
 
         const matchInst = lead.adminNotes.match(/\[INSTRUCTIONS:([\s\S]*?)\]/i);
         if (matchInst) {
@@ -237,7 +247,7 @@ export default function LeadDetailsModal({ lead, isOpen, onClose }: LeadDetailsM
       ? `[INCLUSIONS: Exp=${experiences.trim()} | Perks=${customInclusions.trim()}]`
       : "";
 
-    const termsTag = `[TERMS: TermsPkg=${termsPkg.trim() || DEFAULT_TERMS_PKG} | TermsAdv=${termsAdv.trim() || DEFAULT_TERMS_ADV} | TermsBal=${termsBal.trim() || DEFAULT_TERMS_BAL}]`;
+    const termsTag = `[TERMS: TermsPkg=${termsPkg.trim() ? termsPkg.trim() : "NONE"} | TermsAdv=${termsAdv.trim() ? termsAdv.trim() : "NONE"} | TermsBal=${termsBal.trim() ? termsBal.trim() : "NONE"}]`;
 
     const instructionsTag = groundInstructions.trim()
       ? `[INSTRUCTIONS: ${groundInstructions.trim()}]`
@@ -938,14 +948,34 @@ export default function LeadDetailsModal({ lead, isOpen, onClose }: LeadDetailsM
                     </div>
                   </div>
                   <div>
-                    <label className="block text-[11px] text-slate-400 mb-1">
-                      Details / Terms (PDF Column):
-                    </label>
+                    <div className="flex items-center justify-between mb-1">
+                      <label className="block text-[11px] text-slate-300 font-medium">
+                        Package Details / Terms:
+                      </label>
+                      <div className="flex items-center gap-1.5 text-[10px]">
+                        <button
+                          type="button"
+                          onClick={() => setTermsPkg(DEFAULT_TERMS_PKG)}
+                          className="text-slate-400 hover:text-slate-200 transition cursor-pointer"
+                        >
+                          Default
+                        </button>
+                        {termsPkg.trim() && (
+                          <button
+                            type="button"
+                            onClick={() => setTermsPkg("")}
+                            className="text-rose-400 hover:text-rose-300 transition cursor-pointer"
+                          >
+                            Clear
+                          </button>
+                        )}
+                      </div>
+                    </div>
                     <input
                       type="text"
                       value={termsPkg}
                       onChange={(e) => setTermsPkg(e.target.value)}
-                      placeholder="e.g. Inclusive of stays, private transport & assistance"
+                      placeholder="e.g. Inclusive of stays, private transport & assistance (or blank)"
                       className="w-full px-2.5 py-1.5 bg-slate-900 border border-slate-700 rounded-lg text-xs text-slate-200 focus:outline-hidden focus:border-emerald-500"
                     />
                   </div>
@@ -989,14 +1019,34 @@ export default function LeadDetailsModal({ lead, isOpen, onClose }: LeadDetailsM
                     </div>
                   </div>
                   <div>
-                    <label className="block text-[11px] text-slate-400 mb-1">
-                      Details / Terms (PDF Column):
-                    </label>
+                    <div className="flex items-center justify-between mb-1">
+                      <label className="block text-[11px] text-slate-300 font-medium">
+                        Advance Details / Terms:
+                      </label>
+                      <div className="flex items-center gap-1.5 text-[10px]">
+                        <button
+                          type="button"
+                          onClick={() => setTermsAdv(DEFAULT_TERMS_ADV)}
+                          className="text-slate-400 hover:text-slate-200 transition cursor-pointer"
+                        >
+                          Default
+                        </button>
+                        {termsAdv.trim() && (
+                          <button
+                            type="button"
+                            onClick={() => setTermsAdv("")}
+                            className="text-rose-400 hover:text-rose-300 transition cursor-pointer"
+                          >
+                            Clear
+                          </button>
+                        )}
+                      </div>
+                    </div>
                     <input
                       type="text"
                       value={termsAdv}
                       onChange={(e) => setTermsAdv(e.target.value)}
-                      placeholder="e.g. Booking locked & vehicle/hotel reserved"
+                      placeholder="e.g. Booking locked & vehicle/hotel reserved (or blank)"
                       className="w-full px-2.5 py-1.5 bg-slate-900 border border-slate-700 rounded-lg text-xs text-slate-200 focus:outline-hidden focus:border-emerald-500"
                     />
                   </div>
@@ -1022,14 +1072,34 @@ export default function LeadDetailsModal({ lead, isOpen, onClose }: LeadDetailsM
                   </div>
                 </div>
                 <div className="pt-2 border-t border-slate-800/80">
-                  <label className="block text-[11px] text-slate-400 mb-1">
-                    Balance Details / Terms (PDF Column):
-                  </label>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="block text-[11px] text-slate-300 font-medium">
+                      Balance Details / Terms:
+                    </label>
+                    <div className="flex items-center gap-1.5 text-[10px]">
+                      <button
+                        type="button"
+                        onClick={() => setTermsBal(DEFAULT_TERMS_BAL)}
+                        className="text-slate-400 hover:text-slate-200 transition cursor-pointer"
+                      >
+                        Default
+                      </button>
+                      {termsBal.trim() && (
+                        <button
+                          type="button"
+                          onClick={() => setTermsBal("")}
+                          className="text-rose-400 hover:text-rose-300 transition cursor-pointer"
+                        >
+                          Clear
+                        </button>
+                      )}
+                    </div>
+                  </div>
                   <input
                     type="text"
                     value={termsBal}
                     onChange={(e) => setTermsBal(e.target.value)}
-                    placeholder="e.g. Payable at Srinagar arrival (cash or UPI to driver/hotel)"
+                    placeholder="e.g. Payable at Srinagar arrival (cash or UPI to driver/hotel) (or blank)"
                     className="w-full px-2.5 py-1.5 bg-slate-900 border border-slate-700 rounded-lg text-xs text-slate-200 focus:outline-hidden focus:border-emerald-500"
                   />
                 </div>

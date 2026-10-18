@@ -98,7 +98,10 @@ export default function VoucherToolbar({ activeSeason }: VoucherToolbarProps) {
         })}
       </div>
 
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2.5">
+        <span className="text-[11px] text-slate-400 hidden lg:inline">
+          ✏️ Click text in voucher table to edit before printing
+        </span>
         <button
           type="button"
           onClick={() => window.print()}

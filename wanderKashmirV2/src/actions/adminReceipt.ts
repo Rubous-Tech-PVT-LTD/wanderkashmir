@@ -237,9 +237,9 @@ export async function sendLeadReceiptEmailAction(input: SendReceiptEmailInput): 
       `;
     })();
 
-    const termsPkgText = input.termsPkg || "Inclusive of stays, private transport & assistance";
-    const termsAdvText = input.termsAdv || "Booking locked & vehicle/hotel reserved";
-    const termsBalText = input.termsBal || "Payable at Srinagar arrival (cash or UPI to driver/hotel)";
+    const termsPkgText = input.termsPkg !== undefined ? (input.termsPkg === "NONE" ? "" : input.termsPkg) : "Inclusive of stays, private transport & assistance";
+    const termsAdvText = input.termsAdv !== undefined ? (input.termsAdv === "NONE" ? "" : input.termsAdv) : "Booking locked & vehicle/hotel reserved";
+    const termsBalText = input.termsBal !== undefined ? (input.termsBal === "NONE" ? "" : input.termsBal) : "Payable at Srinagar arrival (cash or UPI to driver/hotel)";
 
     const emailHtml = `
       <!DOCTYPE html>

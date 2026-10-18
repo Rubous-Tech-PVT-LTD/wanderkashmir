@@ -258,35 +258,47 @@ export default async function LeadReceiptPage({
   let savedExp = "";
   let savedInc = "";
   let savedInstructions = "";
-  let savedTermsPkg = "";
-  let savedTermsAdv = "";
-  let savedTermsBal = "";
+  let savedTermsPkg: string | null = null;
+  let savedTermsAdv: string | null = null;
+  let savedTermsBal: string | null = null;
   if (lead.adminNotes) {
     const matchExp = lead.adminNotes.match(/Exp=([^|\]]+)/i);
     const matchInc = lead.adminNotes.match(/Perks=([^|\]]+)/i);
     const matchInst = lead.adminNotes.match(/\[INSTRUCTIONS:([\s\S]*?)\]/i);
-    const matchTermsPkg = lead.adminNotes.match(/TermsPkg=([^|\]]+)/i);
-    const matchTermsAdv = lead.adminNotes.match(/TermsAdv=([^|\]]+)/i);
-    const matchTermsBal = lead.adminNotes.match(/TermsBal=([^|\]]+)/i);
+    const matchTerms = lead.adminNotes.match(/\[TERMS:([\s\S]*?)\]/i);
     if (matchExp) savedExp = matchExp[1].trim();
     if (matchInc) savedInc = matchInc[1].trim();
     if (matchInst) savedInstructions = matchInst[1].trim();
-    if (matchTermsPkg) savedTermsPkg = matchTermsPkg[1].trim();
-    if (matchTermsAdv) savedTermsAdv = matchTermsAdv[1].trim();
-    if (matchTermsBal) savedTermsBal = matchTermsBal[1].trim();
+    if (matchTerms) {
+      const matchTermsPkg = matchTerms[1].match(/TermsPkg=([^|\]]*)/i);
+      const matchTermsAdv = matchTerms[1].match(/TermsAdv=([^|\]]*)/i);
+      const matchTermsBal = matchTerms[1].match(/TermsBal=([^|\]]*)/i);
+      if (matchTermsPkg) {
+        const val = matchTermsPkg[1].trim();
+        savedTermsPkg = val === "NONE" ? "" : val;
+      }
+      if (matchTermsAdv) {
+        const val = matchTermsAdv[1].trim();
+        savedTermsAdv = val === "NONE" ? "" : val;
+      }
+      if (matchTermsBal) {
+        const val = matchTermsBal[1].trim();
+        savedTermsBal = val === "NONE" ? "" : val;
+      }
+    }
   }
 
   const termsPkgVal = sParams.termsPkg !== undefined
-    ? sParams.termsPkg
-    : (savedTermsPkg || "Inclusive of stays, private transport & assistance");
+    ? (sParams.termsPkg === "NONE" ? "" : sParams.termsPkg)
+    : (savedTermsPkg !== null ? savedTermsPkg : "Inclusive of stays, private transport & assistance");
 
   const termsAdvVal = sParams.termsAdv !== undefined
-    ? sParams.termsAdv
-    : (savedTermsAdv || "Booking locked & vehicle/hotel reserved");
+    ? (sParams.termsAdv === "NONE" ? "" : sParams.termsAdv)
+    : (savedTermsAdv !== null ? savedTermsAdv : "Booking locked & vehicle/hotel reserved");
 
   const termsBalVal = sParams.termsBal !== undefined
-    ? sParams.termsBal
-    : (savedTermsBal || "Payable at Srinagar arrival (cash or UPI to driver/hotel)");
+    ? (sParams.termsBal === "NONE" ? "" : sParams.termsBal)
+    : (savedTermsBal !== null ? savedTermsBal : "Payable at Srinagar arrival (cash or UPI to driver/hotel)");
 
   const rawInstructions = sParams.instructions !== undefined
     ? sParams.instructions
@@ -459,7 +471,14 @@ export default async function LeadReceiptPage({
                 <tbody className={`divide-y ${voucherTheme.tableBorder} text-slate-800`}>
                   <tr className="bg-white">
                     <td className="p-3 font-medium">Total Package Value</td>
-                    <td className="p-3 text-slate-600">{termsPkgVal}</td>
+                    <td
+                      contentEditable
+                      suppressContentEditableWarning
+                      className="p-3 text-slate-600 outline-hidden hover:bg-slate-100/70 focus:bg-white focus:ring-1 focus:ring-slate-400 rounded transition-colors cursor-text"
+                      title="Click to edit package terms before printing"
+                    >
+                      {termsPkgVal}
+                    </td>
                     <td className="p-3 text-right font-bold text-slate-900">
                       ₹{totalAmount.toLocaleString("en-IN")}
                     </td>
@@ -469,7 +488,12 @@ export default async function LeadReceiptPage({
                       <ShieldCheck className={`w-4 h-4 ${voucherTheme.advanceShieldColor} shrink-0`} />
                       <span>Advance Received</span>
                     </td>
-                    <td className="p-3 text-slate-700">
+                    <td
+                      contentEditable
+                      suppressContentEditableWarning
+                      className="p-3 text-slate-700 outline-hidden hover:bg-amber-100/60 focus:bg-white focus:ring-1 focus:ring-amber-500 rounded transition-colors cursor-text"
+                      title="Click to edit advance details before printing"
+                    >
                       {termsAdvVal}
                     </td>
                     <td className={`p-3 text-right ${voucherTheme.advanceAmountText} font-extrabold text-sm`}>
@@ -478,7 +502,12 @@ export default async function LeadReceiptPage({
                   </tr>
                   <tr className={`${voucherTheme.arrivalRowBg} ${voucherTheme.arrivalRowText} font-bold border-t-2 ${voucherTheme.arrivalBorder}`}>
                     <td className="p-3">Balance to Pay on Arrival</td>
-                    <td className="p-3 text-slate-700 font-normal">
+                    <td
+                      contentEditable
+                      suppressContentEditableWarning
+                      className="p-3 text-slate-700 font-normal outline-hidden hover:bg-amber-100/60 focus:bg-white focus:ring-1 focus:ring-amber-500 rounded transition-colors cursor-text"
+                      title="Click to edit balance terms before printing"
+                    >
                       {termsBalVal}
                     </td>
                     <td className={`p-3 text-right ${voucherTheme.arrivalAmountText} font-extrabold text-sm`}>
