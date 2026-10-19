@@ -1,4 +1,3 @@
-import { redirect } from "next/navigation";
 import type { Metadata } from "next";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -36,24 +35,29 @@ export const metadata: Metadata = {
   },
 };
 
-interface ToursPageProps {
-  searchParams: Promise<{
-    category?: string;
-    style?: string;
-    duration?: string;
-    destination?: string;
-    maxPrice?: string;
-    sort?: string;
-  }>;
-}
+export default async function ToursListingPage() {
+  // 1. Fetch live/published tours, visible Tour Categories, and active Travel Styles concurrently in parallel
+  const [rawTours, dbTourCategories, dbTravelStyles] = await Promise.all([
+    prisma.tour
+      .findMany({
+        where: { isLive: true },
+        orderBy: { createdAt: "desc" },
+        include: {
+          tourCategory: { select: { id: true, name: true, slug: true } },
+          travelStyles: {
+            select: {
+              travelStyle: {
+                select: { id: true, name: true, slug: true, isActive: true },
+              },
+            },
+          },
+        },
+      })
+      .catch((err) => {
+        console.error("Failed to fetch tours from production DB on /tours:", err);
+        return [];
+      }),
 
-export default async function ToursListingPage({ searchParams }: ToursPageProps) {
-  const { category, style, duration, destination, maxPrice, sort } = await searchParams;
-
-  const parsedMaxPrice = maxPrice ? Number(maxPrice) : undefined;
-
-  // 1. Fetch visible Tour Categories and active Travel Styles concurrently in parallel
-  const [dbTourCategories, dbTravelStyles] = await Promise.all([
     prisma.tourCategory
       .findMany({
         where: { showInFilter: true },
@@ -80,240 +84,86 @@ export default async function ToursListingPage({ searchParams }: ToursPageProps)
       .catch(() => []),
   ]);
 
-  // 2. Resolve selected Category and Travel Style filters
-  let matchedCategoryId: string | undefined = undefined;
-  let activeCategorySlug: string | undefined = undefined;
-  let activeStyleSlug: string | undefined = undefined;
+  // 2. Map database records to TourPackageDetail format
+  const dbTours: TourPackageDetail[] = rawTours.map((tour: (typeof rawTours)[number]) => ({
+    id: tour.id,
+    slug: tour.slug,
+    title: tour.title,
+    duration: tour.duration || "",
+    daysCount: parseInt((tour.duration || "0").match(/(\d+)/)?.[0] || "0", 10),
+    nightsCount: Math.max(
+      0,
+      parseInt((tour.duration || "0").match(/(\d+)/)?.[0] || "1", 10) - 1
+    ),
+    badge: (tour as any).badge || "",
+    category: tour.tourCategory?.name || tour.category || "General",
+    categoryDisplay: tour.tourCategory?.name || tour.category || "General",
+    categoryId: tour.categoryId || tour.tourCategory?.id || null,
+    tourCategory: tour.tourCategory || null,
+    destinations: (tour.destinations as string[]) || [],
+    routeDisplay: (tour.destinations as string[]) || [],
+    price: tour.price || 0,
+    originalPrice: tour.originalPrice || tour.price || 0,
+    rating: 0,
+    reviewsCount: 0,
+    overview: tour.overview || "",
+    images: (tour.images as string[]) || [],
+    whyThisRoute: [],
+    itinerary: [],
+    inclusions: (tour.inclusions as string[]) || [],
+    exclusions: (tour.exclusions as string[]) || [],
+    highlights: (tour.highlights as string[]) || [],
+    reviewsList: [],
+    stays: [],
+    transports: [],
+    travelStyles: (tour.travelStyles as any[]) || [],
+    isLive: tour.isLive,
+    maxPersons: tour.maxPersons || 2,
+  }));
 
-  if (style && style !== "all") {
-    const cleanStyle = style.toLowerCase().trim();
-    const matchedStyle = dbTravelStyles.find((s) => s.slug.toLowerCase() === cleanStyle);
-    if (matchedStyle) {
-      activeStyleSlug = matchedStyle.slug;
-    }
-  }
+  // 3. Derive catalog filter metadata from rawTours
+  const durationCountsMap = new Map<number, number>();
+  const destSet = new Set<string>();
+  const prices: number[] = [];
 
-  if (category && category !== "all") {
-    const cleanCat = category.toLowerCase().trim();
-    const matchedCat = dbTourCategories.find(
-      (c) => c.slug.toLowerCase() === cleanCat || c.id === category
+  for (const t of rawTours) {
+    const days = parseInt(
+      (t.duration || "0").match(/(\d+)\s*d/i)?.[1] ||
+        (t.duration || "0").match(/\d+/)?.[0] ||
+        "0",
+      10
     );
-
-    if (matchedCat) {
-      matchedCategoryId = matchedCat.id;
-      activeCategorySlug = matchedCat.slug;
-    } else {
-      // Check if it's an admin category that exists in DB (even if not shown in filter)
-      const anyCat = await prisma.tourCategory.findFirst({
-        where: { OR: [{ slug: cleanCat }, { id: category }] },
-        select: { id: true, slug: true },
-      });
-      if (anyCat) {
-        matchedCategoryId = anyCat.id;
-        activeCategorySlug = anyCat.slug;
-      } else if (!activeStyleSlug && dbTravelStyles.some((s) => s.slug.toLowerCase() === cleanCat)) {
-        // Backwards compatibility: if a travel style slug was passed in ?category=
-        activeStyleSlug = cleanCat;
+    if (days > 0) {
+      durationCountsMap.set(days, (durationCountsMap.get(days) || 0) + 1);
+    }
+    if (Array.isArray(t.destinations)) {
+      for (const d of t.destinations) {
+        const clean = d?.trim();
+        if (clean) destSet.add(clean);
       }
     }
+    if (typeof t.price === "number" && !isNaN(t.price) && t.price > 0) {
+      prices.push(t.price);
+    }
   }
 
-  // 3. Build query filter
-  const where: Record<string, unknown> = { isLive: true };
-
-  // Canonical relational filtering by Tour.categoryId
-  if (matchedCategoryId) {
-    where.categoryId = matchedCategoryId;
-  }
-
-  // TravelStyle filtering via Many-to-Many relation TourTravelStyle
-  if (activeStyleSlug) {
-    where.travelStyles = {
-      some: {
-        travelStyle: {
-          slug: activeStyleSlug,
-          isActive: true,
-        },
-      },
-    };
-  }
-
-  const isFiltered = Boolean(matchedCategoryId || activeStyleSlug);
-
-  // 4. Fetch live/published tours and catalog metadata concurrently.
-  // When unfiltered, raw already retrieves all live tours (where: { isLive: true }).
-  // In that case, we eliminate the duplicate liveMetaTours query entirely and derive
-  // metadata directly from raw in-memory, saving an entire remote roundtrip.
-  // When filtered, both queries execute in parallel via Promise.all so the sidebar
-  // accurately retains catalog-wide filter facets without sequential blocking.
-  let dbTours: TourPackageDetail[] = [];
-  let availableDurations: { value: string; label: string; count?: number }[] = [];
-  let availableDestinations: { name: string; label: string }[] = [];
-  let minPriceBound = 0;
-  let maxPriceBound = 50000;
-
-  try {
-    const [raw, liveMetaTours] = await Promise.all([
-      prisma.tour
-        .findMany({
-          where,
-          orderBy: { createdAt: "desc" },
-          include: {
-            tourCategory: { select: { id: true, name: true, slug: true } },
-          },
-        })
-        .catch((err) => {
-          console.error("Failed to fetch tours from production DB on /tours:", err);
-          return [];
-        }),
-
-      isFiltered
-        ? prisma.tour
-            .findMany({
-              where: { isLive: true },
-              select: { duration: true, destinations: true, price: true },
-            })
-            .catch((metaErr) => {
-              console.error("Failed to fetch tours metadata on /tours:", metaErr);
-              return [];
-            })
-        : Promise.resolve(null),
-    ]);
-
-    dbTours = raw.map((tour: (typeof raw)[number]) => ({
-      id: tour.id,
-      slug: tour.slug,
-      title: tour.title,
-      duration: tour.duration || "",
-      daysCount: parseInt((tour.duration || "0").match(/(\d+)/)?.[0] || "0", 10),
-      nightsCount: Math.max(
-        0,
-        parseInt((tour.duration || "0").match(/(\d+)/)?.[0] || "1", 10) - 1
-      ),
-      badge: (tour as any).badge || "",
-      category: tour.tourCategory?.name || tour.category || "General",
-      categoryDisplay: tour.tourCategory?.name || tour.category || "General",
-      destinations: (tour.destinations as string[]) || [],
-      routeDisplay: (tour.destinations as string[]) || [],
-      price: tour.price || 0,
-      originalPrice: tour.originalPrice || tour.price || 0,
-      rating: 0,
-      reviewsCount: 0,
-      overview: tour.overview || "",
-      images: (tour.images as string[]) || [],
-      whyThisRoute: [],
-      itinerary: [],
-      inclusions: (tour.inclusions as string[]) || [],
-      exclusions: (tour.exclusions as string[]) || [],
-      highlights: (tour.highlights as string[]) || [],
-      reviewsList: [],
-      stays: [],
-      transports: [],
-      isLive: tour.isLive,
-      maxPersons: tour.maxPersons || 2,
+  const availableDurations = Array.from(durationCountsMap.entries())
+    .sort(([a], [b]) => a - b)
+    .map(([days, count]) => ({
+      value: String(days),
+      label: `${days} Days`,
+      count,
     }));
 
-    // 5. Derive catalog filter metadata from either liveMetaTours (if filtered) or raw (if unfiltered)
-    const metaSource = liveMetaTours ?? raw;
-    const durationCountsMap = new Map<number, number>();
-    const destSet = new Set<string>();
-    const prices: number[] = [];
+  const availableDestinations = Array.from(destSet)
+    .sort((a, b) => a.localeCompare(b))
+    .map((name) => ({ name, label: name }));
 
-    for (const t of metaSource) {
-      const days = parseInt(
-        (t.duration || "0").match(/(\d+)\s*d/i)?.[1] ||
-          (t.duration || "0").match(/\d+/)?.[0] ||
-          "0",
-        10
-      );
-      if (days > 0) {
-        durationCountsMap.set(days, (durationCountsMap.get(days) || 0) + 1);
-      }
-      if (Array.isArray(t.destinations)) {
-        for (const d of t.destinations) {
-          const clean = d?.trim();
-          if (clean) destSet.add(clean);
-        }
-      }
-      if (typeof t.price === "number" && !isNaN(t.price) && t.price > 0) {
-        prices.push(t.price);
-      }
-    }
-
-    availableDurations = Array.from(durationCountsMap.entries())
-      .sort(([a], [b]) => a - b)
-      .map(([days, count]) => ({
-        value: String(days),
-        label: `${days} Days`,
-        count,
-      }));
-
-    availableDestinations = Array.from(destSet)
-      .sort((a, b) => a.localeCompare(b))
-      .map((name) => ({ name, label: name }));
-
-    if (prices.length > 0) {
-      minPriceBound = Math.min(...prices);
-      maxPriceBound = Math.ceil(Math.max(...prices) / 1000) * 1000;
-    }
-  } catch (err) {
-    console.error("Failed to process tours data on /tours:", err);
-  }
-
-  // Apply remaining client-side filters (duration, destination, maxPrice, sort)
-  // that are not cost-effective to push to every DB query permutation
-  let filteredTours = dbTours;
-
-  if (duration) {
-    const dur = duration.toLowerCase().trim();
-    const durNum = parseInt(dur, 10);
-    if (!isNaN(durNum)) {
-      if (dur === "2" || dur.includes("weekend")) {
-        filteredTours = filteredTours.filter((t) => t.daysCount <= 2);
-      } else if (dur.includes("short")) {
-        filteredTours = filteredTours.filter((t) => t.daysCount >= 3 && t.daysCount <= 4);
-      } else if (dur.includes("week")) {
-        filteredTours = filteredTours.filter((t) => t.daysCount >= 5);
-      } else {
-        filteredTours = filteredTours.filter((t) => t.daysCount === durNum);
-      }
-    } else if (dur.includes("weekend")) {
-      filteredTours = filteredTours.filter((t) => t.daysCount <= 2);
-    } else if (dur.includes("short")) {
-      filteredTours = filteredTours.filter((t) => t.daysCount >= 3 && t.daysCount <= 4);
-    } else if (dur.includes("week")) {
-      filteredTours = filteredTours.filter((t) => t.daysCount >= 5);
-    }
-  }
-
-  if (destination) {
-    const dest = destination.toLowerCase().trim();
-    filteredTours = filteredTours.filter((t) =>
-      t.destinations.some((d) => d.toLowerCase().includes(dest))
-    );
-  }
-
-  if (parsedMaxPrice) {
-    filteredTours = filteredTours.filter((t) => t.price <= parsedMaxPrice);
-  }
-
-  if (sort) {
-    switch (sort) {
-      case "price-asc":
-        filteredTours.sort((a, b) => a.price - b.price);
-        break;
-      case "price-desc":
-        filteredTours.sort((a, b) => b.price - a.price);
-        break;
-      case "duration-asc":
-        filteredTours.sort((a, b) => a.daysCount - b.daysCount);
-        break;
-      case "duration-desc":
-        filteredTours.sort((a, b) => b.daysCount - a.daysCount);
-        break;
-      default:
-        break;
-    }
+  let minPriceBound = 0;
+  let maxPriceBound = 50000;
+  if (prices.length > 0) {
+    minPriceBound = Math.min(...prices);
+    maxPriceBound = Math.ceil(Math.max(...prices) / 1000) * 1000;
   }
 
   return (
@@ -325,23 +175,17 @@ export default async function ToursListingPage({ searchParams }: ToursPageProps)
         <ToursHeroBanner />
 
         {/* 2. HELP ME CHOOSE RECOMMENDATION BAR */}
-        <ToursRecommendationBar currentCategory={activeStyleSlug || category} />
+        <ToursRecommendationBar />
 
         {/* 3. TOUR DISCOVERY AREA (Sidebar + Inventory Top Bar + 3-Col Cards Grid) */}
         <ToursInventoryView
-          tours={filteredTours}
+          tours={dbTours}
           categories={dbTourCategories}
           travelStyles={dbTravelStyles}
-          category={activeCategorySlug || category}
-          style={activeStyleSlug || style}
-          duration={duration}
-          destination={destination}
-          maxPrice={parsedMaxPrice}
           minPriceBound={minPriceBound}
           maxPriceBound={maxPriceBound}
           availableDurations={availableDurations}
           availableDestinations={availableDestinations}
-          sort={sort}
         />
 
         {/* 4. NEED HELP CHOOSING? SUPPORT CTA */}

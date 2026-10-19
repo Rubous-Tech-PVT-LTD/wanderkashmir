@@ -110,6 +110,14 @@ export interface TourPackageDetail {
     slug: string;
   } | null;
   destinations: string[];
+  travelStyles?: {
+    travelStyle: {
+      id: string;
+      name: string;
+      slug: string;
+      isActive?: boolean;
+    };
+  }[];
   routeDisplay: string[];
   resolvedDestinations?: TourResolvedDestinationItem[];
   price: number;

@@ -1,12 +1,11 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useState, useMemo, useEffect, useCallback, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import { TourPackageDetail } from "@/data/liveToursData";
 import TourCardCompact from "./TourCardCompact";
 import ToursFilterSidebar, { TourCategoryFilterOption, TravelStyleFilterOption } from "./ToursFilterSidebar";
 import { SlidersHorizontal, RotateCcw, Compass } from "lucide-react";
-import Link from "next/link";
 
 interface ToursInventoryViewProps {
   tours: TourPackageDetail[];
@@ -33,6 +32,41 @@ const SORT_OPTIONS = [
   { value: "rating", label: "Highest Rated" },
 ];
 
+/**
+ * Isolated Client Component that reads useSearchParams.
+ * Wrapped in <Suspense> so the parent ToursInventoryView and the entire
+ * tours catalog can be statically prerendered into the initial HTML.
+ */
+function ToursUrlSync({
+  onSync,
+}: {
+  onSync: (filters: {
+    category?: string;
+    style?: string;
+    duration?: string;
+    destination?: string;
+    maxPrice?: number | null;
+    sort?: string;
+  }) => void;
+}) {
+  const searchParams = useSearchParams();
+
+  useEffect(() => {
+    if (searchParams) {
+      const category = searchParams.get("category") || "";
+      const style = searchParams.get("style") || "";
+      const duration = searchParams.get("duration") || "";
+      const destination = searchParams.get("destination") || "";
+      const maxPriceStr = searchParams.get("maxPrice");
+      const maxPrice = maxPriceStr ? parseInt(maxPriceStr, 10) : null;
+      const sort = searchParams.get("sort") || "";
+      onSync({ category, style, duration, destination, maxPrice, sort });
+    }
+  }, [searchParams, onSync]);
+
+  return null;
+}
+
 export default function ToursInventoryView({
   tours,
   categories,
@@ -48,31 +82,254 @@ export default function ToursInventoryView({
   availableDestinations,
   sort,
 }: ToursInventoryViewProps) {
-  const router = useRouter();
-  const searchParams = useSearchParams();
+  const [activeCategory, setActiveCategory] = useState<string>(() => category || "");
+  const [activeStyle, setActiveStyle] = useState<string>(() => style || "");
+  const [activeDuration, setActiveDuration] = useState<string>(() => duration || "");
+  const [activeDestination, setActiveDestination] = useState<string>(() => destination || "");
+  const [activeMaxPrice, setActiveMaxPrice] = useState<number | null>(() => maxPrice ?? null);
+  const [activeSort, setActiveSort] = useState<string>(() => sort || "");
   const [mobileFilterOpen, setMobileFilterOpen] = useState(false);
 
-  const handleSortChange = (newSort: string) => {
-    const params = new URLSearchParams(searchParams ? searchParams.toString() : "");
-    if (newSort) {
-      params.set("sort", newSort);
-    } else {
-      params.delete("sort");
+  // Synchronize state when browser Back/Forward (popstate) occurs
+  useEffect(() => {
+    const handlePopState = () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      setActiveCategory(urlParams.get("category") || "");
+      setActiveStyle(urlParams.get("style") || "");
+      setActiveDuration(urlParams.get("duration") || "");
+      setActiveDestination(urlParams.get("destination") || "");
+      const p = urlParams.get("maxPrice");
+      setActiveMaxPrice(p ? parseInt(p, 10) : null);
+      setActiveSort(urlParams.get("sort") || "");
+    };
+
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, []);
+
+  // Update browser URL query params without triggering a full server reload
+  const updateUrlParams = useCallback((newFilters: {
+    category?: string | null;
+    style?: string | null;
+    duration?: string | null;
+    destination?: string | null;
+    maxPrice?: number | null;
+    sort?: string | null;
+  }) => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams();
+    if (newFilters.category && newFilters.category !== "all") params.set("category", newFilters.category);
+    if (newFilters.style && newFilters.style !== "all") params.set("style", newFilters.style);
+    if (newFilters.duration) params.set("duration", newFilters.duration);
+    if (newFilters.destination) params.set("destination", newFilters.destination);
+    if (newFilters.maxPrice !== null && newFilters.maxPrice !== undefined) {
+      params.set("maxPrice", String(newFilters.maxPrice));
     }
+    if (newFilters.sort) params.set("sort", newFilters.sort);
+
     const qs = params.toString();
-    router.push(qs ? `/tours?${qs}` : "/tours", { scroll: false });
+    const pathname = window.location.pathname;
+    const newPath = qs ? `${pathname}?${qs}` : pathname;
+    window.history.pushState(null, "", newPath);
+  }, []);
+
+  // Synchronize state from isolated ToursUrlSync component
+  const handleUrlSync = useCallback(
+    (filters: {
+      category?: string;
+      style?: string;
+      duration?: string;
+      destination?: string;
+      maxPrice?: number | null;
+      sort?: string;
+    }) => {
+      setActiveCategory(filters.category || "");
+      setActiveStyle(filters.style || "");
+      setActiveDuration(filters.duration || "");
+      setActiveDestination(filters.destination || "");
+      setActiveMaxPrice(filters.maxPrice ?? null);
+      setActiveSort(filters.sort || "");
+    },
+    []
+  );
+
+  const handleFilterChange = useCallback((newParams: Record<string, string | null>) => {
+    setActiveCategory((prev) => ("category" in newParams ? (newParams.category || "") : prev));
+    setActiveStyle((prev) => ("style" in newParams ? (newParams.style || "") : prev));
+    setActiveDuration((prev) => ("duration" in newParams ? (newParams.duration || "") : prev));
+    setActiveDestination((prev) => ("destination" in newParams ? (newParams.destination || "") : prev));
+    setActiveMaxPrice((prev) => {
+      if ("maxPrice" in newParams) {
+        return newParams.maxPrice ? parseInt(newParams.maxPrice, 10) : null;
+      }
+      return prev;
+    });
+
+    const nextCategory = "category" in newParams ? (newParams.category || "") : activeCategory;
+    const nextStyle = "style" in newParams ? (newParams.style || "") : activeStyle;
+    const nextDuration = "duration" in newParams ? (newParams.duration || "") : activeDuration;
+    const nextDestination = "destination" in newParams ? (newParams.destination || "") : activeDestination;
+    const nextMaxPrice = "maxPrice" in newParams ? (newParams.maxPrice ? parseInt(newParams.maxPrice, 10) : null) : activeMaxPrice;
+
+    updateUrlParams({
+      category: nextCategory,
+      style: nextStyle,
+      duration: nextDuration,
+      destination: nextDestination,
+      maxPrice: nextMaxPrice,
+      sort: activeSort,
+    });
+  }, [activeCategory, activeStyle, activeDuration, activeDestination, activeMaxPrice, activeSort, updateUrlParams]);
+
+  const handleSortChange = (newSort: string) => {
+    setActiveSort(newSort);
+    updateUrlParams({
+      category: activeCategory,
+      style: activeStyle,
+      duration: activeDuration,
+      destination: activeDestination,
+      maxPrice: activeMaxPrice,
+      sort: newSort,
+    });
   };
 
+  const handleResetFilters = () => {
+    setActiveCategory("");
+    setActiveStyle("");
+    setActiveDuration("");
+    setActiveDestination("");
+    setActiveMaxPrice(null);
+    setActiveSort("");
+    updateUrlParams({
+      category: null,
+      style: null,
+      duration: null,
+      destination: null,
+      maxPrice: null,
+      sort: null,
+    });
+  };
+
+  // Filter and sort catalog in-memory
+  const filteredTours = useMemo(() => {
+    let result = [...tours];
+
+    // Resolve Category filter
+    let matchedCategoryId: string | undefined = undefined;
+    let resolvedCategorySlug: string | undefined = undefined;
+    let resolvedStyleSlug = activeStyle && activeStyle !== "all" ? activeStyle.toLowerCase().trim() : undefined;
+
+    if (activeCategory && activeCategory !== "all") {
+      const cleanCat = activeCategory.toLowerCase().trim();
+      const matchedCat = categories?.find(
+        (c) => c.slug.toLowerCase() === cleanCat || c.id === activeCategory
+      );
+      if (matchedCat) {
+        matchedCategoryId = matchedCat.id;
+        resolvedCategorySlug = matchedCat.slug;
+      } else if (!resolvedStyleSlug && travelStyles?.some((s) => s.slug.toLowerCase() === cleanCat)) {
+        resolvedStyleSlug = cleanCat;
+      } else {
+        resolvedCategorySlug = cleanCat;
+      }
+    }
+
+    if (matchedCategoryId || resolvedCategorySlug) {
+      result = result.filter((t) => {
+        if (matchedCategoryId && (t.categoryId === matchedCategoryId || t.tourCategory?.id === matchedCategoryId)) return true;
+        if (resolvedCategorySlug && t.tourCategory?.slug?.toLowerCase() === resolvedCategorySlug.toLowerCase()) return true;
+        if (resolvedCategorySlug && t.category?.toLowerCase() === resolvedCategorySlug.toLowerCase()) return true;
+        return false;
+      });
+    }
+
+    if (resolvedStyleSlug) {
+      result = result.filter((t) => {
+        if (Array.isArray(t.travelStyles) && t.travelStyles.length > 0) {
+          const hasStyle = t.travelStyles.some(
+            (ts) => ts.travelStyle?.slug?.toLowerCase() === resolvedStyleSlug
+          );
+          if (hasStyle) return true;
+        }
+        if (t.badge?.toLowerCase() === resolvedStyleSlug) return true;
+        if (t.category?.toLowerCase() === resolvedStyleSlug) return true;
+        return false;
+      });
+    }
+
+    if (activeDuration) {
+      const dur = activeDuration.toLowerCase().trim();
+      const durNum = parseInt(dur, 10);
+      if (!isNaN(durNum)) {
+        if (dur === "2" || dur.includes("weekend")) {
+          result = result.filter((t) => t.daysCount <= 2);
+        } else if (dur.includes("short")) {
+          result = result.filter((t) => t.daysCount >= 3 && t.daysCount <= 4);
+        } else if (dur.includes("week")) {
+          result = result.filter((t) => t.daysCount >= 5);
+        } else {
+          result = result.filter((t) => t.daysCount === durNum);
+        }
+      } else if (dur.includes("weekend")) {
+        result = result.filter((t) => t.daysCount <= 2);
+      } else if (dur.includes("short")) {
+        result = result.filter((t) => t.daysCount >= 3 && t.daysCount <= 4);
+      } else if (dur.includes("week")) {
+        result = result.filter((t) => t.daysCount >= 5);
+      }
+    }
+
+    if (activeDestination) {
+      const dest = activeDestination.toLowerCase().trim();
+      result = result.filter((t) =>
+        t.destinations.some((d) => d.toLowerCase().includes(dest))
+      );
+    }
+
+    if (activeMaxPrice) {
+      result = result.filter((t) => t.price <= activeMaxPrice);
+    }
+
+    if (activeSort) {
+      switch (activeSort) {
+        case "price-asc":
+          result.sort((a, b) => a.price - b.price);
+          break;
+        case "price-desc":
+          result.sort((a, b) => b.price - a.price);
+          break;
+        case "duration-asc":
+          result.sort((a, b) => a.daysCount - b.daysCount);
+          break;
+        case "duration-desc":
+          result.sort((a, b) => b.daysCount - a.daysCount);
+          break;
+        case "rating":
+          result.sort((a, b) => (b.rating || 0) - (a.rating || 0));
+          break;
+        default:
+          break;
+      }
+    }
+
+    return result;
+  }, [tours, categories, travelStyles, activeCategory, activeStyle, activeDuration, activeDestination, activeMaxPrice, activeSort]);
+
   const activeFilterCount = [
-    category,
-    style,
-    duration,
-    destination,
-    maxPrice && maxPrice < (maxPriceBound ?? 50000) ? maxPrice : null,
+    activeCategory,
+    activeStyle,
+    activeDuration,
+    activeDestination,
+    activeMaxPrice && activeMaxPrice < (maxPriceBound ?? 50000) ? activeMaxPrice : null,
   ].filter(Boolean).length;
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10">
+      {/* Isolated URL search params listener wrapped in Suspense for static prerendering */}
+      <Suspense fallback={null}>
+        <ToursUrlSync onSync={handleUrlSync} />
+      </Suspense>
+
       <div className="flex flex-col lg:flex-row items-start gap-8">
         {/* ========================================= */}
         {/* LEFT COLUMN: Filter Sidebar (Desktop)     */}
@@ -81,15 +338,16 @@ export default function ToursInventoryView({
           <ToursFilterSidebar
             categories={categories}
             travelStyles={travelStyles}
-            category={category}
-            style={style}
-            duration={duration}
-            destination={destination}
-            maxPrice={maxPrice}
+            category={activeCategory}
+            style={activeStyle}
+            duration={activeDuration}
+            destination={activeDestination}
+            maxPrice={activeMaxPrice ?? undefined}
             minPriceBound={minPriceBound}
             maxPriceBound={maxPriceBound}
             availableDurations={availableDurations}
             availableDestinations={availableDestinations}
+            onFilterChange={handleFilterChange}
           />
         </aside>
 
@@ -102,16 +360,17 @@ export default function ToursInventoryView({
               <ToursFilterSidebar
                 categories={categories}
                 travelStyles={travelStyles}
-                category={category}
-                style={style}
-                duration={duration}
-                destination={destination}
-                maxPrice={maxPrice}
+                category={activeCategory}
+                style={activeStyle}
+                duration={activeDuration}
+                destination={activeDestination}
+                maxPrice={activeMaxPrice ?? undefined}
                 minPriceBound={minPriceBound}
                 maxPriceBound={maxPriceBound}
                 availableDurations={availableDurations}
                 availableDestinations={availableDestinations}
                 onCloseMobile={() => setMobileFilterOpen(false)}
+                onFilterChange={handleFilterChange}
               />
             </div>
           </div>
@@ -126,7 +385,7 @@ export default function ToursInventoryView({
             {/* Dynamic Result Count */}
             <div>
               <h2 className="text-xl sm:text-2xl font-extrabold text-[var(--season-text,#111827)] font-display tracking-tight">
-                {tours.length} Kashmir Tour{tours.length === 1 ? "" : "s"} Found
+                {filteredTours.length} Kashmir Tour{filteredTours.length === 1 ? "" : "s"} Found
               </h2>
             </div>
 
@@ -156,7 +415,7 @@ export default function ToursInventoryView({
                 </label>
                 <select
                   id="sort-select"
-                  value={sort || ""}
+                  value={activeSort || ""}
                   onChange={(e) => handleSortChange(e.target.value)}
                   className="px-3 py-1.5 rounded-xl text-xs font-semibold bg-white border border-[var(--season-border)] text-[var(--season-text)] focus:ring-[var(--season-primary)] focus:border-[var(--season-primary)] cursor-pointer shadow-2xs"
                 >
@@ -171,9 +430,9 @@ export default function ToursInventoryView({
           </div>
 
           {/* Tour Cards Grid: 3 columns desktop, 2 columns tablet, 1 column mobile */}
-          {tours.length > 0 ? (
+          {filteredTours.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5 sm:gap-6">
-              {tours.map((tour) => (
+              {filteredTours.map((tour) => (
                 <TourCardCompact key={tour.id} tour={tour} />
               ))}
             </div>
@@ -190,13 +449,14 @@ export default function ToursInventoryView({
                 We couldn&apos;t find any tour packages matching your exact criteria. Try adjusting your duration, category, or price range.
               </p>
               <div className="pt-2">
-                <Link
-                  href="/tours"
-                  className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold text-white bg-[var(--season-primary)] hover:bg-[var(--season-primary-hover)] transition-colors shadow-2xs"
+                <button
+                  type="button"
+                  onClick={handleResetFilters}
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold text-white bg-[var(--season-primary)] hover:bg-[var(--season-primary-hover)] transition-colors shadow-2xs cursor-pointer"
                 >
                   <RotateCcw className="w-3.5 h-3.5" />
                   <span>Reset All Filters</span>
-                </Link>
+                </button>
               </div>
             </div>
           )}

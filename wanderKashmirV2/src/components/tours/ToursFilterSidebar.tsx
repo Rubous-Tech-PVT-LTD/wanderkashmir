@@ -1,7 +1,6 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { ChevronDown, ChevronUp, RotateCcw, X, SlidersHorizontal } from "lucide-react";
 
@@ -31,6 +30,7 @@ interface ToursFilterSidebarProps {
   availableDurations?: { value: string; label: string; count?: number }[];
   availableDestinations?: { name: string; label: string }[];
   onCloseMobile?: () => void;
+  onFilterChange?: (newParams: Record<string, string | null>) => void;
 }
 
 const DEFAULT_CATEGORIES: TourCategoryFilterOption[] = [
@@ -59,10 +59,8 @@ export default function ToursFilterSidebar({
   availableDurations = [],
   availableDestinations = [],
   onCloseMobile,
+  onFilterChange,
 }: ToursFilterSidebarProps) {
-  const router = useRouter();
-  const searchParams = useSearchParams();
-
   // Accordion state
   const [openTourCategories, setOpenTourCategories] = useState(false);
   const [openTravelStyles, setOpenTravelStyles] = useState(false);
@@ -76,8 +74,18 @@ export default function ToursFilterSidebar({
   const currentMaxPrice = maxPrice ? Number(maxPrice) : effectiveMaxPrice;
   const [localPrice, setLocalPrice] = useState<number>(currentMaxPrice);
 
+  useEffect(() => {
+    setLocalPrice(maxPrice ? Number(maxPrice) : effectiveMaxPrice);
+  }, [maxPrice, effectiveMaxPrice]);
+
   const updateFilters = (newParams: Record<string, string | null>) => {
-    const params = new URLSearchParams(searchParams ? searchParams.toString() : "");
+    if (onFilterChange) {
+      onFilterChange(newParams);
+      return;
+    }
+
+    const currentSearch = typeof window !== "undefined" ? window.location.search : "";
+    const params = new URLSearchParams(currentSearch);
 
     Object.entries(newParams).forEach(([key, value]) => {
       if (value === null || value === "") {
@@ -88,7 +96,12 @@ export default function ToursFilterSidebar({
     });
 
     const queryString = params.toString();
-    router.push(queryString ? `/tours?${queryString}` : "/tours", { scroll: false });
+    const pathname = typeof window !== "undefined" ? window.location.pathname : "/tours";
+    const targetUrl = queryString ? `${pathname}?${queryString}` : pathname;
+    if (typeof window !== "undefined") {
+      window.history.pushState(null, "", targetUrl);
+      window.dispatchEvent(new Event("popstate"));
+    }
   };
 
   const handleCategoryToggle = (slug: string) => {
@@ -137,14 +150,31 @@ export default function ToursFilterSidebar({
 
   const clearAllFilters = () => {
     setLocalPrice(effectiveMaxPrice);
-    const params = new URLSearchParams(searchParams ? searchParams.toString() : "");
+    if (onFilterChange) {
+      onFilterChange({
+        category: null,
+        style: null,
+        duration: null,
+        destination: null,
+        maxPrice: null,
+      });
+      return;
+    }
+
+    const currentSearch = typeof window !== "undefined" ? window.location.search : "";
+    const params = new URLSearchParams(currentSearch);
     params.delete("category");
     params.delete("style");
     params.delete("duration");
     params.delete("destination");
     params.delete("maxPrice");
     const qs = params.toString();
-    router.push(qs ? `/tours?${qs}` : "/tours", { scroll: false });
+    const pathname = typeof window !== "undefined" ? window.location.pathname : "/tours";
+    const targetUrl = qs ? `${pathname}?${qs}` : pathname;
+    if (typeof window !== "undefined") {
+      window.history.pushState(null, "", targetUrl);
+      window.dispatchEvent(new Event("popstate"));
+    }
   };
 
   const hasActiveFilters = Boolean(
