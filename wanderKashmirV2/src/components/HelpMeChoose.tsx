@@ -487,7 +487,7 @@ export default function HelpMeChoose({ travelStyles }: HelpMeChooseProps = {}) {
                   fill
                   sizes="(max-width: 640px) 80vw, (max-width: 1024px) 33vw, 16vw"
                   className="object-cover object-center transition-transform duration-700 ease-out motion-safe:group-hover:scale-108 motion-reduce:transform-none"
-                  priority={idx < 6}
+                  priority={false}
                   aria-hidden="true"
                 />
 
