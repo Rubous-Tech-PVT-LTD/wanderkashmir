@@ -64,8 +64,8 @@ export default function HomeHero({ rating, totalReviews }: HomeHeroProps) {
               loop
               muted
               playsInline
-              preload="auto"
-              poster="https://res.cloudinary.com/dcmoseix9/video/upload/so_0,f_auto,q_auto/v1789317861/Final_Video_rdc5nd.jpg"
+              preload="none"
+              poster="https://res.cloudinary.com/dcmoseix9/video/upload/so_0,w_480,f_auto,q_auto/v1789317861/Final_Video_rdc5nd.jpg"
               title="Discover Kashmir - WanderKashmir Travel"
               aria-label="WanderKashmir scenic travel video"
               className="absolute inset-0 w-full h-full object-cover object-center"

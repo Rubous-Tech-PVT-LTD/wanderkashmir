@@ -324,8 +324,19 @@ export default async function HomePage() {
       : {}),
   };
 
+const MOBILE_HERO_POSTER_URL =
+  "https://res.cloudinary.com/dcmoseix9/video/upload/so_0,w_480,f_auto,q_auto/v1789317861/Final_Video_rdc5nd.jpg";
+
   return (
     <div className="flex min-h-screen flex-col bg-white text-[var(--season-text)] transition-colors duration-200 overflow-x-clip">
+      {/* High-priority mobile LCP poster preload - media query prevents redundant desktop download */}
+      <link
+        rel="preload"
+        as="image"
+        href={MOBILE_HERO_POSTER_URL}
+        media="(max-width: 767px)"
+        fetchPriority="high"
+      />
       <JsonLd data={orgJsonLd} />
       {/* 1. Nav / Header */}
       <Navbar />
