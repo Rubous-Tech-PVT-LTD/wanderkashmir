@@ -34,51 +34,27 @@ export const metadata: Metadata = {
   },
 };
 
-interface StaysPageProps {
-  searchParams?: Promise<{
-    type?: string;
-    location?: string;
-    maxPrice?: string;
-  }>;
-}
-
-export default async function StaysPage({ searchParams }: StaysPageProps) {
-  const resolvedParams = searchParams ? await searchParams : {};
-  const activeType = resolvedParams.type ? resolvedParams.type.trim() : undefined;
-  const activeLocation = resolvedParams.location ? resolvedParams.location.trim() : undefined;
-  const activeMaxPrice = resolvedParams.maxPrice ? parseInt(resolvedParams.maxPrice.trim(), 10) : undefined;
-
-  // Map requested type filter to database PropertyType enum
-  let propertyTypeFilter: "HOTEL" | "RESORT" | "HOMESTAY" | "HOUSEBOAT" | undefined = undefined;
-  if (activeType && activeType !== "ALL") {
-    const norm = activeType.toLowerCase();
-    if (norm === "hotel" || norm === "hotels") propertyTypeFilter = "HOTEL";
-    else if (norm === "resort" || norm === "resorts") propertyTypeFilter = "RESORT";
-    else if (norm === "homestay" || norm === "homestays") propertyTypeFilter = "HOMESTAY";
-    else if (norm === "houseboat" || norm === "houseboats") propertyTypeFilter = "HOUSEBOAT";
-  }
-
-  // Fetch strictly verified & approved properties from database with server-side query filters
+export default async function StaysPage() {
+  // Fetch complete set of strictly verified & approved properties for public display
   const rawProperties = await prisma.property.findMany({
     where: {
       isApproved: true,
       status: "APPROVED",
-      ...(propertyTypeFilter ? { propertyType: propertyTypeFilter } : {}),
-      ...(activeLocation && activeLocation !== "ALL"
-        ? { location: { contains: activeLocation, mode: "insensitive" } }
-        : {}),
-      ...(activeMaxPrice && !isNaN(activeMaxPrice)
-        ? { pricePerNight: { lte: activeMaxPrice } }
-        : {}),
     },
-    include: {
-      vendorProfile: {
-        select: {
-          id: true,
-          type: true,
-          businessName: true,
-        },
-      },
+    select: {
+      id: true,
+      name: true,
+      location: true,
+      description: true,
+      pricePerNight: true,
+      images: true,
+      amenities: true,
+      bedrooms: true,
+      beds: true,
+      guests: true,
+      breakfastIncluded: true,
+      dinnerIncluded: true,
+      propertyType: true,
     },
     orderBy: {
       createdAt: "desc",
@@ -99,7 +75,7 @@ export default async function StaysPage({ searchParams }: StaysPageProps) {
     guests: p.guests || 2,
     breakfastIncluded: Boolean(p.breakfastIncluded),
     dinnerIncluded: Boolean(p.dinnerIncluded),
-    vendorType: p.vendorProfile?.type || "HOTEL",
+    vendorType: p.propertyType || "HOTEL",
     propertyType: p.propertyType || "HOTEL",
   }));
 
@@ -108,12 +84,7 @@ export default async function StaysPage({ searchParams }: StaysPageProps) {
       <Navbar />
       <main className="min-h-screen bg-[var(--season-background,#FAFAFA)]">
         <StaysHeroBanner />
-        <StaysInventoryView
-          initialProperties={properties}
-          initialType={activeType}
-          initialLocation={activeLocation}
-          initialMaxPrice={activeMaxPrice}
-        />
+        <StaysInventoryView initialProperties={properties} />
       </main>
       <Footer />
     </>

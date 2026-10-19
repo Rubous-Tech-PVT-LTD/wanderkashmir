@@ -52,34 +52,35 @@ export default async function ToursListingPage({ searchParams }: ToursPageProps)
 
   const parsedMaxPrice = maxPrice ? Number(maxPrice) : undefined;
 
-  // 1. Fetch visible Tour Categories dynamically from database (ordered by displayOrder)
-  const dbTourCategories = await prisma.tourCategory
-    .findMany({
-      where: { showInFilter: true },
-      orderBy: [{ displayOrder: "asc" }, { name: "asc" }],
-      select: {
-        id: true,
-        name: true,
-        slug: true,
-        displayOrder: true,
-      },
-    })
-    .catch(() => []);
+  // 1. Fetch visible Tour Categories and active Travel Styles concurrently in parallel
+  const [dbTourCategories, dbTravelStyles] = await Promise.all([
+    prisma.tourCategory
+      .findMany({
+        where: { showInFilter: true },
+        orderBy: [{ displayOrder: "asc" }, { name: "asc" }],
+        select: {
+          id: true,
+          name: true,
+          slug: true,
+          displayOrder: true,
+        },
+      })
+      .catch(() => []),
 
-  // 2. Fetch active Travel Styles dynamically from database
-  const dbTravelStyles = await prisma.travelStyle
-    .findMany({
-      where: { isActive: true },
-      orderBy: { displayOrder: "asc" },
-      select: {
-        id: true,
-        name: true,
-        slug: true,
-      },
-    })
-    .catch(() => []);
+    prisma.travelStyle
+      .findMany({
+        where: { isActive: true },
+        orderBy: { displayOrder: "asc" },
+        select: {
+          id: true,
+          name: true,
+          slug: true,
+        },
+      })
+      .catch(() => []),
+  ]);
 
-  // 3. Resolve selected Category and Travel Style filters
+  // 2. Resolve selected Category and Travel Style filters
   let matchedCategoryId: string | undefined = undefined;
   let activeCategorySlug: string | undefined = undefined;
   let activeStyleSlug: string | undefined = undefined;
@@ -117,35 +118,67 @@ export default async function ToursListingPage({ searchParams }: ToursPageProps)
     }
   }
 
-  // 4. Fetch ONLY live/published tours from production DB using canonical relational fields
-  let dbTours: TourPackageDetail[] = [];
-  try {
-    const where: Record<string, unknown> = { isLive: true };
+  // 3. Build query filter
+  const where: Record<string, unknown> = { isLive: true };
 
-    // Canonical relational filtering by Tour.categoryId
-    if (matchedCategoryId) {
-      where.categoryId = matchedCategoryId;
-    }
+  // Canonical relational filtering by Tour.categoryId
+  if (matchedCategoryId) {
+    where.categoryId = matchedCategoryId;
+  }
 
-    // TravelStyle filtering via Many-to-Many relation TourTravelStyle
-    if (activeStyleSlug) {
-      where.travelStyles = {
-        some: {
-          travelStyle: {
-            slug: activeStyleSlug,
-            isActive: true,
-          },
+  // TravelStyle filtering via Many-to-Many relation TourTravelStyle
+  if (activeStyleSlug) {
+    where.travelStyles = {
+      some: {
+        travelStyle: {
+          slug: activeStyleSlug,
+          isActive: true,
         },
-      };
-    }
-
-    const raw = await prisma.tour.findMany({
-      where,
-      orderBy: { createdAt: "desc" },
-      include: {
-        tourCategory: { select: { id: true, name: true, slug: true } },
       },
-    });
+    };
+  }
+
+  const isFiltered = Boolean(matchedCategoryId || activeStyleSlug);
+
+  // 4. Fetch live/published tours and catalog metadata concurrently.
+  // When unfiltered, raw already retrieves all live tours (where: { isLive: true }).
+  // In that case, we eliminate the duplicate liveMetaTours query entirely and derive
+  // metadata directly from raw in-memory, saving an entire remote roundtrip.
+  // When filtered, both queries execute in parallel via Promise.all so the sidebar
+  // accurately retains catalog-wide filter facets without sequential blocking.
+  let dbTours: TourPackageDetail[] = [];
+  let availableDurations: { value: string; label: string; count?: number }[] = [];
+  let availableDestinations: { name: string; label: string }[] = [];
+  let minPriceBound = 0;
+  let maxPriceBound = 50000;
+
+  try {
+    const [raw, liveMetaTours] = await Promise.all([
+      prisma.tour
+        .findMany({
+          where,
+          orderBy: { createdAt: "desc" },
+          include: {
+            tourCategory: { select: { id: true, name: true, slug: true } },
+          },
+        })
+        .catch((err) => {
+          console.error("Failed to fetch tours from production DB on /tours:", err);
+          return [];
+        }),
+
+      isFiltered
+        ? prisma.tour
+            .findMany({
+              where: { isLive: true },
+              select: { duration: true, destinations: true, price: true },
+            })
+            .catch((metaErr) => {
+              console.error("Failed to fetch tours metadata on /tours:", metaErr);
+              return [];
+            })
+        : Promise.resolve(null),
+    ]);
 
     dbTours = raw.map((tour: (typeof raw)[number]) => ({
       id: tour.id,
@@ -179,28 +212,14 @@ export default async function ToursListingPage({ searchParams }: ToursPageProps)
       isLive: tour.isLive,
       maxPersons: tour.maxPersons || 2,
     }));
-  } catch (err) {
-    console.error("Failed to fetch tours from production DB on /tours:", err);
-    dbTours = [];
-  }
 
-  // 5. Fetch all Live Tours inventory metadata to dynamically derive filters
-  let availableDurations: { value: string; label: string; count?: number }[] = [];
-  let availableDestinations: { name: string; label: string }[] = [];
-  let minPriceBound = 0;
-  let maxPriceBound = 50000;
-
-  try {
-    const liveMetaTours = await prisma.tour.findMany({
-      where: { isLive: true },
-      select: { duration: true, destinations: true, price: true },
-    });
-
+    // 5. Derive catalog filter metadata from either liveMetaTours (if filtered) or raw (if unfiltered)
+    const metaSource = liveMetaTours ?? raw;
     const durationCountsMap = new Map<number, number>();
     const destSet = new Set<string>();
     const prices: number[] = [];
 
-    for (const t of liveMetaTours) {
+    for (const t of metaSource) {
       const days = parseInt(
         (t.duration || "0").match(/(\d+)\s*d/i)?.[1] ||
           (t.duration || "0").match(/\d+/)?.[0] ||
@@ -237,8 +256,8 @@ export default async function ToursListingPage({ searchParams }: ToursPageProps)
       minPriceBound = Math.min(...prices);
       maxPriceBound = Math.ceil(Math.max(...prices) / 1000) * 1000;
     }
-  } catch (metaErr) {
-    console.error("Failed to compute live filters metadata:", metaErr);
+  } catch (err) {
+    console.error("Failed to process tours data on /tours:", err);
   }
 
   // Apply remaining client-side filters (duration, destination, maxPrice, sort)

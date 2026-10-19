@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import React, { useState, useMemo, useEffect, useCallback, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import {
   SlidersHorizontal,
   Search,
@@ -22,15 +22,37 @@ interface StaysInventoryViewProps {
   initialMaxPrice?: number | null;
 }
 
+/**
+ * Isolated Client Component that reads useSearchParams.
+ * Wrapped in <Suspense> so the parent StaysInventoryView and the entire
+ * stays catalog can be statically prerendered into the initial HTML.
+ */
+function StaysUrlSync({
+  onSync,
+}: {
+  onSync: (type: string, location: string, maxPrice: number | null) => void;
+}) {
+  const searchParams = useSearchParams();
+
+  useEffect(() => {
+    if (searchParams) {
+      const type = searchParams.get("type") || "ALL";
+      const loc = searchParams.get("location") || "ALL";
+      const p = searchParams.get("maxPrice");
+      const maxPrice = p ? parseInt(p, 10) : null;
+      onSync(type, loc, maxPrice);
+    }
+  }, [searchParams, onSync]);
+
+  return null;
+}
+
 export default function StaysInventoryView({
   initialProperties,
   initialType,
   initialLocation,
   initialMaxPrice,
 }: StaysInventoryViewProps) {
-  const router = useRouter();
-  const searchParams = useSearchParams();
-
   // Normalize initial inputs
   const parseType = (val?: string | null) => {
     if (!val) return "ALL";
@@ -42,13 +64,9 @@ export default function StaysInventoryView({
     return val.toUpperCase();
   };
 
-  const [activeType, setActiveType] = useState<string>(() => parseType(initialType || searchParams?.get("type")));
-  const [activeLocation, setActiveLocation] = useState<string>(() => initialLocation || searchParams?.get("location") || "ALL");
-  const [activeMaxPrice, setActiveMaxPrice] = useState<number | null>(() => {
-    if (initialMaxPrice) return initialMaxPrice;
-    const p = searchParams?.get("maxPrice");
-    return p ? parseInt(p, 10) : null;
-  });
+  const [activeType, setActiveType] = useState<string>(() => parseType(initialType));
+  const [activeLocation, setActiveLocation] = useState<string>(() => initialLocation || "ALL");
+  const [activeMaxPrice, setActiveMaxPrice] = useState<number | null>(() => initialMaxPrice ?? null);
   const [activeAmenities, setActiveAmenities] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [sortBy, setSortBy] = useState<string>("recommended");
@@ -134,7 +152,7 @@ export default function StaysInventoryView({
     };
   }, [initialProperties]);
 
-  // 2. Synchronize URL query params with router navigation
+  // 2. Synchronize URL query params with shallow browser history (no full server reload)
   const updateUrlParams = (newType: string, newLoc: string, newMaxPrice: number | null) => {
     const params = new URLSearchParams();
     if (newType !== "ALL") params.set("type", newType.toLowerCase());
@@ -143,8 +161,36 @@ export default function StaysInventoryView({
 
     const qs = params.toString();
     const newPath = qs ? `/stays?${qs}` : "/stays";
-    router.push(newPath);
+
+    // Update browser URL and history without triggering a full server-side navigation
+    if (typeof window !== "undefined") {
+      window.history.pushState(null, "", newPath);
+    }
   };
+
+  // Synchronize state when browser Back/Forward (popstate) occurs
+  useEffect(() => {
+    const handlePopState = () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      setActiveType(parseType(urlParams.get("type")));
+      setActiveLocation(urlParams.get("location") || "ALL");
+      const p = urlParams.get("maxPrice");
+      setActiveMaxPrice(p ? parseInt(p, 10) : null);
+    };
+
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, []);
+
+  // Synchronize state from isolated StaysUrlSync component
+  const handleUrlSync = useCallback(
+    (typeKey: string, locKey: string, maxPriceVal: number | null) => {
+      setActiveType(parseType(typeKey));
+      setActiveLocation(locKey || "ALL");
+      setActiveMaxPrice(maxPriceVal);
+    },
+    []
+  );
 
   // Filter handlers
   const handleSelectType = (typeKey: string) => {
@@ -254,6 +300,11 @@ export default function StaysInventoryView({
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10">
+      {/* Isolated URL search params listener wrapped in Suspense for static prerendering */}
+      <Suspense fallback={null}>
+        <StaysUrlSync onSync={handleUrlSync} />
+      </Suspense>
+
       {/* Search Bar & Quick Bar */}
       <div className="mb-6 p-3 sm:p-4 rounded-2xl bg-white border border-[var(--season-border,#E5E7EB)] shadow-2xs flex flex-col md:flex-row items-center gap-3">
         {/* Search Input */}
