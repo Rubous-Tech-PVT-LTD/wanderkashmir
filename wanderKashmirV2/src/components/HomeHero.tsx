@@ -1,5 +1,7 @@
 "use client";
 
+import Image from "next/image";
+import { useEffect, useRef } from "react";
 import CustomizeTripModal from "@/components/CustomizeTripModal";
 import HeroSearchBar from "@/components/HeroSearchBar";
 import { HEADER_SPACING } from "@/components/Navbar";
@@ -48,6 +50,59 @@ interface HomeHeroProps {
 }
 
 export default function HomeHero({ rating, totalReviews }: HomeHeroProps) {
+  const mobileVideoRef = useRef<HTMLVideoElement | null>(null);
+
+  useEffect(() => {
+    let isCancelled = false;
+    let timerId: ReturnType<typeof setTimeout> | null = null;
+    let idleId: number | null = null;
+
+    const startPlayback = () => {
+      if (isCancelled) return;
+      const video = mobileVideoRef.current;
+      if (!video) return;
+
+      video.muted = true;
+      const playPromise = video.play();
+      if (playPromise !== undefined) {
+        playPromise.catch(() => {
+          // Gracefully ignore play rejection (e.g. low power mode or browser policy)
+        });
+      }
+    };
+
+    // Defer playback until after poster has painted and main thread is sufficiently idle
+    const schedulePlay = () => {
+      if (typeof window.requestIdleCallback === "function") {
+        idleId = window.requestIdleCallback(
+          () => {
+            timerId = setTimeout(startPlayback, 800);
+          },
+          { timeout: 2500 }
+        );
+      } else {
+        timerId = setTimeout(startPlayback, 1200);
+      }
+    };
+
+    if (document.readyState === "complete") {
+      schedulePlay();
+    } else {
+      const onWindowLoad = () => schedulePlay();
+      window.addEventListener("load", onWindowLoad, { once: true });
+    }
+
+    return () => {
+      isCancelled = true;
+      if (idleId !== null && typeof window.cancelIdleCallback === "function") {
+        window.cancelIdleCallback(idleId);
+      }
+      if (timerId !== null) {
+        clearTimeout(timerId);
+      }
+    };
+  }, []);
+
   return (
     <>
       {/* ─── MOBILE ONLY: Hero Video & Action Section (Copied from production, rest is new design) ─── */}
@@ -57,15 +112,24 @@ export default function HomeHero({ rating, totalReviews }: HomeHeroProps) {
           aria-label="Discover Kashmir Video"
           className="relative w-full h-[54dvh] min-h-[360px] max-h-[480px] flex flex-col justify-center overflow-hidden bg-black"
         >
-          {/* Background Video */}
+          {/* Background Video & Dedicated Poster Layer */}
           <div className="absolute inset-0 z-0 overflow-hidden w-full h-full pointer-events-none">
+            {/* Dedicated Hero Poster Image (Layer 0) */}
+            <Image
+              src="https://res.cloudinary.com/dcmoseix9/video/upload/so_0,w_480,f_auto,q_auto/v1789317861/Final_Video_rdc5nd.jpg"
+              alt="Discover Kashmir scenic travel hero"
+              fill
+              priority
+              unoptimized
+              sizes="100vw"
+              className="absolute inset-0 w-full h-full object-cover object-center"
+            />
             <video
-              autoPlay
+              ref={mobileVideoRef}
               loop
               muted
               playsInline
               preload="none"
-              poster="https://res.cloudinary.com/dcmoseix9/video/upload/so_0,w_480,f_auto,q_auto/v1789317861/Final_Video_rdc5nd.jpg"
               title="Discover Kashmir - WanderKashmir Travel"
               aria-label="WanderKashmir scenic travel video"
               className="absolute inset-0 w-full h-full object-cover object-center"
