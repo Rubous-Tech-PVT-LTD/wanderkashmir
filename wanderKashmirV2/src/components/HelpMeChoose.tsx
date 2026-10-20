@@ -485,7 +485,7 @@ export default function HelpMeChoose({ travelStyles }: HelpMeChooseProps = {}) {
                   src={card.imageUrl}
                   alt=""
                   fill
-                  sizes="(max-width: 640px) 80vw, (max-width: 1024px) 33vw, 16vw"
+                  sizes="(max-width: 640px) min(80vw, 320px), (max-width: 1024px) 33vw, 280px"
                   className="object-cover object-center transition-transform duration-700 ease-out motion-safe:group-hover:scale-108 motion-reduce:transform-none"
                   priority={false}
                   aria-hidden="true"
@@ -504,7 +504,7 @@ export default function HelpMeChoose({ travelStyles }: HelpMeChooseProps = {}) {
                           src={card.svgUrl}
                           alt=""
                           fill
-                          unoptimized
+                          sizes="32px"
                           className="object-contain filter brightness-0 invert drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]"
                           aria-hidden="true"
                         />

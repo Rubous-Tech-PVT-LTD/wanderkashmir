@@ -202,7 +202,7 @@ export default function PopularTours({ initialTours }: PopularToursProps) {
                       src={tour.imageUrl}
                       alt={tour.title}
                       fill
-                      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+                      sizes="(max-width: 640px) 92vw, (max-width: 1024px) 48vw, 380px"
                       className="object-cover object-center transition-transform duration-700 ease-out group-hover:scale-106"
                     />
                   ) : (
