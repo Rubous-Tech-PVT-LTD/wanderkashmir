@@ -1,5 +1,7 @@
 "use client";
 
+import Image from "next/image";
+import { useEffect, useRef, useState } from "react";
 import CustomizeTripModal from "@/components/CustomizeTripModal";
 import HeroSearchBar from "@/components/HeroSearchBar";
 import { HEADER_SPACING } from "@/components/Navbar";
@@ -48,6 +50,67 @@ interface HomeHeroProps {
 }
 
 export default function HomeHero({ rating, totalReviews }: HomeHeroProps) {
+  const mobileVideoRef = useRef<HTMLVideoElement | null>(null);
+  const [isVideoVisible, setIsVideoVisible] = useState(false);
+
+  useEffect(() => {
+    let isCancelled = false;
+    const video = mobileVideoRef.current;
+    if (!video) return;
+
+    // Respect user's reduced-motion preference (keep high-res poster static)
+    if (
+      typeof window !== "undefined" &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches
+    ) {
+      return;
+    }
+
+    // Only fade in the video once it is actually actively playing
+    // This guarantees no black/blank frames if playback is slow or fails
+    const onPlaying = () => {
+      if (!isCancelled) {
+        setIsVideoVisible(true);
+      }
+    };
+
+    video.addEventListener("playing", onPlaying, { once: true });
+
+    const activateAndPlay = () => {
+      if (isCancelled) return;
+      cleanup();
+
+      video.muted = true;
+      const playPromise = video.play();
+      if (playPromise !== undefined) {
+        playPromise.catch(() => {
+          // Playback rejected (e.g. Low Power Mode, battery saver, or network failure)
+          // Keep video at opacity-0 so the dedicated poster remains seamlessly visible
+        });
+      }
+    };
+
+    const cleanup = () => {
+      window.removeEventListener("scroll", activateAndPlay);
+      window.removeEventListener("touchstart", activateAndPlay);
+      window.removeEventListener("pointerdown", activateAndPlay);
+      window.removeEventListener("keydown", activateAndPlay);
+    };
+
+    // Activate video on the first user interaction (touch, scroll, tap, keypress)
+    // This guarantees the browser's LCP window is closed before video frames paint
+    window.addEventListener("scroll", activateAndPlay, { passive: true, once: true });
+    window.addEventListener("touchstart", activateAndPlay, { passive: true, once: true });
+    window.addEventListener("pointerdown", activateAndPlay, { passive: true, once: true });
+    window.addEventListener("keydown", activateAndPlay, { passive: true, once: true });
+
+    return () => {
+      isCancelled = true;
+      cleanup();
+      video.removeEventListener("playing", onPlaying);
+    };
+  }, []);
+
   return (
     <>
       {/* ─── MOBILE ONLY: Hero Video & Action Section (Copied from production, rest is new design) ─── */}
@@ -57,18 +120,30 @@ export default function HomeHero({ rating, totalReviews }: HomeHeroProps) {
           aria-label="Discover Kashmir Video"
           className="relative w-full h-[54dvh] min-h-[360px] max-h-[480px] flex flex-col justify-center overflow-hidden bg-black"
         >
-          {/* Background Video */}
+          {/* Background Video & Dedicated Poster Layer */}
           <div className="absolute inset-0 z-0 overflow-hidden w-full h-full pointer-events-none">
+            {/* Dedicated Hero Poster Image (Layer 0) */}
+            <Image
+              src="https://res.cloudinary.com/dcmoseix9/video/upload/so_0,w_480,f_auto,q_auto/v1789317861/Final_Video_rdc5nd.jpg"
+              alt="Discover Kashmir scenic travel hero"
+              fill
+              priority
+              unoptimized
+              sizes="100vw"
+              className="absolute inset-0 w-full h-full object-cover object-center"
+            />
+            {/* Background Video (Layer 1) - Transparent until playback confirmed, then fades in */}
             <video
-              autoPlay
+              ref={mobileVideoRef}
               loop
               muted
               playsInline
               preload="none"
-              poster="https://res.cloudinary.com/dcmoseix9/video/upload/so_0,w_480,f_auto,q_auto/v1789317861/Final_Video_rdc5nd.jpg"
               title="Discover Kashmir - WanderKashmir Travel"
               aria-label="WanderKashmir scenic travel video"
-              className="absolute inset-0 w-full h-full object-cover object-center"
+              className={`absolute inset-0 w-full h-full object-cover object-center transition-opacity duration-700 pointer-events-none ${
+                isVideoVisible ? "opacity-100" : "opacity-0"
+              }`}
             >
               <source
                 src="https://res.cloudinary.com/dcmoseix9/video/upload/f_auto,q_auto/v1789317861/Final_Video_rdc5nd.mp4"
