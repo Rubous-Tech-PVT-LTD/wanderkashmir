@@ -100,7 +100,6 @@ export default function MobileHeroActionBar({ rating, totalReviews }: MobileHero
                   width={24}
                   height={24}
                   className="w-6 h-6 shrink-0 object-contain drop-shadow-xs [filter:brightness(0)_invert(1)]"
-                  priority
                 />
                 <span className="font-extrabold whitespace-nowrap text-[12px] sm:text-xs tracking-tight text-center drop-shadow-xs">
                   Customize Your Itinerary

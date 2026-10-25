@@ -127,7 +127,7 @@ export default function HomeHero({ rating, totalReviews }: HomeHeroProps) {
               src="https://res.cloudinary.com/dcmoseix9/video/upload/so_0,w_480,f_auto,q_auto/v1789317861/Final_Video_rdc5nd.jpg"
               alt="Discover Kashmir scenic travel hero"
               fill
-              priority
+              loading="eager"
               unoptimized
               sizes="100vw"
               className="absolute inset-0 w-full h-full object-cover object-center"
