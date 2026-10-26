@@ -169,7 +169,7 @@ export default function HomeHero({ rating, totalReviews }: HomeHeroProps) {
 
       {/* ─── DESKTOP ONLY: Original Approved Desktop Hero Layout (Strictly Unchanged) ─── */}
       <section
-        className="hidden md:flex relative items-center justify-center pt-[88px] pb-3.5 md:pt-[98px] md:pb-4 lg:pt-[106px] lg:pb-4.5 bg-white border-b transition-all duration-300"
+        className="hidden md:flex relative items-center justify-center pt-[88px] pb-5 md:pt-[98px] md:pb-6 lg:pt-[106px] lg:pb-7 bg-white border-b transition-all duration-300"
         style={{ borderColor: "var(--season-border)" }}
       >
         <div className="w-full relative z-10 px-4 sm:px-6">
@@ -190,7 +190,7 @@ export default function HomeHero({ rating, totalReviews }: HomeHeroProps) {
 
           {/* Tailored Trip Quick Trigger */}
           <div
-            className="mt-3 flex flex-wrap items-center justify-center gap-2 transition-all duration-300 lg:[transform:translateX(var(--nav-shift-x))]"
+            className="mt-4 md:mt-5 relative z-20 flex flex-wrap items-center justify-center gap-2 transition-all duration-300 lg:[transform:translateX(var(--nav-shift-x))]"
             style={{
               ["--nav-shift-x" as string]: HEADER_SPACING.centerContainerShiftX || "40px",
             }}
