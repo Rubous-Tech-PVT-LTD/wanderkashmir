@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import prisma from "@/lib/prisma";
 import { getAdminSession } from "@/lib/auth";
 
@@ -88,6 +89,12 @@ export async function POST(req: Request) {
         });
       }
 
+      if (updatedPage?.type === "DESTINATION") {
+        revalidatePath("/destinations");
+        revalidatePath(`/destinations/${updatedPage.slug}`);
+        revalidatePath("/");
+      }
+
       if (opportunityId && opp) {
         const mrd = (opp.manualReviewDecision as any) || {};
         mrd.primaryPageId = primaryPageId;
@@ -134,6 +141,12 @@ export async function POST(req: Request) {
           ...(initialMetrics && { gscInitialMetrics: initialMetrics }),
         },
       });
+
+      if (newPage.type === "DESTINATION") {
+        revalidatePath("/destinations");
+        revalidatePath(`/destinations/${newPage.slug}`);
+        revalidatePath("/");
+      }
 
       if (opportunityId && opp) {
         const mrd = (opp.manualReviewDecision as any) || {};

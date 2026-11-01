@@ -101,23 +101,17 @@ export default function Navbar() {
         }`}
       >
         <div className="container-custom flex items-center justify-between">
-          {/* Logo */}
-          <Link href="/" className="flex items-center gap-2.5 group shrink-0">
-            <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-full overflow-hidden border-2 border-white/95 shadow-md flex items-center justify-center transition-transform group-hover:-rotate-12 shrink-0 bg-white p-0.5">
-              <Image
-                src="/brand-icon.webp"
-                alt="WanderKashmir logo"
-                width={48}
-                height={48}
-                className="w-full h-full rounded-full object-cover"
-              />
-            </div>
-            <div className="flex flex-col">
-              <span className="font-display font-bold text-[1.4rem] tracking-tight leading-none mt-1">
-                <span className="max-lg:text-white lg:text-[#f97316] transition-colors">Wander</span>
-                <span className="text-black font-extrabold">Kashmir</span>
-              </span>
-            </div>
+          {/* Logo - Approved Cloudinary Brand Logo */}
+          <Link href="/" className="flex items-center group shrink-0">
+            <Image
+              src="https://res.cloudinary.com/dcmoseix9/image/upload/v1790838648/My%20Brand/WhatsApp_Image_2026-09-27_at_12.47.53_PM_1_aptjs2.jpg"
+              alt="WanderKashmir logo"
+              width={140}
+              height={44}
+              style={{ width: "auto" }}
+              className="h-8 sm:h-9 md:h-10 w-auto object-contain transition-transform group-hover:scale-105"
+              priority
+            />
           </Link>
 
           {/* Desktop Nav Links */}
@@ -202,21 +196,15 @@ export default function Navbar() {
           aria-label="Navigation menu"
         >
           <div className="flex items-center justify-between p-5 border-b border-slate-100">
-            <Link href="/" className="flex items-center gap-2.5" onClick={() => setMobileOpen(false)}>
-              <div className="flex items-center justify-center">
-                <Image
-                  src="/brand-icon.webp"
-                  alt="WanderKashmir logo"
-                  width={36}
-                  height={36}
-                  className="rounded-md object-cover shadow-sm"
-                />
-              </div>
-              <div className="flex flex-col">
-                <span className="font-display text-xl font-bold text-slate-900 leading-none mt-1">
-                  <span className="text-[#f97316]">Wander</span>Kashmir
-                </span>
-              </div>
+            <Link href="/" className="flex items-center" onClick={() => setMobileOpen(false)}>
+              <Image
+                src="https://res.cloudinary.com/dcmoseix9/image/upload/v1790838648/My%20Brand/WhatsApp_Image_2026-09-27_at_12.47.53_PM_1_aptjs2.jpg"
+                alt="WanderKashmir logo"
+                width={120}
+                height={38}
+                style={{ width: "auto" }}
+                className="h-8 w-auto object-contain"
+              />
             </Link>
             <button
               onClick={() => setMobileOpen(false)}

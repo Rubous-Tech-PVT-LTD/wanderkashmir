@@ -272,3 +272,61 @@
   0% { transform: translateY(-100%); }
   100% { transform: translateY(1000px); }
 }
+
+/* ============================================================
+   4 Seasons Infinite Attention Gradient Animation
+   Harud (Autumn) -> Wandh (Winter) -> Sonth (Spring) -> Retkol (Summer)
+   Smooth fluid cycle designed for high user engagement & conversion
+   ============================================================ */
+@keyframes fourSeasonsInfiniteCycle {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+@keyframes buttonPulseGlow {
+  0%, 100% {
+    box-shadow: 0 4px 14px -2px rgba(214, 40, 40, 0.45), 0 0 0 0 rgba(214, 40, 40, 0.3);
+  }
+  25% {
+    box-shadow: 0 4px 14px -2px rgba(30, 58, 138, 0.45), 0 0 0 2px rgba(2, 132, 199, 0.25);
+  }
+  50% {
+    box-shadow: 0 4px 14px -2px rgba(217, 30, 99, 0.45), 0 0 0 2px rgba(13, 148, 136, 0.25);
+  }
+  75% {
+    box-shadow: 0 4px 14px -2px rgba(15, 118, 110, 0.45), 0 0 0 2px rgba(233, 196, 106, 0.25);
+  }
+}
+
+.animate-four-seasons {
+  background: linear-gradient(
+    115deg,
+    #D62828 0%,    /* Autumn (Harud) Crimson */
+    #F4A261 14%,   /* Autumn Warm Amber Glow */
+    #1E3A8A 28%,   /* Winter (Wandh) Deep Cobalt */
+    #0284C7 42%,   /* Winter Glacier Blue */
+    #D91E63 56%,   /* Spring (Sonth) Almond Tulip Pink */
+    #0D9488 70%,   /* Spring Fresh Meadow Emerald */
+    #0F766E 84%,   /* Summer (Retkol) Pine Forest */
+    #E9C46A 94%,   /* Summer Golden Sun */
+    #D62828 100%   /* Seamless Return to Autumn */
+  ) !important;
+  background-size: 340% 340% !important;
+  animation: fourSeasonsInfiniteCycle 10s ease infinite, buttonPulseGlow 10s ease infinite !important;
+  transition: transform 0.15s ease, filter 0.2s ease !important;
+}
+
+.animate-four-seasons:hover {
+  filter: brightness(1.08);
+}
+
+.animate-four-seasons:active {
+  transform: scale(0.97);
+}

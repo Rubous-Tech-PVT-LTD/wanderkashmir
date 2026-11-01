@@ -62,13 +62,13 @@ export async function runSeoResearch(target: string, type: string, targetUrl?: s
 
     if (manualTrendEvidence) {
       trendsData = {
-        status: 'AVAILABLE',
+        status: 'AVAILABLE' as any,
         source: 'Manual Evidence — Google Trends',
-        trendSignal: manualTrendEvidence.trendDirection
+        trendSignal: manualTrendEvidence.trendDirection as any
       };
     } else {
       trendsData = {
-        status: 'UNAVAILABLE',
+        status: 'UNAVAILABLE' as any,
         source: 'Google Trends — Manual Check Pending',
         trendSignal: 'UNAVAILABLE'
       };
@@ -150,6 +150,21 @@ export async function runSeoResearch(target: string, type: string, targetUrl?: s
       select: { id: true, name: true, slug: true }
     });
 
+    // Place entity awareness: include active child attractions in cannibalization checking
+    const existingPlaces = await prisma.place.findMany({
+      where: { status: 'ACTIVE' },
+      select: {
+        id: true,
+        name: true,
+        slug: true,
+        destinationPlaces: {
+          select: {
+            destination: { select: { slug: true } }
+          }
+        }
+      }
+    });
+
     const stopWords = new Set(['to', 'the', 'in', 'for', 'and', 'of', 'with', 'a', 'an', 'is', 'called', 'what', 'fare', 'cost', 'guide', 'places', 'unique', 'hidden', 'best', 'top', '2026', '2025', '2024']);
     const targetWords = target.toLowerCase().split(/[^a-z0-9]+/).filter(w => w.length > 2 && !stopWords.has(w));
     const genericKeywords = new Set([
@@ -185,7 +200,7 @@ export async function runSeoResearch(target: string, type: string, targetUrl?: s
       entityType: 'TOUR' as const
     }));
 
-    // Phase 4: TourCategory candidates for cannibalization
+    // TourCategory candidates for cannibalization
     const categoryCandidates = existingCategories.map(c => ({
       id: c.id,
       title: c.name,
@@ -194,7 +209,19 @@ export async function runSeoResearch(target: string, type: string, targetUrl?: s
       entityType: 'TOUR_CATEGORY' as const
     }));
 
-    const allCandidates = [...seoPageCandidates, ...propertyCandidates, ...tourCandidates, ...categoryCandidates];
+    // Place candidates for cannibalization
+    const placeCandidates = existingPlaces.map(p => {
+      const parentSlug = p.destinationPlaces?.[0]?.destination?.slug || 'destinations';
+      return {
+        id: p.id,
+        title: p.name,
+        slug: `${parentSlug}/${p.slug}`,
+        type: 'PLACE',
+        entityType: 'PLACE' as const,
+      };
+    });
+
+    const allCandidates = [...seoPageCandidates, ...propertyCandidates, ...tourCandidates, ...categoryCandidates, ...placeCandidates];
     
     const ents = getEntities(target);
     const queryIntent = inferIntent(target, ents.ints);
@@ -220,11 +247,10 @@ export async function runSeoResearch(target: string, type: string, targetUrl?: s
       const hasStringMatch = hasEntityMatch && matches >= Math.min(2, targetWords.length) && targetWords.length > 0;
       if (!hasStringMatch) return false;
       
-      // Phase 2: Intent-based filtering
+      // Intent-based filtering
       if (p.entityType === 'TOUR' || p.entityType === 'PROPERTY') {
          return isCommercialQuery || titleWords === target.toLowerCase();
       }
-      // Phase 4: TourCategory hub pages compete for commercial/category-level queries
       if (p.entityType === 'TOUR_CATEGORY') {
          return isCommercialQuery || titleWords === target.toLowerCase();
       }
@@ -248,7 +274,8 @@ export async function runSeoResearch(target: string, type: string, targetUrl?: s
             url: c.entityType === 'TOUR_CATEGORY' ? `/tours?category=${c.slug}`
                : c.entityType === 'PROPERTY' ? `/stays/${c.id}` 
                : (c.entityType === 'TOUR' ? `/tours/${c.slug}` 
-               : (c.type.toUpperCase() === 'BLOG' ? `/blog/${c.slug}` : `/${c.type.toLowerCase()}s/${c.slug}`)), 
+               : (c.entityType === 'PLACE' ? `/destinations/${c.slug}`
+               : (c.type.toUpperCase() === 'BLOG' ? `/blog/${c.slug}` : `/${c.type.toLowerCase()}s/${c.slug}`))),
             title: c.title, 
             type: c.type,
             entityType: c.entityType,
@@ -297,7 +324,7 @@ export async function runSeoResearch(target: string, type: string, targetUrl?: s
     manualReviewRecommendation = generateManualReviewRecommendation(
       target,
       searchIntent,
-      cannibalizationRisk.competingPages,
+      cannibalizationRisk.competingPages as any,
       topQueries.length > 0 ? topQueries : relatedQueries
     );
   }

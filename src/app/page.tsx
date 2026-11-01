@@ -13,6 +13,7 @@ import GoogleReviewsWrapper from "@/components/GoogleReviewsWrapper";
 import PromoWrapper from "@/components/PromoWrapper";
 import { getGooglePlaceReviews } from "@/actions/google-reviews";
 import MobileHeroActionBar from "@/components/MobileHeroActionBar";
+import HelpMeChoose from "@/components/HelpMeChoose";
 import StoryDestinations from "@/components/StoryDestinations";
 import { getDestinations as getStoryDestinations } from "@/actions/destinations";
 
@@ -520,6 +521,26 @@ export default async function Home() {
     };
   });
 
+  // Fetch active travel styles safely for Help Me Choose
+  let travelStyles: any[] = [];
+  try {
+    travelStyles = await prisma.travelStyle.findMany({
+      where: { isActive: true },
+      orderBy: { displayOrder: "asc" },
+      select: {
+        id: true,
+        name: true,
+        slug: true,
+        description: true,
+        imageUrl: true,
+        imageAlt: true,
+        displayOrder: true,
+      },
+    });
+  } catch (error) {
+    console.error("Failed to fetch travel styles for homepage:", error);
+  }
+
   return (
     <main className="min-h-screen bg-white">
       <script
@@ -597,8 +618,10 @@ export default async function Home() {
         totalReviews={googleReviewsData?.userRatingsTotal} 
       />
 
-      {/* ─── STORY DESTINATIONS (Circular story highlight scroller) ─── */}
-      <StoryDestinations destinations={storyDestinations} />
+      {/* ─── MOBILE ONLY: HELP ME CHOOSE YOUR PERFECT TRIP (Replaces Mobile Destinations) ─── */}
+      <div className="md:hidden">
+        <HelpMeChoose travelStyles={travelStyles} />
+      </div>
 
       {/* Spacing for floating search bar (Hidden while search bar is hidden) */}
       {/* <div className="h-32"></div> */}

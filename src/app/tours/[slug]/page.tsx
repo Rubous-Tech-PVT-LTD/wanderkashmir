@@ -1,6 +1,6 @@
 import prisma from "@/lib/prisma";
 import TourDetailClient from "./TourDetailClient";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { Metadata } from "next";
 
 const fallbackTourMap: Record<string, any> = {
@@ -85,6 +85,21 @@ const fallbackTourMap: Record<string, any> = {
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
+
+  const travelStyle = await prisma.travelStyle.findFirst({
+    where: { slug, isActive: true }
+  }).catch(() => null);
+
+  if (travelStyle) {
+    return {
+      title: `${travelStyle.name} Kashmir Tour Packages | Curated Itineraries | WanderKashmir`,
+      description: travelStyle.description || `Explore hand-crafted ${travelStyle.name} Kashmir tour packages with local guides and verified stays.`,
+      alternates: {
+        canonical: `/tours/${travelStyle.slug}`,
+      },
+    };
+  }
+
   let tour = await prisma.tour.findUnique({ where: { slug } }).catch(() => null);
   if (!tour) tour = fallbackTourMap[slug];
   
@@ -131,6 +146,14 @@ export const revalidate = 60;
 export default async function TourPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   
+  const travelStyle = await prisma.travelStyle.findFirst({
+    where: { slug, isActive: true }
+  }).catch(() => null);
+
+  if (travelStyle) {
+    redirect(`/tours?category=${encodeURIComponent(travelStyle.name)}`);
+  }
+
   let tour: any = await prisma.tour.findUnique({
     where: { slug },
     include: {
@@ -152,7 +175,7 @@ export default async function TourPage({ params }: { params: Promise<{ slug: str
   // Calculate rating
   const reviewCount = tour.reviews.length;
   const averageRating = reviewCount > 0 
-    ? (tour.reviews.reduce((acc, r) => acc + r.rating, 0) / reviewCount).toFixed(1)
+    ? (tour.reviews.reduce((acc: number, r: any) => acc + r.rating, 0) / reviewCount).toFixed(1)
     : "0.0";
 
   // Format reviews for client
@@ -160,7 +183,7 @@ export default async function TourPage({ params }: { params: Promise<{ slug: str
     ...tour,
     rating: averageRating,
     reviews: reviewCount,
-    reviewsList: tour.reviews.map(r => ({
+    reviewsList: tour.reviews.map((r: any) => ({
       name: r.user?.name || "Anonymous",
       avatar: r.user?.image || "https://ui-avatars.com/api/?name=" + (r.user?.name || "A"),
       location: "India", // Placeholder as location isn't in User model

@@ -235,7 +235,7 @@ export async function PUT(
     // Validate and synchronize Travel Guides (must be SeoLandingPage with type = BLOG and PUBLISHED)
     if (Array.isArray(data.travelGuides)) {
       const submittedGuides = data.travelGuides.filter((g: any) => g && g.guideId);
-      const uniqueGuideIds = Array.from(new Set(submittedGuides.map((g: any) => g.guideId)));
+      const uniqueGuideIds: string[] = Array.from(new Set(submittedGuides.map((g: any) => String(g.guideId))));
 
       if (uniqueGuideIds.length > 0) {
         const validGuides = await prisma.seoLandingPage.findMany({
@@ -275,6 +275,19 @@ export async function PUT(
       }
     }
 
+    if (Array.isArray(data.travelStyleIds)) {
+      await prisma.tourTravelStyle.deleteMany({ where: { tourId: id } });
+      if (data.travelStyleIds.length > 0) {
+        await prisma.tourTravelStyle.createMany({
+          data: data.travelStyleIds.map((styleId: string, idx: number) => ({
+            tourId: id,
+            travelStyleId: styleId,
+            displayOrder: idx + 1,
+          })),
+        });
+      }
+    }
+
     const finalTour = await prisma.tour.findUnique({
       where: { id },
       include: {
@@ -308,6 +321,18 @@ export async function PUT(
                 description: true,
                 type: true,
                 workflowState: true,
+              },
+            },
+          },
+          orderBy: { displayOrder: "asc" },
+        },
+        travelStyles: {
+          include: {
+            travelStyle: {
+              select: {
+                id: true,
+                name: true,
+                slug: true,
               },
             },
           },

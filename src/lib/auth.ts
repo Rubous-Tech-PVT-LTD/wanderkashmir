@@ -1,7 +1,14 @@
 import { SignJWT, jwtVerify } from "jose";
 import { cookies } from "next/headers";
 
-const secretKey = process.env.JWT_SECRET || "fallback-secret-for-development";
+const _jwtSecret = process.env.JWT_SECRET;
+if (!_jwtSecret) {
+  throw new Error(
+    "JWT_SECRET environment variable is not set. " +
+      "Generate one with: openssl rand -base64 32"
+  );
+}
+const secretKey = _jwtSecret;
 const key = new TextEncoder().encode(secretKey);
 
 export async function encrypt(payload: any) {

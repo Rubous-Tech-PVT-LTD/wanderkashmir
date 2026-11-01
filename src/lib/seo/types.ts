@@ -84,7 +84,7 @@ export interface SeoResearch {
 
   cannibalizationRisk: {
     status?: 'SAFE' | 'MEDIUM_RISK' | 'HIGH_RISK';
-    competingPages: { id?: string; url: string; title: string; type: string; entityType?: 'PROPERTY' | 'SEO_LANDING_PAGE' | 'TOUR' | 'TOUR_CATEGORY' }[];
+    competingPages: { id?: string; url: string; title: string; type: string; entityType?: 'PROPERTY' | 'SEO_LANDING_PAGE' | 'TOUR' | 'TOUR_CATEGORY' | 'PLACE' }[];
     recommendation: 'CREATE_NEW' | 'KEEP_SEPARATE' | 'OPTIMIZE_EXISTING' | 'CONSOLIDATE' | 'REDIRECT' | 'REWRITE_FOR_DIFFERENT_INTENT' | 'MANUAL_REVIEW';
     reason?: string;
   };
@@ -102,7 +102,7 @@ export interface CompetingPageCandidate {
   url: string;
   title: string;
   type: string;
-  entityType?: 'PROPERTY' | 'SEO_LANDING_PAGE' | 'TOUR' | 'TOUR_CATEGORY';
+  entityType?: 'PROPERTY' | 'SEO_LANDING_PAGE' | 'TOUR' | 'TOUR_CATEGORY' | 'PLACE';
   role: 'PRIMARY_CANDIDATE' | 'SUPPORTING_INFORMATIONAL' | 'SUPPORTING_TRANSPORT' | 'SUPPORTING_COMMERCIAL' | 'POTENTIAL_DUPLICATE';
   intent?: string;
   intentAlignment: string;
@@ -117,7 +117,7 @@ export interface ManualReviewRecommendation {
     url: string;
     title: string;
     pageType: string;
-    entityType?: 'PROPERTY' | 'SEO_LANDING_PAGE' | 'TOUR' | 'TOUR_CATEGORY';
+    entityType?: 'PROPERTY' | 'SEO_LANDING_PAGE' | 'TOUR' | 'TOUR_CATEGORY' | 'PLACE';
     role?: string;
     score?: number;
     reasons?: string[];

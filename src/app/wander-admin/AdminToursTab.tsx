@@ -27,6 +27,7 @@ export default function AdminToursTab({ initialEditTour, initialCategory, onInit
   const [approvedExperiences, setApprovedExperiences] = useState<any[]>([]);
   const [availableDestinations, setAvailableDestinations] = useState<DestinationItem[]>([]);
   const [availableTravelGuides, setAvailableTravelGuides] = useState<any[]>([]);
+  const [availableTravelStyles, setAvailableTravelStyles] = useState<any[]>([]);
   const [destSearch, setDestSearch] = useState("");
   const [guideSearch, setGuideSearch] = useState("");
   const router = useRouter();
@@ -37,6 +38,14 @@ export default function AdminToursTab({ initialEditTour, initialCategory, onInit
     getActiveDriversForSelect().then((d) => setActiveDrivers(d || [])).catch(() => {});
     getApprovedExperiencesForSelect().then((e) => setApprovedExperiences(e || [])).catch(() => {});
     getDestinations(false).then((dests) => setAvailableDestinations(dests || [])).catch(() => {});
+    fetch("/api/admin/travel-styles")
+      .then((res) => res.json())
+      .then((data) => {
+        if (Array.isArray(data)) {
+          setAvailableTravelStyles(data);
+        }
+      })
+      .catch(() => {});
     fetch("/api/admin/seo-pages?type=BLOG")
       .then((res) => res.json())
       .then((data) => {
@@ -101,6 +110,7 @@ export default function AdminToursTab({ initialEditTour, initialCategory, onInit
       propertyId: string | null;
       displayOrder: number;
     }[],
+    travelStyleIds: [] as string[],
     isLive: true,
   });
 
@@ -141,6 +151,9 @@ export default function AdminToursTab({ initialEditTour, initialCategory, onInit
         : [],
       transports: tour.transports || [],
       experiences: tour.experiences || [],
+      travelStyleIds: Array.isArray(tour.travelStyles)
+        ? tour.travelStyles.map((ts: any) => ts.travelStyleId || ts.travelStyle?.id).filter(Boolean)
+        : [],
       isLive: tour.isLive ?? true,
     });
     setIsAdding(true);
@@ -167,6 +180,7 @@ export default function AdminToursTab({ initialEditTour, initialCategory, onInit
       transports: [],
       experiences: [],
       stays: [],
+      travelStyleIds: [],
       isLive: true,
     });
     setIsAdding(true);
@@ -243,6 +257,7 @@ export default function AdminToursTab({ initialEditTour, initialCategory, onInit
         exclusions: formData.exclusions.split(",").map(s => s.trim()).filter(Boolean),
         itinerary: formData.itinerary,
         stays: formData.stays,
+        travelStyleIds: formData.travelStyleIds,
         isLive: formData.isLive,
       };
 
@@ -446,6 +461,42 @@ export default function AdminToursTab({ initialEditTour, initialCategory, onInit
                   {cat}
                 </button>
               ))}
+            </div>
+          </div>
+          <div className="md:col-span-2">
+            <label className="block text-sm font-semibold mb-1 text-slate-800">
+              Travel Styles (&quot;Help Me Choose&quot; Taxonomy)
+            </label>
+            <p className="text-xs text-slate-500 mb-2">
+              Select one or more travel styles to associate this tour with public discovery intent categories.
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {availableTravelStyles.map((style) => {
+                const isSelected = formData.travelStyleIds.includes(style.id);
+                return (
+                  <button
+                    key={style.id}
+                    type="button"
+                    onClick={() => {
+                      const next = isSelected
+                        ? formData.travelStyleIds.filter((id) => id !== style.id)
+                        : [...formData.travelStyleIds, style.id];
+                      setFormData({ ...formData, travelStyleIds: next });
+                    }}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all border cursor-pointer ${
+                      isSelected
+                        ? "bg-emerald-600 text-white border-emerald-600 shadow-xs"
+                        : "bg-white text-slate-700 hover:bg-slate-50 border-slate-200"
+                    }`}
+                  >
+                    <span>{isSelected ? "✓" : "+"}</span>
+                    <span>{style.name}</span>
+                  </button>
+                );
+              })}
+              {availableTravelStyles.length === 0 && (
+                <span className="text-xs text-slate-400">Loading travel styles...</span>
+              )}
             </div>
           </div>
           <div className="md:col-span-2">
@@ -1188,6 +1239,15 @@ export default function AdminToursTab({ initialEditTour, initialCategory, onInit
                   <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-orange-50 text-orange-700 border border-orange-200">
                     {tour.category || "Unassigned"}
                   </span>
+                  {Array.isArray(tour.travelStyles) && tour.travelStyles.length > 0 && (
+                    <div className="flex flex-wrap gap-1 mt-1">
+                      {tour.travelStyles.map((ts: any) => (
+                        <span key={ts.travelStyle?.id || ts.id} className="text-[10px] px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200">
+                          {ts.travelStyle?.name}
+                        </span>
+                      ))}
+                    </div>
+                  )}
                 </td>
                 <td className="px-6 py-4 text-sm font-medium">{tour.duration}</td>
                 <td className="px-6 py-4 text-sm font-bold text-emerald-600">₹{tour.price.toLocaleString('en-IN')}</td>

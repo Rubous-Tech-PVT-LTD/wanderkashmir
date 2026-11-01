@@ -205,7 +205,7 @@ export function analyzePageFeedback(
   if (signal === 'PERFORMANCE_DECLINE') finalScore += 10;
 
   finalScore = Math.max(0, Math.min(finalScore, 100));
-  if (recommendedAction === 'IGNORE') finalScore = 0;
+  if (recommendedAction === ('IGNORE' as any)) finalScore = 0;
 
   // Format honest evidence string
   const evidence = `[FEEDBACK: ${signal}] Baseline: ${baseline.position > 0 ? baseline.position.toFixed(1) : 'N/A'} pos / ${baseline.impressions} impr | Current: ${current.position.toFixed(1)} pos / ${current.impressions} impr | Delta: ${delta.position >= 0 ? '+' : ''}${delta.position.toFixed(1)} pos, ${delta.impressions >= 0 ? '+' : ''}${delta.impressions} impr, ${(delta.ctr * 100).toFixed(1)}% CTR | Primary Query: "${primaryQuery}"`;

@@ -33,29 +33,27 @@ const LinkedinIcon = ({ className }: { className?: string }) => (
 
 const footerLinks = {
   Explore: [
-    { label: "Hotels & Resorts", href: "/stays?type=hotel" },
+    { label: "Hotels & Stays", href: "/stays?type=hotel" },
     { label: "Traditional Homestays", href: "/stays?type=homestay" },
     { label: "Dal Lake Houseboats", href: "/stays?type=houseboat" },
-    { label: "Cultural Tour Packages", href: "/tours" },
+    { label: "Tour Packages", href: "/tours" },
     { label: "Local Guides", href: "/guides" },
     { label: "Taxi Booking", href: "/taxis" },
   ],
   Destinations: [
-    { label: "Srinagar", href: "/tours?destination=srinagar" },
-    { label: "Gulmarg", href: "/tours?destination=gulmarg" },
-    { label: "Pahalgam", href: "/tours?destination=pahalgam" },
-    { label: "Sonamarg", href: "/tours?destination=sonamarg" },
-    { label: "Ladakh", href: "/tours?destination=ladakh" },
-    { label: "Jammu", href: "/tours?destination=jammu" },
+    { label: "Srinagar Travel Guide", href: "/destinations/srinagar" },
+    { label: "Gulmarg Travel Guide", href: "/destinations/gulmarg" },
+    { label: "Pahalgam Travel Guide", href: "/destinations/pahalgam" },
+    { label: "Sonamarg Travel Guide", href: "/destinations/sonamarg" },
+    { label: "Doodhpathri Travel Guide", href: "/destinations/doodhpathri" },
+    { label: "Yusmarg Travel Guide", href: "/destinations/yusmarg" },
   ],
   Company: [
     { label: "About Us", href: "/about" },
     { label: "Our Vision", href: "/our-vision" },
-    { label: "Blog", href: "/blog" },
-    { label: "Careers (Coming Soon)", href: "#" },
-    { label: "Press", href: "/press" },
+    { label: "Kashmir Travel Blog", href: "/blog" },
     { label: "Partner With Us", href: "/partner/register" },
-    { label: "Contact", href: "/contact" },
+    { label: "Contact Us", href: "/contact" },
   ],
   Support: [
     { label: "Help Center", href: "/help" },
@@ -189,8 +187,8 @@ export default function Footer() {
             <Link href="/privacy-policy" className="hover:text-slate-300 transition-colors">
               Privacy
             </Link>
-            <Link href="/cookies" className="hover:text-slate-300 transition-colors">
-              Cookies
+            <Link href="/cancellation" className="hover:text-slate-300 transition-colors">
+              Cancellation
             </Link>
             <div className="flex items-center gap-2 pl-4 border-l border-slate-700">
               <span>🇮🇳</span>

@@ -31,8 +31,10 @@ const AdminPromoCodesTab = dynamic(() => import("./AdminPromoCodesTab"), { ssr: 
 const AdminPopupsTab = dynamic(() => import("./AdminPopupsTab"), { ssr: false });
 const AdminCustomToursTab = dynamic(() => import("./AdminCustomToursTab"), { ssr: false });
 const AdminTourCategoriesTab = dynamic(() => import("./AdminTourCategoriesTab"), { ssr: false });
+const AdminTravelStylesTab = dynamic(() => import("./AdminTravelStylesTab"), { ssr: false });
 const AdminSeoCommentsTab = dynamic(() => import("./AdminSeoCommentsTab"), { ssr: false });
 const AdminDestinationsTab = dynamic(() => import("./AdminDestinationsTab"), { ssr: false });
+const AdminV2DestinationsTab = dynamic(() => import("./AdminV2DestinationsTab"), { ssr: false });
 const ImageUpload = dynamic(() => import("@/components/ImageUpload"), { ssr: false });
 
 function PropertyImagesAdmin({ property, onSaved }: { property: any, onSaved: (newImages: string[]) => void }) {
@@ -161,7 +163,13 @@ export default function AdminDashboardClient({
 }: { 
   totalUsers: number, totalRevenue: number, totalLiveVendors: number, pendingVendors: number, rejectedVendors: number, payouts?: any[] 
 }) {
-  const [activeTab, setActiveTab] = useState("dashboard");
+  const [activeTab, setActiveTab] = useState(() => {
+    if (typeof window !== "undefined") {
+      const tab = new URLSearchParams(window.location.search).get("tab");
+      if (tab) return tab;
+    }
+    return "dashboard";
+  });
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
@@ -279,6 +287,11 @@ export default function AdminDashboardClient({
     setFilterStatus("ALL");
     setFilterType("ALL");
     setFilterDate("ALL");
+    if (typeof window !== "undefined") {
+      const url = new URL(window.location.href);
+      url.searchParams.set("tab", tab);
+      window.history.replaceState({}, "", url.toString());
+    }
   };
 
   const exportPayouts = () => {
@@ -665,6 +678,7 @@ export default function AdminDashboardClient({
         <nav className="flex-1 space-y-2">
           {[
             { id: "dashboard", icon: LayoutDashboard, label: "Overview" },
+            { id: "destination_cms", icon: Globe, label: "Destinations CMS" },
             { id: "destinations", icon: MapPin, label: "Destinations (Stories)" },
             { id: "map_view", icon: MapPin, label: "Map View" },
             { id: "manifest", icon: FileText, label: "Daily Operations" },
@@ -674,6 +688,7 @@ export default function AdminDashboardClient({
             { id: "live_listings", label: "Live Listings", icon: MapPin },
             { id: "tours", label: "Tours", icon: Map },
             { id: "tour_categories", label: "Tour Categories", icon: Map },
+            { id: "travel_styles", label: "Travel Styles (Help Me Choose)", icon: Sparkles },
             { id: "custom_tours", label: "Custom Inquiries", icon: Sparkles },
             { id: "taxis", label: "Taxis", icon: Car },
             { id: "payouts", label: "Payouts", icon: IndianRupee },
@@ -785,6 +800,8 @@ export default function AdminDashboardClient({
             }}
           />
         )}
+        {activeTab === "travel_styles" && <AdminTravelStylesTab />}
+        {activeTab === "destination_cms" && <AdminV2DestinationsTab />}
         {activeTab === "destinations" && <AdminDestinationsTab />}
         {activeTab === "custom_tours" && <AdminCustomToursTab />}
         {activeTab === "taxis" && <AdminTaxisTab />}

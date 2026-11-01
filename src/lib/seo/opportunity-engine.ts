@@ -106,6 +106,21 @@ export async function detectOpportunities(saveToDb = false): Promise<ContentOppo
     const existingProperties = await prisma.property.findMany({ select: { id: true, name: true }});
     const existingTours = await prisma.tour.findMany({ where: { isLive: true }, select: { id: true, title: true, slug: true, category: true }});
     const existingCategories = await prisma.tourCategory.findMany({ select: { id: true, name: true, slug: true }});
+    const existingPlaces = await prisma.place.findMany({
+      where: { status: 'ACTIVE' },
+      select: {
+        id: true,
+        name: true,
+        slug: true,
+        destinationPlaces: {
+          select: {
+            destination: {
+              select: { slug: true }
+            }
+          }
+        }
+      }
+    });
 
     for (const cluster of clusters) {
        const primaryQuery = cluster.queries[0]; // The highest impression query in the cluster
@@ -129,7 +144,7 @@ export async function detectOpportunities(saveToDb = false): Promise<ContentOppo
            topRankingGscUrl = pagesArray[0]; // Take the first ranking page reported by GSC
        }
        
-       // Match properties, tours, and categories (intent-aware)
+       // Match properties, tours, categories, and places (intent-aware)
        const isCommercialQuery = intent === 'COMMERCIAL' || intent === 'TRANSACTIONAL';
        
        const matchedProp = existingProperties.find(p => 
@@ -144,11 +159,23 @@ export async function detectOpportunities(saveToDb = false): Promise<ContentOppo
          (isCommercialQuery && t.title.toLowerCase().includes(ents.words.join(' ')) && ents.words.length > 0)
        );
 
-       // Phase 4: TourCategory hub page detection
+       // TourCategory hub page detection
        const matchedCategory = existingCategories.find(c =>
          primaryQuery.includes(c.name.toLowerCase()) ||
          (c.name.toLowerCase().includes(ents.words.join(' ')) && ents.words.length > 0)
        );
+
+       // Place entity awareness: match active child attractions (e.g. Dal Lake, Betaab Valley, Aru Valley)
+       const matchedPlace = existingPlaces.find(p => {
+         const pName = p.name.toLowerCase();
+         const pSlug = p.slug.toLowerCase();
+         return (
+           primaryQuery.includes(pName) ||
+           pName === primaryQuery ||
+           primaryQuery.includes(pSlug) ||
+           (ents.words.length > 0 && pName.includes(ents.words.join(' ')))
+         );
+       });
        
        if (matchedCategory) {
          // Category hub is the broadest match — checked first for category-level queries
@@ -157,6 +184,14 @@ export async function detectOpportunities(saveToDb = false): Promise<ContentOppo
          existingPage = { id: matchedTour.id, url: `/tours/${matchedTour.slug}`, title: matchedTour.title, type: 'TOUR' };
        } else if (matchedProp) {
          existingPage = { id: matchedProp.id, url: `/stays/${matchedProp.id}`, title: matchedProp.name, type: 'PROPERTY' };
+       } else if (matchedPlace) {
+         const parentDestSlug = matchedPlace.destinationPlaces?.[0]?.destination?.slug || 'destinations';
+         existingPage = {
+           id: matchedPlace.id,
+           url: `/destinations/${parentDestSlug}/${matchedPlace.slug}`,
+           title: matchedPlace.name,
+           type: 'PLACE',
+         };
        } else if (topRankingGscUrl) {
          // If GSC tells us what page ranks, use it! It's a real existing page.
          const urlPath = topRankingGscUrl.replace(/^https?:\/\/[^\/]+/, '');
@@ -180,9 +215,10 @@ export async function detectOpportunities(saveToDb = false): Promise<ContentOppo
        
        // Check for cannibalization (multiple pages matching)
        let matchCount = 0;
-       if (matchedCategory) matchCount++;  // Phase 4: TourCategory in cannibalization
+       if (matchedCategory) matchCount++;
        if (matchedProp) matchCount++;
        if (matchedTour) matchCount++;
+       if (matchedPlace) matchCount++;
        existingSeoPages.forEach(p => {
           if (querySlugified.includes(p.slug) || p.slug.includes(querySlugified) || p.title.toLowerCase().includes(primaryQuery)) matchCount++;
        });

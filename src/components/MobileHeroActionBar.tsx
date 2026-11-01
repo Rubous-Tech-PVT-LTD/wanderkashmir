@@ -84,11 +84,11 @@ export default function MobileHeroActionBar({ rating, totalReviews }: MobileHero
               <button
                 type="button"
                 onClick={openModal}
-                className="flex-1 bg-wander-gradient-soft hover:bg-wander-gradient text-white font-bold py-2 px-3 rounded-lg border border-orange-400/40 shadow-2xs flex items-center justify-center gap-2 cursor-pointer transition-all active:scale-98 text-center backdrop-blur-xs"
+                className="flex-1 animate-four-seasons text-white font-bold py-2.5 px-3 rounded-lg flex items-center justify-center gap-2 cursor-pointer text-center select-none"
               >
-                <Sparkles className="w-3.5 h-3.5 text-amber-200 animate-pulse shrink-0" />
-                <span className="font-black whitespace-nowrap text-[11px] sm:text-xs tracking-tight text-center">Customize Your Tour Packages</span>
-                <ArrowRight className="w-3.5 h-3.5 text-orange-100 shrink-0" />
+                <Sparkles className="w-3.5 h-3.5 text-white animate-pulse shrink-0 drop-shadow-xs" />
+                <span className="font-extrabold whitespace-nowrap text-[11.5px] sm:text-xs tracking-tight text-center drop-shadow-xs">Customize Your Tour Packages</span>
+                <ArrowRight className="w-3.5 h-3.5 text-white shrink-0 drop-shadow-xs transition-transform duration-200 group-hover:translate-x-0.5" />
               </button>
 
               {/* Dedicated Instant Call Button (Dialer Blue - universally recognized phone call color) */}

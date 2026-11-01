@@ -299,6 +299,14 @@ export async function getPaginatedTours(params: {
           },
           orderBy: { displayOrder: "asc" },
         },
+        travelStyles: {
+          include: {
+            travelStyle: {
+              select: { id: true, name: true, slug: true },
+            },
+          },
+          orderBy: { displayOrder: "asc" },
+        },
       },
       orderBy: { createdAt: "desc" },
       skip: (page - 1) * limit,

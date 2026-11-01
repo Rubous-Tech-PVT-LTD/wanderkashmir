@@ -128,7 +128,7 @@ export async function POST(request: Request) {
           manualReviewDecision: {
             ...currentDecision,
             manualTrendEvidence: evidence,
-          },
+          } as any,
           updatedAt: new Date(),
         },
       });

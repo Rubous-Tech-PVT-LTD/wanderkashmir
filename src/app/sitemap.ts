@@ -109,6 +109,51 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     console.error("Error fetching SEO pages for sitemap:", error)
   }
 
+  let placeUrls: MetadataRoute.Sitemap = []
+
+  try {
+    const destinationPlaces = await prisma.destinationPlace.findMany({
+      where: {
+        destination: { workflowState: 'PUBLISHED', type: 'DESTINATION' },
+        place: { status: 'ACTIVE' },
+      },
+      select: {
+        updatedAt: true,
+        destination: { select: { slug: true } },
+        place: { select: { slug: true, updatedAt: true } },
+      },
+      take: 5000,
+    })
+
+    placeUrls = destinationPlaces.map((dp: any) => ({
+      url: `${baseUrl}/destinations/${dp.destination.slug}/${dp.place.slug}`,
+      lastModified: dp.place.updatedAt || dp.updatedAt,
+      changeFrequency: 'weekly',
+      priority: 0.8,
+    }))
+  } catch (error) {
+    console.error("Error fetching places for sitemap:", error)
+  }
+
+  let travelStyleUrls: MetadataRoute.Sitemap = []
+
+  try {
+    const travelStyles = await prisma.travelStyle.findMany({
+      where: { isActive: true },
+      select: { slug: true, updatedAt: true },
+      take: 100,
+    })
+
+    travelStyleUrls = travelStyles.map((style) => ({
+      url: `${baseUrl}/tours/${style.slug}`,
+      lastModified: style.updatedAt,
+      changeFrequency: 'weekly',
+      priority: 0.8,
+    }))
+  } catch (error) {
+    console.error("Error fetching travel styles for sitemap:", error)
+  }
+
   return [
     {
       url: baseUrl,
@@ -187,5 +232,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...vehicleUrls,
     ...guideUrls,
     ...seoUrls,
+    ...placeUrls,
+    ...travelStyleUrls,
   ]
 }
