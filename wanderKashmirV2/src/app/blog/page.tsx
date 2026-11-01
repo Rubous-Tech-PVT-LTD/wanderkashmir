@@ -5,7 +5,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, Calendar, User } from "lucide-react";
 
-export const revalidate = 60;
+// ISR: 1-hour cache for blog catalog. Admin updates trigger on-demand revalidation.
+export const revalidate = 3600;
 
 export const metadata = {
   title: "Kashmir Travel Blog | Insider Tips, Guides & Hidden Gems | WanderKashmir",

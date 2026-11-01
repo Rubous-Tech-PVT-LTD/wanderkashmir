@@ -139,6 +139,9 @@ export async function createSeoLandingPageAction(
       if (type === "DESTINATION") {
         revalidatePath("/destinations");
         revalidatePath(`/destinations/${newPage.slug}`);
+      } else if (type === "BLOG") {
+        revalidatePath("/blog");
+        revalidatePath(`/blog/${newPage.slug}`);
       }
     } catch (e) {
       console.warn("Revalidation warning after createSeoLandingPage:", e);
@@ -241,6 +244,12 @@ export async function updateSeoLandingPageAction(
         if (currentPage.slug !== rawSlug) {
           revalidatePath(`/destinations/${rawSlug}`);
         }
+      } else if (currentPage.type === "BLOG") {
+        revalidatePath("/blog");
+        revalidatePath(`/blog/${currentPage.slug}`);
+        if (currentPage.slug !== rawSlug) {
+          revalidatePath(`/blog/${rawSlug}`);
+        }
       }
     } catch (e) {
       console.warn("Revalidation warning after updateSeoLandingPage:", e);
@@ -299,6 +308,9 @@ export async function toggleSeoPublishStatusAction(
       if (page.type === "DESTINATION") {
         revalidatePath("/destinations");
         revalidatePath(`/destinations/${page.slug}`);
+      } else if (page.type === "BLOG") {
+        revalidatePath("/blog");
+        revalidatePath(`/blog/${page.slug}`);
       }
     } catch (e) {
       console.warn("Revalidation warning after toggleSeoPublishStatus:", e);
@@ -377,6 +389,10 @@ export async function deleteSeoLandingPageAction(
       revalidatePath("/sitemap.xml");
       if (page.type === "DESTINATION") {
         revalidatePath("/destinations");
+        revalidatePath(`/destinations/${page.slug}`);
+      } else if (page.type === "BLOG") {
+        revalidatePath("/blog");
+        revalidatePath(`/blog/${page.slug}`);
       }
     } catch (e) {
       console.warn("Revalidation warning after deleteSeoLandingPage:", e);

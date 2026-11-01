@@ -1,5 +1,6 @@
 import prisma from "@/lib/prisma";
 import { notFound } from "next/navigation";
+import { cache } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Metadata } from "next";
@@ -12,11 +13,23 @@ interface ExperienceDetailPageProps {
   params: Promise<{ slug: string }>;
 }
 
+// Request-level cached loader to deduplicate Prisma reads between generateMetadata and ExperienceDetailPage
+const getExperienceDetail = cache(async (slug: string) => {
+  return await prisma.experience.findUnique({
+    where: { slug },
+    include: {
+      tourExperiences: {
+        include: {
+          tour: true,
+        },
+      },
+    },
+  });
+});
+
 export async function generateMetadata({ params }: ExperienceDetailPageProps): Promise<Metadata> {
   const { slug } = await params;
-  const experience = await prisma.experience.findUnique({
-    where: { slug }
-  });
+  const experience = await getExperienceDetail(slug);
 
   if (!experience || experience.status !== 'ACTIVE') {
     return {
@@ -50,20 +63,12 @@ export async function generateMetadata({ params }: ExperienceDetailPageProps): P
   };
 }
 
-export const revalidate = 60;
+// ISR: 1-hour cache for experience detail. Admin updates trigger on-demand revalidation.
+export const revalidate = 3600;
 
 export default async function ExperienceDetailPage({ params }: ExperienceDetailPageProps) {
   const { slug } = await params;
-  const experience = await prisma.experience.findUnique({
-    where: { slug },
-    include: {
-      tourExperiences: {
-        include: {
-          tour: true
-        }
-      }
-    }
-  });
+  const experience = await getExperienceDetail(slug);
 
   if (!experience || experience.status !== 'ACTIVE') {
     notFound();

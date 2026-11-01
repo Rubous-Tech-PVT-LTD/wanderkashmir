@@ -8,7 +8,8 @@ import StaysHeroBanner from "@/components/stays/StaysHeroBanner";
 import StaysInventoryView from "@/components/stays/StaysInventoryView";
 import { StayPropertyItem } from "@/components/stays/StayCard";
 
-export const revalidate = 60; // ISR for stays index
+// ISR: 1-hour cache for stays catalog. Admin updates trigger on-demand revalidation.
+export const revalidate = 3600;
 
 export const metadata: Metadata = {
   title: "Hotels, Resorts & Houseboats in Kashmir | WanderKashmir",

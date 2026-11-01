@@ -25,7 +25,8 @@ export const metadata: Metadata = {
   },
 };
 
-export const revalidate = 60;
+// ISR: 1-hour cache for experiences catalog. Admin updates trigger on-demand revalidation.
+export const revalidate = 3600;
 
 export default async function ExperiencesPage({ 
   searchParams 

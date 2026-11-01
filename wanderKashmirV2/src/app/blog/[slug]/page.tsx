@@ -1,5 +1,6 @@
 import { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { cache } from "react";
 import prisma from "@/lib/prisma";
 import Link from "next/link";
 import { ChevronRight, Calendar, User, ArrowLeft, ChevronDown, Compass, PhoneCall } from "lucide-react";
@@ -15,16 +16,21 @@ interface BlogPageProps {
   params: Promise<{ slug: string }>;
 }
 
+// Request-level cached loader to deduplicate Prisma reads between generateMetadata and BlogArticlePage
+const getBlogArticle = cache(async (slug: string) => {
+  return await prisma.seoLandingPage.findFirst({
+    where: {
+      slug,
+      type: "BLOG",
+      workflowState: "PUBLISHED",
+    },
+  });
+});
+
 export async function generateMetadata({ params }: BlogPageProps): Promise<Metadata> {
   const resolvedParams = await params;
   try {
-    const page = await prisma.seoLandingPage.findFirst({
-      where: {
-        slug: resolvedParams.slug,
-        type: "BLOG",
-        workflowState: "PUBLISHED",
-      },
-    });
+    const page = await getBlogArticle(resolvedParams.slug);
 
     if (!page) {
       return {
@@ -77,13 +83,7 @@ export default async function BlogArticlePage({ params }: BlogPageProps) {
   let page: any = null;
 
   try {
-    page = await prisma.seoLandingPage.findFirst({
-      where: {
-        slug: resolvedParams.slug,
-        type: "BLOG",
-        workflowState: "PUBLISHED",
-      },
-    });
+    page = await getBlogArticle(resolvedParams.slug);
   } catch (error) {
     console.error("Error fetching blog article from DB:", error);
   }

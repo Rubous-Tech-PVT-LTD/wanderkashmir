@@ -1,4 +1,4 @@
-import React from "react";
+import React, { cache } from "react";
 import { Metadata } from "next";
 import { notFound } from "next/navigation";
 
@@ -10,7 +10,8 @@ import { mapPropertyToHotelViewModel } from "@/components/stays/detail/types";
 import { getGooglePlaceReviews } from "@/lib/googleReviews";
 import { JsonLd } from "@/components/JsonLd";
 
-export const revalidate = 60;
+// ISR: 1-hour cache for stay detail page. Admin updates trigger on-demand revalidation.
+export const revalidate = 3600;
 
 interface HotelDetailPageProps {
   params: Promise<{
@@ -18,13 +19,9 @@ interface HotelDetailPageProps {
   }>;
 }
 
-export async function generateMetadata({
-  params,
-}: HotelDetailPageProps): Promise<Metadata> {
-  const resolvedParams = await params;
-  const slug = resolvedParams.slug;
-
-  const property = await prisma.property.findFirst({
+// Request-level cached loader to deduplicate Prisma reads between generateMetadata and HotelDetailPage
+const getPropertyDetail = cache(async (slug: string) => {
+  return await prisma.property.findFirst({
     where: {
       OR: [
         { id: slug },
@@ -33,14 +30,45 @@ export async function generateMetadata({
       isApproved: true,
       status: "APPROVED",
     },
-    select: {
-      id: true,
-      name: true,
-      description: true,
-      images: true,
-      location: true,
+    include: {
+      vendorProfile: {
+        select: {
+          id: true,
+          type: true,
+          businessName: true,
+          phone: true,
+        },
+      },
+      roomTypes: {
+        select: {
+          id: true,
+          propertyId: true,
+          name: true,
+          description: true,
+          basePrice: true,
+          capacity: true,
+          totalUnits: true,
+        },
+      },
+      reviews: {
+        include: {
+          user: {
+            select: { name: true },
+          },
+        },
+        orderBy: { createdAt: "desc" },
+      },
     },
   });
+});
+
+export async function generateMetadata({
+  params,
+}: HotelDetailPageProps): Promise<Metadata> {
+  const resolvedParams = await params;
+  const slug = resolvedParams.slug;
+
+  const property = await getPropertyDetail(slug);
 
   if (!property) {
     return {
@@ -83,46 +111,8 @@ export default async function HotelDetailPage({ params }: HotelDetailPageProps) 
   const resolvedParams = await params;
   const slug = resolvedParams.slug;
 
-  // Query database strictly by id or matching name (Zero fake data)
-  const property = await prisma.property.findFirst({
-    where: {
-      OR: [
-        { id: slug },
-        { name: { equals: slug.replace(/-/g, " "), mode: "insensitive" } },
-      ],
-      isApproved: true,
-      status: "APPROVED",
-    },
-    include: {
-      vendorProfile: {
-        select: {
-          id: true,
-          type: true,
-          businessName: true,
-          phone: true,
-        },
-      },
-      roomTypes: {
-        select: {
-          id: true,
-          propertyId: true,
-          name: true,
-          description: true,
-          basePrice: true,
-          capacity: true,
-          totalUnits: true,
-        },
-      },
-      reviews: {
-        include: {
-          user: {
-            select: { name: true },
-          },
-        },
-        orderBy: { createdAt: "desc" },
-      },
-    },
-  });
+  // Query database strictly by id or matching name via request-cached loader
+  const property = await getPropertyDetail(slug);
 
   if (!property) {
     notFound();

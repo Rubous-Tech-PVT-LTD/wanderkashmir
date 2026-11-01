@@ -1,6 +1,10 @@
 import { MetadataRoute } from 'next';
 import prisma from "@/lib/prisma";
 
+// Cache sitemap for 24 hours (86,400s) to prevent repetitive bot scans against Neon DB.
+// On-demand revalidation is triggered by admin actions via revalidatePath("/sitemap.xml").
+export const revalidate = 86400;
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = 'https://www.wanderkashmir.com';
 

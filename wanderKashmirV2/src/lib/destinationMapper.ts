@@ -1,5 +1,6 @@
 import prisma from "./prisma";
 import { getValidImageUrl } from "./imageUtils";
+import { cache } from "react";
 
 export interface DestinationPlaceItem {
   id: string;
@@ -138,7 +139,9 @@ export interface DestinationPageData {
  * Fetches structured CMS / database destination data and transforms it into
  * clean, predictable DestinationPageData for the locked template.
  */
-export async function getDestinationData(slug: string): Promise<DestinationPageData | null> {
+export const getDestinationData = cache(async function (
+  slug: string
+): Promise<DestinationPageData | null> {
   const page = await prisma.seoLandingPage.findUnique({
     where: { slug },
     include: {
@@ -158,7 +161,7 @@ export async function getDestinationData(slug: string): Promise<DestinationPageD
   }
 
   return mapDestinationDoc(page);
-}
+});
 
 export async function mapDestinationDoc(
   page: any,

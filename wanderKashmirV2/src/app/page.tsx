@@ -16,7 +16,8 @@ import prisma from "@/lib/prisma";
 import { getRealGoogleReviews } from "@/lib/googleReviews";
 import { JsonLd } from "@/components/JsonLd";
 
-export const revalidate = 60;
+// ISR: 1-hour cache for public homepage. Admin updates trigger on-demand revalidation.
+export const revalidate = 3600;
 
 export const metadata: Metadata = {
   title: "WanderKashmir | Curated Kashmir Tour Packages, Dal Lake Houseboats & Local Stays",

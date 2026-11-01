@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
+import { cache } from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import ToursHeroBanner from "@/components/tours/ToursHeroBanner";
@@ -10,8 +11,8 @@ import { getToursByCategory } from "@/data/toursDataFetching";
 import prisma from "@/lib/prisma";
 import { JsonLd } from "@/components/JsonLd";
 
-// ISR: revalidate every 60 seconds so Admin publish changes are reflected promptly
-export const revalidate = 60;
+// ISR: 1-hour cache for public tour category page. Admin updates trigger on-demand revalidation.
+export const revalidate = 3600;
 
 interface PageProps {
   params: Promise<{ slug: string }>;
@@ -34,12 +35,24 @@ export async function generateStaticParams() {
   return categories.map((c: { slug: string }) => ({ slug: c.slug }));
 }
 
+// Request-level cached loader to deduplicate category lookups
+const getTourCategoryMeta = cache(async (slug: string) => {
+  return await prisma.tourCategory.findFirst({
+    where: { slug, showInFilter: true },
+    select: {
+      id: true,
+      name: true,
+      slug: true,
+      description: true,
+      showInFilter: true,
+    },
+  });
+});
+
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
 
-  const category = await prisma.tourCategory.findFirst({
-    where: { slug, showInFilter: true },
-  });
+  const category = await getTourCategoryMeta(slug);
 
   if (!category) {
     return {
@@ -80,7 +93,13 @@ export default async function TourCategoryDetailPage({ params, searchParams }: P
   const resolvedSearchParams = searchParams ? await searchParams : {};
   const parsedMaxPrice = resolvedSearchParams.maxPrice ? Number(resolvedSearchParams.maxPrice) : undefined;
 
-  // 1. Fetch category and its LIVE tours (drafts are excluded in data fetching)
+  // 1. Check if category exists via cached lookup
+  const catMeta = await getTourCategoryMeta(slug);
+  if (!catMeta) {
+    notFound();
+  }
+
+  // 2. Fetch category and its LIVE tours (drafts are excluded in data fetching)
   const categoryData = await getToursByCategory(slug, {
     duration: resolvedSearchParams.duration,
     destination: resolvedSearchParams.destination,

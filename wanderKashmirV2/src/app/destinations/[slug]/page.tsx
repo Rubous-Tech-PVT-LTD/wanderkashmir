@@ -20,7 +20,8 @@ import {
 } from "@/components/destinations/RichContentRenderer";
 import { getDestinationData } from "@/lib/destinationMapper";
 
-export const revalidate = 60;
+// ISR: 1-hour cache for destination detail. Admin updates trigger on-demand revalidation.
+export const revalidate = 3600;
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const resolvedParams = await params;

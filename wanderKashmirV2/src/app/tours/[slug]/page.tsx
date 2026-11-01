@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
+import { cache } from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import TourPackageView from "@/components/tours/TourPackageView";
@@ -10,8 +11,8 @@ import ToursNeedHelpBanner from "@/components/tours/ToursNeedHelpBanner";
 import { getTourFromDB, getOtherToursFromDB, getToursByTravelStyle } from "@/data/toursDataFetching";
 import prisma from "@/lib/prisma";
 
-// ISR: revalidate every 60 seconds so Admin publish changes are reflected promptly
-export const revalidate = 60;
+// ISR: 1-hour cache for public tour detail. Admin updates trigger on-demand revalidation.
+export const revalidate = 3600;
 
 interface PageProps {
   params: Promise<{ slug: string }>;
@@ -44,13 +45,25 @@ export async function generateStaticParams() {
 
 import { JsonLd } from "@/components/JsonLd";
 
+// Request-level cached travel style metadata loader to deduplicate Prisma lookups
+const getTravelStyleMeta = cache(async (slug: string) => {
+  return await prisma.travelStyle.findFirst({
+    where: { slug, isActive: true },
+    select: {
+      id: true,
+      name: true,
+      slug: true,
+      description: true,
+      imageUrl: true,
+    },
+  });
+});
+
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
 
-  // 1. Check if slug matches an active Travel Style
-  const travelStyle = await prisma.travelStyle.findFirst({
-    where: { slug, isActive: true },
-  });
+  // 1. Check if slug matches an active Travel Style via cached loader
+  const travelStyle = await getTravelStyleMeta(slug);
 
   if (travelStyle) {
     return {
@@ -117,15 +130,17 @@ export default async function TourOrStylePage({ params, searchParams }: PageProp
   const resolvedSearchParams = searchParams ? await searchParams : {};
   const parsedMaxPrice = resolvedSearchParams.maxPrice ? Number(resolvedSearchParams.maxPrice) : undefined;
 
-  // 1. Check if slug matches an active Travel Style
-  const travelStyleData = await getToursByTravelStyle(slug, {
-    duration: resolvedSearchParams.duration,
-    destination: resolvedSearchParams.destination,
-    maxPrice: parsedMaxPrice,
-    sort: resolvedSearchParams.sort,
-  });
+  // 1. Check if slug matches an active Travel Style (cached)
+  const isStyle = await getTravelStyleMeta(slug);
+  if (isStyle) {
+    const travelStyleData = await getToursByTravelStyle(slug, {
+      duration: resolvedSearchParams.duration,
+      destination: resolvedSearchParams.destination,
+      maxPrice: parsedMaxPrice,
+      sort: resolvedSearchParams.sort,
+    });
 
-  if (travelStyleData) {
+    if (travelStyleData) {
     const { style, tours } = travelStyleData;
 
     const [dbTourCategories, dbTravelStyles] = await Promise.all([
@@ -180,6 +195,7 @@ export default async function TourOrStylePage({ params, searchParams }: PageProp
         <Footer />
       </div>
     );
+    }
   }
 
   // 2. Otherwise check if slug matches a Tour Detail page

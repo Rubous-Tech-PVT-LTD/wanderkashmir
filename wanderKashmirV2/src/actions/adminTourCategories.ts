@@ -94,6 +94,8 @@ export async function createTourCategoryAction(
       revalidatePath("/admin/tours");
       revalidatePath("/admin/tours/new");
       revalidatePath("/tours");
+      revalidatePath(`/tours/category/${category.slug}`);
+      revalidatePath("/sitemap.xml");
     } catch {
       // Revalidation during non-HTTP tests
     }
@@ -206,6 +208,11 @@ export async function updateTourCategoryAction(
       revalidatePath("/admin/tours");
       revalidatePath(`/admin/tour-categories/${id}`);
       revalidatePath("/tours");
+      revalidatePath(`/tours/category/${updated.slug}`);
+      if (existing.slug !== updated.slug) {
+        revalidatePath(`/tours/category/${existing.slug}`);
+      }
+      revalidatePath("/sitemap.xml");
     } catch {
       // Revalidation during non-HTTP tests
     }
@@ -308,6 +315,8 @@ export async function deleteTourCategoryAction(
       revalidatePath("/admin/tours");
       revalidatePath("/admin/tours/new");
       revalidatePath("/tours");
+      revalidatePath(`/tours/category/${category.slug}`);
+      revalidatePath("/sitemap.xml");
     } catch {
       // Revalidation during non-HTTP tests
     }

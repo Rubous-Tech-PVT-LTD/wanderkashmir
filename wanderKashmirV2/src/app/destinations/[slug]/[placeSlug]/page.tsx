@@ -1,5 +1,6 @@
 import { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { cache } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { ChevronRight, MapPin } from "lucide-react";
@@ -8,7 +9,8 @@ import Footer from "@/components/Footer";
 import { JsonLd } from "@/components/JsonLd";
 import prisma from "@/lib/prisma";
 
-export const revalidate = 60;
+// ISR: 1-hour cache for destination place detail. Admin updates trigger on-demand revalidation.
+export const revalidate = 3600;
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -50,10 +52,10 @@ interface ResolvedEntity {
  *
  * Returns null for any broken link, triggering notFound().
  */
-async function resolveEntity(
+const resolveEntity = cache(async (
   destinationSlug: string,
   placeSlug: string
-): Promise<ResolvedEntity | null> {
+): Promise<ResolvedEntity | null> => {
   // Load the destination page including all its linked places
   const destination = await prisma.seoLandingPage.findUnique({
     where: { slug: destinationSlug },
@@ -174,7 +176,7 @@ async function resolveEntity(
     place,
     relatedPlaces,
   };
-}
+});
 
 // ─── Metadata ─────────────────────────────────────────────────────────────────
 

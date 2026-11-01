@@ -8,7 +8,8 @@ import DestinationsHeroBanner from "@/components/destinations/DestinationsHeroBa
 import DestinationsInventoryView from "@/components/destinations/DestinationsInventoryView";
 
 
-export const revalidate = 60; // ISR for destination index
+// ISR: 1-hour cache for destination catalog. Admin updates trigger on-demand revalidation.
+export const revalidate = 3600;
 
 export const metadata: Metadata = {
   title: "Destinations | Discover Kashmir | WanderKashmir",

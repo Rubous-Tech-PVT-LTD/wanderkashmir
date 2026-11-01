@@ -8,8 +8,8 @@ import ToursNeedHelpBanner from "@/components/tours/ToursNeedHelpBanner";
 import prisma from "@/lib/prisma";
 import { TourPackageDetail } from "@/data/liveToursData";
 
-// ISR: revalidate every 60 seconds so Admin publish changes are reflected promptly
-export const revalidate = 60;
+// ISR: 1-hour cache for public tours catalog. Admin updates trigger on-demand revalidation.
+export const revalidate = 3600;
 
 export const metadata: Metadata = {
   title: "Kashmir Tour Packages | Curated Itineraries & Mountain Stays | WanderKashmir",
@@ -42,12 +42,41 @@ export default async function ToursListingPage() {
       .findMany({
         where: { isLive: true },
         orderBy: { createdAt: "desc" },
-        include: {
-          tourCategory: { select: { id: true, name: true, slug: true } },
+        select: {
+          id: true,
+          slug: true,
+          title: true,
+          duration: true,
+          badge: true,
+          category: true,
+          categoryId: true,
+          destinations: true,
+          price: true,
+          originalPrice: true,
+          overview: true,
+          images: true,
+          inclusions: true,
+          exclusions: true,
+          highlights: true,
+          isLive: true,
+          maxPersons: true,
+          createdAt: true,
+          tourCategory: {
+            select: {
+              id: true,
+              name: true,
+              slug: true,
+            },
+          },
           travelStyles: {
             select: {
               travelStyle: {
-                select: { id: true, name: true, slug: true, isActive: true },
+                select: {
+                  id: true,
+                  name: true,
+                  slug: true,
+                  isActive: true,
+                },
               },
             },
           },
@@ -95,7 +124,7 @@ export default async function ToursListingPage() {
       0,
       parseInt((tour.duration || "0").match(/(\d+)/)?.[0] || "1", 10) - 1
     ),
-    badge: (tour as any).badge || "",
+    badge: tour.badge || "",
     category: tour.tourCategory?.name || tour.category || "General",
     categoryDisplay: tour.tourCategory?.name || tour.category || "General",
     categoryId: tour.categoryId || tour.tourCategory?.id || null,
@@ -116,7 +145,7 @@ export default async function ToursListingPage() {
     reviewsList: [],
     stays: [],
     transports: [],
-    travelStyles: (tour.travelStyles as any[]) || [],
+    travelStyles: tour.travelStyles || [],
     isLive: tour.isLive,
     maxPersons: tour.maxPersons || 2,
   }));
