@@ -1,12 +1,11 @@
-import React from "react";
+import React, { cache } from "react";
 import { Metadata } from "next";
 
 import prisma from "@/lib/prisma";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import DestinationsHeroBanner from "@/components/destinations/DestinationsHeroBanner";
-import DestinationsInventoryView from "@/components/destinations/DestinationsInventoryView";
-
+import DestinationsInventoryView, { CATEGORY_ALIASES } from "@/components/destinations/DestinationsInventoryView";
 
 // ISR: 1-hour cache for destination catalog. Admin updates trigger on-demand revalidation.
 export const revalidate = 3600;
@@ -30,25 +29,12 @@ export const metadata: Metadata = {
   },
 };
 
-interface DestinationsPageProps {
-  searchParams: Promise<{
-    name?: string;
-    category?: string;
-  }>;
-}
-
-export default async function DestinationsPage({ searchParams }: DestinationsPageProps) {
-  const resolvedParams = searchParams ? await searchParams : {};
-  const activeName = resolvedParams.name ? resolvedParams.name.trim() : undefined;
-  const activeCategory = resolvedParams.category ? resolvedParams.category.trim() : undefined;
-
-  // 1. Fetch ONLY destination pages strictly restricted to type: "DESTINATION" and workflowState: "PUBLISHED"
-  // Use explicit select to retrieve only the lightweight fields needed for card display and filtering
+const getDestinationsData = cache(async () => {
   const [rawDestinations, categoryMappings] = await Promise.all([
     prisma.seoLandingPage.findMany({
-      where: { 
+      where: {
         type: "DESTINATION",
-        workflowState: "PUBLISHED" 
+        workflowState: "PUBLISHED"
       },
       select: {
         id: true,
@@ -68,26 +54,50 @@ export default async function DestinationsPage({ searchParams }: DestinationsPag
     })
   ]);
 
-  // 2. Defensive server-side validation: Guarantee strictly DESTINATION type and PUBLISHED status
   const allDestinations = rawDestinations.filter(
-    (d: (typeof rawDestinations)[number]) => d.type === "DESTINATION" && d.workflowState === "PUBLISHED"
+    (d) => d.type === "DESTINATION" && d.workflowState === "PUBLISHED"
   );
 
-  const mappings = categoryMappings?.value ? JSON.parse(categoryMappings.value) : {};
+  let mappings: Record<string, string[]> = {};
+  if (categoryMappings?.value) {
+    try {
+      mappings = JSON.parse(categoryMappings.value);
+    } catch (e) {
+      console.error("Error parsing category mappings:", e);
+    }
+  }
 
-  // 3. Filter in-memory by category and destination name
+  return { allDestinations, mappings };
+});
+
+interface DestinationsPageProps {
+  searchParams?: Promise<{
+    name?: string;
+    category?: string;
+  }>;
+}
+
+export default async function DestinationsPage({ searchParams }: DestinationsPageProps) {
+  const resolvedParams = searchParams ? await searchParams : {};
+  const activeName = resolvedParams.name ? resolvedParams.name.trim() : undefined;
+  const activeCategory = resolvedParams.category ? resolvedParams.category.trim() : undefined;
+
+  const { allDestinations, mappings } = await getDestinationsData();
+
+  // Server-side pre-filtering for SSR and search crawlers
   let filteredDestinations = allDestinations;
 
   if (activeCategory) {
-    filteredDestinations = filteredDestinations.filter((dest: (typeof allDestinations)[number]) => {
+    const targetCats = CATEGORY_ALIASES[activeCategory] || [activeCategory];
+    filteredDestinations = filteredDestinations.filter((dest) => {
       const cats = mappings[dest.slug || ""] || [];
-      return cats.includes(activeCategory);
+      return cats.some((c) => targetCats.includes(c));
     });
   }
 
   const normalizedFilter = activeName ? activeName.toLowerCase() : "";
   if (normalizedFilter) {
-    filteredDestinations = filteredDestinations.filter((dest: (typeof allDestinations)[number]) => {
+    filteredDestinations = filteredDestinations.filter((dest) => {
       const slug = (dest.slug || "").toLowerCase();
       const title = (dest.title || "").toLowerCase();
       const heading = (dest.h1Heading || "").toLowerCase();
@@ -96,7 +106,7 @@ export default async function DestinationsPage({ searchParams }: DestinationsPag
   }
 
   return (
-    <div className="flex min-h-screen flex-col bg-white text-[var(--season-text)] font-sans selection:bg-[var(--season-primary)] selection:text-white">
+    <div className="flex min-h-screen flex-col bg-white text-[var(--season-text,#111827)] font-sans selection:bg-[var(--season-primary,#EA580C)] selection:text-white">
       <Navbar />
 
       <main className="flex-1 w-full pb-16 pt-[64px]">
@@ -104,14 +114,13 @@ export default async function DestinationsPage({ searchParams }: DestinationsPag
         <DestinationsHeroBanner />
 
         {/* 2. DESTINATION DISCOVERY AREA (Sidebar + Inventory Top Bar + Card Grid) */}
-        <DestinationsInventoryView 
+        <DestinationsInventoryView
           allDestinations={allDestinations}
-          destinations={filteredDestinations} 
+          destinations={filteredDestinations}
           activeName={activeName}
           activeCategory={activeCategory}
+          categoryMappings={mappings}
         />
-
-
       </main>
 
       <Footer />
