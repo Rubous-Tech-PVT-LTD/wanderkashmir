@@ -1,3 +1,4 @@
+import { cache } from "react";
 import prisma from "@/lib/prisma";
 import TourDetailClient from "./TourDetailClient";
 import { notFound, redirect } from "next/navigation";
@@ -83,12 +84,30 @@ const fallbackTourMap: Record<string, any> = {
   }
 };
 
+const getTravelStyleBySlug = cache(async (slug: string) => {
+  return prisma.travelStyle.findFirst({
+    where: { slug, isActive: true },
+  }).catch(() => null);
+});
+
+const getTourBySlug = cache(async (slug: string): Promise<any> => {
+  const tour = await prisma.tour.findUnique({
+    where: { slug },
+    include: {
+      reviews: {
+        include: { user: true },
+        orderBy: { createdAt: "desc" },
+      },
+    },
+  }).catch(() => null);
+
+  return tour || fallbackTourMap[slug] || null;
+});
+
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
 
-  const travelStyle = await prisma.travelStyle.findFirst({
-    where: { slug, isActive: true }
-  }).catch(() => null);
+  const travelStyle = await getTravelStyleBySlug(slug);
 
   if (travelStyle) {
     return {
@@ -100,8 +119,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     };
   }
 
-  let tour = await prisma.tour.findUnique({ where: { slug } }).catch(() => null);
-  if (!tour) tour = fallbackTourMap[slug];
+  const tour = await getTourBySlug(slug);
   
   if (!tour) return { title: "Tour Not Found | WanderKashmir" };
   
@@ -129,7 +147,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
       description,
       url,
       siteName: "WanderKashmir",
-      images: images.map(imgUrl => ({ url: imgUrl })),
+      images: images.map((imgUrl: string) => ({ url: imgUrl })),
       type: "website",
     },
     twitter: {
@@ -146,27 +164,13 @@ export const revalidate = 60;
 export default async function TourPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   
-  const travelStyle = await prisma.travelStyle.findFirst({
-    where: { slug, isActive: true }
-  }).catch(() => null);
+  const travelStyle = await getTravelStyleBySlug(slug);
 
   if (travelStyle) {
     redirect(`/tours?category=${encodeURIComponent(travelStyle.name)}`);
   }
 
-  let tour: any = await prisma.tour.findUnique({
-    where: { slug },
-    include: {
-      reviews: {
-        include: { user: true },
-        orderBy: { createdAt: 'desc' }
-      }
-    }
-  }).catch(() => null);
-
-  if (!tour) {
-    tour = fallbackTourMap[slug];
-  }
+  const tour: any = await getTourBySlug(slug);
 
   if (!tour) {
     notFound();

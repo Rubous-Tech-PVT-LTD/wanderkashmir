@@ -154,8 +154,10 @@ export default async function ToursPage({
   searchParams?: Promise<{ [key: string]: string | string[] | undefined }> | { [key: string]: string | string[] | undefined }
 }) {
   const resolvedSearchParams = searchParams ? await searchParams : {};
-  const dbCategories = await getCategories();
-  const tours = await getTours();
+  const [dbCategories, tours] = await Promise.all([
+    getCategories(),
+    getTours(),
+  ]);
 
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.wanderkashmir.com';
   const jsonLd = {

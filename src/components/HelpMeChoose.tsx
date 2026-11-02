@@ -194,7 +194,7 @@ export const HELP_ME_CHOOSE_CARDS: PathwayCardItem[] = [
       "https://res.cloudinary.com/dcmoseix9/image/upload/v1790881582/culture_hf5pex.jpg",
     svgUrl: "https://res.cloudinary.com/dcmoseix9/image/upload/v1789793264/palace_igvqrj.png",
     fallbackIcon: HouseboatIcon,
-    href: "/tours/culture",
+    href: "/tours?category=Culture",
     actionText: "Explore Culture",
   },
   {
@@ -205,7 +205,7 @@ export const HELP_ME_CHOOSE_CARDS: PathwayCardItem[] = [
       "https://res.cloudinary.com/dcmoseix9/image/upload/v1790833523/Spritural_Image_fj5gla.jpg",
     svgUrl: "https://res.cloudinary.com/dcmoseix9/image/upload/v1789793902/dervish_jr9igw.png",
     fallbackIcon: ShrineIcon,
-    href: "/tours/spiritual",
+    href: "/tours?category=Spiritual",
     actionText: "Explore Spiritual Kashmir",
   },
   {
@@ -216,7 +216,7 @@ export const HELP_ME_CHOOSE_CARDS: PathwayCardItem[] = [
       "https://res.cloudinary.com/dcmoseix9/image/upload/v1790833824/Nature_morh8k.jpg",
     svgUrl: "https://res.cloudinary.com/dcmoseix9/image/upload/v1789793956/solo-traveller_uiybia.png",
     fallbackIcon: BackpackIcon,
-    href: "/tours/nature",
+    href: "/tours?category=Nature",
     actionText: "Explore Nature Trips",
   },
   {
@@ -227,7 +227,7 @@ export const HELP_ME_CHOOSE_CARDS: PathwayCardItem[] = [
       "https://res.cloudinary.com/dcmoseix9/image/upload/v1790833786/family_image_dy0haf.jpg",
     svgUrl: "https://res.cloudinary.com/dcmoseix9/image/upload/v1789794097/building_grx3vy.png",
     fallbackIcon: TraditionalChinarIcon,
-    href: "/tours/family",
+    href: "/tours?category=Family",
     actionText: "Explore Family Trips",
   },
   {
@@ -239,7 +239,7 @@ export const HELP_ME_CHOOSE_CARDS: PathwayCardItem[] = [
     svgUrl: "https://res.cloudinary.com/dcmoseix9/image/upload/v1789794239/hiking_rpczgx.png",
     iconClassName: "-scale-x-100",
     fallbackIcon: HikingBootIcon,
-    href: "/tours/adventure",
+    href: "/tours?category=Adventure",
     actionText: "Explore Adventure",
   },
   {
@@ -250,7 +250,7 @@ export const HELP_ME_CHOOSE_CARDS: PathwayCardItem[] = [
       "https://res.cloudinary.com/dcmoseix9/image/upload/v1790833785/Trek_image_zr6vzf.jpg",
     svgUrl: "",
     fallbackIcon: MountainLakeIcon,
-    href: "/tours/trekking",
+    href: "/tours?category=Trekking",
     actionText: "Explore Trekking",
   },
 ];
@@ -323,7 +323,7 @@ export default function HelpMeChoose({ travelStyles }: HelpMeChooseProps = {}) {
           svgUrl: iconConfig.svgUrl,
           iconClassName: iconConfig.iconClassName,
           fallbackIcon: iconConfig.fallbackIcon,
-          href: `/tours/${style.slug}`,
+          href: `/tours?category=${encodeURIComponent(style.name)}`,
           actionText: `Explore ${style.name}`,
         };
       });

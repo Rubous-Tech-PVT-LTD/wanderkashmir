@@ -1,4 +1,5 @@
 import { Metadata } from "next";
+import { cache } from "react";
 import { notFound } from "next/navigation";
 import prisma from "@/lib/prisma";
 import Image from "next/image";
@@ -12,11 +13,15 @@ import { JsonLd } from "@/components/JsonLd";
 
 export const revalidate = 3600; // ISR: Revalidate every hour for instant load times
 
+const getDestinationSeoPage = cache(async (slug: string) => {
+  return prisma.seoLandingPage.findUnique({
+    where: { slug },
+  });
+});
+
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const resolvedParams = await params;
-  const page = await prisma.seoLandingPage.findUnique({
-    where: { slug: resolvedParams.slug },
-  });
+  const page = await getDestinationSeoPage(resolvedParams.slug);
 
   if (!page || page.type !== "DESTINATION") {
     return { title: "Destination not found" };
@@ -42,9 +47,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 
 export default async function DestinationSeoPage({ params }: { params: Promise<{ slug: string }> }) {
   const resolvedParams = await params;
-  const page = await prisma.seoLandingPage.findUnique({
-    where: { slug: resolvedParams.slug },
-  });
+  const page = await getDestinationSeoPage(resolvedParams.slug);
 
   if (!page || page.type !== "DESTINATION") {
     notFound();
