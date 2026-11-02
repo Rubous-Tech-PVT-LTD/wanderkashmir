@@ -26,14 +26,15 @@ const updateRequirementSchema = z.object({
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const user = await getCrmUser(req);
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
     const requirement = await prisma.crmRequirement.findUnique({
-      where: { id: params.id },
+      where: { id },
       include: {
         partner: true,
         quotations: {
@@ -66,9 +67,10 @@ export async function GET(
 
 export async function PATCH(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const user = await getCrmUser(req);
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
@@ -76,7 +78,7 @@ export async function PATCH(
     const data = updateRequirementSchema.parse(body);
 
     const existing = await prisma.crmRequirement.findUnique({
-      where: { id: params.id },
+      where: { id },
       include: { partner: true }
     });
 
@@ -91,7 +93,7 @@ export async function PATCH(
     if (data.returnDate) updateData.returnDate = new Date(data.returnDate);
 
     const updated = await prisma.crmRequirement.update({
-      where: { id: params.id },
+      where: { id },
       data: updateData,
     });
 

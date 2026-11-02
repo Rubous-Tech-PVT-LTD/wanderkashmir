@@ -1,6 +1,7 @@
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Shield, BookOpen, AlertCircle, Scale, CreditCard } from "lucide-react";
+import Link from "next/link";
 
 export const metadata = {
   title: "Terms of Service | WanderKashmir",
@@ -85,7 +86,12 @@ export default function TermsOfServicePage() {
               </div>
               <h2 className="text-2xl font-bold text-slate-900 m-0">4. Cancellations & Refunds</h2>
             </div>
-            <p className="text-slate-600 mb-3">Our standard cancellation policy protects both guests and hosts:</p>
+            <p className="text-slate-600 mb-3">
+              Standard hotel and homestay bookings allow cancellation up to 48 hours before check-in. For all domestic and international group tours, private itineraries, and package bookings, cancellations, deductions, and free rescheduling are strictly governed by our official{" "}
+              <Link href="/cancellation" className="text-orange-600 font-semibold underline hover:text-orange-700">
+                Cancellation &amp; Refund Policy
+              </Link>.
+            </p>
             <ul className="list-disc pl-5 text-slate-600 space-y-2">
               <li><strong>Free Cancellation:</strong> Guests can cancel up to 48 hours before check-in/start date for a 100% refund (minus payment gateway charges).</li>
               <li><strong>Late Cancellation:</strong> Cancellations made within 48 hours will incur a 50% penalty, which is transferred to the vendor to cover losses.</li>

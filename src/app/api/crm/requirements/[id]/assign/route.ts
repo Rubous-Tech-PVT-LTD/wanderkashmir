@@ -9,9 +9,10 @@ const assignSchema = z.object({
 
 export async function POST(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const user = await getCrmUser(req);
     if (!user || !isCrmAdminOrManager(user.role)) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
@@ -21,12 +22,12 @@ export async function POST(
     const { opsId } = assignSchema.parse(body);
 
     const existing = await prisma.crmRequirement.findUnique({
-      where: { id: params.id }
+      where: { id }
     });
     if (!existing) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
     const updated = await prisma.crmRequirement.update({
-      where: { id: params.id },
+      where: { id },
       data: { assignedOpsId: opsId },
     });
 

@@ -22,7 +22,7 @@ import { Metadata } from "next";
 export const metadata: Metadata = {
   title: "Cancellation & Refund Policy | WanderKashmir",
   description:
-    "Official Cancellation, Rescheduling & Refund Policy for bookings made with Avian Experiences (WanderKashmir.com).",
+    "Official Cancellation, Rescheduling & Refund Policy for bookings made with WanderKashmir (WanderKashmir.com).",
   alternates: {
     canonical: "/cancellation",
   },
@@ -57,7 +57,7 @@ export default function CancellationPage() {
           <div className="bg-amber-50/80 border-l-4 border-amber-500 rounded-r-xl p-4 sm:p-5 text-amber-950 text-sm leading-relaxed">
             <p className="font-semibold text-amber-900 mb-1">Important Notice</p>
             This Cancellation & Refund Policy is applicable to all bookings made with{" "}
-            <strong>Avian Experiences (WanderKashmir.com)</strong>. All cancellation requests must be communicated in writing via email to{" "}
+            <strong>WanderKashmir (WanderKashmir.com)</strong>. All cancellation requests must be communicated in writing via email to{" "}
             <a href="mailto:sales@wanderkashmir.com" className="font-semibold text-amber-900 underline hover:text-[#f97316]">
               sales@wanderkashmir.com
             </a>{" "}
@@ -229,7 +229,7 @@ export default function CancellationPage() {
                   • <strong>Refundable bookings:</strong> Refunds will be processed strictly as per the respective third-party service provider’s cancellation policy.
                 </p>
                 <p>
-                  • <strong>Third-party delays:</strong> Avian Experiences Pvt. Ltd. (WanderKashmir) is not responsible for delays, schedule alterations, or cancellations by airlines, hotels, railways, coach operators, or other external providers.
+                  • <strong>Third-party delays:</strong> WanderKashmir is not responsible for delays, schedule alterations, or cancellations by airlines, hotels, railways, coach operators, or other external providers.
                 </p>
                 <p>
                   • <strong>Hotel Lock-in:</strong> Most hotels and resorts become strictly non-refundable within the last <strong>20 days prior to check-in</strong>; last-minute changes or refunds may not be possible.
@@ -245,7 +245,7 @@ export default function CancellationPage() {
               <h3 className="text-base font-bold text-slate-800">Visa Services</h3>
               <div className="space-y-2 text-sm text-slate-600 leading-relaxed">
                 <p>
-                  • <strong>Assistance Only:</strong> Avian Experiences provides visa assistance services only, including documentation support and appointment guidance. The final decision regarding visa issuance or refusal lies solely with the respective embassy or consulate.
+                  • <strong>Assistance Only:</strong> WanderKashmir provides visa assistance services only, including documentation support and appointment guidance. The final decision regarding visa issuance or refusal lies solely with the respective embassy or consulate.
                 </p>
                 <p>
                   • <strong>Non-Refundable Visa Fees:</strong> Embassy and consular visa fees are non-refundable under all circumstances.
@@ -287,7 +287,7 @@ export default function CancellationPage() {
 
             <div className="text-sm text-slate-600 space-y-3 leading-relaxed">
               <p>
-                In the event of a trip being cancelled or modified due to government restrictions, natural calamities, severe weather, civil unrest, or any other circumstances beyond our control, Avian Experiences may be required to alter or cancel the tour itinerary.
+                In the event of a trip being cancelled or modified due to government restrictions, natural calamities, severe weather, civil unrest, or any other circumstances beyond our control, WanderKashmir may be required to alter or cancel the tour itinerary.
               </p>
               <p>
                 Any refunds or credit vouchers in such situations will be governed strictly by respective vendor policies and what is practically feasible. No refunds will be issued for indirect travel services (such as independent flight tickets, visas, or travel insurance) that are impacted by such changes.
