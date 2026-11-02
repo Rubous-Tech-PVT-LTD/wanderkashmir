@@ -1,138 +1,129 @@
+import React, { cache } from "react";
+import { Metadata } from "next";
+
 import prisma from "@/lib/prisma";
-import Link from "next/link";
-import { ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
-import Image from "next/image";
-import { getValidImageUrl } from "@/lib/imageUtils";
+import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
+import DestinationsHeroBanner from "@/components/destinations/DestinationsHeroBanner";
+import DestinationsInventoryView, { CATEGORY_ALIASES } from "@/components/destinations/DestinationsInventoryView";
 
-// Revalidate occasionally, or make it dynamic
-export const dynamic = 'force-dynamic';
+// ISR: 1-hour cache for destination catalog. Admin updates trigger on-demand revalidation.
+export const revalidate = 3600;
 
-export default async function DestinationsPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
-}) {
-  const resolvedParams = await searchParams;
-  const pageParam = resolvedParams.page;
-  const currentPage = typeof pageParam === 'string' ? parseInt(pageParam, 10) : 1;
-  const itemsPerPage = 24;
+export const metadata: Metadata = {
+  title: "Destinations | Discover Kashmir | WanderKashmir",
+  description: "Explore Kashmir's destinations, landscapes and local experiences. Plan your perfect journey through our verified destination guides.",
+  alternates: {
+    canonical: "https://www.wanderkashmir.com/destinations",
+  },
+  openGraph: {
+    title: "Destinations | Discover Kashmir | WanderKashmir",
+    description: "Explore Kashmir's destinations, landscapes and local experiences. Plan your perfect journey through our verified destination guides.",
+    url: "https://www.wanderkashmir.com/destinations",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Destinations | Discover Kashmir | WanderKashmir",
+    description: "Explore Kashmir's destinations, landscapes and local experiences. Plan your perfect journey through our verified destination guides.",
+  },
+};
 
-  const validPage = isNaN(currentPage) || currentPage < 1 ? 1 : currentPage;
-  const skip = (validPage - 1) * itemsPerPage;
-
-  const [routes, totalCount] = await Promise.all([
+const getDestinationsData = cache(async () => {
+  const [rawDestinations, categoryMappings] = await Promise.all([
     prisma.seoLandingPage.findMany({
-      skip,
-      take: itemsPerPage,
+      where: {
+        type: "DESTINATION",
+        workflowState: "PUBLISHED"
+      },
+      select: {
+        id: true,
+        slug: true,
+        type: true,
+        title: true,
+        h1Heading: true,
+        description: true,
+        imageUrl: true,
+        workflowState: true,
+        createdAt: true,
+      },
       orderBy: { createdAt: "desc" },
     }),
-    prisma.seoLandingPage.count(),
+    prisma.systemConfig.findUnique({
+      where: { key: "destination_category_mappings" }
+    })
   ]);
 
-  const totalPages = Math.ceil(totalCount / itemsPerPage);
+  const allDestinations = rawDestinations.filter(
+    (d) => d.type === "DESTINATION" && d.workflowState === "PUBLISHED"
+  );
+
+  let mappings: Record<string, string[]> = {};
+  if (categoryMappings?.value) {
+    try {
+      mappings = JSON.parse(categoryMappings.value);
+    } catch (e) {
+      console.error("Error parsing category mappings:", e);
+    }
+  }
+
+  return { allDestinations, mappings };
+});
+
+interface DestinationsPageProps {
+  searchParams?: Promise<{
+    name?: string;
+    category?: string;
+  }>;
+}
+
+export default async function DestinationsPage({ searchParams }: DestinationsPageProps) {
+  const resolvedParams = searchParams ? await searchParams : {};
+  const activeName = resolvedParams.name ? resolvedParams.name.trim() : undefined;
+  const activeCategory = resolvedParams.category ? resolvedParams.category.trim() : undefined;
+
+  const { allDestinations, mappings } = await getDestinationsData();
+
+  // Server-side pre-filtering for SSR and search crawlers
+  let filteredDestinations = allDestinations;
+
+  if (activeCategory) {
+    const targetCats = CATEGORY_ALIASES[activeCategory] || [activeCategory];
+    filteredDestinations = filteredDestinations.filter((dest) => {
+      const cats = mappings[dest.slug || ""] || [];
+      return cats.some((c) => targetCats.includes(c));
+    });
+  }
+
+  const normalizedFilter = activeName ? activeName.toLowerCase() : "";
+  if (normalizedFilter) {
+    filteredDestinations = filteredDestinations.filter((dest) => {
+      const slug = (dest.slug || "").toLowerCase();
+      const title = (dest.title || "").toLowerCase();
+      const heading = (dest.h1Heading || "").toLowerCase();
+      return slug === normalizedFilter || title.includes(normalizedFilter) || heading.includes(normalizedFilter);
+    });
+  }
 
   return (
-    <div className="bg-white min-h-screen pt-24 pb-16">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="mb-10 border-b border-slate-100 pb-8">
-          <h1 className="text-4xl font-bold text-slate-900">All Destinations & Routes</h1>
-          <p className="mt-4 text-lg text-slate-500 max-w-3xl">
-            Explore our complete collection of travel routes, homestays, and tour packages across the beautiful valleys of Kashmir.
-          </p>
-        </div>
+    <div className="flex min-h-screen flex-col bg-white text-[var(--season-text,#111827)] font-sans selection:bg-[var(--season-primary,#EA580C)] selection:text-white">
+      <Navbar />
 
-        {routes.length === 0 ? (
-          <div className="text-center py-20">
-            <h3 className="text-xl font-medium text-slate-600">No destinations found.</h3>
-          </div>
-        ) : (
-          <>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-              {routes.map((route) => {
-                const getBasePath = (type: string) => {
-                  switch (type) {
-                    case "BLOG": return "blogs";
-                    case "HOMESTAY": return "homestays";
-                    case "DESTINATION": return "destinations";
-                    case "TOUR": return "tours";
-                    case "TAXI": return "taxis";
-                    default: return type ? `${type.toLowerCase()}s` : "tours";
-                  }
-                };
-                const basePath = getBasePath(route.type);
-                
-                return (
-                  <Link
-                    key={route.id}
-                    href={`/${basePath}/${route.slug}`}
-                    className="group flex flex-col overflow-hidden rounded-2xl border border-slate-200 hover:border-[#f97316]/30 hover:shadow-xl hover:shadow-[#f97316]/10 bg-white transition-all duration-300 h-full"
-                  >
-                    <div className="relative h-48 w-full overflow-hidden bg-slate-100">
-                      {route.imageUrl ? (
-                        <Image
-                          src={getValidImageUrl([route.imageUrl])}
-                          alt={route.title}
-                          fill
-                          className="object-cover group-hover:scale-105 transition-transform duration-500"
-                        />
-                      ) : (
-                        <div className="absolute inset-0 flex items-center justify-center text-slate-400">
-                          No Image
-                        </div>
-                      )}
-                    </div>
-                    <div className="p-5 flex flex-col flex-grow">
-                      <div className="text-xs font-semibold tracking-wider text-[#f97316] mb-2 uppercase">
-                        {route.type}
-                      </div>
-                      <h3 className="font-bold text-slate-900 group-hover:text-[#f97316] transition-colors line-clamp-2 mb-3">
-                        {route.title}
-                      </h3>
-                      <div className="mt-auto flex items-center text-sm font-medium text-[#f97316]">
-                        Read more
-                        <ArrowRight className="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" />
-                      </div>
-                    </div>
-                  </Link>
-                );
-              })}
-            </div>
+      <main className="flex-1 w-full pb-16 pt-[64px]">
+        {/* 1. COMPACT PAGE INTRO */}
+        <DestinationsHeroBanner />
 
-            {/* Pagination Controls */}
-            {totalPages > 1 && (
-              <div className="mt-16 flex items-center justify-center gap-2 border-t border-slate-100 pt-8">
-                <Link
-                  href={`/destinations?page=${validPage - 1}`}
-                  className={`p-2 rounded-full border ${
-                    validPage <= 1
-                      ? "border-slate-200 text-slate-300 pointer-events-none"
-                      : "border-slate-300 text-slate-600 hover:bg-slate-50 hover:text-slate-900"
-                  }`}
-                  aria-disabled={validPage <= 1}
-                >
-                  <ChevronLeft className="w-5 h-5" />
-                </Link>
-                
-                <span className="text-sm font-medium text-slate-600 mx-4">
-                  Page {validPage} of {totalPages}
-                </span>
+        {/* 2. DESTINATION DISCOVERY AREA (Sidebar + Inventory Top Bar + Card Grid) */}
+        <DestinationsInventoryView
+          allDestinations={allDestinations}
+          destinations={filteredDestinations}
+          activeName={activeName}
+          activeCategory={activeCategory}
+          categoryMappings={mappings}
+        />
+      </main>
 
-                <Link
-                  href={`/destinations?page=${validPage + 1}`}
-                  className={`p-2 rounded-full border ${
-                    validPage >= totalPages
-                      ? "border-slate-200 text-slate-300 pointer-events-none"
-                      : "border-slate-300 text-slate-600 hover:bg-slate-50 hover:text-slate-900"
-                  }`}
-                  aria-disabled={validPage >= totalPages}
-                >
-                  <ChevronRight className="w-5 h-5" />
-                </Link>
-              </div>
-            )}
-          </>
-        )}
-      </div>
+      <Footer />
     </div>
   );
 }
