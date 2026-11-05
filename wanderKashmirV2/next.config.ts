@@ -65,6 +65,36 @@ const nextConfig: NextConfig = {
         destination: "/stays",
         permanent: true,
       },
+      {
+        source: "/tours/7-days-complete-kashmir",
+        destination: "/tours/7-days-kashmir-tour-package",
+        permanent: true,
+      },
+      {
+        source: "/tours/6-days-tour-kashmir-explorer-package",
+        destination: "/tours/6-days-kashmir-tour-package",
+        permanent: true,
+      },
+      {
+        source: "/tours/5-days-family-special",
+        destination: "/tours/5-days-kashmir-tour-package",
+        permanent: true,
+      },
+      {
+        source: "/tours/4-days-srinagar-gulmarg-pahalgam",
+        destination: "/tours/4-days-3-nights-kashmir-tour-package",
+        permanent: true,
+      },
+      {
+        source: "/tours/2-days-quick-srinagar",
+        destination: "/tours/2-days-1-night-srinagar-tour-package",
+        permanent: true,
+      },
+      {
+        source: "/tours/3-days-srinagar-gulmarg",
+        destination: "/tours/3-days-2-nights-srinagar-gulmarg-tour-package",
+        permanent: true,
+      },
     ];
   },
   async headers() {
