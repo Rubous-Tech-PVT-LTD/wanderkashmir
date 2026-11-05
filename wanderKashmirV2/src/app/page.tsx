@@ -9,6 +9,7 @@ import { FilterTourPackage } from "@/data/filterToursData";
 import BrowseToursSection from "@/components/BrowseToursSection";
 import DestinationGuidesAndFAQ, {
   FeaturedDestinationItem,
+  TravelGuideItem,
 } from "@/components/DestinationGuidesAndFAQ";
 import GoogleReviewsSection from "@/components/GoogleReviewsSection";
 import Footer from "@/components/Footer";
@@ -90,6 +91,7 @@ export default async function HomePage() {
     travelStyles,
     rawPopular,
     rawLiveTours,
+    rawTravelGuides,
     googleReviewsData,
   ] = await Promise.all([
     prisma.seoLandingPage
@@ -181,6 +183,35 @@ export default async function HomePage() {
         return [];
       }),
 
+    prisma.seoLandingPage
+      .findMany({
+        where: {
+          type: "BLOG",
+          workflowState: "PUBLISHED",
+          slug: {
+            in: [
+              "gulmarg-gondola-ultimate-guide-kashmir",
+              "winter-packing-list-kashmir",
+              "kashmir-couples-dream-5-day-itinerary",
+              "gurez-lolab-valley-untouched-kashmir",
+            ],
+          },
+        },
+        select: {
+          id: true,
+          title: true,
+          slug: true,
+          imageUrl: true,
+          description: true,
+          content: true,
+          createdAt: true,
+        },
+      })
+      .catch((error) => {
+        console.error("Failed to query travel guides for Homepage:", error);
+        return [];
+      }),
+
     getRealGoogleReviews().catch((error) => {
       console.error("Failed to fetch Google reviews for Homepage:", error);
       return {
@@ -203,12 +234,64 @@ export default async function HomePage() {
       subtitle:
         dest._count?.places && dest._count.places > 0
           ? `${dest._count.places} ${dest._count.places === 1 ? "Place" : "Places"}`
-          : "Travel Guide",
+          : "Explore Destination",
       description: dest.description,
     })
   );
 
-  // 2. Transform popular tours
+  // 2. Transform curated travel guides deterministically
+  const PRIORITY_GUIDE_SLUGS = [
+    "gulmarg-gondola-ultimate-guide-kashmir",
+    "winter-packing-list-kashmir",
+    "kashmir-couples-dream-5-day-itinerary",
+    "gurez-lolab-valley-untouched-kashmir",
+  ];
+
+  const guideMap = new Map(rawTravelGuides.map((g) => [g.slug, g]));
+  const selectedGuides: (typeof rawTravelGuides)[number][] = [];
+
+  for (const slug of PRIORITY_GUIDE_SLUGS) {
+    const guide = guideMap.get(slug);
+    if (guide) {
+      selectedGuides.push(guide);
+      guideMap.delete(slug);
+    }
+  }
+
+  if (selectedGuides.length < 4) {
+    for (const guide of rawTravelGuides) {
+      if (selectedGuides.length >= 4) break;
+      if (!selectedGuides.some((g) => g.id === guide.id)) {
+        selectedGuides.push(guide);
+      }
+    }
+  }
+
+  const travelGuides: TravelGuideItem[] = selectedGuides.map((guide) => {
+    const wordCount = guide.content ? guide.content.trim().split(/\s+/).length : 0;
+    const readingTimeMinutes = Math.max(1, Math.ceil(wordCount / 200));
+
+    return {
+      id: guide.id,
+      title: guide.title,
+      slug: guide.slug,
+      href: `/blog/${guide.slug}`,
+      imageUrl:
+        guide.imageUrl ||
+        "https://images.unsplash.com/photo-1595815771614-ade9d652a65d?auto=format&fit=crop&q=80&w=800",
+      excerpt: guide.description?.replace(/^Meta\s*Description:\s*/i, "").trim() || "",
+      readingTime: `${readingTimeMinutes} min read`,
+      date: guide.createdAt
+        ? new Date(guide.createdAt).toLocaleDateString("en-US", {
+            month: "short",
+            day: "numeric",
+            year: "numeric",
+          })
+        : undefined,
+    };
+  });
+
+  // 3. Transform popular tours
   const popularTours: PopularTourCard[] = rawPopular.map((tour) => {
     const inclusionsList: TourInclusionItem[] = (tour.inclusions || []).slice(0, 4).map((inc) => {
       const lower = inc.toLowerCase();
@@ -362,7 +445,10 @@ const MOBILE_HERO_POSTER_URL =
         <BrowseToursSection durations={liveBrowseDurations} />
 
         {/* 7. Featured Destinations, Travel Guides & FAQs */}
-        <DestinationGuidesAndFAQ featuredDestinations={featuredDestinations} />
+        <DestinationGuidesAndFAQ
+          featuredDestinations={featuredDestinations}
+          travelGuides={travelGuides}
+        />
 
         {/* 8. Verified Google Reviews (Live Real Reviews, new design layout & colors) */}
         <GoogleReviewsSection initialData={googleReviewsData} />

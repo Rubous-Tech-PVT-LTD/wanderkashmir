@@ -29,8 +29,12 @@ export interface FeaturedDestinationItem {
 export interface TravelGuideItem {
   id?: string;
   title: string;
+  slug?: string;
   imageUrl: string;
   href: string;
+  excerpt?: string;
+  readingTime?: string;
+  date?: string;
 }
 
 export interface DestinationGuidesAndFAQProps {
@@ -164,7 +168,7 @@ export default function DestinationGuidesAndFAQ({
                       {dest.subtitle ||
                         (dest.placesCount && dest.placesCount > 0
                           ? `${dest.placesCount} ${dest.placesCount === 1 ? "Place" : "Places"}`
-                          : "Travel Guide")}
+                          : "Explore Destination")}
                     </span>
                   </div>
                 </Link>
@@ -183,7 +187,7 @@ export default function DestinationGuidesAndFAQ({
             </h2>
             {guides.length > 0 && (
               <Link
-                href="/guides"
+                href="/blog"
                 className="group inline-flex items-center gap-1 text-xs font-bold transition-all duration-200 hover:translate-x-0.5 cursor-pointer"
                 style={{ color: "var(--season-primary)" }}
               >
@@ -206,7 +210,7 @@ export default function DestinationGuidesAndFAQ({
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3.5">
               {guides.map((guide) => (
                 <Link
-                  key={guide.title}
+                  key={guide.slug || guide.title}
                   href={guide.href}
                   className="group flex flex-col bg-white rounded-xl overflow-hidden border transition-all duration-200 shadow-2xs hover:shadow-md hover:-translate-y-0.5 hover:border-[var(--season-primary)] focus:outline-hidden"
                   style={{ borderColor: "var(--season-border)" }}
@@ -214,7 +218,10 @@ export default function DestinationGuidesAndFAQ({
                   {/* Guide Image Banner */}
                   <div className="relative w-full h-28 sm:h-32 overflow-hidden bg-slate-100">
                     <Image
-                      src={guide.imageUrl}
+                      src={
+                        guide.imageUrl ||
+                        "https://images.unsplash.com/photo-1595815771614-ade9d652a65d?auto=format&fit=crop&q=80&w=800"
+                      }
                       alt={guide.title}
                       fill
                       sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
@@ -222,11 +229,23 @@ export default function DestinationGuidesAndFAQ({
                     />
                   </div>
 
-                  {/* Guide Title */}
-                  <div className="p-3">
-                    <h3 className="font-display font-extrabold text-[13px] sm:text-[13.5px] text-[#17211D] group-hover:text-[var(--season-primary)] transition-colors leading-snug line-clamp-1">
+                  {/* Guide Content */}
+                  <div className="p-3 sm:p-3.5 flex flex-col flex-1">
+                    {guide.readingTime && (
+                      <div className="flex items-center gap-2 text-[10.5px] text-[#56635E] font-medium mb-1.5">
+                        <span>{guide.readingTime}</span>
+                      </div>
+                    )}
+
+                    <h3 className="font-display font-extrabold text-[13px] sm:text-[13.5px] text-[#17211D] group-hover:text-[var(--season-primary)] transition-colors leading-snug line-clamp-2 mb-1.5">
                       {guide.title}
                     </h3>
+
+                    {guide.excerpt && (
+                      <p className="text-[11px] text-[#56635E] line-clamp-2 leading-relaxed mt-auto">
+                        {guide.excerpt}
+                      </p>
+                    )}
                   </div>
                 </Link>
               ))}
