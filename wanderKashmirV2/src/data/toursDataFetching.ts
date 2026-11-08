@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import prisma from "../lib/prisma";
 import { TourPackageDetail } from "./liveToursData";
 import { NearbyPlaceItemConfig } from "@/components/admin/destinations/NearbyPlacesEditor";
@@ -690,7 +691,7 @@ export const getToursByCategory = cache(async function(
       duration: tour.duration || "",
       daysCount: parseInt((tour.duration || "0").match(/(\d+)/)?.[0] || "0", 10),
       nightsCount: Math.max(0, parseInt((tour.duration || "0").match(/(\d+)/)?.[0] || "1", 10) - 1),
-      category: tour.category || category.name,
+      category: category.name || tour.category,
       destinations: tour.destinations || [],
       routeDisplay: tour.destinations || [],
       price: tour.price || 0,
