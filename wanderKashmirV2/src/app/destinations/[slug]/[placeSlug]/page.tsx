@@ -12,11 +12,18 @@ import {
   ArrowRight,
   BookOpen,
   Compass,
+  Clock,
+  Ticket,
+  Calendar,
+  Info,
+  CheckCircle2,
+  Images,
 } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { JsonLd } from "@/components/JsonLd";
 import prisma from "@/lib/prisma";
+import { GalleryImageItem, validateGalleryData } from "@/lib/places/galleryValidation";
 
 // ISR: 1-hour cache for destination place detail. Admin updates trigger on-demand revalidation.
 export const revalidate = 3600;
@@ -40,6 +47,12 @@ interface ResolvedEntity {
     slug: string;
     description: string | null;
     imageUrl: string | null;
+    gallery?: unknown;
+    timings?: string | null;
+    entryFee?: string | null;
+    bestTimeToVisit?: string | null;
+    thingsToDo?: unknown;
+    visitorTips?: unknown;
     status: string;
   };
   relatedPlaces: Array<{
@@ -137,6 +150,12 @@ const resolveEntity = cache(
                 slug: true,
                 description: true,
                 imageUrl: true,
+                gallery: true,
+                timings: true,
+                entryFee: true,
+                bestTimeToVisit: true,
+                thingsToDo: true,
+                visitorTips: true,
                 status: true,
               },
             },
@@ -389,6 +408,42 @@ export default async function PlaceEntityPage({
     ? parseDescriptionSections(place.description)
     : [];
 
+  // Validate and parse gallery items
+  const galleryCheck = validateGalleryData(place.gallery);
+  let galleryImages: GalleryImageItem[] = galleryCheck.valid ? galleryCheck.data : [];
+
+  // If place.imageUrl exists and is not already in gallery, prepend it as the primary cover
+  if (place.imageUrl && !galleryImages.some((img) => img.url === place.imageUrl)) {
+    galleryImages = [
+      {
+        url: place.imageUrl,
+        alt: `${place.name} in ${destination.name}`,
+        caption: null,
+        order: -1,
+        isFeatured: true,
+      },
+      ...galleryImages,
+    ];
+  }
+
+  // Helper to parse JSON string or array lists
+  const parseJsonList = (val: unknown): string[] => {
+    if (!val) return [];
+    if (Array.isArray(val)) return val.map(String);
+    if (typeof val === "string") {
+      try {
+        const parsed = JSON.parse(val);
+        if (Array.isArray(parsed)) return parsed.map(String);
+      } catch {
+        return [];
+      }
+    }
+    return [];
+  };
+
+  const thingsToDo = parseJsonList(place.thingsToDo);
+  const visitorTips = parseJsonList(place.visitorTips);
+
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col font-sans">
       <JsonLd data={breadcrumbSchema} />
@@ -449,13 +504,145 @@ export default async function PlaceEntityPage({
           </h1>
         </div>
 
-        {/* ── Visual Showcase (Prepared for Future Bento Gallery Integration) ─ */}
+        {/* ── Visual Showcase (Bento Photo Gallery) ────────────────────────── */}
         <div className="mb-10 sm:mb-12">
-          {place.imageUrl ? (
+          {galleryImages.length >= 4 ? (
+            <div>
+              {/* Desktop / Tablet Bento Grid */}
+              <div className="hidden sm:grid sm:grid-cols-4 sm:grid-rows-2 gap-2.5 sm:gap-3 h-[420px] md:h-[480px] rounded-3xl overflow-hidden shadow-md border border-slate-200 bg-slate-900/5">
+                {/* Main Hero Photo (Takes 2 cols & 2 rows on left) */}
+                <div className="sm:col-span-2 sm:row-span-2 relative overflow-hidden group">
+                  <Image
+                    src={galleryImages[0].url}
+                    alt={galleryImages[0].alt || `${place.name} in ${destination.name}`}
+                    fill
+                    priority
+                    className="object-cover object-center group-hover:scale-105 transition-transform duration-500"
+                    sizes="(max-width: 768px) 100vw, 560px"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-80" />
+                  <div className="absolute bottom-4 left-5 right-5 flex items-center justify-between text-white text-xs">
+                    <span className="font-semibold drop-shadow-sm flex items-center gap-2">
+                      <Camera className="w-4 h-4 text-emerald-300" />
+                      <span>{galleryImages[0].caption || `${place.name} • Featured View`}</span>
+                    </span>
+                    <span className="px-3 py-1 rounded-lg bg-black/60 backdrop-blur-md text-[11px] font-bold uppercase tracking-wider">
+                      Featured View
+                    </span>
+                  </div>
+                </div>
+
+                {/* Companion Tile 1 */}
+                <div className="relative overflow-hidden group">
+                  <Image
+                    src={galleryImages[1].url}
+                    alt={galleryImages[1].alt || `${place.name} photo 2`}
+                    fill
+                    className="object-cover object-center group-hover:scale-105 transition-transform duration-500"
+                    sizes="(max-width: 768px) 50vw, 280px"
+                  />
+                  {galleryImages[1].caption && (
+                    <div className="absolute inset-x-0 bottom-0 p-2 bg-gradient-to-t from-black/70 to-transparent text-[11px] text-white truncate">
+                      {galleryImages[1].caption}
+                    </div>
+                  )}
+                </div>
+
+                {/* Companion Tile 2 */}
+                <div className="relative overflow-hidden group">
+                  <Image
+                    src={galleryImages[2].url}
+                    alt={galleryImages[2].alt || `${place.name} photo 3`}
+                    fill
+                    className="object-cover object-center group-hover:scale-105 transition-transform duration-500"
+                    sizes="(max-width: 768px) 50vw, 280px"
+                  />
+                  {galleryImages[2].caption && (
+                    <div className="absolute inset-x-0 bottom-0 p-2 bg-gradient-to-t from-black/70 to-transparent text-[11px] text-white truncate">
+                      {galleryImages[2].caption}
+                    </div>
+                  )}
+                </div>
+
+                {/* Companion Tile 3 */}
+                <div className="relative overflow-hidden group">
+                  <Image
+                    src={galleryImages[3].url}
+                    alt={galleryImages[3].alt || `${place.name} photo 4`}
+                    fill
+                    className="object-cover object-center group-hover:scale-105 transition-transform duration-500"
+                    sizes="(max-width: 768px) 50vw, 280px"
+                  />
+                  {galleryImages[3].caption && (
+                    <div className="absolute inset-x-0 bottom-0 p-2 bg-gradient-to-t from-black/70 to-transparent text-[11px] text-white truncate">
+                      {galleryImages[3].caption}
+                    </div>
+                  )}
+                </div>
+
+                {/* Companion Tile 4 (or 5th image if available, else span) */}
+                <div className="relative overflow-hidden group">
+                  <Image
+                    src={galleryImages[4]?.url || galleryImages[0].url}
+                    alt={galleryImages[4]?.alt || `${place.name} photo 5`}
+                    fill
+                    className="object-cover object-center group-hover:scale-105 transition-transform duration-500"
+                    sizes="(max-width: 768px) 50vw, 280px"
+                  />
+                  {galleryImages.length > 5 && (
+                    <div className="absolute inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center text-white text-sm font-bold gap-1.5">
+                      <Images className="w-4 h-4" />
+                      <span>+{galleryImages.length - 4} More</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Mobile Hero + Thumbnail Strip */}
+              <div className="block sm:hidden space-y-2">
+                <div className="relative w-full aspect-[16/10] rounded-2xl overflow-hidden shadow-sm border border-slate-200">
+                  <Image
+                    src={galleryImages[0].url}
+                    alt={galleryImages[0].alt || `${place.name} in ${destination.name}`}
+                    fill
+                    priority
+                    className="object-cover"
+                    sizes="100vw"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-80" />
+                  <div className="absolute bottom-3 left-4 right-4 flex items-center justify-between text-white text-xs">
+                    <span className="font-semibold drop-shadow-sm flex items-center gap-1.5">
+                      <Camera className="w-3.5 h-3.5 text-emerald-300" />
+                      <span>{place.name}</span>
+                    </span>
+                    <span className="px-2 py-0.5 rounded bg-black/60 text-[10px] font-bold">
+                      {galleryImages.length} Photos
+                    </span>
+                  </div>
+                </div>
+
+                {/* Mobile Companion Thumbnails */}
+                <div className="grid grid-cols-3 gap-2">
+                  {galleryImages.slice(1, 4).map((img, idx) => (
+                    <div key={idx} className="relative aspect-[4/3] rounded-xl overflow-hidden border border-slate-200 bg-slate-100">
+                      <Image
+                        src={img.url}
+                        alt={img.alt || `${place.name} thumbnail`}
+                        fill
+                        className="object-cover"
+                        sizes="33vw"
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          ) : galleryImages.length > 0 ? (
+            /* 1 to 3 images fallback layout */
             <div className="relative w-full aspect-[16/8] sm:aspect-[16/7] rounded-3xl overflow-hidden bg-slate-100 shadow-md border border-slate-200">
               <Image
-                src={place.imageUrl}
-                alt={`${place.name} in ${destination.name}`}
+                src={galleryImages[0].url}
+                alt={galleryImages[0].alt || `${place.name} in ${destination.name}`}
                 fill
                 priority
                 className="object-cover object-center"
@@ -473,6 +660,7 @@ export default async function PlaceEntityPage({
               </div>
             </div>
           ) : (
+            /* Zero images placeholder */
             <div className="w-full aspect-[16/7] rounded-3xl bg-slate-100 border border-dashed border-slate-200 flex items-center justify-center">
               <div className="flex flex-col items-center gap-3 text-slate-400">
                 <MapPin className="w-10 h-10 stroke-[1.5]" />
@@ -483,7 +671,7 @@ export default async function PlaceEntityPage({
         </div>
 
         {/* ── Key Highlights Strip ────────────────────────────────────────── */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-12 sm:mb-14">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8 sm:mb-10">
           <div className="p-4 sm:p-5 rounded-2xl bg-white border border-slate-200 shadow-2xs flex items-start gap-3.5">
             <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center shrink-0">
               <MapPin className="w-5 h-5" />
@@ -527,6 +715,59 @@ export default async function PlaceEntityPage({
           </div>
         </div>
 
+        {/* ── Practical Visitor Essentials ─────────────────────────────────── */}
+        {(place.timings || place.entryFee || place.bestTimeToVisit) && (
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-12 sm:mb-14">
+            {place.timings && (
+              <div className="p-4 sm:p-5 rounded-2xl bg-white border border-slate-200 shadow-2xs flex items-start gap-3.5">
+                <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center shrink-0">
+                  <Clock className="w-5 h-5" />
+                </div>
+                <div className="min-w-0">
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 block">
+                    Visiting Hours
+                  </span>
+                  <span className="text-xs sm:text-sm font-semibold text-slate-900 block mt-0.5 leading-snug">
+                    {place.timings}
+                  </span>
+                </div>
+              </div>
+            )}
+
+            {place.entryFee && (
+              <div className="p-4 sm:p-5 rounded-2xl bg-white border border-slate-200 shadow-2xs flex items-start gap-3.5">
+                <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-700 flex items-center justify-center shrink-0">
+                  <Ticket className="w-5 h-5" />
+                </div>
+                <div className="min-w-0">
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 block">
+                    Admission Fee
+                  </span>
+                  <span className="text-xs sm:text-sm font-semibold text-slate-900 block mt-0.5 leading-snug">
+                    {place.entryFee}
+                  </span>
+                </div>
+              </div>
+            )}
+
+            {place.bestTimeToVisit && (
+              <div className="p-4 sm:p-5 rounded-2xl bg-white border border-slate-200 shadow-2xs flex items-start gap-3.5">
+                <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-700 flex items-center justify-center shrink-0">
+                  <Calendar className="w-5 h-5" />
+                </div>
+                <div className="min-w-0">
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 block">
+                    Best Season
+                  </span>
+                  <span className="text-xs sm:text-sm font-semibold text-slate-900 block mt-0.5 leading-snug">
+                    {place.bestTimeToVisit}
+                  </span>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
         {/* ── Editorial Description & Story ───────────────────────────────── */}
         <section className="mb-14 sm:mb-16">
           <div className="bg-white rounded-3xl border border-slate-200 p-6 sm:p-10 shadow-xs">
@@ -566,6 +807,54 @@ export default async function PlaceEntityPage({
             )}
           </div>
         </section>
+
+        {/* ── Key Highlights & Things to Do ────────────────────────────────── */}
+        {thingsToDo.length > 0 && (
+          <section className="mb-14 sm:mb-16">
+            <div className="bg-white rounded-3xl border border-slate-200 p-6 sm:p-10 shadow-xs">
+              <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 font-display tracking-tight mb-6 pb-4 border-b border-slate-100 flex items-center gap-2.5">
+                <Sparkles className="w-6 h-6 text-emerald-700" />
+                <span>Key Highlights & Things to Do</span>
+              </h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                {thingsToDo.map((item, idx) => (
+                  <div
+                    key={idx}
+                    className="flex items-start gap-3 p-4 rounded-2xl bg-slate-50 border border-slate-200 text-xs sm:text-sm text-slate-700"
+                  >
+                    <span className="w-6 h-6 rounded-full bg-emerald-600 text-white flex items-center justify-center shrink-0 font-bold text-xs mt-0.5">
+                      {idx + 1}
+                    </span>
+                    <span className="font-medium leading-relaxed">{item}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </section>
+        )}
+
+        {/* ── Practical Visitor Tips ───────────────────────────────────────── */}
+        {visitorTips.length > 0 && (
+          <section className="mb-14 sm:mb-16">
+            <div className="bg-white rounded-3xl border border-slate-200 p-6 sm:p-10 shadow-xs">
+              <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 font-display tracking-tight mb-6 pb-4 border-b border-slate-100 flex items-center gap-2.5">
+                <Info className="w-6 h-6 text-emerald-700" />
+                <span>Visitor Tips & Practical Advice</span>
+              </h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                {visitorTips.map((tip, idx) => (
+                  <div
+                    key={idx}
+                    className="flex items-start gap-3 p-4 rounded-2xl bg-amber-50/50 border border-amber-200/70 text-xs sm:text-sm text-slate-700"
+                  >
+                    <CheckCircle2 className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+                    <span className="leading-relaxed">{tip}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </section>
+        )}
 
         {/* ── Related Travel Guides ────────────────────────────────────────── */}
         {relatedGuides.length > 0 && (
