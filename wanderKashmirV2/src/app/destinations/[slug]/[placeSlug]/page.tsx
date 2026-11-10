@@ -18,6 +18,7 @@ import {
   Info,
   CheckCircle2,
   Images,
+  User,
 } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -388,6 +389,18 @@ export default async function PlaceEntityPage({
     ],
   };
 
+  // Detect Author Attribution from content or verified assignment
+  let authorName: string | null = null;
+  if (place.description) {
+    const match = place.description.match(/(?:authored by|researched and authored by|author:)\s*([A-Za-z\s]+?)(?:\s+for|\.|\n|$)/i);
+    if (match) {
+      authorName = match[1].trim();
+    }
+  }
+  if (!authorName && place.slug === "chashme-shahi-srinagar-guide") {
+    authorName = "Sadiya Sayeedahmed Mulla";
+  }
+
   // Structured Data: TouristAttraction
   const attractionSchema: Record<string, unknown> = {
     "@context": "https://schema.org",
@@ -401,6 +414,12 @@ export default async function PlaceEntityPage({
       name: destination.name,
       url: `${canonicalOrigin}/destinations/${destination.slug}`,
     },
+    ...(authorName && {
+      author: {
+        "@type": "Person",
+        name: authorName,
+      },
+    }),
   };
 
   // Parse structured sections from plain description text
@@ -455,51 +474,58 @@ export default async function PlaceEntityPage({
         {/* ── Breadcrumb ──────────────────────────────────────────────────── */}
         <nav
           aria-label="Breadcrumb"
-          className="flex items-center flex-wrap gap-1.5 text-xs sm:text-sm text-slate-500 mb-6 sm:mb-8"
+          className="flex items-center flex-wrap gap-1.5 text-xs sm:text-sm text-[var(--season-muted,#64748B)] mb-6 sm:mb-8"
         >
           <Link
             href="/"
-            className="hover:text-emerald-700 transition-colors"
+            className="hover:text-[var(--season-primary,#164E3B)] transition-colors"
           >
             Home
           </Link>
           <ChevronRight className="w-3.5 h-3.5 text-slate-400 shrink-0" />
           <Link
             href="/destinations"
-            className="hover:text-emerald-700 transition-colors"
+            className="hover:text-[var(--season-primary,#164E3B)] transition-colors"
           >
             Destinations
           </Link>
           <ChevronRight className="w-3.5 h-3.5 text-slate-400 shrink-0" />
           <Link
             href={`/destinations/${destination.slug}`}
-            className="hover:text-emerald-700 transition-colors truncate max-w-[140px] sm:max-w-none"
+            className="hover:text-[var(--season-primary,#164E3B)] transition-colors truncate max-w-[140px] sm:max-w-none"
           >
             {destination.name}
           </Link>
           <ChevronRight className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-          <span className="text-slate-900 font-medium truncate">
+          <span className="text-[var(--season-text,#0F172A)] font-medium truncate">
             {place.name}
           </span>
         </nav>
 
         {/* ── Entity Header ───────────────────────────────────────────────── */}
         <div className="mb-8 sm:mb-10">
-          <div className="flex items-center gap-2 mb-3">
+          <div className="flex items-center gap-2 mb-3 flex-wrap">
             <Link
               href={`/destinations/${destination.slug}`}
-              className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-800 border border-emerald-100 hover:bg-emerald-100 transition-colors"
+              className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-[var(--season-primary-light,#EBF2EE)] text-[var(--season-primary,#164E3B)] border border-[var(--season-border,#D2E1DB)] hover:opacity-90 transition-opacity"
             >
-              <MapPin className="w-3.5 h-3.5 text-emerald-600" />
+              <MapPin className="w-3.5 h-3.5 text-[var(--season-primary,#164E3B)]" />
               <span>{destination.name}</span>
             </Link>
 
             <span className="px-2.5 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider bg-slate-200/70 text-slate-700">
               Verified Heritage
             </span>
+
+            {authorName && (
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-white border border-[var(--season-border,#D2E1DB)] text-[var(--season-text,#0F172A)] shadow-2xs">
+                <User className="w-3.5 h-3.5 text-[var(--season-primary,#164E3B)]" />
+                <span>By {authorName}</span>
+              </span>
+            )}
           </div>
 
-          <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-slate-900 font-display tracking-tight leading-tight">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-[var(--season-text,#0F172A)] font-display tracking-tight leading-tight">
             {place.name}
           </h1>
         </div>
@@ -523,7 +549,7 @@ export default async function PlaceEntityPage({
                   <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-80" />
                   <div className="absolute bottom-4 left-5 right-5 flex items-center justify-between text-white text-xs">
                     <span className="font-semibold drop-shadow-sm flex items-center gap-2">
-                      <Camera className="w-4 h-4 text-emerald-300" />
+                      <Camera className="w-4 h-4 text-white/90" />
                       <span>{galleryImages[0].caption || `${place.name} • Featured View`}</span>
                     </span>
                     <span className="px-3 py-1 rounded-lg bg-black/60 backdrop-blur-md text-[11px] font-bold uppercase tracking-wider">
@@ -612,7 +638,7 @@ export default async function PlaceEntityPage({
                   <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-80" />
                   <div className="absolute bottom-3 left-4 right-4 flex items-center justify-between text-white text-xs">
                     <span className="font-semibold drop-shadow-sm flex items-center gap-1.5">
-                      <Camera className="w-3.5 h-3.5 text-emerald-300" />
+                      <Camera className="w-3.5 h-3.5 text-white/90" />
                       <span>{place.name}</span>
                     </span>
                     <span className="px-2 py-0.5 rounded bg-black/60 text-[10px] font-bold">
@@ -651,7 +677,7 @@ export default async function PlaceEntityPage({
               <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-60" />
               <div className="absolute bottom-4 left-5 right-5 flex items-center justify-between text-white text-xs">
                 <span className="font-semibold drop-shadow-sm flex items-center gap-2">
-                  <Camera className="w-4 h-4 text-emerald-300" />
+                  <Camera className="w-4 h-4 text-white/90" />
                   <span>{place.name} &bull; Verified Photography</span>
                 </span>
                 <span className="px-3 py-1 rounded-lg bg-black/60 backdrop-blur-md text-[11px] font-bold uppercase tracking-wider">
@@ -672,43 +698,43 @@ export default async function PlaceEntityPage({
 
         {/* ── Key Highlights Strip ────────────────────────────────────────── */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8 sm:mb-10">
-          <div className="p-4 sm:p-5 rounded-2xl bg-white border border-slate-200 shadow-2xs flex items-start gap-3.5">
-            <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center shrink-0">
+          <div className="p-4 sm:p-5 rounded-2xl bg-white border border-[var(--season-border,#E5E7EB)] shadow-2xs flex items-start gap-3.5">
+            <div className="w-10 h-10 rounded-xl bg-[var(--season-primary-light,#EBF2EE)] text-[var(--season-primary,#164E3B)] flex items-center justify-center shrink-0">
               <MapPin className="w-5 h-5" />
             </div>
             <div>
-              <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 block">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-[var(--season-muted,#64748B)] block">
                 Region
               </span>
-              <span className="text-sm font-bold text-slate-900 block mt-0.5">
+              <span className="text-sm font-bold text-[var(--season-text,#0F172A)] block mt-0.5">
                 {destination.name}, Kashmir
               </span>
             </div>
           </div>
 
-          <div className="p-4 sm:p-5 rounded-2xl bg-white border border-slate-200 shadow-2xs flex items-start gap-3.5">
-            <div className="w-10 h-10 rounded-xl bg-cyan-50 text-cyan-700 flex items-center justify-center shrink-0">
+          <div className="p-4 sm:p-5 rounded-2xl bg-white border border-[var(--season-border,#E5E7EB)] shadow-2xs flex items-start gap-3.5">
+            <div className="w-10 h-10 rounded-xl bg-[var(--season-secondary-light,#E5F2F9)] text-[var(--season-secondary,#0878B9)] flex items-center justify-center shrink-0">
               <Landmark className="w-5 h-5" />
             </div>
             <div>
-              <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 block">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-[var(--season-muted,#64748B)] block">
                 Attraction Type
               </span>
-              <span className="text-sm font-bold text-slate-900 block mt-0.5">
+              <span className="text-sm font-bold text-[var(--season-text,#0F172A)] block mt-0.5">
                 Heritage Mughal Garden
               </span>
             </div>
           </div>
 
-          <div className="p-4 sm:p-5 rounded-2xl bg-white border border-slate-200 shadow-2xs flex items-start gap-3.5">
-            <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-700 flex items-center justify-center shrink-0">
+          <div className="p-4 sm:p-5 rounded-2xl bg-white border border-[var(--season-border,#E5E7EB)] shadow-2xs flex items-start gap-3.5">
+            <div className="w-10 h-10 rounded-xl bg-[var(--season-primary-light,#EBF2EE)] text-[var(--season-primary,#164E3B)] flex items-center justify-center shrink-0">
               <Sparkles className="w-5 h-5" />
             </div>
             <div>
-              <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 block">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-[var(--season-muted,#64748B)] block">
                 Heritage Status
               </span>
-              <span className="text-sm font-bold text-slate-900 block mt-0.5">
+              <span className="text-sm font-bold text-[var(--season-text,#0F172A)] block mt-0.5">
                 Verified Sightseeing Asset
               </span>
             </div>
@@ -719,15 +745,15 @@ export default async function PlaceEntityPage({
         {(place.timings || place.entryFee || place.bestTimeToVisit) && (
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-12 sm:mb-14">
             {place.timings && (
-              <div className="p-4 sm:p-5 rounded-2xl bg-white border border-slate-200 shadow-2xs flex items-start gap-3.5">
-                <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center shrink-0">
+              <div className="p-4 sm:p-5 rounded-2xl bg-white border border-[var(--season-border,#E5E7EB)] shadow-2xs flex items-start gap-3.5">
+                <div className="w-10 h-10 rounded-xl bg-[var(--season-primary-light,#EBF2EE)] text-[var(--season-primary,#164E3B)] flex items-center justify-center shrink-0">
                   <Clock className="w-5 h-5" />
                 </div>
                 <div className="min-w-0">
-                  <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 block">
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-[var(--season-muted,#64748B)] block">
                     Visiting Hours
                   </span>
-                  <span className="text-xs sm:text-sm font-semibold text-slate-900 block mt-0.5 leading-snug">
+                  <span className="text-xs sm:text-sm font-semibold text-[var(--season-text,#0F172A)] block mt-0.5 leading-snug">
                     {place.timings}
                   </span>
                 </div>
@@ -735,15 +761,15 @@ export default async function PlaceEntityPage({
             )}
 
             {place.entryFee && (
-              <div className="p-4 sm:p-5 rounded-2xl bg-white border border-slate-200 shadow-2xs flex items-start gap-3.5">
-                <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-700 flex items-center justify-center shrink-0">
+              <div className="p-4 sm:p-5 rounded-2xl bg-white border border-[var(--season-border,#E5E7EB)] shadow-2xs flex items-start gap-3.5">
+                <div className="w-10 h-10 rounded-xl bg-[var(--season-secondary-light,#E5F2F9)] text-[var(--season-secondary,#0878B9)] flex items-center justify-center shrink-0">
                   <Ticket className="w-5 h-5" />
                 </div>
                 <div className="min-w-0">
-                  <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 block">
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-[var(--season-muted,#64748B)] block">
                     Admission Fee
                   </span>
-                  <span className="text-xs sm:text-sm font-semibold text-slate-900 block mt-0.5 leading-snug">
+                  <span className="text-xs sm:text-sm font-semibold text-[var(--season-text,#0F172A)] block mt-0.5 leading-snug">
                     {place.entryFee}
                   </span>
                 </div>
@@ -751,15 +777,15 @@ export default async function PlaceEntityPage({
             )}
 
             {place.bestTimeToVisit && (
-              <div className="p-4 sm:p-5 rounded-2xl bg-white border border-slate-200 shadow-2xs flex items-start gap-3.5">
-                <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-700 flex items-center justify-center shrink-0">
+              <div className="p-4 sm:p-5 rounded-2xl bg-white border border-[var(--season-border,#E5E7EB)] shadow-2xs flex items-start gap-3.5">
+                <div className="w-10 h-10 rounded-xl bg-[var(--season-primary-light,#EBF2EE)] text-[var(--season-primary,#164E3B)] flex items-center justify-center shrink-0">
                   <Calendar className="w-5 h-5" />
                 </div>
                 <div className="min-w-0">
-                  <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 block">
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-[var(--season-muted,#64748B)] block">
                     Best Season
                   </span>
-                  <span className="text-xs sm:text-sm font-semibold text-slate-900 block mt-0.5 leading-snug">
+                  <span className="text-xs sm:text-sm font-semibold text-[var(--season-text,#0F172A)] block mt-0.5 leading-snug">
                     {place.bestTimeToVisit}
                   </span>
                 </div>
@@ -770,9 +796,9 @@ export default async function PlaceEntityPage({
 
         {/* ── Editorial Description & Story ───────────────────────────────── */}
         <section className="mb-14 sm:mb-16">
-          <div className="bg-white rounded-3xl border border-slate-200 p-6 sm:p-10 shadow-xs">
-            <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 font-display tracking-tight mb-6 pb-4 border-b border-slate-100 flex items-center gap-2.5">
-              <Compass className="w-6 h-6 text-emerald-700" />
+          <div className="bg-white rounded-3xl border border-[var(--season-border,#E5E7EB)] p-6 sm:p-10 shadow-xs">
+            <h2 className="text-2xl sm:text-3xl font-bold text-[var(--season-text,#0F172A)] font-display tracking-tight mb-6 pb-4 border-b border-[var(--season-border,#F1F5F9)] flex items-center gap-2.5">
+              <Compass className="w-6 h-6 text-[var(--season-primary,#164E3B)]" />
               <span>About {place.name}</span>
             </h2>
 
@@ -781,7 +807,7 @@ export default async function PlaceEntityPage({
                 {structuredSections.map((sec, idx) => (
                   <div key={idx} className="space-y-3">
                     {sec.heading && (
-                      <h3 className="text-lg sm:text-xl font-bold text-slate-900 font-display tracking-tight text-emerald-900">
+                      <h3 className="text-lg sm:text-xl font-bold text-[var(--season-primary,#164E3B)] font-display tracking-tight">
                         {sec.heading}
                       </h3>
                     )}
@@ -799,8 +825,8 @@ export default async function PlaceEntityPage({
                 ))}
               </div>
             ) : (
-              <div className="p-8 rounded-2xl border border-dashed border-slate-200 bg-slate-50/50 text-center">
-                <p className="text-slate-500 font-medium font-sans text-sm sm:text-base">
+              <div className="p-8 rounded-2xl border border-dashed border-[var(--season-border,#E5E7EB)] bg-slate-50/50 text-center">
+                <p className="text-[var(--season-muted,#64748B)] font-medium font-sans text-sm sm:text-base">
                   Full heritage description and seasonal visitor notes are being prepared.
                 </p>
               </div>
@@ -811,18 +837,18 @@ export default async function PlaceEntityPage({
         {/* ── Key Highlights & Things to Do ────────────────────────────────── */}
         {thingsToDo.length > 0 && (
           <section className="mb-14 sm:mb-16">
-            <div className="bg-white rounded-3xl border border-slate-200 p-6 sm:p-10 shadow-xs">
-              <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 font-display tracking-tight mb-6 pb-4 border-b border-slate-100 flex items-center gap-2.5">
-                <Sparkles className="w-6 h-6 text-emerald-700" />
+            <div className="bg-white rounded-3xl border border-[var(--season-border,#E5E7EB)] p-6 sm:p-10 shadow-xs">
+              <h2 className="text-2xl sm:text-3xl font-bold text-[var(--season-text,#0F172A)] font-display tracking-tight mb-6 pb-4 border-b border-[var(--season-border,#F1F5F9)] flex items-center gap-2.5">
+                <Sparkles className="w-6 h-6 text-[var(--season-primary,#164E3B)]" />
                 <span>Key Highlights & Things to Do</span>
               </h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                 {thingsToDo.map((item, idx) => (
                   <div
                     key={idx}
-                    className="flex items-start gap-3 p-4 rounded-2xl bg-slate-50 border border-slate-200 text-xs sm:text-sm text-slate-700"
+                    className="flex items-start gap-3 p-4 rounded-2xl bg-slate-50 border border-[var(--season-border,#E5E7EB)] text-xs sm:text-sm text-slate-700"
                   >
-                    <span className="w-6 h-6 rounded-full bg-emerald-600 text-white flex items-center justify-center shrink-0 font-bold text-xs mt-0.5">
+                    <span className="w-6 h-6 rounded-full bg-[var(--season-primary,#164E3B)] text-white flex items-center justify-center shrink-0 font-bold text-xs mt-0.5">
                       {idx + 1}
                     </span>
                     <span className="font-medium leading-relaxed">{item}</span>
@@ -836,18 +862,18 @@ export default async function PlaceEntityPage({
         {/* ── Practical Visitor Tips ───────────────────────────────────────── */}
         {visitorTips.length > 0 && (
           <section className="mb-14 sm:mb-16">
-            <div className="bg-white rounded-3xl border border-slate-200 p-6 sm:p-10 shadow-xs">
-              <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 font-display tracking-tight mb-6 pb-4 border-b border-slate-100 flex items-center gap-2.5">
-                <Info className="w-6 h-6 text-emerald-700" />
+            <div className="bg-white rounded-3xl border border-[var(--season-border,#E5E7EB)] p-6 sm:p-10 shadow-xs">
+              <h2 className="text-2xl sm:text-3xl font-bold text-[var(--season-text,#0F172A)] font-display tracking-tight mb-6 pb-4 border-b border-[var(--season-border,#F1F5F9)] flex items-center gap-2.5">
+                <Info className="w-6 h-6 text-[var(--season-primary,#164E3B)]" />
                 <span>Visitor Tips & Practical Advice</span>
               </h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                 {visitorTips.map((tip, idx) => (
                   <div
                     key={idx}
-                    className="flex items-start gap-3 p-4 rounded-2xl bg-amber-50/50 border border-amber-200/70 text-xs sm:text-sm text-slate-700"
+                    className="flex items-start gap-3 p-4 rounded-2xl bg-[var(--season-secondary-light,#E5F2F9)]/50 border border-[var(--season-border,#D2E1DB)] text-xs sm:text-sm text-slate-700"
                   >
-                    <CheckCircle2 className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+                    <CheckCircle2 className="w-5 h-5 text-[var(--season-secondary,#0878B9)] shrink-0 mt-0.5" />
                     <span className="leading-relaxed">{tip}</span>
                   </div>
                 ))}
@@ -861,14 +887,14 @@ export default async function PlaceEntityPage({
           <section id="travel-guides" className="mb-14 sm:mb-16">
             <div className="flex items-center justify-between mb-6 sm:mb-8">
               <div className="flex items-center gap-2">
-                <BookOpen className="w-5 h-5 text-emerald-700" />
-                <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 font-display tracking-tight">
+                <BookOpen className="w-5 h-5 text-[var(--season-primary,#164E3B)]" />
+                <h2 className="text-2xl sm:text-3xl font-bold text-[var(--season-text,#0F172A)] font-display tracking-tight">
                   Related Travel Guides
                 </h2>
               </div>
               <Link
                 href="/blog"
-                className="text-xs sm:text-sm font-semibold text-emerald-700 hover:text-emerald-800 transition-colors flex items-center gap-1"
+                className="text-xs sm:text-sm font-semibold text-[var(--season-primary,#164E3B)] hover:text-[var(--season-primary-hover,#0D3028)] transition-colors flex items-center gap-1"
               >
                 <span>View all articles</span>
                 <ArrowRight className="w-3.5 h-3.5" />
@@ -880,7 +906,7 @@ export default async function PlaceEntityPage({
                 <Link
                   key={guide.id}
                   href={`/blog/${guide.slug}`}
-                  className="group flex flex-col bg-white rounded-2xl overflow-hidden border border-slate-200 shadow-2xs hover:shadow-md transition-all duration-300"
+                  className="group flex flex-col bg-white rounded-2xl overflow-hidden border border-[var(--season-border,#E5E7EB)] shadow-2xs hover:shadow-md hover:border-[var(--season-primary,#164E3B)] transition-all duration-300"
                 >
                   <div className="relative aspect-[16/10] w-full overflow-hidden bg-slate-100">
                     {guide.imageUrl ? (
@@ -898,15 +924,15 @@ export default async function PlaceEntityPage({
                     )}
                   </div>
                   <div className="p-5 flex-1 flex flex-col">
-                    <h3 className="font-bold text-base text-slate-900 group-hover:text-emerald-700 transition-colors line-clamp-2 leading-snug">
+                    <h3 className="font-bold text-base text-[var(--season-text,#0F172A)] group-hover:text-[var(--season-primary,#164E3B)] transition-colors line-clamp-2 leading-snug">
                       {guide.title}
                     </h3>
                     {guide.description && (
-                      <p className="text-slate-600 text-xs sm:text-sm mt-2 line-clamp-2 leading-relaxed">
+                      <p className="text-[var(--season-muted,#64748B)] text-xs sm:text-sm mt-2 line-clamp-2 leading-relaxed">
                         {guide.description}
                       </p>
                     )}
-                    <span className="mt-auto pt-3 text-xs font-bold text-emerald-700 flex items-center gap-1">
+                    <span className="mt-auto pt-3 text-xs font-bold text-[var(--season-primary,#164E3B)] flex items-center gap-1">
                       Read Guide →
                     </span>
                   </div>
@@ -921,16 +947,16 @@ export default async function PlaceEntityPage({
           <section id="related-tours" className="mb-14 sm:mb-16">
             <div className="flex items-center justify-between mb-6 sm:mb-8">
               <div>
-                <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 font-display tracking-tight">
+                <h2 className="text-2xl sm:text-3xl font-bold text-[var(--season-text,#0F172A)] font-display tracking-tight">
                   Tours Featuring {destination.name}
                 </h2>
-                <p className="text-xs sm:text-sm text-slate-500 mt-1">
+                <p className="text-xs sm:text-sm text-[var(--season-muted,#64748B)] mt-1">
                   Verified Kashmir tour packages covering this destination.
                 </p>
               </div>
               <Link
                 href="/tours"
-                className="text-xs sm:text-sm font-semibold text-emerald-700 hover:text-emerald-800 transition-colors flex items-center gap-1"
+                className="text-xs sm:text-sm font-semibold text-[var(--season-primary,#164E3B)] hover:text-[var(--season-primary-hover,#0D3028)] transition-colors flex items-center gap-1"
               >
                 <span>All tours</span>
                 <ArrowRight className="w-3.5 h-3.5" />
@@ -942,7 +968,7 @@ export default async function PlaceEntityPage({
                 <Link
                   key={tour.id}
                   href={`/tours/${tour.slug}`}
-                  className="group flex flex-col bg-white rounded-2xl overflow-hidden border border-slate-200 shadow-2xs hover:shadow-md transition-all duration-300"
+                  className="group flex flex-col bg-white rounded-2xl overflow-hidden border border-[var(--season-border,#E5E7EB)] shadow-2xs hover:shadow-md hover:border-[var(--season-primary,#164E3B)] transition-all duration-300"
                 >
                   <div className="relative aspect-[16/10] w-full overflow-hidden bg-slate-100">
                     {tour.images && tour.images.length > 0 ? (
@@ -965,22 +991,22 @@ export default async function PlaceEntityPage({
                     )}
                   </div>
                   <div className="p-5 flex-1 flex flex-col">
-                    <span className="text-xs font-semibold text-emerald-700 mb-1">
+                    <span className="text-xs font-semibold text-[var(--season-primary,#164E3B)] mb-1">
                       {tour.duration}
                     </span>
-                    <h3 className="font-bold text-base text-slate-900 group-hover:text-emerald-700 transition-colors line-clamp-2 leading-snug">
+                    <h3 className="font-bold text-base text-[var(--season-text,#0F172A)] group-hover:text-[var(--season-primary,#164E3B)] transition-colors line-clamp-2 leading-snug">
                       {tour.title}
                     </h3>
-                    <div className="mt-auto pt-4 flex items-center justify-between border-t border-slate-100">
+                    <div className="mt-auto pt-4 flex items-center justify-between border-t border-[var(--season-border,#F1F5F9)]">
                       <div>
-                        <span className="text-[10px] uppercase font-bold text-slate-400 block">
+                        <span className="text-[10px] uppercase font-bold text-[var(--season-muted,#64748B)] block">
                           From
                         </span>
-                        <span className="text-base font-extrabold text-slate-900">
+                        <span className="text-base font-extrabold text-[var(--season-text,#0F172A)]">
                           ₹{tour.price.toLocaleString("en-IN")}
                         </span>
                       </div>
-                      <span className="text-xs font-bold text-emerald-700 flex items-center gap-1">
+                      <span className="text-xs font-bold text-[var(--season-primary,#164E3B)] flex items-center gap-1">
                         View Itinerary →
                       </span>
                     </div>
@@ -994,12 +1020,12 @@ export default async function PlaceEntityPage({
         {/* ── Related Places in Destination ────────────────────────────────── */}
         <section id="related-places" className="mb-14 sm:mb-16">
           <div className="flex items-center justify-between mb-6 sm:mb-8">
-            <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 font-display tracking-tight">
+            <h2 className="text-2xl sm:text-3xl font-bold text-[var(--season-text,#0F172A)] font-display tracking-tight">
               More Places in {destination.name}
             </h2>
             <Link
               href="/places"
-              className="text-xs sm:text-sm font-semibold text-emerald-700 hover:text-emerald-800 transition-colors flex items-center gap-1"
+              className="text-xs sm:text-sm font-semibold text-[var(--season-primary,#164E3B)] hover:text-[var(--season-primary-hover,#0D3028)] transition-colors flex items-center gap-1"
             >
               <span>All places in Kashmir</span>
               <ArrowRight className="w-3.5 h-3.5" />
@@ -1012,7 +1038,7 @@ export default async function PlaceEntityPage({
                 <Link
                   key={related.id}
                   href={`/destinations/${destination.slug}/${related.slug}`}
-                  className="group flex flex-col bg-white rounded-2xl overflow-hidden border border-slate-200 shadow-2xs hover:shadow-md transition-all"
+                  className="group flex flex-col bg-white rounded-2xl overflow-hidden border border-[var(--season-border,#E5E7EB)] shadow-2xs hover:shadow-md hover:border-[var(--season-primary,#164E3B)] transition-all"
                 >
                   <div className="relative aspect-[4/3] w-full overflow-hidden bg-slate-100">
                     {related.imageUrl ? (
@@ -1030,15 +1056,15 @@ export default async function PlaceEntityPage({
                     )}
                   </div>
                   <div className="p-5 flex-1 flex flex-col">
-                    <h3 className="font-bold text-base text-slate-900 group-hover:text-emerald-700 transition-colors mb-1.5">
+                    <h3 className="font-bold text-base text-[var(--season-text,#0F172A)] group-hover:text-[var(--season-primary,#164E3B)] transition-colors mb-1.5">
                       {related.name}
                     </h3>
                     {related.description && (
-                      <p className="text-slate-600 text-xs sm:text-sm leading-relaxed line-clamp-2">
+                      <p className="text-[var(--season-muted,#64748B)] text-xs sm:text-sm leading-relaxed line-clamp-2">
                         {related.description}
                       </p>
                     )}
-                    <span className="mt-auto pt-3 text-xs font-semibold text-emerald-700 flex items-center gap-1">
+                    <span className="mt-auto pt-3 text-xs font-semibold text-[var(--season-primary,#164E3B)] flex items-center gap-1">
                       Explore Attraction →
                     </span>
                   </div>
@@ -1046,11 +1072,11 @@ export default async function PlaceEntityPage({
               ))}
             </div>
           ) : (
-            <div className="p-8 rounded-2xl border border-dashed border-slate-200 bg-slate-50/50 flex flex-col items-center justify-center text-center space-y-3 min-h-[160px]">
-              <div className="w-12 h-12 rounded-full bg-white border border-slate-200 flex items-center justify-center text-slate-400 mb-2 shadow-2xs">
+            <div className="p-8 rounded-2xl border border-dashed border-[var(--season-border,#E5E7EB)] bg-slate-50/50 flex flex-col items-center justify-center text-center space-y-3 min-h-[160px]">
+              <div className="w-12 h-12 rounded-full bg-white border border-[var(--season-border,#E5E7EB)] flex items-center justify-center text-slate-400 mb-2 shadow-2xs">
                 <MapPin className="w-6 h-6 stroke-[1.5]" />
               </div>
-              <p className="text-slate-500 font-medium font-sans text-sm sm:text-base">
+              <p className="text-[var(--season-muted,#64748B)] font-medium font-sans text-sm sm:text-base">
                 Additional attractions in {destination.name} will be added shortly.
               </p>
             </div>
@@ -1058,10 +1084,10 @@ export default async function PlaceEntityPage({
         </section>
 
         {/* ── Back Navigation ─────────────────────────────────────────────── */}
-        <div className="pt-6 border-t border-slate-200 flex items-center justify-between flex-wrap gap-4">
+        <div className="pt-6 border-t border-[var(--season-border,#E5E7EB)] flex items-center justify-between flex-wrap gap-4">
           <Link
             href={`/destinations/${destination.slug}`}
-            className="inline-flex items-center gap-2 text-sm font-semibold text-slate-600 hover:text-slate-900 transition-colors"
+            className="inline-flex items-center gap-2 text-sm font-semibold text-[var(--season-muted,#64748B)] hover:text-[var(--season-text,#0F172A)] transition-colors"
           >
             <ChevronRight className="w-4 h-4 rotate-180" />
             <span>Back to {destination.name} Travel Guide</span>
@@ -1069,7 +1095,7 @@ export default async function PlaceEntityPage({
 
           <Link
             href="/places"
-            className="inline-flex items-center gap-2 text-sm font-semibold text-emerald-700 hover:text-emerald-800 transition-colors"
+            className="inline-flex items-center gap-2 text-sm font-semibold text-[var(--season-primary,#164E3B)] hover:text-[var(--season-primary-hover,#0D3028)] transition-colors"
           >
             <span>Explore All Kashmir Places</span>
             <ChevronRight className="w-4 h-4" />
