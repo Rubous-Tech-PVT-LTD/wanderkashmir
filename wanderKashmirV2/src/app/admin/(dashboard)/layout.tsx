@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { headers } from "next/headers";
-import { getAdminSession } from "@/lib/admin/auth";
+import { getAdminOrEditorSession } from "@/lib/admin/auth";
 import AdminSidebar from "@/components/admin/AdminSidebar";
 import { logoutAdminAction } from "@/actions/adminAuth";
 import { LogOut } from "lucide-react";
@@ -18,7 +18,7 @@ export default async function AdminDashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const session = await getAdminSession();
+  const session = await getAdminOrEditorSession();
   const headerList = await headers();
   const isWanderAdmin = headerList.get("x-admin-alias") === "wander-admin";
 
@@ -26,14 +26,16 @@ export default async function AdminDashboardLayout({
     redirect(isWanderAdmin ? "/wander-admin/login" : "/admin/login");
   }
 
-  if (session.role !== "ADMIN") {
+  if (session.role !== "ADMIN" && session.role !== "EDITOR") {
     redirect(isWanderAdmin ? "/wander-admin/unauthorized" : "/admin/unauthorized");
   }
+
+  const isEditor = session.role === "EDITOR";
 
   return (
     <div className="min-h-screen bg-slate-900 text-slate-100 flex flex-col lg:flex-row">
       {/* Sidebar Navigation */}
-      <AdminSidebar userEmail={session.email} />
+      <AdminSidebar userEmail={session.email} userRole={session.role} />
 
       {/* Main Content Area */}
       <div className="flex-1 lg:pl-64 flex flex-col min-w-0">
@@ -46,13 +48,14 @@ export default async function AdminDashboardLayout({
               Production DB Connected
             </span>
             <span className="inline-flex items-center rounded-full bg-blue-500/10 px-2.5 py-0.5 text-xs font-medium text-blue-400 border border-blue-500/20">
-              Read-Only Safety
+              {isEditor ? "Editorial Access" : "Read-Only Safety"}
             </span>
           </div>
 
           <div className="flex items-center gap-4 text-xs text-slate-400">
             <div>
-              Authenticated Admin: <span className="text-white font-medium">{session.email}</span>
+              {isEditor ? "Authenticated Editor: " : "Authenticated Admin: "}
+              <span className="text-white font-medium">{session.email}</span>
             </div>
             <form action={logoutAdminAction}>
               <button

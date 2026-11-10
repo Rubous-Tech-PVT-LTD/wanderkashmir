@@ -37,6 +37,7 @@ import { logoutAdminAction } from "@/actions/adminAuth";
 
 interface AdminSidebarProps {
   userEmail: string;
+  userRole?: string;
 }
 
 interface NavItem {
@@ -78,7 +79,8 @@ const navSections: NavSection[] = [
       { name: "Travel Styles", href: "/admin/travel-styles", icon: Palette },
       { name: "Taxis / Vehicles", href: "/admin/taxis", icon: Car },
       { name: "Stays & Properties", href: "/admin/properties", icon: Building },
-      { name: "Destinations & Places", href: "/admin/destinations", icon: MapPin },
+      { name: "Destinations", href: "/admin/destinations", icon: MapPin },
+      { name: "Places CMS", href: "/admin/places", icon: Compass },
       { name: "Experiences", href: "/admin/experiences", icon: Sparkles },
     ],
   },
@@ -118,7 +120,19 @@ const navSections: NavSection[] = [
   },
 ];
 
-export default function AdminSidebar({ userEmail }: AdminSidebarProps) {
+const EDITOR_ALLOWED_PREFIXES = [
+  "/admin/destinations",
+  "/admin/places",
+  "/admin/experiences",
+  "/admin/seo",
+  "/admin/seo-comments",
+  "/admin/tours",
+  "/admin/tour-categories",
+  "/admin/travel-styles",
+  "/admin/popups",
+];
+
+export default function AdminSidebar({ userEmail, userRole }: AdminSidebarProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [themeOpen, setThemeOpen] = useState(false);
   const pathname = usePathname();
@@ -126,6 +140,21 @@ export default function AdminSidebar({ userEmail }: AdminSidebarProps) {
 
   const isWanderAdmin = pathname.startsWith("/wander-admin");
   const adminBase = isWanderAdmin ? "/wander-admin" : "/admin";
+
+  const isEditor = userRole === "EDITOR";
+  const visibleSections = isEditor
+    ? navSections
+        .map((sec) => ({
+          ...sec,
+          items: sec.items.filter((item) => {
+            if (item.href === "/admin") return true;
+            return EDITOR_ALLOWED_PREFIXES.some(
+              (p) => item.href === p || item.href.startsWith(`${p}/`)
+            );
+          }),
+        }))
+        .filter((sec) => sec.items.length > 0)
+    : navSections;
 
   return (
     <>
@@ -186,7 +215,7 @@ export default function AdminSidebar({ userEmail }: AdminSidebarProps) {
 
         {/* Navigation List */}
         <nav className="flex-1 px-3 py-4 space-y-5 overflow-y-auto">
-          {navSections.map((section, idx) => (
+          {visibleSections.map((section, idx) => (
             <div key={idx} className="space-y-1">
               {section.title && (
                 <div className="px-3 pb-1 text-[10px] font-bold uppercase tracking-wider text-slate-500 select-none">

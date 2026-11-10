@@ -1,8 +1,8 @@
 "use server";
 
 import prisma from "@/lib/prisma";
-import { SeoWorkflowState } from "@prisma/client";
-import { getAdminSession } from "@/lib/admin/auth";
+import { SeoWorkflowState, Prisma } from "@prisma/client";
+import { getAdminOrEditorSession } from "@/lib/admin/auth";
 import { revalidatePath } from "next/cache";
 
 export interface DestinationFormInput {
@@ -71,17 +71,7 @@ function sanitizeSlug(slug: string): string {
     .replace(/(^-|-$)+/g, "");
 }
 
-function sanitizeNearbyPlacesConfig(inputConfig: any): {
-  introContent: string | null;
-  items: Array<{
-    id: string;
-    type: "database" | "custom";
-    placeId?: string;
-    name?: string;
-    description?: string | null;
-    url?: string | null;
-  }>;
-} | null {
+function sanitizeNearbyPlacesConfig(inputConfig: Record<string, unknown> | null | undefined): Prisma.InputJsonObject | null {
   if (!inputConfig || typeof inputConfig !== "object") return null;
 
   const introContent =
@@ -90,14 +80,7 @@ function sanitizeNearbyPlacesConfig(inputConfig: any): {
       : null;
 
   const rawItems = Array.isArray(inputConfig.items) ? inputConfig.items : [];
-  const items: Array<{
-    id: string;
-    type: "database" | "custom";
-    placeId?: string;
-    name?: string;
-    description?: string | null;
-    url?: string | null;
-  }> = [];
+  const items: Prisma.InputJsonValue[] = [];
 
   for (let i = 0; i < rawItems.length; i++) {
     const it = rawItems[i];
@@ -158,9 +141,9 @@ export async function createDestinationAction(
   input: DestinationFormInput
 ): Promise<ActionResult<{ id: string; slug: string }>> {
   try {
-    const session = await getAdminSession();
-    if (!session || session.role !== "ADMIN") {
-      return { success: false, error: "Unauthorized: Administrator privileges required." };
+    const session = await getAdminOrEditorSession();
+    if (!session || (session.role !== "ADMIN" && session.role !== "EDITOR")) {
+      return { success: false, error: "Unauthorized: Administrator or Editor privileges required." };
     }
 
     const title = (input.title || "").trim();
@@ -192,7 +175,7 @@ export async function createDestinationAction(
       ? sanitizedNearbyConfig.introContent
       : (input.nearbyPlacesContent?.trim() || null);
 
-    let dynamicSections: any[] = [];
+    const dynamicSections: Prisma.InputJsonValue[] = [];
     if (input.photographySpots && Array.isArray(input.photographySpots.spots) && input.photographySpots.spots.length > 0) {
       dynamicSections.push({
         blockType: "photographySpots",
@@ -210,7 +193,7 @@ export async function createDestinationAction(
       });
     }
 
-    const seoStrategy = {
+    const seoStrategy: Prisma.InputJsonObject = {
       cleanName: input.cleanName?.trim() || title.split("|")[0].replace(/\s*Travel Guide.*$/i, "").trim(),
       gallery: Array.isArray(input.gallery) ? input.gallery.filter(Boolean) : [],
       overview: input.overview?.trim() || null,
@@ -251,6 +234,9 @@ export async function createDestinationAction(
 
     return { success: true, data: { id: newDest.id, slug: newDest.slug } };
   } catch (error) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
+      return { success: false, error: "This Destination URL is already in use. Please choose another slug." };
+    }
     console.error("Error creating destination:", error);
     return { success: false, error: "Failed to create destination. Please check inputs." };
   }
@@ -264,9 +250,9 @@ export async function updateDestinationAction(
   input: DestinationFormInput
 ): Promise<ActionResult<{ id: string; slug: string }>> {
   try {
-    const session = await getAdminSession();
-    if (!session || session.role !== "ADMIN") {
-      return { success: false, error: "Unauthorized: Administrator privileges required." };
+    const session = await getAdminOrEditorSession();
+    if (!session || (session.role !== "ADMIN" && session.role !== "EDITOR")) {
+      return { success: false, error: "Unauthorized: Administrator or Editor privileges required." };
     }
 
     if (!id || id.trim() === "") {
@@ -304,36 +290,39 @@ export async function updateDestinationAction(
       }
     }
 
-    const existingStrategy: any =
-      typeof existing.seoStrategy === "object" && existing.seoStrategy !== null
-        ? existing.seoStrategy
+    const existingStrategy: Prisma.JsonObject =
+      typeof existing.seoStrategy === "object" && existing.seoStrategy !== null && !Array.isArray(existing.seoStrategy)
+        ? (existing.seoStrategy as Prisma.JsonObject)
         : {};
 
     const sanitizedNearbyConfig = input.nearbyPlacesConfig !== undefined
       ? sanitizeNearbyPlacesConfig(input.nearbyPlacesConfig)
-      : existingStrategy.nearbyPlacesConfig;
+      : (existingStrategy.nearbyPlacesConfig as Prisma.InputJsonObject | null | undefined);
 
     const nearbyPlacesContent = input.nearbyPlacesContent !== undefined
       ? input.nearbyPlacesContent?.trim() || null
-      : (sanitizedNearbyConfig?.introContent !== undefined
-          ? sanitizedNearbyConfig.introContent
-          : existingStrategy.nearbyPlacesContent);
+      : (sanitizedNearbyConfig && typeof sanitizedNearbyConfig === "object" && "introContent" in sanitizedNearbyConfig
+          ? (sanitizedNearbyConfig.introContent as string | null)
+          : typeof existingStrategy.nearbyPlacesContent === "string"
+          ? existingStrategy.nearbyPlacesContent
+          : null);
 
-    const existingDynamicSections = Array.isArray(existingStrategy.dynamicSections)
-      ? [...existingStrategy.dynamicSections]
+    const existingDynamicSections: Prisma.InputJsonArray = Array.isArray(existingStrategy.dynamicSections)
+      ? [...(existingStrategy.dynamicSections as Prisma.InputJsonArray)]
       : [];
 
-    let updatedDynamicSections = existingDynamicSections;
+    let updatedDynamicSections: Prisma.InputJsonArray = existingDynamicSections;
     if (input.photographySpots !== undefined) {
-      const nonPhotoBlocks = existingDynamicSections.filter(
-        (b: any) => b.blockType !== "photographySpots"
-      );
+      const nonPhotoBlocks = existingDynamicSections.filter((b) => {
+        if (!b || typeof b !== "object" || Array.isArray(b)) return true;
+        return (b as Prisma.InputJsonObject).blockType !== "photographySpots";
+      });
       if (
         input.photographySpots &&
         Array.isArray(input.photographySpots.spots) &&
         input.photographySpots.spots.length > 0
       ) {
-        const photoBlock = {
+        const photoBlock: Prisma.InputJsonObject = {
           blockType: "photographySpots",
           displayOrder: 30,
           sectionTitle:
@@ -351,32 +340,68 @@ export async function updateDestinationAction(
             }))
             .filter((s) => s.spotName || s.image),
         };
-        updatedDynamicSections = [photoBlock, ...nonPhotoBlocks].sort(
-          (a: any, b: any) => (a.displayOrder || 50) - (b.displayOrder || 50)
-        );
+        updatedDynamicSections = [photoBlock, ...nonPhotoBlocks].sort((a, b) => {
+          const orderA = typeof (a as Prisma.InputJsonObject)?.displayOrder === "number" ? ((a as Prisma.InputJsonObject).displayOrder as number) : 50;
+          const orderB = typeof (b as Prisma.InputJsonObject)?.displayOrder === "number" ? ((b as Prisma.InputJsonObject).displayOrder as number) : 50;
+          return orderA - orderB;
+        });
       } else {
         updatedDynamicSections = nonPhotoBlocks;
       }
     }
 
-    const updatedStrategy = {
+    const updatedStrategy: Prisma.InputJsonObject = {
       ...existingStrategy,
       cleanName: input.cleanName?.trim() || title.split("|")[0].replace(/\s*Travel Guide.*$/i, "").trim(),
-      gallery: Array.isArray(input.gallery) ? input.gallery.filter(Boolean) : existingStrategy.gallery || [],
-      overview: input.overview !== undefined ? input.overview?.trim() || null : existingStrategy.overview,
-      bestTimeToVisit: input.bestTimeToVisit !== undefined ? input.bestTimeToVisit?.trim() || null : existingStrategy.bestTimeToVisit,
-      itinerary: input.itinerary !== undefined ? input.itinerary?.trim() || null : existingStrategy.itinerary,
-      howToReach: input.howToReach !== undefined ? input.howToReach?.trim() || null : existingStrategy.howToReach,
-      food: input.food !== undefined ? input.food?.trim() || null : existingStrategy.food,
-      shopping: input.shopping !== undefined ? input.shopping?.trim() || null : existingStrategy.shopping,
-      activities: input.activities !== undefined ? input.activities?.trim() || null : existingStrategy.activities,
+      gallery: Array.isArray(input.gallery)
+        ? input.gallery.filter(Boolean)
+        : Array.isArray(existingStrategy.gallery)
+        ? (existingStrategy.gallery as string[])
+        : [],
+      overview: input.overview !== undefined
+        ? input.overview?.trim() || null
+        : typeof existingStrategy.overview === "string"
+        ? existingStrategy.overview
+        : null,
+      bestTimeToVisit: input.bestTimeToVisit !== undefined
+        ? input.bestTimeToVisit?.trim() || null
+        : typeof existingStrategy.bestTimeToVisit === "string"
+        ? existingStrategy.bestTimeToVisit
+        : null,
+      itinerary: input.itinerary !== undefined
+        ? input.itinerary?.trim() || null
+        : typeof existingStrategy.itinerary === "string"
+        ? existingStrategy.itinerary
+        : null,
+      howToReach: input.howToReach !== undefined
+        ? input.howToReach?.trim() || null
+        : typeof existingStrategy.howToReach === "string"
+        ? existingStrategy.howToReach
+        : null,
+      food: input.food !== undefined
+        ? input.food?.trim() || null
+        : typeof existingStrategy.food === "string"
+        ? existingStrategy.food
+        : null,
+      shopping: input.shopping !== undefined
+        ? input.shopping?.trim() || null
+        : typeof existingStrategy.shopping === "string"
+        ? existingStrategy.shopping
+        : null,
+      activities: input.activities !== undefined
+        ? input.activities?.trim() || null
+        : typeof existingStrategy.activities === "string"
+        ? existingStrategy.activities
+        : null,
       nearbyPlacesContent,
       nearbyPlacesConfig: sanitizedNearbyConfig,
       dynamicSections: updatedDynamicSections,
       featuredPropertyIds:
         input.featuredPropertyIds !== undefined
           ? (Array.isArray(input.featuredPropertyIds) ? input.featuredPropertyIds.filter(Boolean) : [])
-          : (existingStrategy.featuredPropertyIds || []),
+          : Array.isArray(existingStrategy.featuredPropertyIds)
+          ? (existingStrategy.featuredPropertyIds as string[])
+          : [],
     };
 
     await prisma.seoLandingPage.update({
@@ -405,6 +430,9 @@ export async function updateDestinationAction(
 
     return { success: true, data: { id, slug: rawSlug } };
   } catch (error) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
+      return { success: false, error: "This Destination URL is already in use. Please choose another slug." };
+    }
     console.error("Error updating destination:", error);
     return { success: false, error: "Failed to update destination." };
   }
@@ -418,9 +446,9 @@ export async function toggleDestinationPublishAction(
   publish: boolean
 ): Promise<ActionResult<{ id: string; workflowState: SeoWorkflowState }>> {
   try {
-    const session = await getAdminSession();
-    if (!session || session.role !== "ADMIN") {
-      return { success: false, error: "Unauthorized: Administrator privileges required." };
+    const session = await getAdminOrEditorSession();
+    if (!session || (session.role !== "ADMIN" && session.role !== "EDITOR")) {
+      return { success: false, error: "Unauthorized: Administrator or Editor privileges required." };
     }
 
     if (!id || id.trim() === "") {
@@ -463,9 +491,9 @@ export async function createPlaceAction(
   input: PlaceFormInput
 ): Promise<ActionResult<{ id: string; slug: string }>> {
   try {
-    const session = await getAdminSession();
-    if (!session || session.role !== "ADMIN") {
-      return { success: false, error: "Unauthorized: Administrator privileges required." };
+    const session = await getAdminOrEditorSession();
+    if (!session || (session.role !== "ADMIN" && session.role !== "EDITOR")) {
+      return { success: false, error: "Unauthorized: Administrator or Editor privileges required." };
     }
 
     const name = (input.name || "").trim();
@@ -537,6 +565,9 @@ export async function createPlaceAction(
 
     return { success: true, data: { id: newPlace.id, slug: newPlace.slug } };
   } catch (error) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
+      return { success: false, error: "This Place URL is already in use. Please choose another slug." };
+    }
     console.error("Error creating place:", error);
     return { success: false, error: "Failed to create place." };
   }
@@ -550,9 +581,9 @@ export async function updatePlaceAction(
   input: PlaceFormInput
 ): Promise<ActionResult<{ id: string; slug: string }>> {
   try {
-    const session = await getAdminSession();
-    if (!session || session.role !== "ADMIN") {
-      return { success: false, error: "Unauthorized: Administrator privileges required." };
+    const session = await getAdminOrEditorSession();
+    if (!session || (session.role !== "ADMIN" && session.role !== "EDITOR")) {
+      return { success: false, error: "Unauthorized: Administrator or Editor privileges required." };
     }
 
     if (!id || id.trim() === "") {
@@ -656,6 +687,9 @@ export async function updatePlaceAction(
 
     return { success: true, data: { id, slug: rawSlug } };
   } catch (error) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
+      return { success: false, error: "This Place URL is already in use. Please choose another slug." };
+    }
     console.error("Error updating place:", error);
     return { success: false, error: "Failed to update place." };
   }
@@ -669,9 +703,9 @@ export async function togglePlaceActiveAction(
   active: boolean
 ): Promise<ActionResult<{ id: string; status: string }>> {
   try {
-    const session = await getAdminSession();
-    if (!session || session.role !== "ADMIN") {
-      return { success: false, error: "Unauthorized: Administrator privileges required." };
+    const session = await getAdminOrEditorSession();
+    if (!session || (session.role !== "ADMIN" && session.role !== "EDITOR")) {
+      return { success: false, error: "Unauthorized: Administrator or Editor privileges required." };
     }
 
     if (!id || id.trim() === "") {
@@ -727,9 +761,9 @@ export async function assignPlaceToDestinationAction(
   placeId: string
 ): Promise<ActionResult<{ id: string }>> {
   try {
-    const session = await getAdminSession();
-    if (!session || session.role !== "ADMIN") {
-      return { success: false, error: "Unauthorized: Administrator privileges required." };
+    const session = await getAdminOrEditorSession();
+    if (!session || (session.role !== "ADMIN" && session.role !== "EDITOR")) {
+      return { success: false, error: "Unauthorized: Administrator or Editor privileges required." };
     }
 
     const [destination, place] = await Promise.all([
@@ -802,9 +836,9 @@ export async function removePlaceFromDestinationAction(
   placeId: string
 ): Promise<ActionResult<{ success: boolean }>> {
   try {
-    const session = await getAdminSession();
-    if (!session || session.role !== "ADMIN") {
-      return { success: false, error: "Unauthorized: Administrator privileges required." };
+    const session = await getAdminOrEditorSession();
+    if (!session || (session.role !== "ADMIN" && session.role !== "EDITOR")) {
+      return { success: false, error: "Unauthorized: Administrator or Editor privileges required." };
     }
 
     const [destination, place] = await Promise.all([
@@ -849,9 +883,9 @@ export async function reorderDestinationPlacesAction(
   placeIds: string[]
 ): Promise<ActionResult<{ success: boolean }>> {
   try {
-    const session = await getAdminSession();
-    if (!session || session.role !== "ADMIN") {
-      return { success: false, error: "Unauthorized: Administrator privileges required." };
+    const session = await getAdminOrEditorSession();
+    if (!session || (session.role !== "ADMIN" && session.role !== "EDITOR")) {
+      return { success: false, error: "Unauthorized: Administrator or Editor privileges required." };
     }
 
     const destination = await prisma.seoLandingPage.findUnique({

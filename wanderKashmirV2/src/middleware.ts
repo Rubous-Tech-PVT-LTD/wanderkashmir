@@ -1,6 +1,53 @@
 import { NextRequest, NextResponse } from "next/server";
 import { verifyAdminToken } from "@/lib/admin/auth";
 
+/**
+ * Editorial path prefixes accessible to users with the EDITOR role.
+ * (Normalized against internal /admin/... paths).
+ */
+const EDITOR_ALLOWED_PREFIXES = [
+  "/admin/destinations",
+  "/admin/places",
+  "/admin/experiences",
+  "/admin/seo",
+  "/admin/seo-comments",
+  "/admin/tours",
+  "/admin/tour-categories",
+  "/admin/travel-styles",
+  "/admin/popups",
+];
+
+/**
+ * Validates whether a specific internal /admin path is accessible to an EDITOR.
+ */
+function isRouteAllowedForEditor(adminPath: string): boolean {
+  if (adminPath === "/admin" || adminPath === "/admin/") {
+    return true;
+  }
+  return EDITOR_ALLOWED_PREFIXES.some(
+    (prefix) => adminPath === prefix || adminPath.startsWith(`${prefix}/`)
+  );
+}
+
+/**
+ * Validates role-based permissions:
+ * - ADMIN: full access across all admin routes.
+ * - EDITOR: restricted strictly to CMS and editorial content routes.
+ * - VENDOR, CUSTOMER, or invalid: zero access to admin portal.
+ */
+function checkAdminRoleAccess(
+  role: string | undefined,
+  adminInternalPath: string
+): { allowed: boolean } {
+  if (role === "ADMIN") {
+    return { allowed: true };
+  }
+  if (role === "EDITOR") {
+    return { allowed: isRouteAllowedForEditor(adminInternalPath) };
+  }
+  return { allowed: false };
+}
+
 export async function middleware(request: NextRequest) {
   const host = request.headers.get("host") || request.nextUrl.host || "";
   const hostname = host.split(":")[0].toLowerCase();
@@ -52,12 +99,28 @@ export async function middleware(request: NextRequest) {
     }
 
     const session = await verifyAdminToken(sessionCookie);
-    if (!session || session.role !== "ADMIN") {
+    if (!session) {
       const unauthorizedUrl = new URL("/admin/unauthorized", request.url);
       return NextResponse.redirect(unauthorizedUrl);
     }
 
-    // Authenticated admin on admin domain:
+    // Resolve internal target path for permission validation
+    const targetAdminPath =
+      pathname === "/" || pathname === "/admin" || pathname === "/wander-admin"
+        ? "/admin"
+        : pathname.startsWith("/wander-admin/")
+        ? `/admin${pathname.slice("/wander-admin".length)}`
+        : pathname.startsWith("/admin/")
+        ? pathname
+        : `/admin${pathname}`;
+
+    const access = checkAdminRoleAccess(session.role, targetAdminPath);
+    if (!access.allowed) {
+      const unauthorizedUrl = new URL("/admin/unauthorized", request.url);
+      return NextResponse.redirect(unauthorizedUrl);
+    }
+
+    // Authenticated allowed navigation on admin domain:
     if (pathname === "/" || pathname === "/admin" || pathname === "/wander-admin") {
       return rewriteToAdmin("/admin");
     }
@@ -94,16 +157,22 @@ export async function middleware(request: NextRequest) {
     }
 
     const session = await verifyAdminToken(sessionCookie);
-    if (!session || session.role !== "ADMIN") {
+    if (!session) {
       const unauthorizedUrl = new URL("/wander-admin/unauthorized", request.url);
       return NextResponse.redirect(unauthorizedUrl);
     }
 
-    // Authenticated admin: map to internal /admin path
+    // Map to internal /admin path for permission evaluation
     const internalSubpath = pathname === "/wander-admin"
       ? ""
       : pathname.slice("/wander-admin".length);
     const internalPath = `/admin${internalSubpath}`;
+
+    const access = checkAdminRoleAccess(session.role, internalPath);
+    if (!access.allowed) {
+      const unauthorizedUrl = new URL("/wander-admin/unauthorized", request.url);
+      return NextResponse.redirect(unauthorizedUrl);
+    }
 
     return rewriteToAdmin(internalPath);
   }
@@ -123,7 +192,13 @@ export async function middleware(request: NextRequest) {
     }
 
     const session = await verifyAdminToken(sessionCookie);
-    if (!session || session.role !== "ADMIN") {
+    if (!session) {
+      const unauthorizedUrl = new URL("/admin/unauthorized", request.url);
+      return NextResponse.redirect(unauthorizedUrl);
+    }
+
+    const access = checkAdminRoleAccess(session.role, pathname);
+    if (!access.allowed) {
       const unauthorizedUrl = new URL("/admin/unauthorized", request.url);
       return NextResponse.redirect(unauthorizedUrl);
     }

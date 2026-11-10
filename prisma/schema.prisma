@@ -475,7 +475,17 @@ model Place {
   slug              String             @unique
   description       String?
   imageUrl          String?
+  gallery           Json?
   destination       String?
+  timings           String?
+  entryFee          String?
+  bestTimeToVisit   String?
+  thingsToDo        Json?
+  visitorTips       Json?
+  seoTitle          String?
+  metaDescription   String?
+  canonicalUrl      String?
+  isFeatured        Boolean            @default(false)
   status            String             @default("ACTIVE")
   createdAt         DateTime           @default(now())
   updatedAt         DateTime           @updatedAt
@@ -483,6 +493,7 @@ model Place {
 
   @@index([destination])
   @@index([status])
+  @@index([isFeatured])
 }
 
 model DestinationPlace {
@@ -1047,6 +1058,7 @@ enum SeoWorkflowState {
 
 enum Role {
   ADMIN
+  EDITOR
   VENDOR
   CUSTOMER
 }

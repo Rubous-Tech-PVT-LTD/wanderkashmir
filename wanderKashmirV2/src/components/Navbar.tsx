@@ -14,6 +14,7 @@ import {
   Home,
   Car,
   UserCheck,
+  MapPin,
 } from "lucide-react";
 import CustomizeTripModal from "@/components/CustomizeTripModal";
 
@@ -358,6 +359,7 @@ function WhatsAppOfficialVectorIcon({
 
 const exploreLinks = [
   { label: "Tour Packages", href: "/tours", desc: "Curated all-inclusive & private itineraries", icon: Package },
+  { label: "Places to Visit", href: "/places", desc: "Scenic spots, heritage gardens & lakes", icon: MapPin },
   { label: "Hotels", href: "/stays?type=hotel", desc: "Handpicked boutique & luxury stays across the valley", icon: Hotel },
   { label: "Resorts", href: "/stays?type=resort", desc: "Alpine retreats & scenic valley resorts", icon: Palmtree },
   { label: "Dal Lake Houseboats", href: "/stays?type=houseboat", desc: "Heritage cedar wood living on Dal & Nigeen", icon: Anchor },

@@ -105,6 +105,7 @@ function WhatsAppIcon({ className = "w-4 h-4" }: { className?: string }) {
 export const REAL_FOOTER_LINKS = {
   Explore: [
     { label: "Tour Packages", href: "/tours" },
+    { label: "Places & Attractions", href: "/places" },
     { label: "Hotels & Stays", href: "/stays?type=hotel" },
     { label: "Traditional Homestays", href: "/stays?type=homestay" },
     { label: "Dal Lake Houseboats", href: "/stays?type=houseboat" },

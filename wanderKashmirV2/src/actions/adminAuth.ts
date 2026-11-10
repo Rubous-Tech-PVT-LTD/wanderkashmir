@@ -27,8 +27,8 @@ export async function loginAdminAction(formData: FormData): Promise<{ success: b
       return { success: false, error: "Invalid email or password." };
     }
 
-    if (user.role !== "ADMIN") {
-      return { success: false, error: "Access denied. Administrator privileges required." };
+    if (user.role !== "ADMIN" && user.role !== "EDITOR") {
+      return { success: false, error: "Access denied. Administrator or Editor privileges required." };
     }
 
     if (!user.password) {

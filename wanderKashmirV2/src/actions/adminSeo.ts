@@ -1,7 +1,7 @@
 "use server";
 
 import prisma from "@/lib/prisma";
-import { getAdminSession } from "@/lib/admin/auth";
+import { getAdminOrEditorSession } from "@/lib/admin/auth";
 import { revalidatePath } from "next/cache";
 import { SeoWorkflowState } from "@prisma/client";
 import {
@@ -42,17 +42,17 @@ function sanitizeSlug(slug: string): string {
 }
 
 /**
- * Common security validator: Ensures that an active, verified ADMIN session exists
+ * Common security validator: Ensures that an active, verified ADMIN or EDITOR session exists
  * and re-confirms the role and active non-banned state in the database before any mutation.
  */
-async function verifyAdminAuth(): Promise<{ authorized: boolean; error?: string; adminId?: string }> {
-  const session = await getAdminSession();
+async function verifyAdminAuth(): Promise<{ authorized: boolean; error?: string; adminId?: string; role?: string }> {
+  const session = await getAdminOrEditorSession();
   if (!session) {
-    return { authorized: false, error: "Unauthorized: Admin session required." };
+    return { authorized: false, error: "Unauthorized: Admin or Editor session required." };
   }
 
-  if (session.role !== "ADMIN") {
-    return { authorized: false, error: "Forbidden: Administrator privileges required." };
+  if (session.role !== "ADMIN" && session.role !== "EDITOR") {
+    return { authorized: false, error: "Forbidden: Administrator or Editor privileges required." };
   }
 
   // Database verification prevents stale/forged JWT claims
@@ -61,11 +61,11 @@ async function verifyAdminAuth(): Promise<{ authorized: boolean; error?: string;
     select: { id: true, role: true, isBanned: true },
   });
 
-  if (!dbUser || dbUser.role !== "ADMIN" || dbUser.isBanned) {
-    return { authorized: false, error: "Forbidden: Account is not an active administrator." };
+  if (!dbUser || (dbUser.role !== "ADMIN" && dbUser.role !== "EDITOR") || dbUser.isBanned) {
+    return { authorized: false, error: "Forbidden: Account is not an active administrator or editor." };
   }
 
-  return { authorized: true, adminId: dbUser.id };
+  return { authorized: true, adminId: dbUser.id, role: dbUser.role };
 }
 
 export interface SeoLandingPageCreateInput {
@@ -92,6 +92,7 @@ export async function createSeoLandingPageAction(
     if (!auth.authorized) {
       return { success: false, error: auth.error };
     }
+
 
     const title = (input.title || "").trim();
     if (title.length < 2) {
@@ -173,6 +174,7 @@ export async function updateSeoLandingPageAction(
     if (!auth.authorized) {
       return { success: false, error: auth.error };
     }
+
 
     if (!id || typeof id !== "string") {
       return { success: false, error: "Invalid SEO landing page identifier." };
@@ -285,6 +287,7 @@ export async function toggleSeoPublishStatusAction(
       return { success: false, error: auth.error };
     }
 
+
     const page = await prisma.seoLandingPage.findUnique({
       where: { id },
       select: { id: true, slug: true, type: true },
@@ -347,6 +350,10 @@ export async function deleteSeoLandingPageAction(
     if (!auth.authorized) {
       return { success: false, error: auth.error };
     }
+    if (auth.role !== "ADMIN") {
+      return { success: false, error: "Forbidden: Deleting SEO landing pages requires Administrator privileges." };
+    }
+
 
     if (!id || typeof id !== "string") {
       return { success: false, error: "Invalid SEO landing page identifier." };
@@ -420,6 +427,7 @@ export async function refreshOpportunitiesAction(): Promise<ActionResult<{ messa
       return { success: false, error: auth.error };
     }
 
+
     // Check if GSC refresh token exists in database
     const gscToken = await prisma.systemConfig.findUnique({
       where: { key: "GSC_REFRESH_TOKEN" },
@@ -480,6 +488,7 @@ export async function refreshGscOverviewAction(): Promise<ActionResult<{ message
       return { success: false, error: auth.error };
     }
 
+
     const { getGsc90DayOverview } = await import("@/lib/admin/seoGsc");
     const result = await getGsc90DayOverview(true);
 
@@ -520,6 +529,7 @@ export async function saveSeoResearchAction(
     if (!auth.authorized) {
       return { success: false, error: auth.error };
     }
+
 
     if (!pageId || typeof pageId !== "string") {
       return { success: false, error: "Invalid SEO Page ID." };
@@ -580,6 +590,7 @@ export async function saveSeoStrategyAction(
     if (!auth.authorized) {
       return { success: false, error: auth.error };
     }
+
 
     if (!pageId || typeof pageId !== "string") {
       return { success: false, error: "Invalid SEO Page ID." };
@@ -643,6 +654,7 @@ export async function generateSeoContentDraftAction(
       return { success: false, error: auth.error };
     }
 
+
     const result = await generateSeoContentDraft(pageId, options);
 
     if (!result.success || !result.data) {
@@ -684,6 +696,7 @@ export async function saveGeneratedDraftAction(
       return { success: false, error: auth.error };
     }
 
+
     const result = await saveGeneratedDraft(pageId, draftData);
     if (!result.success) {
       return { success: false, error: result.error || "Failed to save draft." };
@@ -717,6 +730,7 @@ export async function discardGeneratedDraftAction(
       return { success: false, error: auth.error };
     }
 
+
     const result = await discardGeneratedDraft(pageId);
     if (!result.success) {
       return { success: false, error: result.error || "Failed to discard draft." };
@@ -749,6 +763,7 @@ export async function runSeoValidationAction(
     if (!auth.authorized) {
       return { success: false, error: auth.error };
     }
+
 
     if (!pageId || typeof pageId !== "string") {
       return { success: false, error: "Invalid SEO landing page identifier." };

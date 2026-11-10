@@ -28,12 +28,14 @@ export const metadata: Metadata = {
 // ISR: 1-hour cache for experiences catalog. Admin updates trigger on-demand revalidation.
 export const revalidate = 3600;
 
-export default async function ExperiencesPage({ 
-  searchParams 
-}: { 
-  searchParams?: Promise<{ [key: string]: string | string[] | undefined }> | { [key: string]: string | string[] | undefined };
-}) {
-  const resolvedSearchParams = searchParams ? await Promise.resolve(searchParams) : {};
+type PageProps = {
+  searchParams?: Promise<{
+    [key: string]: string | string[] | undefined;
+  }>;
+};
+
+export default async function ExperiencesPage({ searchParams }: PageProps) {
+  const resolvedSearchParams = searchParams ? await searchParams : {};
   const pageParam = resolvedSearchParams.page;
   const page = typeof pageParam === 'string' ? parseInt(pageParam, 10) : 1;
   const currentPage = isNaN(page) || page < 1 ? 1 : page;
