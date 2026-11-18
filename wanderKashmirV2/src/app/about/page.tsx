@@ -9,7 +9,6 @@ import {
   MapPin,
   ShieldCheck,
   Compass,
-  Users,
   HeartHandshake,
   Car,
   Home,
@@ -626,52 +625,8 @@ export default function AboutPage() {
               </p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8">
-              {/* Leader 1: Aubaid Amin Shah */}
-              <div className="bg-slate-50 rounded-2xl p-6 sm:p-7 border border-slate-200/80 flex flex-col justify-between hover:shadow-md transition-shadow">
-                <div>
-                  {/* Refined Monogram Badge (Accurate & Professional, No Stock/AI Photo) */}
-                  <div className="flex items-center gap-4 mb-5">
-                    <div
-                      className="w-14 h-14 rounded-2xl flex items-center justify-center font-display font-extrabold text-xl text-white shadow-xs"
-                      style={{
-                        backgroundColor: "var(--season-primary, #D62828)",
-                      }}
-                    >
-                      AS
-                    </div>
-                    <div>
-                      <h3 className="font-display font-bold text-lg text-slate-900">
-                        Aubaid Amin Shah
-                      </h3>
-                      <p
-                        className="text-xs font-semibold tracking-wide uppercase"
-                        style={{ color: "var(--season-primary, #D62828)" }}
-                      >
-                        Operations Manager
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="inline-flex items-center gap-1.5 text-xs text-slate-600 bg-white px-2.5 py-1 rounded-md border border-slate-200 mb-4">
-                    <MapPin className="w-3.5 h-3.5 text-slate-400" />
-                    <span>Based in Anantnag, Jammu &amp; Kashmir</span>
-                  </div>
-
-                  <p className="text-sm text-slate-600 leading-relaxed">
-                    Leads on-ground tourism operations across Kashmir,
-                    spearheading local service provider coordination, hotel and
-                    homestay relations, and day-to-day operational execution to
-                    ensure seamless traveler logistics.
-                  </p>
-                </div>
-
-                <div className="mt-6 pt-4 border-t border-slate-200/60 text-xs text-slate-500 font-medium">
-                  Focus: Operations &amp; Local Provider Coordination
-                </div>
-              </div>
-
-              {/* Leader 2: Ubaid Ahmad Bhat */}
+            <div className="max-w-lg mx-auto">
+              {/* Ubaid Ahmad Bhat */}
               <div className="bg-slate-50 rounded-2xl p-6 sm:p-7 border border-slate-200/80 flex flex-col justify-between hover:shadow-md transition-shadow">
                 <div>
                   <div className="flex items-center gap-4 mb-5">
@@ -711,44 +666,6 @@ export default function AboutPage() {
 
                 <div className="mt-6 pt-4 border-t border-slate-200/60 text-xs text-slate-500 font-medium">
                   Focus: Digital Platform &amp; Technical Infrastructure
-                </div>
-              </div>
-
-              {/* Leader 3: Vinamra */}
-              <div className="bg-slate-50 rounded-2xl p-6 sm:p-7 border border-slate-200/80 flex flex-col justify-between hover:shadow-md transition-shadow">
-                <div>
-                  <div className="flex items-center gap-4 mb-5">
-                    <div className="w-14 h-14 rounded-2xl bg-slate-800 flex items-center justify-center font-display font-extrabold text-xl text-white shadow-xs">
-                      V
-                    </div>
-                    <div>
-                      <h3 className="font-display font-bold text-lg text-slate-900">
-                        Vinamra
-                      </h3>
-                      <p
-                        className="text-xs font-semibold tracking-wide uppercase"
-                        style={{ color: "var(--season-primary, #D62828)" }}
-                      >
-                        HR &amp; People Management
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="inline-flex items-center gap-1.5 text-xs text-slate-600 bg-white px-2.5 py-1 rounded-md border border-slate-200 mb-4">
-                    <Users className="w-3.5 h-3.5 text-slate-400" />
-                    <span>People &amp; Organisation</span>
-                  </div>
-
-                  <p className="text-sm text-slate-600 leading-relaxed">
-                    Manages human resources, talent acquisition, cross-functional
-                    team coordination, and internal organizational processes to
-                    foster an agile, collaborative, and mission-aligned company
-                    culture.
-                  </p>
-                </div>
-
-                <div className="mt-6 pt-4 border-t border-slate-200/60 text-xs text-slate-500 font-medium">
-                  Focus: Human Resources &amp; Team Coordination
                 </div>
               </div>
             </div>
