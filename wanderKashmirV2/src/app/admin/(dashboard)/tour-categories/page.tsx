@@ -1,6 +1,9 @@
 import { Metadata } from "next";
+import prisma from "@/lib/prisma";
 import { getAdminTourCategoriesList } from "@/lib/admin/tourCategories";
 import TourCategoriesClient from "@/components/admin/tourCategories/TourCategoriesClient";
+
+export const revalidate = 0;
 
 export const metadata: Metadata = {
   title: "Tour Categories | WanderKashmir Admin",
@@ -19,14 +22,18 @@ export default async function TourCategoriesPage({
   const params = await searchParams;
   const currentSearch = params.search || "";
 
-  const categories = await getAdminTourCategoriesList({
-    search: currentSearch,
-  });
+  const [categories, unassignedCount] = await Promise.all([
+    getAdminTourCategoriesList({
+      search: currentSearch,
+    }),
+    prisma.tour.count({ where: { categoryId: null } }),
+  ]);
 
   return (
     <TourCategoriesClient
       categories={categories}
       currentSearch={currentSearch}
+      unassignedCount={unassignedCount}
     />
   );
 }

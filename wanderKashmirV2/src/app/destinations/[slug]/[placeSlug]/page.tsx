@@ -54,6 +54,10 @@ interface ResolvedEntity {
     bestTimeToVisit?: string | null;
     thingsToDo?: unknown;
     visitorTips?: unknown;
+    seoTitle?: string | null;
+    metaDescription?: string | null;
+    canonicalUrl?: string | null;
+    isFeatured?: boolean;
     status: string;
   };
   relatedPlaces: Array<{
@@ -157,6 +161,10 @@ const resolveEntity = cache(
                 bestTimeToVisit: true,
                 thingsToDo: true,
                 visitorTips: true,
+                seoTitle: true,
+                metaDescription: true,
+                canonicalUrl: true,
+                isFeatured: true,
                 status: true,
               },
             },
@@ -195,6 +203,16 @@ const resolveEntity = cache(
           slug: true,
           description: true,
           imageUrl: true,
+          gallery: true,
+          timings: true,
+          entryFee: true,
+          bestTimeToVisit: true,
+          thingsToDo: true,
+          visitorTips: true,
+          seoTitle: true,
+          metaDescription: true,
+          canonicalUrl: true,
+          isFeatured: true,
           status: true,
           destination: true,
         },
@@ -215,6 +233,16 @@ const resolveEntity = cache(
             slug: dbPlace.slug,
             description: dbPlace.description,
             imageUrl: dbPlace.imageUrl,
+            gallery: dbPlace.gallery,
+            timings: dbPlace.timings,
+            entryFee: dbPlace.entryFee,
+            bestTimeToVisit: dbPlace.bestTimeToVisit,
+            thingsToDo: dbPlace.thingsToDo,
+            visitorTips: dbPlace.visitorTips,
+            seoTitle: dbPlace.seoTitle,
+            metaDescription: dbPlace.metaDescription,
+            canonicalUrl: dbPlace.canonicalUrl,
+            isFeatured: dbPlace.isFeatured,
             status: dbPlace.status,
           };
         }
@@ -324,17 +352,21 @@ export async function generateMetadata({
     };
   }
 
-  const canonicalUrl = `https://www.wanderkashmir.com/destinations/${entity.destination.slug}/${entity.place.slug}`;
-  const metaDescription = entity.place.description
-    ? entity.place.description.slice(0, 160)
-    : undefined;
+  const defaultCanonical = `https://www.wanderkashmir.com/destinations/${entity.destination.slug}/${entity.place.slug}`;
+  const canonicalUrl = entity.place.canonicalUrl?.trim() || defaultCanonical;
+  const seoTitle =
+    entity.place.seoTitle?.trim() ||
+    `${entity.place.name}, ${entity.destination.name} | WanderKashmir`;
+  const metaDescription =
+    entity.place.metaDescription?.trim() ||
+    (entity.place.description ? entity.place.description.slice(0, 160) : undefined);
 
   return {
-    title: `${entity.place.name}, ${entity.destination.name} | WanderKashmir`,
+    title: seoTitle,
     ...(metaDescription !== undefined && { description: metaDescription }),
     alternates: { canonical: canonicalUrl },
     openGraph: {
-      title: `${entity.place.name}, ${entity.destination.name} | WanderKashmir`,
+      title: seoTitle,
       ...(metaDescription !== undefined && { description: metaDescription }),
       url: canonicalUrl,
       ...(entity.place.imageUrl && { images: [entity.place.imageUrl] }),
@@ -342,7 +374,7 @@ export async function generateMetadata({
     },
     twitter: {
       card: "summary_large_image",
-      title: `${entity.place.name}, ${entity.destination.name} | WanderKashmir`,
+      title: seoTitle,
       ...(metaDescription !== undefined && { description: metaDescription }),
     },
   };
@@ -427,9 +459,15 @@ export default async function PlaceEntityPage({
     ? parseDescriptionSections(place.description)
     : [];
 
-  // Validate and parse gallery items
+  // Validate, sort (featured cover first, then order), and normalize gallery items
   const galleryCheck = validateGalleryData(place.gallery);
-  let galleryImages: GalleryImageItem[] = galleryCheck.valid ? galleryCheck.data : [];
+  let galleryImages: GalleryImageItem[] = galleryCheck.valid
+    ? [...galleryCheck.data].sort((a, b) => {
+        if (a.isFeatured && !b.isFeatured) return -1;
+        if (!a.isFeatured && b.isFeatured) return 1;
+        return (a.order ?? 0) - (b.order ?? 0);
+      })
+    : [];
 
   // If place.imageUrl exists and is not already in gallery, prepend it as the primary cover
   if (place.imageUrl && !galleryImages.some((img) => img.url === place.imageUrl)) {
@@ -590,8 +628,8 @@ export default async function PlaceEntityPage({
                   )}
                 </div>
 
-                {/* Companion Tile 3 */}
-                <div className="relative overflow-hidden group">
+                {/* Companion Tile 3 (Spans 2 cols cleanly when exactly 4 images) */}
+                <div className={`relative overflow-hidden group ${galleryImages.length === 4 ? "sm:col-span-2" : ""}`}>
                   <Image
                     src={galleryImages[3].url}
                     alt={galleryImages[3].alt || `${place.name} photo 4`}
@@ -606,22 +644,30 @@ export default async function PlaceEntityPage({
                   )}
                 </div>
 
-                {/* Companion Tile 4 (or 5th image if available, else span) */}
-                <div className="relative overflow-hidden group">
-                  <Image
-                    src={galleryImages[4]?.url || galleryImages[0].url}
-                    alt={galleryImages[4]?.alt || `${place.name} photo 5`}
-                    fill
-                    className="object-cover object-center group-hover:scale-105 transition-transform duration-500"
-                    sizes="(max-width: 768px) 50vw, 280px"
-                  />
-                  {galleryImages.length > 5 && (
-                    <div className="absolute inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center text-white text-sm font-bold gap-1.5">
-                      <Images className="w-4 h-4" />
-                      <span>+{galleryImages.length - 4} More</span>
-                    </div>
-                  )}
-                </div>
+                {/* Companion Tile 4 (Rendered only when 5+ unique images exist) */}
+                {galleryImages.length >= 5 && (
+                  <div className="relative overflow-hidden group">
+                    <Image
+                      src={galleryImages[4].url}
+                      alt={galleryImages[4].alt || `${place.name} photo 5`}
+                      fill
+                      className="object-cover object-center group-hover:scale-105 transition-transform duration-500"
+                      sizes="(max-width: 768px) 50vw, 280px"
+                    />
+                    {galleryImages.length > 5 ? (
+                      <div className="absolute inset-0 bg-black/55 backdrop-blur-xs flex items-center justify-center text-white text-sm font-bold gap-1.5">
+                        <Images className="w-4 h-4" />
+                        <span>+{galleryImages.length - 5} More</span>
+                      </div>
+                    ) : (
+                      galleryImages[4].caption && (
+                        <div className="absolute inset-x-0 bottom-0 p-2 bg-gradient-to-t from-black/70 to-transparent text-[11px] text-white truncate">
+                          {galleryImages[4].caption}
+                        </div>
+                      )
+                    )}
+                  </div>
+                )}
               </div>
 
               {/* Mobile Hero + Thumbnail Strip */}
@@ -663,8 +709,66 @@ export default async function PlaceEntityPage({
                 </div>
               </div>
             </div>
-          ) : galleryImages.length > 0 ? (
-            /* 1 to 3 images fallback layout */
+          ) : galleryImages.length === 3 ? (
+            /* 3-image balanced Bento layout */
+            <div className="grid grid-cols-1 sm:grid-cols-3 sm:grid-rows-2 gap-2.5 sm:gap-3 sm:h-[420px] rounded-3xl overflow-hidden shadow-md border border-slate-200 bg-slate-900/5">
+              <div className="sm:col-span-2 sm:row-span-2 relative aspect-[16/10] sm:aspect-auto overflow-hidden group">
+                <Image
+                  src={galleryImages[0].url}
+                  alt={galleryImages[0].alt || `${place.name} in ${destination.name}`}
+                  fill
+                  priority
+                  className="object-cover object-center group-hover:scale-105 transition-transform duration-500"
+                  sizes="(max-width: 768px) 100vw, 720px"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-80" />
+                <div className="absolute bottom-4 left-5 right-5 flex items-center justify-between text-white text-xs">
+                  <span className="font-semibold drop-shadow-sm flex items-center gap-2">
+                    <Camera className="w-4 h-4 text-white/90" />
+                    <span>{galleryImages[0].caption || `${place.name} • Featured View`}</span>
+                  </span>
+                </div>
+              </div>
+              {galleryImages.slice(1, 3).map((img, idx) => (
+                <div key={idx} className="relative aspect-[16/10] sm:aspect-auto overflow-hidden group">
+                  <Image
+                    src={img.url}
+                    alt={img.alt || `${place.name} photo ${idx + 2}`}
+                    fill
+                    className="object-cover object-center group-hover:scale-105 transition-transform duration-500"
+                    sizes="(max-width: 768px) 100vw, 380px"
+                  />
+                  {img.caption && (
+                    <div className="absolute inset-x-0 bottom-0 p-2 bg-gradient-to-t from-black/70 to-transparent text-[11px] text-white truncate">
+                      {img.caption}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          ) : galleryImages.length === 2 ? (
+            /* 2-image side-by-side Bento layout */
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-3 sm:h-[380px] rounded-3xl overflow-hidden shadow-md border border-slate-200 bg-slate-900/5">
+              {galleryImages.map((img, idx) => (
+                <div key={idx} className="relative aspect-[16/10] sm:aspect-auto overflow-hidden group">
+                  <Image
+                    src={img.url}
+                    alt={img.alt || `${place.name} photo ${idx + 1}`}
+                    fill
+                    priority={idx === 0}
+                    className="object-cover object-center group-hover:scale-105 transition-transform duration-500"
+                    sizes="(max-width: 768px) 100vw, 560px"
+                  />
+                  {img.caption && (
+                    <div className="absolute inset-x-0 bottom-0 p-3 bg-gradient-to-t from-black/70 to-transparent text-xs text-white truncate">
+                      {img.caption}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          ) : galleryImages.length === 1 ? (
+            /* Single hero image layout */
             <div className="relative w-full aspect-[16/8] sm:aspect-[16/7] rounded-3xl overflow-hidden bg-slate-100 shadow-md border border-slate-200">
               <Image
                 src={galleryImages[0].url}
@@ -678,10 +782,7 @@ export default async function PlaceEntityPage({
               <div className="absolute bottom-4 left-5 right-5 flex items-center justify-between text-white text-xs">
                 <span className="font-semibold drop-shadow-sm flex items-center gap-2">
                   <Camera className="w-4 h-4 text-white/90" />
-                  <span>{place.name} &bull; Verified Photography</span>
-                </span>
-                <span className="px-3 py-1 rounded-lg bg-black/60 backdrop-blur-md text-[11px] font-bold uppercase tracking-wider">
-                  Featured View
+                  <span>{galleryImages[0].caption || `${place.name} • Featured View`}</span>
                 </span>
               </div>
             </div>
@@ -721,7 +822,7 @@ export default async function PlaceEntityPage({
                 Attraction Type
               </span>
               <span className="text-sm font-bold text-[var(--season-text,#0F172A)] block mt-0.5">
-                Heritage Mughal Garden
+                Sightseeing &amp; Heritage
               </span>
             </div>
           </div>

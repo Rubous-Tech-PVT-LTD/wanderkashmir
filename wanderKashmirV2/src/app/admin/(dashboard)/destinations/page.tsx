@@ -1,11 +1,12 @@
+import { redirect } from "next/navigation";
+import { headers } from "next/headers";
 import {
   getAdminDestinationsList,
-  getAdminPlacesList,
   getAdminDestinationsStats,
 } from "@/lib/admin/destinations";
 import DestinationListClient from "@/components/admin/destinations/DestinationListClient";
 
-export const revalidate = 0; // Fresh data on every admin request
+export const revalidate = 0;
 
 export default async function AdminDestinationsPage({
   searchParams,
@@ -17,23 +18,23 @@ export default async function AdminDestinationsPage({
     page?: string;
   }>;
 }) {
-  const params = await searchParams;
-  const tab = (params.tab === "places" ? "places" : "destinations") as "destinations" | "places";
+  const [params, headerList] = await Promise.all([searchParams, headers()]);
+  const base = headerList.get("x-admin-alias") === "wander-admin" ? "/wander-admin" : "/admin";
+
+  // Backward-compatible redirect for legacy bookmarks to the old duplicate Places tab
+  if (params.tab === "places") {
+    redirect(`${base}/places`);
+  }
+
   const search = params.search || "";
-  const status = (params.status?.toUpperCase() || "ALL") as any;
+  const status = (params.status?.toUpperCase() || "ALL") as "ALL" | "PUBLISHED" | "DRAFT";
   const page = parseInt(params.page || "1", 10) || 1;
 
-  const [destinationsData, placesData, stats] = await Promise.all([
+  const [destinationsData, stats] = await Promise.all([
     getAdminDestinationsList({
-      search: tab === "destinations" ? search : undefined,
-      status: tab === "destinations" ? status : undefined,
-      page: tab === "destinations" ? page : 1,
-      limit: 20,
-    }),
-    getAdminPlacesList({
-      search: tab === "places" ? search : undefined,
-      status: tab === "places" ? status : undefined,
-      page: tab === "places" ? page : 1,
+      search: search || undefined,
+      status,
+      page,
       limit: 20,
     }),
     getAdminDestinationsStats(),
@@ -41,15 +42,10 @@ export default async function AdminDestinationsPage({
 
   return (
     <DestinationListClient
-      currentTab={tab}
       destinations={destinationsData.destinations}
-      destinationsTotalCount={destinationsData.totalCount}
-      destinationsCurrentPage={destinationsData.page}
-      destinationsTotalPages={destinationsData.totalPages}
-      places={placesData.places}
-      placesTotalCount={placesData.totalCount}
-      placesCurrentPage={placesData.page}
-      placesTotalPages={placesData.totalPages}
+      totalCount={destinationsData.totalCount}
+      currentPage={destinationsData.page}
+      totalPages={destinationsData.totalPages}
       currentStatus={status}
       currentSearch={search}
       stats={stats}

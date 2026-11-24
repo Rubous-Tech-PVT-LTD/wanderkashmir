@@ -34,7 +34,6 @@ export default function TourFixedContentSectionsEditor({
 }: TourFixedContentSectionsEditorProps) {
   const faqs = contentSections.faqs || [];
 
-  // Nearby places state initialization
   const initialNearbyConfig = contentSections.nearbyPlacesConfig;
   const initialNearbyIntro =
     initialNearbyConfig?.introContent !== undefined
@@ -42,7 +41,10 @@ export default function TourFixedContentSectionsEditor({
       : typeof contentSections.nearby === "string"
       ? contentSections.nearby
       : contentSections.nearby?.blocks
-      ? contentSections.nearby.blocks.map((b: any) => b.data?.text || "").filter(Boolean).join("\n\n")
+      ? contentSections.nearby.blocks
+          .map((b: any) => b.data?.text || "")
+          .filter(Boolean)
+          .join("\n\n")
       : "";
   const initialNearbyItems = Array.isArray(initialNearbyConfig?.items)
     ? initialNearbyConfig.items
@@ -109,41 +111,41 @@ export default function TourFixedContentSectionsEditor({
   };
 
   return (
-    <div className="rounded-xl border border-slate-800 bg-slate-950/60 p-6 space-y-6">
-      <div>
-        <h2 className="text-sm font-semibold text-white">
+    <div className="rounded-md border border-slate-200/90 bg-white p-5 sm:p-6 space-y-6 shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
+      <div className="border-b border-slate-100 pb-3">
+        <h2 className="text-sm font-semibold text-slate-900">
           Fixed Template Content Sections
         </h2>
-        <p className="text-xs text-slate-400 mt-1">
-          Full rich content authoring inside the fixed accordion tabs on the public Tour page. Use headings, lists, tables, quotes, and links. Empty sections gracefully display the default seasonal placeholder.
+        <p className="text-xs text-slate-500 mt-1">
+          Rich content authoring for the accordion tabs on the public Tour page. Empty sections gracefully display the default seasonal fallback.
         </p>
       </div>
 
       <div className="space-y-6">
         {/* 1. How to Reach & Route Explanation */}
-        <div className="space-y-3 p-4 rounded-xl border border-slate-800 bg-slate-900/60">
-          <div className="flex items-center justify-between gap-3">
-            <label className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-slate-300">
-              <Compass className="w-3.5 h-3.5 text-emerald-400" />
+        <div className="space-y-3 p-4 rounded-md border border-slate-200 bg-slate-50/70">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <label className="flex items-center gap-2 text-xs font-semibold text-slate-800">
+              <Compass className="w-3.5 h-3.5 text-[var(--season-primary)]" />
               <span>How to Reach & Route Explanation</span>
             </label>
-            <label className="flex items-center gap-2 cursor-pointer text-xs font-medium text-slate-300 select-none">
+            <label className="flex items-center gap-2 cursor-pointer text-xs font-medium text-slate-700 select-none">
               <input
                 type="checkbox"
                 checked={contentSections.howToReachEnabled !== false}
                 onChange={(e) => updateField("howToReachEnabled", e.target.checked)}
-                className="w-4 h-4 rounded border-slate-700 bg-slate-800 text-emerald-500 focus:ring-emerald-500 focus:ring-offset-slate-900 cursor-pointer"
+                className="w-4 h-4 rounded border-slate-300 text-[var(--season-primary)] focus:ring-[var(--season-primary)] cursor-pointer"
               />
               <span>Show How to Reach</span>
             </label>
           </div>
 
-          <p className="text-xs text-slate-400">
-            When enabled, the public page displays the dynamic route circuit and map. Use &quot;Why This Route&quot; below to explain route pacing and connectivity. If left empty, no marketing copy will be shown.
+          <p className="text-xs text-slate-500">
+            When enabled, the public page displays the route circuit and map. Use &ldquo;Why This Route&rdquo; below to explain route pacing and connectivity.
           </p>
 
-          <div className="space-y-2 pt-1">
-            <label className="block text-[11px] font-semibold uppercase tracking-wider text-slate-400">
+          <div className="space-y-1.5 pt-1">
+            <label className="block text-xs font-medium text-slate-700">
               Why This Route Details
             </label>
             <EditorJsField
@@ -157,8 +159,8 @@ export default function TourFixedContentSectionsEditor({
 
         {/* 2. Best Time to Visit */}
         <div className="space-y-2">
-          <label className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-slate-300">
-            <Clock className="w-3.5 h-3.5 text-emerald-400" />
+          <label className="flex items-center gap-2 text-xs font-semibold text-slate-800">
+            <Clock className="w-3.5 h-3.5 text-[var(--season-primary)]" />
             <span>Best Time to Visit</span>
           </label>
           <EditorJsField
@@ -171,8 +173,8 @@ export default function TourFixedContentSectionsEditor({
 
         {/* 3. Food Recommendations */}
         <div className="space-y-2">
-          <label className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-slate-300">
-            <UtensilsCrossed className="w-3.5 h-3.5 text-emerald-400" />
+          <label className="flex items-center gap-2 text-xs font-semibold text-slate-800">
+            <UtensilsCrossed className="w-3.5 h-3.5 text-[var(--season-primary)]" />
             <span>Food & Dining Recommendations</span>
           </label>
           <EditorJsField
@@ -185,8 +187,8 @@ export default function TourFixedContentSectionsEditor({
 
         {/* 4. Shopping Recommendations */}
         <div className="space-y-2">
-          <label className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-slate-300">
-            <Sparkles className="w-3.5 h-3.5 text-emerald-400" />
+          <label className="flex items-center gap-2 text-xs font-semibold text-slate-800">
+            <Sparkles className="w-3.5 h-3.5 text-[var(--season-primary)]" />
             <span>Shopping & Local Souvenirs</span>
           </label>
           <EditorJsField
@@ -198,9 +200,9 @@ export default function TourFixedContentSectionsEditor({
         </div>
 
         {/* 5. Nearby Places to Explore */}
-        <div className="space-y-2 pt-2 border-t border-slate-800">
-          <label className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-slate-300">
-            <MapPin className="w-3.5 h-3.5 text-emerald-400" />
+        <div className="space-y-2 pt-3 border-t border-slate-100">
+          <label className="flex items-center gap-2 text-xs font-semibold text-slate-800">
+            <MapPin className="w-3.5 h-3.5 text-[var(--season-primary)]" />
             <span>Nearby Places to Explore</span>
           </label>
           <NearbyPlacesEditor
@@ -213,34 +215,35 @@ export default function TourFixedContentSectionsEditor({
         </div>
 
         {/* 6. Frequently Asked Questions */}
-        <div className="space-y-3 pt-3 border-t border-slate-800">
+        <div className="space-y-3 pt-3 border-t border-slate-100">
           <div className="flex items-center justify-between">
-            <label className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-slate-300">
-              <HelpCircle className="w-3.5 h-3.5 text-emerald-400" />
+            <label className="flex items-center gap-2 text-xs font-semibold text-slate-800">
+              <HelpCircle className="w-3.5 h-3.5 text-[var(--season-primary)]" />
               <span>Frequently Asked Questions ({faqs.length})</span>
             </label>
             <button
               type="button"
               onClick={addFaq}
-              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 hover:bg-emerald-500/20 transition-colors"
+              className="inline-flex items-center gap-1.5 rounded-md border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 transition-colors cursor-pointer"
             >
-              <Plus className="w-3.5 h-3.5" /> Add FAQ
+              <Plus className="w-3.5 h-3.5" />
+              <span>Add FAQ</span>
             </button>
           </div>
 
           {faqs.length === 0 ? (
             <p className="text-xs text-slate-500 italic">
-              No tour-specific FAQs configured. Click &quot;Add FAQ&quot; to answer questions about permits, clothing, or transfers.
+              No tour-specific FAQs configured. Click &ldquo;Add FAQ&rdquo; to answer questions about permits, clothing, or transfers.
             </p>
           ) : (
-            <div className="space-y-4">
+            <div className="space-y-3">
               {faqs.map((faq, idx) => (
                 <div
                   key={idx}
-                  className="rounded-lg border border-slate-800 bg-slate-900/60 p-4 space-y-3"
+                  className="rounded-md border border-slate-200 bg-slate-50/70 p-4 space-y-3"
                 >
                   <div className="flex items-center justify-between gap-2">
-                    <span className="w-5 h-5 rounded bg-slate-800 text-slate-300 text-[10px] font-bold flex items-center justify-center shrink-0 border border-slate-700">
+                    <span className="h-6 w-6 rounded bg-white text-slate-600 text-[10px] font-semibold flex items-center justify-center shrink-0 border border-slate-200">
                       Q{idx + 1}
                     </span>
                     <input
@@ -248,15 +251,15 @@ export default function TourFixedContentSectionsEditor({
                       value={faq.question}
                       onChange={(e) => updateFaq(idx, "question", e.target.value)}
                       placeholder="e.g. Is a Shikara ride included in this package?"
-                      className="flex-1 rounded border border-slate-700 bg-slate-800 px-2.5 py-1.5 text-xs font-semibold text-white focus:border-emerald-500 focus:outline-none"
+                      className="flex-1 rounded-md border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-900 placeholder:text-slate-400 focus:border-[var(--season-primary)] focus:ring-1 focus:ring-[var(--season-primary)]/20 focus:outline-hidden"
                     />
                     <div className="flex items-center gap-0.5">
                       <button
                         type="button"
                         onClick={() => moveFaq(idx, "up")}
                         disabled={idx === 0}
-                        className="p-1 text-slate-400 hover:text-white disabled:opacity-30"
-                        title="Move Up"
+                        className="rounded p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-700 disabled:opacity-30 cursor-pointer"
+                        title="Move up"
                       >
                         <ChevronUp className="w-3.5 h-3.5" />
                       </button>
@@ -264,15 +267,15 @@ export default function TourFixedContentSectionsEditor({
                         type="button"
                         onClick={() => moveFaq(idx, "down")}
                         disabled={idx === faqs.length - 1}
-                        className="p-1 text-slate-400 hover:text-white disabled:opacity-30"
-                        title="Move Down"
+                        className="rounded p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-700 disabled:opacity-30 cursor-pointer"
+                        title="Move down"
                       >
                         <ChevronDown className="w-3.5 h-3.5" />
                       </button>
                       <button
                         type="button"
                         onClick={() => removeFaq(idx)}
-                        className="p-1 text-slate-400 hover:text-rose-400"
+                        className="rounded p-1 text-slate-400 hover:bg-rose-50 hover:text-rose-600 cursor-pointer"
                         title="Delete FAQ"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
@@ -281,13 +284,13 @@ export default function TourFixedContentSectionsEditor({
                   </div>
 
                   <div className="space-y-1">
-                    <label className="text-[10px] uppercase font-semibold tracking-wider text-slate-400">
+                    <label className="text-[11px] font-medium text-slate-500">
                       Answer Details
                     </label>
                     <EditorJsField
                       value={faq.answer}
                       onChange={(val: any) => updateFaq(idx, "answer", val)}
-                      placeholder="e.g. Yes, a 1-hour private Shikara ride on Dal Lake is included for all travelers..."
+                      placeholder="e.g. Yes, a 1-hour private Shikara ride on Dal Lake is included..."
                       minHeight={80}
                     />
                   </div>

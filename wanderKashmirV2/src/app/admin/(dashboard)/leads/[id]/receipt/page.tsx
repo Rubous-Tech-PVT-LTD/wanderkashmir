@@ -372,7 +372,7 @@ export default async function LeadReceiptPage({
   const voucherTheme = VOUCHER_SEASON_THEMES[activeSeason] || VOUCHER_SEASON_THEMES.autumn;
 
   return (
-    <div className="min-h-screen bg-slate-950 py-8 px-4 sm:px-6">
+    <div className="min-h-screen bg-[#F8FAFC] py-8 px-4 sm:px-6 print:bg-white print:p-0">
       {/* Top Floating Action Bar with Season Switcher & Print Button (Hidden when printing) */}
       <VoucherToolbar activeSeason={activeSeason} />
 
@@ -441,7 +441,7 @@ export default async function LeadReceiptPage({
               <h3 className={`text-xs font-bold uppercase tracking-wider ${voucherTheme.sectionTitleText} border-b ${voucherTheme.sectionBorder} pb-1.5 mb-3`}>
                 2. Itinerary & Ground Logistics
               </h3>
-              <div className="bg-slate-50 rounded-xl p-4 border border-slate-200/80 space-y-2.5 text-xs">
+              <div className="bg-slate-50 rounded-md p-4 border border-slate-200/80 space-y-2.5 text-xs">
                 {logisticsItems.map((item, idx) => (
                   <div key={idx} className="flex justify-between items-start gap-4">
                     <span className="text-slate-600 shrink-0 font-medium">{item.label}:</span>
@@ -459,7 +459,7 @@ export default async function LeadReceiptPage({
             <h3 className={`text-xs font-bold uppercase tracking-wider ${voucherTheme.sectionTitleText} border-b ${voucherTheme.sectionBorder} pb-1.5 mb-3`}>
               3. Official Payment & Advance Receipt
             </h3>
-            <div className={`rounded-xl border-2 ${voucherTheme.tableBorder} overflow-hidden ${voucherTheme.advanceRowBg}`}>
+            <div className={`rounded-md border-2 ${voucherTheme.tableBorder} overflow-hidden ${voucherTheme.advanceRowBg}`}>
               <table className="w-full text-xs">
                 <thead>
                   <tr className={`${voucherTheme.tableHeadBg} text-white font-semibold text-left`}>
@@ -521,7 +521,7 @@ export default async function LeadReceiptPage({
 
           {/* Important Ground Instructions (Dynamic - Omitted if blank) */}
           {parsedInstructionsLines.length > 0 && (
-            <div className={`text-[11px] text-slate-600 space-y-1.5 ${voucherTheme.instructionsBg} p-4 rounded-xl border ${voucherTheme.instructionsBorder} leading-relaxed`}>
+            <div className={`text-[11px] text-slate-600 space-y-1.5 ${voucherTheme.instructionsBg} p-4 rounded-md border ${voucherTheme.instructionsBorder} leading-relaxed`}>
               <div className="font-bold text-slate-800 uppercase tracking-wider text-[10px] mb-1">
                 Important Ground Instructions:
               </div>

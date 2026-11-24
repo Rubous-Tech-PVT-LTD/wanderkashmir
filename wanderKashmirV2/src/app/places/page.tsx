@@ -45,6 +45,7 @@ const getPlacesPageData = cache(async () => {
         description: true,
         imageUrl: true,
         destination: true,
+        isFeatured: true,
         status: true,
         createdAt: true,
         updatedAt: true,
@@ -65,7 +66,7 @@ const getPlacesPageData = cache(async () => {
           },
         },
       },
-      orderBy: { name: "asc" },
+      orderBy: [{ isFeatured: "desc" }, { name: "asc" }],
     }),
     prisma.seoLandingPage.findMany({
       where: {

@@ -1,11 +1,10 @@
-import Link from "next/link";
-import { ArrowLeft, AlertCircle } from "lucide-react";
 import {
   getAdminDestinationById,
   getAllAvailablePlaces,
   getAllAvailableProperties,
 } from "@/lib/admin/destinations";
 import DestinationForm from "@/components/admin/destinations/DestinationForm";
+import { AdminNotFoundCard } from "@/components/admin/ui";
 
 export const revalidate = 0;
 
@@ -24,23 +23,12 @@ export default async function EditDestinationPage({
 
   if (!destination) {
     return (
-      <div className="max-w-md mx-auto text-center py-16 space-y-4">
-        <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400">
-          <AlertCircle className="w-6 h-6" />
-        </div>
-        <h1 className="text-xl font-bold text-white">Destination Not Found</h1>
-        <p className="text-sm text-slate-400">
-          The requested destination (ID: {id}) does not exist in the database.
-        </p>
-        <div>
-          <Link
-            href="/admin/destinations"
-            className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-400 hover:text-emerald-300"
-          >
-            <ArrowLeft className="w-4 h-4" /> Return to Destinations List
-          </Link>
-        </div>
-      </div>
+      <AdminNotFoundCard
+        title="Destination not found"
+        description={`No destination record exists for ID "${id}".`}
+        backHref="/admin/destinations"
+        backLabel="Back to Destinations"
+      />
     );
   }
 

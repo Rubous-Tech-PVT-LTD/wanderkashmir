@@ -4,15 +4,11 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
-  Search,
   Plus,
   ExternalLink,
-  Edit,
+  Pencil,
   Trash2,
-  AlertTriangle,
   Loader2,
-  CheckCircle,
-  EyeOff,
   Palette,
   Image as ImageIcon,
 } from "lucide-react";
@@ -21,6 +17,16 @@ import {
   toggleTravelStyleActiveAction,
   deleteTravelStyleAction,
 } from "@/actions/adminTravelStyles";
+import {
+  AdminPageHeader,
+  AdminFilterBar,
+  AdminToastBanner,
+  AdminModal,
+  AdminEmptyState,
+  StatusBadge,
+  useAdminBasePath,
+  type FeedbackMessage,
+} from "@/components/admin/ui";
 
 interface TravelStylesListClientProps {
   styles: AdminTravelStyleItem[];
@@ -33,11 +39,12 @@ export default function TravelStylesListClient({
 }: TravelStylesListClientProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const basePath = useAdminBasePath();
 
   const [searchVal, setSearchVal] = useState(currentSearch);
   const [togglingId, setTogglingId] = useState<string | null>(null);
+  const [feedback, setFeedback] = useState<FeedbackMessage | null>(null);
 
-  // Delete modal state
   const [deleteModalStyle, setDeleteModalStyle] = useState<AdminTravelStyleItem | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
@@ -50,25 +57,26 @@ export default function TravelStylesListClient({
     } else {
       params.delete("search");
     }
-    router.push(`/admin/travel-styles?${params.toString()}`);
+    const qs = params.toString();
+    router.push(qs ? `${basePath}/travel-styles?${qs}` : `${basePath}/travel-styles`);
   };
 
-  const handleSearchSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    applySearch(searchVal);
-  };
-
-  const handleToggleActive = async (styleId: string, currentActive: boolean) => {
-    setTogglingId(styleId);
+  const handleToggleActive = async (style: AdminTravelStyleItem) => {
+    setTogglingId(style.id);
+    setFeedback(null);
     try {
-      const res = await toggleTravelStyleActiveAction(styleId, !currentActive);
+      const res = await toggleTravelStyleActiveAction(style.id, !style.isActive);
       if (res.success) {
+        setFeedback({
+          type: "success",
+          text: `"${style.name}" is now ${!style.isActive ? "Active" : "Inactive"}.`,
+        });
         router.refresh();
       } else {
-        alert(res.error || "Failed to update status");
+        setFeedback({ type: "error", text: res.error || "Failed to update status." });
       }
     } catch {
-      alert("Error communicating with server.");
+      setFeedback({ type: "error", text: "Error communicating with server." });
     } finally {
       setTogglingId(null);
     }
@@ -81,6 +89,13 @@ export default function TravelStylesListClient({
     try {
       const res = await deleteTravelStyleAction(deleteModalStyle.id, forceHardDelete);
       if (res.success) {
+        setFeedback({
+          type: "success",
+          text:
+            deleteModalStyle.toursCount > 0 && !forceHardDelete
+              ? `Archived travel style "${deleteModalStyle.name}".`
+              : `Deleted travel style "${deleteModalStyle.name}".`,
+        });
         setDeleteModalStyle(null);
         router.refresh();
       } else {
@@ -95,170 +110,139 @@ export default function TravelStylesListClient({
 
   return (
     <div className="space-y-6">
-      {/* Top Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight text-white sm:text-3xl flex items-center gap-2.5">
-            <Palette className="w-7 h-7 text-emerald-400" />
-            Travel Styles Management
-          </h1>
-          <p className="mt-1 text-sm text-slate-400">
-            Organize travel style categories, display sequence, and tour associations ({styles.length} categories)
-          </p>
-        </div>
+      <AdminPageHeader
+        title="Travel Styles"
+        subtitle={`Organize travel styles, display sequence, and linked tour packages (${styles.length} total).`}
+        actions={
+          <Link
+            href={`${basePath}/travel-styles/new`}
+            className="inline-flex items-center gap-1.5 rounded-md bg-[var(--season-primary)] px-3.5 py-2 text-xs font-semibold text-white hover:bg-[var(--season-primary-hover)] shadow-xs transition-colors"
+          >
+            <Plus className="h-3.5 w-3.5" />
+            <span>Create Travel Style</span>
+          </Link>
+        }
+      />
 
-        <Link
-          href="/admin/travel-styles/new"
-          className="inline-flex items-center justify-center gap-2 rounded-lg bg-emerald-600 px-4 py-2.5 text-xs font-semibold text-white shadow-lg shadow-emerald-600/20 hover:bg-emerald-500 transition-all cursor-pointer"
-        >
-          <Plus className="w-4 h-4" /> Create Travel Style
-        </Link>
-      </div>
+      <AdminToastBanner message={feedback} onDismiss={() => setFeedback(null)} />
 
-      {/* Search Bar */}
-      <div className="rounded-xl border border-slate-800 bg-slate-950/60 p-4 flex items-center justify-between gap-4">
-        <form onSubmit={handleSearchSubmit} className="relative flex-1 max-w-md">
-          <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-slate-500">
-            <Search className="h-3.5 w-3.5" />
-          </div>
-          <input
-            type="text"
-            value={searchVal}
-            onChange={(e) => setSearchVal(e.target.value)}
-            placeholder="Search style name, slug, description..."
-            className="w-full rounded-lg border border-slate-700 bg-slate-800/80 py-2 pl-9 pr-3 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500"
-          />
-        </form>
+      <AdminFilterBar
+        searchValue={searchVal}
+        onSearchChange={setSearchVal}
+        onSearchSubmit={() => applySearch(searchVal)}
+        searchPlaceholder="Search style name, slug, or description..."
+        hasActiveFilters={Boolean(currentSearch)}
+        onReset={() => {
+          setSearchVal("");
+          router.push(`${basePath}/travel-styles`);
+        }}
+      />
 
-        <div className="text-xs text-slate-400">
-          Total: <strong className="text-white">{styles.length}</strong> styles
-        </div>
-      </div>
-
-      {/* Styles Table */}
-      <div className="rounded-xl border border-slate-800 bg-slate-950/60 overflow-hidden shadow-sm">
+      <div className="rounded-md border border-slate-200/90 bg-white overflow-hidden shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
         {styles.length === 0 ? (
-          <div className="p-12 text-center text-sm text-slate-400">
-            No travel styles found matching the search criteria.
-          </div>
+          <AdminEmptyState
+            icon={<Palette className="h-5 w-5" />}
+            title="No travel styles found"
+            description="No travel styles matched your search."
+          />
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs sm:text-sm">
-              <thead className="bg-slate-900/60 text-slate-400 uppercase text-[10px] tracking-wider border-b border-slate-800">
+            <table className="w-full text-left text-xs border-collapse">
+              <thead className="bg-slate-50 text-[11px] uppercase tracking-wider text-slate-500 border-b border-slate-200 font-semibold">
                 <tr>
-                  <th className="px-5 py-3.5 w-16">Order</th>
-                  <th className="px-5 py-3.5">Style Details</th>
-                  <th className="px-5 py-3.5">Description</th>
-                  <th className="px-5 py-3.5">Connected Tours</th>
-                  <th className="px-5 py-3.5">Status</th>
-                  <th className="px-5 py-3.5 text-right">Actions</th>
+                  <th className="py-3 px-4 w-16">Order</th>
+                  <th className="py-3 px-4">Travel Style</th>
+                  <th className="py-3 px-4">Description</th>
+                  <th className="py-3 px-4">Connected Tours</th>
+                  <th className="py-3 px-4">Status</th>
+                  <th className="py-3 px-4 text-right">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-800/60 text-slate-300">
+              <tbody className="divide-y divide-slate-100">
                 {styles.map((style) => {
                   const isToggling = togglingId === style.id;
                   return (
-                    <tr key={style.id} className="hover:bg-slate-900/40 transition-colors">
-                      {/* Order */}
-                      <td className="px-5 py-4 font-mono font-semibold text-slate-400 text-xs">
+                    <tr key={style.id} className="hover:bg-slate-50/80 transition-colors">
+                      <td className="py-3.5 px-4 font-mono font-medium text-slate-500">
                         #{style.displayOrder}
                       </td>
 
-                      {/* Name, Slug, Thumbnail */}
-                      <td className="px-5 py-4">
+                      <td className="py-3.5 px-4">
                         <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-lg overflow-hidden border border-slate-800 bg-slate-900 shrink-0 flex items-center justify-center">
+                          <div className="h-10 w-10 rounded-md overflow-hidden border border-slate-200 bg-slate-100 shrink-0 flex items-center justify-center">
                             {style.imageUrl ? (
                               // eslint-disable-next-line @next/next/no-img-element
                               <img
                                 src={style.imageUrl}
                                 alt={style.imageAlt || style.name}
-                                className="w-full h-full object-cover"
-                                onError={(e) => {
-                                  (e.target as HTMLElement).style.display = "none";
-                                }}
+                                className="h-full w-full object-cover"
                               />
                             ) : (
-                              <ImageIcon className="w-4 h-4 text-slate-600" />
+                              <ImageIcon className="h-4 w-4 text-slate-400" />
                             )}
                           </div>
-
                           <div>
-                            <div className="font-semibold text-white text-sm">
+                            <Link
+                              href={`${basePath}/travel-styles/${style.id}`}
+                              className="font-semibold text-slate-900 hover:text-[var(--season-primary)] transition-colors"
+                            >
                               {style.name}
-                            </div>
-                            <div className="font-mono text-xs text-slate-400 mt-0.5">
+                            </Link>
+                            <div className="font-mono text-[11px] text-slate-500">
                               /{style.slug}
                             </div>
                           </div>
                         </div>
                       </td>
 
-                      {/* Description */}
-                      <td className="px-5 py-4 max-w-xs truncate text-xs text-slate-400">
-                        {style.description || <span className="text-slate-600">No description</span>}
+                      <td className="py-3.5 px-4 max-w-xs truncate text-slate-600">
+                        {style.description || <span className="text-slate-400">No description</span>}
                       </td>
 
-                      {/* Connected Tours */}
-                      <td className="px-5 py-4 whitespace-nowrap">
-                        <div className="inline-flex flex-col">
-                          <span className="text-xs font-bold text-white">
-                            {style.toursCount} Tours
-                          </span>
-                          <div className="flex items-center gap-1.5 mt-0.5 text-[10px]">
-                            <span className="text-emerald-400 font-medium">
-                              {style.liveToursCount} live
-                            </span>
-                            <span className="text-slate-600">•</span>
-                            <span className="text-slate-400 font-medium">
-                              {style.draftToursCount} draft
-                            </span>
-                          </div>
+                      <td className="py-3.5 px-4 whitespace-nowrap">
+                        <div className="font-semibold text-slate-900 tabular-nums">
+                          {style.toursCount} tours
+                        </div>
+                        <div className="text-[11px] text-slate-500">
+                          {style.liveToursCount} live · {style.draftToursCount} draft
                         </div>
                       </td>
 
-                      {/* Active Status Toggle */}
-                      <td className="px-5 py-4 whitespace-nowrap">
+                      <td className="py-3.5 px-4 whitespace-nowrap">
                         <button
                           type="button"
                           disabled={isToggling}
-                          onClick={() => handleToggleActive(style.id, style.isActive)}
-                          className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold transition-colors cursor-pointer disabled:opacity-50 ${
-                            style.isActive
-                              ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500/20"
-                              : "bg-slate-800 text-slate-400 border border-slate-700 hover:bg-slate-700"
-                          }`}
+                          onClick={() => handleToggleActive(style)}
+                          className="inline-flex items-center cursor-pointer disabled:opacity-50"
                           title={`Click to ${style.isActive ? "deactivate" : "activate"}`}
                         >
                           {isToggling ? (
-                            <Loader2 className="w-3 h-3 animate-spin" />
-                          ) : style.isActive ? (
-                            <CheckCircle className="w-3 h-3 text-emerald-400" />
+                            <Loader2 className="h-3.5 w-3.5 animate-spin text-slate-400" />
                           ) : (
-                            <EyeOff className="w-3 h-3 text-slate-400" />
+                            <StatusBadge status={style.isActive ? "ACTIVE" : "INACTIVE"} />
                           )}
-                          <span>{style.isActive ? "Active" : "Inactive"}</span>
                         </button>
                       </td>
 
-                      {/* Actions */}
-                      <td className="px-5 py-4 text-right whitespace-nowrap">
-                        <div className="inline-flex items-center gap-2">
+                      <td className="py-3.5 px-4 text-right whitespace-nowrap">
+                        <div className="inline-flex items-center gap-1.5">
                           {style.isActive && (
                             <Link
                               href={`/tours/${style.slug}`}
                               target="_blank"
-                              className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
-                              title="View Public Page"
+                              rel="noopener noreferrer"
+                              className="rounded-md p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-700 transition-colors"
+                              title="View public page"
                             >
-                              <ExternalLink className="w-4 h-4" />
+                              <ExternalLink className="h-3.5 w-3.5" />
                             </Link>
                           )}
                           <Link
-                            href={`/admin/travel-styles/${style.id}`}
-                            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-200 bg-slate-800 hover:bg-slate-700 transition-colors border border-slate-700"
+                            href={`${basePath}/travel-styles/${style.id}`}
+                            className="inline-flex items-center gap-1 rounded-md border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 transition-colors"
                           >
-                            <Edit className="w-3.5 h-3.5" /> Edit
+                            <Pencil className="h-3 w-3" />
+                            <span>Edit</span>
                           </Link>
                           <button
                             type="button"
@@ -267,10 +251,11 @@ export default function TravelStylesListClient({
                               setDeleteError(null);
                               setForceHardDelete(false);
                             }}
-                            className="p-1.5 rounded-lg text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 transition-colors cursor-pointer border border-transparent hover:border-rose-500/20"
-                            title="Delete / Archive Travel Style"
+                            className="rounded-md p-1.5 text-slate-400 hover:bg-rose-50 hover:text-rose-600 transition-colors cursor-pointer"
+                            title="Delete or archive travel style"
+                            aria-label={`Delete ${style.name}`}
                           >
-                            <Trash2 className="w-3.5 h-3.5" />
+                            <Trash2 className="h-3.5 w-3.5" />
                           </button>
                         </div>
                       </td>
@@ -283,89 +268,79 @@ export default function TravelStylesListClient({
         )}
       </div>
 
-      {/* Safety Notice */}
-      <div className="rounded-xl border border-slate-800 bg-slate-950/40 p-4 text-xs text-slate-400">
-        <p className="font-semibold text-slate-300">Travel Styles Relational Safety Policy:</p>
-        <p className="mt-0.5 leading-relaxed">
-          Deleting a travel style that is linked to tours safely deactivates (archives) it to preserve public URLs and tour categorization.
-          Permanent removal is only permitted when zero tours are connected, preventing orphaned database relationships.
-        </p>
-      </div>
-
-      {/* Delete Confirmation Modal */}
-      {deleteModalStyle && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-          <div className="w-full max-w-md rounded-2xl border border-slate-800 bg-slate-900 p-6 shadow-2xl space-y-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-xl bg-rose-500/10 text-rose-400 border border-rose-500/20">
-                <AlertTriangle className="w-6 h-6" />
-              </div>
-              <div>
-                <h3 className="text-base font-bold text-white">Delete Travel Style</h3>
-                <p className="text-xs text-slate-400">Production Relationship Safety Guard</p>
-              </div>
-            </div>
-
+      {/* Delete / Archive Modal */}
+      <AdminModal
+        open={Boolean(deleteModalStyle)}
+        onClose={() => !isDeleting && setDeleteModalStyle(null)}
+        title="Delete Travel Style"
+        maxWidth="md"
+        footer={
+          <>
+            <button
+              type="button"
+              disabled={isDeleting}
+              onClick={() => {
+                setDeleteModalStyle(null);
+                setDeleteError(null);
+              }}
+              className="rounded-md border border-slate-200 bg-white px-3.5 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50 cursor-pointer"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              disabled={isDeleting}
+              onClick={handleDeleteConfirm}
+              className="inline-flex items-center gap-1.5 rounded-md bg-rose-600 px-3.5 py-2 text-xs font-semibold text-white hover:bg-rose-700 disabled:opacity-50 cursor-pointer"
+            >
+              {isDeleting && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+              <span>
+                {deleteModalStyle && deleteModalStyle.toursCount > 0 && !forceHardDelete
+                  ? "Archive Style"
+                  : "Permanently Delete"}
+              </span>
+            </button>
+          </>
+        }
+      >
+        {deleteModalStyle && (
+          <div className="space-y-3 text-xs text-slate-600">
             {deleteError && (
-              <div className="rounded-lg border border-rose-500/30 bg-rose-500/10 p-3 text-xs text-rose-300">
+              <div role="alert" className="rounded-md border border-rose-200 bg-rose-50 px-3 py-2 text-rose-700">
                 {deleteError}
               </div>
             )}
 
             {deleteModalStyle.toursCount > 0 ? (
               <div className="space-y-3">
-                <p className="text-xs text-slate-300 leading-relaxed">
-                  Travel style <strong className="text-white">"{deleteModalStyle.name}"</strong> has{" "}
-                  <strong className="text-amber-400">{deleteModalStyle.toursCount} connected tour package(s)</strong>.
-                  To protect public URLs and tour associations, deleting this style will safely{" "}
-                  <strong className="text-emerald-400">deactivate (archive)</strong> it rather than destroying relationships.
+                <p className="leading-relaxed">
+                  Travel style <strong className="text-slate-900">&ldquo;{deleteModalStyle.name}&rdquo;</strong>{" "}
+                  has <strong className="text-amber-700">{deleteModalStyle.toursCount} connected tour(s)</strong>.
+                  By default it will be archived (deactivated) to preserve tour relationships.
                 </p>
 
-                <label className="flex items-start gap-2 p-2.5 rounded-lg border border-slate-800 bg-slate-950/60 cursor-pointer">
+                <label className="flex items-start gap-2 rounded-md border border-slate-200 bg-slate-50 p-3 cursor-pointer">
                   <input
                     type="checkbox"
                     checked={forceHardDelete}
                     onChange={(e) => setForceHardDelete(e.target.checked)}
-                    className="mt-0.5 rounded border-slate-700 bg-slate-800 text-rose-500 focus:ring-0"
+                    className="mt-0.5 rounded border-slate-300 text-rose-600 focus:ring-rose-600"
                   />
-                  <span className="text-[11px] text-slate-400">
-                    Force permanent deletion (removes all {deleteModalStyle.toursCount} tour mapping rows from this style)
+                  <span className="text-[11px] text-slate-600">
+                    Force permanent deletion (removes all {deleteModalStyle.toursCount} tour style links)
                   </span>
                 </label>
               </div>
             ) : (
-              <p className="text-xs text-slate-300 leading-relaxed">
-                Are you sure you want to permanently delete travel style{" "}
-                <strong className="text-white">"{deleteModalStyle.name}"</strong>?
-                This style has 0 linked tours and can be safely deleted.
+              <p className="leading-relaxed">
+                Permanently delete travel style{" "}
+                <strong className="text-slate-900">&ldquo;{deleteModalStyle.name}&rdquo;</strong>? It has 0
+                connected tours.
               </p>
             )}
-
-            <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-800">
-              <button
-                type="button"
-                disabled={isDeleting}
-                onClick={() => {
-                  setDeleteModalStyle(null);
-                  setDeleteError(null);
-                }}
-                className="px-4 py-2 rounded-lg text-xs font-semibold text-slate-300 bg-slate-800 hover:bg-slate-700 transition-colors cursor-pointer"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                disabled={isDeleting}
-                onClick={handleDeleteConfirm}
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold text-white bg-rose-600 hover:bg-rose-500 transition-colors shadow-lg shadow-rose-600/20 cursor-pointer disabled:opacity-50"
-              >
-                {isDeleting && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
-                {deleteModalStyle.toursCount > 0 && !forceHardDelete ? "Archive Style" : "Permanently Delete"}
-              </button>
-            </div>
           </div>
-        </div>
-      )}
+        )}
+      </AdminModal>
     </div>
   );
 }

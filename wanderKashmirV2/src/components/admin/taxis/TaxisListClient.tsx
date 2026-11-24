@@ -5,26 +5,14 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import {
   Car,
-  Search,
-  CheckCircle2,
-  XCircle,
-  AlertCircle,
-  Clock,
   Download,
   Eye,
   Trash2,
   Edit2,
   Plus,
-  ShieldCheck,
-  User,
-  Phone,
-  Mail,
-  Building,
   CreditCard,
   MapPin,
-  Calendar,
-  X,
-  RefreshCw,
+  Loader2,
 } from "lucide-react";
 import {
   AdminVehicleItem,
@@ -41,6 +29,19 @@ import {
   upsertTaxiRateCardAction,
   deleteTaxiRateCardAction,
 } from "@/actions/adminTaxis";
+import {
+  AdminPageHeader,
+  AdminStatStrip,
+  AdminFilterBar,
+  AdminToastBanner,
+  AdminPagination,
+  AdminEmptyState,
+  AdminModal,
+  ConfirmActionDialog,
+  StatusBadge,
+  useAdminBasePath,
+  type FeedbackMessage,
+} from "@/components/admin/ui";
 
 interface TaxisListClientProps {
   vehicles: AdminVehicleItem[];
@@ -59,6 +60,13 @@ interface TaxisListClientProps {
   fixedStatusTab?: string;
 }
 
+function getVehicleStatusKey(v: AdminVehicleItem): "LIVE" | "PENDING" | "SUSPENDED" | "REJECTED" {
+  if (v.status === "SUSPENDED") return "SUSPENDED";
+  if (v.status === "REJECTED") return "REJECTED";
+  if (v.status === "LIVE" || v.status === "APPROVED" || v.isApproved) return "LIVE";
+  return "PENDING";
+}
+
 export default function TaxisListClient({
   vehicles,
   totalCount,
@@ -73,147 +81,90 @@ export default function TaxisListClient({
   rateCardsTotalCount,
   rateCardsPage,
   rateCardsTotalPages,
-  fixedStatusTab,
 }: TaxisListClientProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [isPending, startTransition] = useTransition();
+  const { adminHref } = useAdminBasePath();
+  const [isTransitionPending, startTransition] = useTransition();
 
   const [activeTab, setActiveTab] = useState<"vehicles" | "rate_cards">(initialTab);
   const [searchInput, setSearchInput] = useState(currentSearch);
   const [isExporting, setIsExporting] = useState(false);
-  const [actionError, setActionError] = useState<string | null>(null);
-  const [actionSuccess, setActionSuccess] = useState<string | null>(null);
+  const [busyId, setBusyId] = useState<string | null>(null);
+  const [feedback, setFeedback] = useState<FeedbackMessage | null>(null);
 
-  // Modals state
+  // Modals
   const [selectedVehicle, setSelectedVehicle] = useState<AdminVehicleItem | null>(null);
   const [rejectingVehicle, setRejectingVehicle] = useState<AdminVehicleItem | null>(null);
-  const [rejectionReason, setRejectionReason] = useState("");
   const [suspendingVehicle, setSuspendingVehicle] = useState<AdminVehicleItem | null>(null);
-  const [suspensionReason, setSuspensionReason] = useState("");
   const [deletingVehicle, setDeletingVehicle] = useState<AdminVehicleItem | null>(null);
 
-  // Rate card modal state
+  // Rate card modal
   const [rateCardModalOpen, setRateCardModalOpen] = useState(false);
   const [editingRateCard, setEditingRateCard] = useState<AdminRateCardItem | null>(null);
   const [rateCardPlace, setRateCardPlace] = useState("");
   const [rateCardRates, setRateCardRates] = useState<Record<string, string>>({});
+  const [rateCardError, setRateCardError] = useState<string | null>(null);
+  const [savingRateCard, setSavingRateCard] = useState(false);
   const [deletingRateCard, setDeletingRateCard] = useState<AdminRateCardItem | null>(null);
 
-  // Navigate helper
   const updateQuery = (updates: Record<string, string | undefined>) => {
     const params = new URLSearchParams(searchParams.toString());
     Object.entries(updates).forEach(([key, val]) => {
-      if (val === undefined || val === "") {
+      if (val === undefined || val === "" || val === "ALL") {
         params.delete(key);
       } else {
         params.set(key, val);
       }
     });
+    const qs = params.toString();
     startTransition(() => {
-      router.push(`?${params.toString()}`);
+      router.push(qs ? `${adminHref("/admin/taxis")}?${qs}` : adminHref("/admin/taxis"));
     });
   };
 
-  const handleSearchSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    updateQuery({ search: searchInput, page: "1" });
-  };
-
-  const handleStatusChange = (status: string) => {
-    updateQuery({ status: status === "ALL" ? undefined : status, page: "1" });
-  };
-
-  const handleTypeChange = (type: string) => {
-    updateQuery({ type: type === "ALL" ? undefined : type, page: "1" });
-  };
-
-  const handleTabChange = (tab: "vehicles" | "rate_cards") => {
-    setActiveTab(tab);
-    updateQuery({ tab: tab === "vehicles" ? undefined : tab, page: "1" });
-  };
-
-  // Approval handlers
   const handleApprove = async (vehicle: AdminVehicleItem) => {
-    setActionError(null);
-    setActionSuccess(null);
-    startTransition(async () => {
+    setBusyId(vehicle.id);
+    setFeedback(null);
+    try {
       const res = await approveVehicleAction(vehicle.id);
       if (res.success) {
-        setActionSuccess(`Vehicle ${vehicle.make} ${vehicle.model} approved and live.`);
+        setFeedback({
+          type: "success",
+          text: `${vehicle.make || ""} ${vehicle.model} approved and set live.`,
+        });
+        setSelectedVehicle(null);
         router.refresh();
       } else {
-        setActionError(res.error || "Failed to approve vehicle.");
+        setFeedback({ type: "error", text: res.error || "Failed to approve vehicle." });
       }
-    });
-  };
-
-  const handleRejectConfirm = async () => {
-    if (!rejectingVehicle || !rejectionReason.trim()) return;
-    setActionError(null);
-    setActionSuccess(null);
-    startTransition(async () => {
-      const res = await rejectVehicleAction(rejectingVehicle.id, rejectionReason.trim());
-      if (res.success) {
-        setActionSuccess(`Vehicle rejected.`);
-        setRejectingVehicle(null);
-        setRejectionReason("");
-        router.refresh();
-      } else {
-        setActionError(res.error || "Failed to reject vehicle.");
-      }
-    });
-  };
-
-  const handleSuspendConfirm = async () => {
-    if (!suspendingVehicle || !suspensionReason.trim()) return;
-    setActionError(null);
-    setActionSuccess(null);
-    startTransition(async () => {
-      const res = await suspendVehicleAction(suspendingVehicle.id, suspensionReason.trim());
-      if (res.success) {
-        setActionSuccess(`Vehicle suspended.`);
-        setSuspendingVehicle(null);
-        setSuspensionReason("");
-        router.refresh();
-      } else {
-        setActionError(res.error || "Failed to suspend vehicle.");
-      }
-    });
+    } finally {
+      setBusyId(null);
+    }
   };
 
   const handleReactivate = async (vehicle: AdminVehicleItem) => {
-    setActionError(null);
-    setActionSuccess(null);
-    startTransition(async () => {
+    setBusyId(vehicle.id);
+    setFeedback(null);
+    try {
       const res = await reactivateVehicleAction(vehicle.id);
       if (res.success) {
-        setActionSuccess(`Vehicle ${vehicle.make} ${vehicle.model} reactivated and live.`);
+        setFeedback({
+          type: "success",
+          text: `${vehicle.make || ""} ${vehicle.model} reactivated.`,
+        });
+        setSelectedVehicle(null);
         router.refresh();
       } else {
-        setActionError(res.error || "Failed to reactivate vehicle.");
+        setFeedback({ type: "error", text: res.error || "Failed to reactivate vehicle." });
       }
-    });
+    } finally {
+      setBusyId(null);
+    }
   };
 
-  const handleDeleteConfirm = async () => {
-    if (!deletingVehicle) return;
-    setActionError(null);
-    setActionSuccess(null);
-    startTransition(async () => {
-      const res = await deleteVehicleAction(deletingVehicle.id);
-      if (res.success) {
-        setActionSuccess(`Vehicle removed.`);
-        setDeletingVehicle(null);
-        router.refresh();
-      } else {
-        setActionError(res.error || "Failed to delete vehicle.");
-      }
-    });
-  };
-
-  // Rate card handlers
   const handleOpenRateCardModal = (rc?: AdminRateCardItem) => {
+    setRateCardError(null);
     if (rc) {
       setEditingRateCard(rc);
       setRateCardPlace(rc.place);
@@ -232,53 +183,47 @@ export default function TaxisListClient({
 
   const handleSaveRateCard = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!rateCardPlace.trim()) return;
+    setRateCardError(null);
+    if (!rateCardPlace.trim()) {
+      setRateCardError("Destination / route name is required.");
+      return;
+    }
 
     const numRates: Record<string, number> = {};
     Object.entries(rateCardRates).forEach(([k, v]) => {
       const num = Number(v);
-      if (!isNaN(num) && num > 0) {
+      if (!Number.isNaN(num) && num > 0) {
         numRates[k] = num;
       }
     });
 
     if (Object.keys(numRates).length === 0) {
-      setActionError("Please provide at least one valid vehicle rate.");
+      setRateCardError("Enter at least one valid rate greater than 0.");
       return;
     }
 
-    startTransition(async () => {
+    setSavingRateCard(true);
+    try {
       const res = await upsertTaxiRateCardAction({
         id: editingRateCard?.id,
         place: rateCardPlace.trim(),
         rates: numRates,
       });
-
       if (res.success) {
-        setActionSuccess(editingRateCard ? "Rate card updated." : "New rate card created.");
+        setFeedback({
+          type: "success",
+          text: editingRateCard ? "Rate card updated." : "Rate card created.",
+        });
         setRateCardModalOpen(false);
         router.refresh();
       } else {
-        setActionError(res.error || "Failed to save rate card.");
+        setRateCardError(res.error || "Failed to save rate card.");
       }
-    });
+    } finally {
+      setSavingRateCard(false);
+    }
   };
 
-  const handleDeleteRateCardConfirm = async () => {
-    if (!deletingRateCard) return;
-    startTransition(async () => {
-      const res = await deleteTaxiRateCardAction(deletingRateCard.id);
-      if (res.success) {
-        setActionSuccess("Rate card deleted.");
-        setDeletingRateCard(null);
-        router.refresh();
-      } else {
-        setActionError(res.error || "Failed to delete rate card.");
-      }
-    });
-  };
-
-  // CSV Export handler
   const handleExportCsv = async () => {
     try {
       setIsExporting(true);
@@ -299,318 +244,256 @@ export default function TaxisListClient({
       a.click();
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
-    } catch (e) {
-      console.error(e);
-      setActionError("Failed to export vehicles CSV.");
+    } catch {
+      setFeedback({ type: "error", text: "Failed to export vehicles CSV." });
     } finally {
       setIsExporting(false);
     }
   };
 
+  const hasFilters = Boolean(currentSearch) || currentStatus !== "ALL" || currentType !== "ALL";
+
   return (
     <div className="space-y-6">
-      {/* Top Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-slate-800 pb-5">
-        <div>
-          <div className="flex items-center gap-2">
-            <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-              Module #14
-            </span>
-            <h1 className="text-2xl font-bold text-white tracking-tight">Taxis & Vehicles</h1>
-          </div>
-          <p className="text-sm text-slate-400 mt-1">
-            Manage transport fleets, vendor vehicle verifications, approvals, and destination rate cards.
-          </p>
-        </div>
+      <AdminPageHeader
+        title="Taxis & Fleet"
+        subtitle="Review vendor vehicle submissions, manage fleet status, and maintain destination taxi rate cards."
+        actions={
+          <>
+            {activeTab === "vehicles" ? (
+              <button
+                type="button"
+                onClick={handleExportCsv}
+                disabled={isExporting}
+                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium text-slate-700 bg-white border border-slate-200 hover:bg-slate-50 disabled:opacity-50 cursor-pointer"
+              >
+                {isExporting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5 text-slate-500" />}
+                <span>Export CSV</span>
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={() => handleOpenRateCardModal()}
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-md text-xs font-medium text-white bg-[var(--season-primary)] hover:bg-[var(--season-primary-hover)] cursor-pointer"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                <span>Add Rate Card</span>
+              </button>
+            )}
+          </>
+        }
+      />
 
-        <div className="flex items-center gap-3">
-          {activeTab === "vehicles" && (
-            <button
-              onClick={handleExportCsv}
-              disabled={isExporting}
-              className="inline-flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-medium bg-slate-900 border border-slate-700 text-slate-200 hover:bg-slate-800 hover:text-white transition disabled:opacity-50"
-            >
-              <Download className="w-4 h-4 text-emerald-400" />
-              {isExporting ? "Exporting..." : "Export CSV"}
-            </button>
-          )}
-
-          {activeTab === "rate_cards" && (
-            <button
-              onClick={() => handleOpenRateCardModal()}
-              className="inline-flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-medium bg-emerald-600 hover:bg-emerald-500 text-white transition shadow-sm"
-            >
-              <Plus className="w-4 h-4" />
-              Add Rate Card
-            </button>
-          )}
-        </div>
-      </div>
-
-      {/* Notifications */}
-      {actionSuccess && (
-        <div className="p-4 rounded-xl bg-emerald-950/40 border border-emerald-800/60 text-emerald-300 text-sm flex items-center justify-between">
-          <span>{actionSuccess}</span>
-          <button onClick={() => setActionSuccess(null)} className="text-emerald-400 hover:text-white">
-            <X className="w-4 h-4" />
-          </button>
-        </div>
-      )}
-
-      {actionError && (
-        <div className="p-4 rounded-xl bg-red-950/40 border border-red-800/60 text-red-300 text-sm flex items-center justify-between">
-          <span>{actionError}</span>
-          <button onClick={() => setActionError(null)} className="text-red-400 hover:text-white">
-            <X className="w-4 h-4" />
-          </button>
-        </div>
-      )}
-
-      {/* Stats Cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+      {/* Primary Domain Switcher */}
+      <div className="flex items-center gap-1 border-b border-slate-200 pb-px">
         <button
-          onClick={() => handleStatusChange("ALL")}
-          className={`p-4 rounded-xl border text-left transition ${
-            currentStatus === "ALL"
-              ? "bg-slate-800/90 border-slate-600"
-              : "bg-slate-900/50 border-slate-800 hover:border-slate-700"
-          }`}
-        >
-          <div className="text-xs text-slate-400 font-medium">Total Fleet</div>
-          <div className="text-xl font-bold text-white mt-1">{stats.total}</div>
-        </button>
-
-        <button
-          onClick={() => handleStatusChange("PENDING")}
-          className={`p-4 rounded-xl border text-left transition ${
-            currentStatus === "PENDING"
-              ? "bg-amber-950/30 border-amber-600"
-              : "bg-slate-900/50 border-slate-800 hover:border-slate-700"
-          }`}
-        >
-          <div className="text-xs text-amber-400 font-medium flex items-center gap-1.5">
-            <Clock className="w-3.5 h-3.5" />
-            Pending Approvals
-          </div>
-          <div className="text-xl font-bold text-amber-300 mt-1">{stats.pending}</div>
-        </button>
-
-        <button
-          onClick={() => handleStatusChange("LIVE")}
-          className={`p-4 rounded-xl border text-left transition ${
-            currentStatus === "LIVE" || currentStatus === "APPROVED"
-              ? "bg-emerald-950/30 border-emerald-600"
-              : "bg-slate-900/50 border-slate-800 hover:border-slate-700"
-          }`}
-        >
-          <div className="text-xs text-emerald-400 font-medium flex items-center gap-1.5">
-            <CheckCircle2 className="w-3.5 h-3.5" />
-            Live / Approved
-          </div>
-          <div className="text-xl font-bold text-emerald-300 mt-1">{stats.live}</div>
-        </button>
-
-        <button
-          onClick={() => handleStatusChange("SUSPENDED")}
-          className={`p-4 rounded-xl border text-left transition ${
-            currentStatus === "SUSPENDED"
-              ? "bg-orange-950/30 border-orange-600"
-              : "bg-slate-900/50 border-slate-800 hover:border-slate-700"
-          }`}
-        >
-          <div className="text-xs text-orange-400 font-medium flex items-center gap-1.5">
-            <AlertCircle className="w-3.5 h-3.5" />
-            Suspended
-          </div>
-          <div className="text-xl font-bold text-orange-300 mt-1">{stats.suspended}</div>
-        </button>
-
-        <button
-          onClick={() => handleStatusChange("REJECTED")}
-          className={`p-4 rounded-xl border text-left transition ${
-            currentStatus === "REJECTED"
-              ? "bg-red-950/30 border-red-600"
-              : "bg-slate-900/50 border-slate-800 hover:border-slate-700"
-          }`}
-        >
-          <div className="text-xs text-red-400 font-medium flex items-center gap-1.5">
-            <XCircle className="w-3.5 h-3.5" />
-            Rejected
-          </div>
-          <div className="text-xl font-bold text-red-300 mt-1">{stats.rejected}</div>
-        </button>
-      </div>
-
-      {/* Main Tabs */}
-      <div className="flex items-center gap-3 border-b border-slate-800 pb-px">
-        <button
-          onClick={() => handleTabChange("vehicles")}
-          className={`pb-3 px-3 text-sm font-medium border-b-2 transition flex items-center gap-2 ${
+          type="button"
+          onClick={() => {
+            setActiveTab("vehicles");
+            updateQuery({ tab: "vehicles", page: "1" });
+          }}
+          className={`inline-flex items-center gap-2 px-3.5 py-2 text-xs font-medium border-b-2 transition-colors cursor-pointer ${
             activeTab === "vehicles"
-              ? "border-emerald-500 text-emerald-400 font-semibold"
-              : "border-transparent text-slate-400 hover:text-slate-200"
+              ? "border-[var(--season-primary)] text-[var(--season-primary-hover)] font-semibold"
+              : "border-transparent text-slate-500 hover:text-slate-900"
           }`}
         >
-          <Car className="w-4 h-4" />
-          Vehicles List ({totalCount})
+          <Car className="w-3.5 h-3.5" />
+          <span>Vehicles</span>
+          <span className="px-1.5 py-0.5 rounded text-[10px] bg-slate-100 text-slate-600 tabular-nums">
+            {stats.total}
+          </span>
         </button>
 
         <button
-          onClick={() => handleTabChange("rate_cards")}
-          className={`pb-3 px-3 text-sm font-medium border-b-2 transition flex items-center gap-2 ${
+          type="button"
+          onClick={() => {
+            setActiveTab("rate_cards");
+            updateQuery({ tab: "rate_cards", page: "1" });
+          }}
+          className={`inline-flex items-center gap-2 px-3.5 py-2 text-xs font-medium border-b-2 transition-colors cursor-pointer ${
             activeTab === "rate_cards"
-              ? "border-emerald-500 text-emerald-400 font-semibold"
-              : "border-transparent text-slate-400 hover:text-slate-200"
+              ? "border-[var(--season-primary)] text-[var(--season-primary-hover)] font-semibold"
+              : "border-transparent text-slate-500 hover:text-slate-900"
           }`}
         >
-          <CreditCard className="w-4 h-4" />
-          Destination Rate Cards ({rateCardsTotalCount})
+          <CreditCard className="w-3.5 h-3.5" />
+          <span>Destination Rate Cards</span>
+          <span className="px-1.5 py-0.5 rounded text-[10px] bg-slate-100 text-slate-600 tabular-nums">
+            {rateCardsTotalCount}
+          </span>
         </button>
       </div>
 
-      {/* Tab 1: Vehicles List */}
+      <AdminToastBanner message={feedback} onDismiss={() => setFeedback(null)} />
+
+      {/* VEHICLES VIEW */}
       {activeTab === "vehicles" && (
-        <div className="space-y-4">
-          {/* Search & Filters */}
-          <div className="flex flex-col sm:flex-row gap-3">
-            <form onSubmit={handleSearchSubmit} className="relative flex-1">
-              <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
-              <input
-                type="text"
-                placeholder="Search by make, model, registration number, or vendor..."
-                value={searchInput}
-                onChange={(e) => setSearchInput(e.target.value)}
-                className="w-full bg-slate-900 border border-slate-800 rounded-lg pl-9 pr-4 py-2 text-sm text-slate-200 placeholder-slate-500 focus:outline-none focus:border-emerald-500 transition"
+        <div className="space-y-5">
+          <AdminStatStrip
+            columns={4}
+            items={[
+              {
+                label: "Pending Approvals",
+                value: stats.pending,
+                tone: stats.pending > 0 ? "amber" : "default",
+                active: currentStatus === "PENDING",
+                onClick: () => updateQuery({ status: currentStatus === "PENDING" ? "ALL" : "PENDING", page: "1" }),
+              },
+              {
+                label: "Live Vehicles",
+                value: stats.live,
+                tone: "primary",
+                active: currentStatus === "LIVE",
+                onClick: () => updateQuery({ status: currentStatus === "LIVE" ? "ALL" : "LIVE", page: "1" }),
+              },
+              {
+                label: "Suspended",
+                value: stats.suspended,
+                active: currentStatus === "SUSPENDED",
+                onClick: () => updateQuery({ status: currentStatus === "SUSPENDED" ? "ALL" : "SUSPENDED", page: "1" }),
+              },
+              {
+                label: "Rejected",
+                value: stats.rejected,
+                tone: stats.rejected > 0 ? "rose" : "default",
+                active: currentStatus === "REJECTED",
+                onClick: () => updateQuery({ status: currentStatus === "REJECTED" ? "ALL" : "REJECTED", page: "1" }),
+              },
+            ]}
+          />
+
+          <AdminFilterBar
+            searchValue={searchInput}
+            onSearchChange={setSearchInput}
+            onSearchSubmit={() => updateQuery({ search: searchInput.trim(), page: "1" })}
+            searchPlaceholder="Search make, model, registration, or vendor..."
+            hasActiveFilters={hasFilters}
+            onReset={() => {
+              setSearchInput("");
+              router.push(adminHref("/admin/taxis"));
+            }}
+            filters={
+              <>
+                <select
+                  value={currentType}
+                  onChange={(e) => updateQuery({ type: e.target.value, page: "1" })}
+                  aria-label="Filter by vehicle type"
+                  className="bg-white border border-slate-200 rounded-md px-3 py-2 text-xs text-slate-700 focus:outline-none focus:border-[var(--season-primary)] cursor-pointer"
+                >
+                  <option value="ALL">All Types</option>
+                  {STANDARD_VEHICLE_TYPES.map((vt) => (
+                    <option key={vt} value={vt}>
+                      {vt}
+                    </option>
+                  ))}
+                </select>
+                <select
+                  value={currentStatus}
+                  onChange={(e) => updateQuery({ status: e.target.value, page: "1" })}
+                  aria-label="Filter by vehicle status"
+                  className="bg-white border border-slate-200 rounded-md px-3 py-2 text-xs text-slate-700 focus:outline-none focus:border-[var(--season-primary)] cursor-pointer"
+                >
+                  <option value="ALL">All Statuses</option>
+                  <option value="PENDING">Pending</option>
+                  <option value="LIVE">Live</option>
+                  <option value="SUSPENDED">Suspended</option>
+                  <option value="REJECTED">Rejected</option>
+                </select>
+              </>
+            }
+          />
+
+          <div className="bg-white border border-slate-200 rounded-md overflow-hidden">
+            {vehicles.length === 0 ? (
+              <AdminEmptyState
+                icon={<Car className="w-5 h-5" />}
+                title="No vehicles found"
+                description="No vehicles match your current filter selection."
+                action={
+                  hasFilters ? (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSearchInput("");
+                        router.push(adminHref("/admin/taxis"));
+                      }}
+                      className="px-3.5 py-2 rounded-lg text-xs font-medium text-slate-700 bg-white border border-slate-200 hover:bg-slate-50 cursor-pointer"
+                    >
+                      Reset Filters
+                    </button>
+                  ) : undefined
+                }
               />
-            </form>
-
-            <select
-              value={currentType}
-              onChange={(e) => handleTypeChange(e.target.value)}
-              className="bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-emerald-500"
-            >
-              <option value="ALL">All Vehicle Types</option>
-              <option value="Sedan">Sedan</option>
-              <option value="SUV">SUV</option>
-              <option value="Hatchback">Hatchback</option>
-              <option value="Van">Van</option>
-              <option value="CRYSTA">Crysta</option>
-              <option value="INNOVA">Innova</option>
-              <option value="ERTIGA">Ertiga</option>
-            </select>
-          </div>
-
-          {/* Table */}
-          <div className="bg-slate-900/60 border border-slate-800 rounded-xl overflow-hidden shadow-sm">
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-sm text-slate-300">
-                <thead className="bg-slate-950/70 text-xs font-semibold text-slate-400 uppercase tracking-wider border-b border-slate-800">
-                  <tr>
-                    <th className="py-3 px-4">Vehicle</th>
-                    <th className="py-3 px-4">Registration</th>
-                    <th className="py-3 px-4">Vendor Context</th>
-                    <th className="py-3 px-4">Capacity</th>
-                    <th className="py-3 px-4">Usage</th>
-                    <th className="py-3 px-4">Status</th>
-                    <th className="py-3 px-4 text-right">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-800/60">
-                  {vehicles.length === 0 ? (
-                    <tr>
-                      <td colSpan={7} className="py-12 text-center text-slate-500">
-                        No vehicles found matching current criteria.
-                      </td>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-xs border-collapse">
+                  <thead>
+                    <tr className="border-b border-slate-200 bg-slate-50 text-slate-500 font-medium uppercase tracking-wider text-[11px]">
+                      <th className="py-2.5 px-4">Vehicle</th>
+                      <th className="py-2.5 px-4">Registration</th>
+                      <th className="py-2.5 px-4">Vendor</th>
+                      <th className="py-2.5 px-4">Capacity</th>
+                      <th className="py-2.5 px-4">Usage</th>
+                      <th className="py-2.5 px-4">Status</th>
+                      <th className="py-2.5 px-4 text-right">Actions</th>
                     </tr>
-                  ) : (
-                    vehicles.map((v) => {
-                      const isLive = v.status === "LIVE" || v.status === "APPROVED" || v.isApproved;
-                      const isPending = v.status === "PENDING" || (!v.isApproved && v.status !== "REJECTED" && v.status !== "SUSPENDED");
-                      const isSuspended = v.status === "SUSPENDED";
-                      const isRejected = v.status === "REJECTED";
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {vehicles.map((v) => {
+                      const statusKey = getVehicleStatusKey(v);
+                      const isRowBusy = isTransitionPending || busyId === v.id;
 
                       return (
-                        <tr key={v.id} className="hover:bg-slate-800/40 transition">
-                          {/* Vehicle Info */}
-                          <td className="py-3.5 px-4">
+                        <tr key={v.id} className="hover:bg-slate-50/80 transition-colors">
+                          <td className="py-3 px-4">
                             <div className="flex items-center gap-3">
-                              {v.images && v.images.length > 0 ? (
-                                <div className="relative w-12 h-10 rounded-lg overflow-hidden border border-slate-700 bg-slate-800 shrink-0">
-                                  <Image
-                                    src={v.images[0]}
-                                    alt={v.model}
-                                    fill
-                                    className="object-cover"
-                                  />
-                                </div>
-                              ) : (
-                                <div className="w-12 h-10 rounded-lg border border-slate-700 bg-slate-800/80 flex items-center justify-center text-slate-500 shrink-0">
-                                  <Car className="w-5 h-5" />
-                                </div>
-                              )}
+                              <div className="relative w-11 h-9 rounded-md overflow-hidden border border-slate-200 bg-slate-100 shrink-0">
+                                {v.images && v.images.length > 0 ? (
+                                  <Image src={v.images[0]} alt={v.model} fill className="object-cover" sizes="44px" />
+                                ) : (
+                                  <div className="w-full h-full flex items-center justify-center text-slate-400">
+                                    <Car className="w-4 h-4" />
+                                  </div>
+                                )}
+                              </div>
                               <div>
-                                <div className="font-semibold text-white">
+                                <div className="font-medium text-slate-900">
                                   {v.make ? `${v.make} ` : ""}
                                   {v.model}
                                 </div>
-                                <div className="text-xs text-slate-400">{v.type}</div>
+                                <div className="text-[11px] text-slate-500">{v.type}</div>
                               </div>
                             </div>
                           </td>
 
-                          {/* Registration */}
-                          <td className="py-3.5 px-4 font-mono text-xs uppercase text-slate-200">
+                          <td className="py-3 px-4 font-mono text-[11px] uppercase text-slate-700">
                             {v.registrationNum || "—"}
                           </td>
 
-                          {/* Vendor Context */}
-                          <td className="py-3.5 px-4">
-                            <div>
-                              <div className="font-medium text-slate-200">
-                                {v.vendorProfile?.businessName || "Unknown Vendor"}
-                              </div>
-                              <div className="text-xs text-slate-400">
-                                {v.vendorProfile?.user?.name || v.vendorProfile?.email || "No contact"}
-                              </div>
+                          <td className="py-3 px-4">
+                            <div className="font-medium text-slate-800">
+                              {v.vendorProfile?.businessName || "Unknown Vendor"}
+                            </div>
+                            <div className="text-[11px] text-slate-500">
+                              {v.vendorProfile?.user?.name || v.vendorProfile?.email || "No contact"}
                             </div>
                           </td>
 
-                          {/* Capacity */}
-                          <td className="py-3.5 px-4 text-xs">
-                            <span className="px-2 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700">
-                              {v.capacity} Seats
-                            </span>
+                          <td className="py-3 px-4 text-slate-700 whitespace-nowrap">
+                            {v.capacity} Seats
                           </td>
 
-                          {/* Usage Count */}
-                          <td className="py-3.5 px-4 text-xs text-slate-400">
+                          <td className="py-3 px-4 text-[11px] text-slate-500 whitespace-nowrap">
                             <div>{v.bookingsCount} booking(s)</div>
-                            <div>{v.tourTransportsCount} tour segment(s)</div>
+                            <div>{v.tourTransportsCount} tour leg(s)</div>
                           </td>
 
-                          {/* Status */}
-                          <td className="py-3.5 px-4">
-                            {isLive ? (
-                              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                                <CheckCircle2 className="w-3 h-3" /> Live
-                              </span>
-                            ) : isPending ? (
-                              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-500/10 text-amber-400 border border-amber-500/20">
-                                <Clock className="w-3 h-3" /> Pending
-                              </span>
-                            ) : isSuspended ? (
-                              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-500/10 text-orange-400 border border-orange-500/20">
-                                <AlertCircle className="w-3 h-3" /> Suspended
-                              </span>
-                            ) : isRejected ? (
-                              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-500/10 text-red-400 border border-red-500/20">
-                                <XCircle className="w-3 h-3" /> Rejected
-                              </span>
-                            ) : null}
-
+                          <td className="py-3 px-4">
+                            <StatusBadge status={statusKey} />
                             {v.rejectionReason && (
                               <div
-                                className="text-[11px] text-red-400 mt-1 max-w-[150px] truncate"
+                                className="text-[11px] text-rose-600 mt-1 max-w-[160px] truncate"
                                 title={v.rejectionReason}
                               >
                                 {v.rejectionReason}
@@ -618,73 +501,67 @@ export default function TaxisListClient({
                             )}
                           </td>
 
-                          {/* Actions */}
-                          <td className="py-3.5 px-4 text-right">
+                          <td className="py-3 px-4 text-right">
                             <div className="inline-flex items-center gap-1.5">
-                              {/* View Details */}
                               <button
+                                type="button"
                                 onClick={() => setSelectedVehicle(v)}
-                                className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition"
+                                className="p-1.5 rounded-md text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-colors cursor-pointer"
                                 title="View Details"
+                                aria-label="View vehicle details"
                               >
                                 <Eye className="w-4 h-4" />
                               </button>
 
-                              {/* Approve Button */}
-                              {!isLive && (
-                                <button
-                                  onClick={() => handleApprove(v)}
-                                  disabled={isPending}
-                                  className="px-2.5 py-1 rounded-lg text-xs font-medium bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 transition disabled:opacity-50"
-                                >
-                                  Approve
-                                </button>
+                              {statusKey === "PENDING" && (
+                                <>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleApprove(v)}
+                                    disabled={isRowBusy}
+                                    className="px-2.5 py-1 rounded-md text-xs font-medium bg-[var(--season-primary)] hover:bg-[var(--season-primary-hover)] text-white disabled:opacity-50 transition-colors cursor-pointer"
+                                  >
+                                    Approve
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => setRejectingVehicle(v)}
+                                    disabled={isRowBusy}
+                                    className="px-2.5 py-1 rounded-md text-xs font-medium bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 disabled:opacity-50 transition-colors cursor-pointer"
+                                  >
+                                    Reject
+                                  </button>
+                                </>
                               )}
 
-                              {/* Reject Button */}
-                              {isPending && (
+                              {statusKey === "LIVE" && (
                                 <button
-                                  onClick={() => {
-                                    setRejectingVehicle(v);
-                                    setRejectionReason("");
-                                  }}
-                                  disabled={isPending}
-                                  className="px-2.5 py-1 rounded-lg text-xs font-medium bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 transition disabled:opacity-50"
-                                >
-                                  Reject
-                                </button>
-                              )}
-
-                              {/* Suspend Button */}
-                              {isLive && (
-                                <button
-                                  onClick={() => {
-                                    setSuspendingVehicle(v);
-                                    setSuspensionReason("");
-                                  }}
-                                  disabled={isPending}
-                                  className="px-2.5 py-1 rounded-lg text-xs font-medium bg-orange-500/10 hover:bg-orange-500/20 text-orange-400 border border-orange-500/30 transition disabled:opacity-50"
+                                  type="button"
+                                  onClick={() => setSuspendingVehicle(v)}
+                                  disabled={isRowBusy}
+                                  className="px-2.5 py-1 rounded-md text-xs font-medium bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 disabled:opacity-50 transition-colors cursor-pointer"
                                 >
                                   Suspend
                                 </button>
                               )}
 
-                              {/* Reactivate Button */}
-                              {(isSuspended || isRejected) && (
+                              {(statusKey === "SUSPENDED" || statusKey === "REJECTED") && (
                                 <button
+                                  type="button"
                                   onClick={() => handleReactivate(v)}
-                                  disabled={isPending}
-                                  className="px-2.5 py-1 rounded-lg text-xs font-medium bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 transition disabled:opacity-50"
+                                  disabled={isRowBusy}
+                                  className="px-2.5 py-1 rounded-md text-xs font-medium bg-[var(--season-primary-light)] hover:bg-[var(--season-primary)]/15 text-[var(--season-primary-hover)] border border-[var(--season-primary)]/25 disabled:opacity-50 transition-colors cursor-pointer"
                                 >
                                   Reactivate
                                 </button>
                               )}
 
-                              {/* Delete Button (safeguarded) */}
                               <button
+                                type="button"
                                 onClick={() => setDeletingVehicle(v)}
-                                className="p-1.5 rounded-lg text-slate-500 hover:text-red-400 hover:bg-slate-800 transition"
+                                className="p-1.5 rounded-md text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer"
                                 title="Delete Vehicle"
+                                aria-label="Delete vehicle"
                               >
                                 <Trash2 className="w-4 h-4" />
                               </button>
@@ -692,451 +569,335 @@ export default function TaxisListClient({
                           </td>
                         </tr>
                       );
-                    })
-                  )}
-                </tbody>
-              </table>
-            </div>
-
-            {/* Pagination */}
-            {totalPages > 1 && (
-              <div className="flex items-center justify-between px-4 py-3 border-t border-slate-800 bg-slate-950/40 text-xs text-slate-400">
-                <div>
-                  Page {currentPage} of {totalPages} ({totalCount} total vehicles)
-                </div>
-                <div className="flex gap-1">
-                  <button
-                    onClick={() => updateQuery({ page: String(currentPage - 1) })}
-                    disabled={currentPage <= 1}
-                    className="px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 disabled:opacity-40 transition"
-                  >
-                    Previous
-                  </button>
-                  <button
-                    onClick={() => updateQuery({ page: String(currentPage + 1) })}
-                    disabled={currentPage >= totalPages}
-                    className="px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 disabled:opacity-40 transition"
-                  >
-                    Next
-                  </button>
-                </div>
+                    })}
+                  </tbody>
+                </table>
               </div>
             )}
+
+            <AdminPagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              totalCount={totalCount}
+              itemLabel="vehicles"
+              disabled={isTransitionPending}
+              onPageChange={(page) => updateQuery({ page: String(page) })}
+            />
           </div>
         </div>
       )}
 
-      {/* Tab 2: Destination Rate Cards */}
+      {/* RATE CARDS VIEW */}
       {activeTab === "rate_cards" && (
-        <div className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {rateCards.length === 0 ? (
-              <div className="col-span-full py-12 text-center text-slate-500 bg-slate-900/40 border border-slate-800 rounded-xl">
-                No destination rate cards found. Click "Add Rate Card" to create one.
-              </div>
-            ) : (
-              rateCards.map((rc) => (
-                <div
-                  key={rc.id}
-                  className="bg-slate-900/60 border border-slate-800 rounded-xl p-4 flex flex-col justify-between hover:border-slate-700 transition shadow-sm"
+        <div className="bg-white border border-slate-200 rounded-md overflow-hidden">
+          {rateCards.length === 0 ? (
+            <AdminEmptyState
+              icon={<MapPin className="w-5 h-5" />}
+              title="No taxi rate cards configured"
+              description="Add destination pricing across standard Kashmir vehicle categories."
+              action={
+                <button
+                  type="button"
+                  onClick={() => handleOpenRateCardModal()}
+                  className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-md text-xs font-medium text-white bg-[var(--season-primary)] hover:bg-[var(--season-primary-hover)] cursor-pointer"
                 >
-                  <div>
-                    <div className="flex items-start justify-between gap-2 border-b border-slate-800 pb-3">
-                      <div>
-                        <div className="flex items-center gap-1.5 text-xs text-emerald-400 font-semibold uppercase tracking-wider">
-                          <MapPin className="w-3.5 h-3.5" />
-                          Route / Destination
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>Add Rate Card</span>
+                </button>
+              }
+            />
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs border-collapse">
+                <thead>
+                  <tr className="border-b border-slate-200 bg-slate-50 text-slate-500 font-medium uppercase tracking-wider text-[11px]">
+                    <th className="py-2.5 px-4">Destination / Route</th>
+                    <th className="py-2.5 px-4">Configured Rates</th>
+                    <th className="py-2.5 px-4 text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {rateCards.map((rc) => (
+                    <tr key={rc.id} className="hover:bg-slate-50/80 transition-colors">
+                      <td className="py-3 px-4 font-medium text-slate-900">{rc.place}</td>
+                      <td className="py-3 px-4">
+                        <div className="flex flex-wrap gap-1.5">
+                          {Object.entries(rc.rates || {}).map(([type, price]) => (
+                            <span
+                              key={type}
+                              className="px-2 py-0.5 rounded bg-slate-100 border border-slate-200/80 text-[11px] text-slate-700"
+                            >
+                              {type}: <strong className="text-slate-900">₹{Number(price).toLocaleString("en-IN")}</strong>
+                            </span>
+                          ))}
                         </div>
-                        <h3 className="text-base font-bold text-white mt-1">{rc.place}</h3>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <button
-                          onClick={() => handleOpenRateCardModal(rc)}
-                          className="p-1 rounded text-slate-400 hover:text-white hover:bg-slate-800 transition"
-                          title="Edit Rate Card"
-                        >
-                          <Edit2 className="w-3.5 h-3.5" />
-                        </button>
-                        <button
-                          onClick={() => setDeletingRateCard(rc)}
-                          className="p-1 rounded text-slate-500 hover:text-red-400 hover:bg-slate-800 transition"
-                          title="Delete Rate Card"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
-                    </div>
-
-                    {/* Rates Matrix */}
-                    <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
-                      {Object.entries(rc.rates || {}).map(([vType, rate]) => (
-                        <div
-                          key={vType}
-                          className="bg-slate-950/60 border border-slate-800/80 rounded-lg p-2 flex items-center justify-between"
-                        >
-                          <span className="text-slate-400 font-mono">{vType}</span>
-                          <span className="text-emerald-400 font-semibold">₹{rate.toLocaleString()}</span>
+                      </td>
+                      <td className="py-3 px-4 text-right">
+                        <div className="inline-flex items-center gap-1">
+                          <button
+                            type="button"
+                            onClick={() => handleOpenRateCardModal(rc)}
+                            className="p-1.5 rounded-md text-slate-500 hover:text-[var(--season-primary-hover)] hover:bg-[var(--season-primary-light)] cursor-pointer"
+                            title="Edit rate card"
+                            aria-label={`Edit ${rc.place}`}
+                          >
+                            <Edit2 className="w-4 h-4" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setDeletingRateCard(rc)}
+                            className="p-1.5 rounded-md text-slate-400 hover:text-rose-600 hover:bg-rose-50 cursor-pointer"
+                            title="Delete rate card"
+                            aria-label={`Delete ${rc.place}`}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
                         </div>
-                      ))}
-                    </div>
-                  </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
 
-                  <div className="mt-4 pt-3 border-t border-slate-800/60 text-[11px] text-slate-500 flex items-center justify-between">
-                    <span>{Object.keys(rc.rates || {}).length} vehicle tier(s)</span>
-                    <span>Updated: {new Date(rc.updatedAt).toLocaleDateString()}</span>
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
+          <AdminPagination
+            currentPage={rateCardsPage}
+            totalPages={rateCardsTotalPages}
+            totalCount={rateCardsTotalCount}
+            itemLabel="rate cards"
+            disabled={isTransitionPending}
+            onPageChange={(page) => updateQuery({ tab: "rate_cards", page: String(page) })}
+          />
         </div>
       )}
 
       {/* Vehicle Details Modal */}
-      {selectedVehicle && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm">
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6 space-y-6">
-            <div className="flex items-start justify-between border-b border-slate-800 pb-4">
-              <div>
-                <span className="text-xs uppercase font-semibold text-emerald-400 tracking-wider">
-                  Vehicle Specifications
-                </span>
-                <h2 className="text-xl font-bold text-white mt-1">
-                  {selectedVehicle.make ? `${selectedVehicle.make} ` : ""}
-                  {selectedVehicle.model}
-                </h2>
-                <div className="text-sm font-mono text-slate-400 uppercase mt-0.5">
-                  Registration: {selectedVehicle.registrationNum}
-                </div>
-              </div>
+      <AdminModal
+        open={Boolean(selectedVehicle)}
+        onClose={() => setSelectedVehicle(null)}
+        title={
+          selectedVehicle
+            ? `${selectedVehicle.make || ""} ${selectedVehicle.model}`.trim()
+            : "Vehicle Details"
+        }
+        subtitle={selectedVehicle?.registrationNum ? `Reg: ${selectedVehicle.registrationNum}` : undefined}
+        maxWidth="lg"
+        footer={
+          selectedVehicle && (
+            <>
               <button
+                type="button"
                 onClick={() => setSelectedVehicle(null)}
-                className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            {/* Vehicle Photos */}
-            {selectedVehicle.images && selectedVehicle.images.length > 0 && (
-              <div>
-                <div className="text-xs font-semibold text-slate-400 uppercase mb-2">Fleet Photos</div>
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                  {selectedVehicle.images.map((img, idx) => (
-                    <div
-                      key={idx}
-                      className="relative h-28 rounded-lg overflow-hidden border border-slate-800 bg-slate-950"
-                    >
-                      <Image src={img} alt="Vehicle Photo" fill className="object-cover" />
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Specifications Grid */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-xs">
-              <div className="p-3 rounded-lg bg-slate-950/60 border border-slate-800">
-                <span className="text-slate-500 block">Vehicle Category</span>
-                <span className="text-white font-semibold mt-1 block">{selectedVehicle.type}</span>
-              </div>
-              <div className="p-3 rounded-lg bg-slate-950/60 border border-slate-800">
-                <span className="text-slate-500 block">Seating Capacity</span>
-                <span className="text-white font-semibold mt-1 block">{selectedVehicle.capacity} Persons</span>
-              </div>
-              <div className="p-3 rounded-lg bg-slate-950/60 border border-slate-800">
-                <span className="text-slate-500 block">Platform Commission</span>
-                <span className="text-white font-semibold mt-1 block">
-                  {selectedVehicle.platformCommissionRate}%
-                </span>
-              </div>
-              <div className="p-3 rounded-lg bg-slate-950/60 border border-slate-800">
-                <span className="text-slate-500 block">Approval Status</span>
-                <span className="text-white font-semibold mt-1 block">{selectedVehicle.status}</span>
-              </div>
-              <div className="p-3 rounded-lg bg-slate-950/60 border border-slate-800">
-                <span className="text-slate-500 block">Connected Bookings</span>
-                <span className="text-white font-semibold mt-1 block">{selectedVehicle.bookingsCount}</span>
-              </div>
-              <div className="p-3 rounded-lg bg-slate-950/60 border border-slate-800">
-                <span className="text-slate-500 block">Tour Itineraries</span>
-                <span className="text-white font-semibold mt-1 block">
-                  {selectedVehicle.tourTransportsCount}
-                </span>
-              </div>
-            </div>
-
-            {/* Vendor Context */}
-            <div className="p-4 rounded-xl bg-slate-950 border border-slate-800 space-y-3">
-              <div className="text-xs font-semibold text-slate-400 uppercase flex items-center gap-1.5">
-                <Building className="w-3.5 h-3.5 text-emerald-400" />
-                Vendor Context
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
-                <div>
-                  <span className="text-slate-500">Business / Operator:</span>
-                  <span className="text-white font-medium ml-2">
-                    {selectedVehicle.vendorProfile?.businessName || "Unknown"}
-                  </span>
-                </div>
-                <div>
-                  <span className="text-slate-500">Vendor Type:</span>
-                  <span className="text-white font-medium ml-2">
-                    {selectedVehicle.vendorProfile?.type || "TAXI"}
-                  </span>
-                </div>
-                <div>
-                  <span className="text-slate-500">Owner Name:</span>
-                  <span className="text-white font-medium ml-2">
-                    {selectedVehicle.vendorProfile?.user?.name || "—"}
-                  </span>
-                </div>
-                <div>
-                  <span className="text-slate-500">Email:</span>
-                  <span className="text-white font-medium ml-2">
-                    {selectedVehicle.vendorProfile?.email || selectedVehicle.vendorProfile?.user?.email || "—"}
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            <div className="flex justify-end pt-2">
-              <button
-                onClick={() => setSelectedVehicle(null)}
-                className="px-4 py-2 rounded-lg text-sm bg-slate-800 hover:bg-slate-700 text-white transition"
+                className="px-3.5 py-2 rounded-md text-xs font-medium text-slate-700 bg-white border border-slate-200 hover:bg-slate-50 cursor-pointer"
               >
                 Close
               </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Reject Modal */}
-      {rejectingVehicle && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm">
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-6 space-y-4">
-            <h3 className="text-lg font-bold text-white">Reject Vehicle Listing</h3>
-            <p className="text-xs text-slate-400">
-              Please provide a specific reason for rejecting{" "}
-              <span className="text-white font-semibold">
-                {rejectingVehicle.make} {rejectingVehicle.model} ({rejectingVehicle.registrationNum})
+              {getVehicleStatusKey(selectedVehicle) === "PENDING" && (
+                <button
+                  type="button"
+                  onClick={() => handleApprove(selectedVehicle)}
+                  className="px-3.5 py-2 rounded-md text-xs font-medium text-white bg-[var(--season-primary)] hover:bg-[var(--season-primary-hover)] cursor-pointer"
+                >
+                  Approve Vehicle
+                </button>
+              )}
+            </>
+          )
+        }
+      >
+        {selectedVehicle && (
+          <div className="space-y-4 text-xs">
+            <div className="flex items-center gap-2">
+              <StatusBadge status={getVehicleStatusKey(selectedVehicle)} />
+              <span className="text-slate-500">
+                {selectedVehicle.type} · {selectedVehicle.capacity} Seats
               </span>
-              . This explanation will be documented on the listing record.
-            </p>
-
-            <textarea
-              value={rejectionReason}
-              onChange={(e) => setRejectionReason(e.target.value)}
-              placeholder="Enter rejection reason (e.g. Invalid RC copy, missing insurance, vehicle age over limit)..."
-              rows={3}
-              className="w-full bg-slate-950 border border-slate-800 rounded-lg p-3 text-sm text-slate-200 placeholder-slate-500 focus:outline-none focus:border-red-500"
-            />
-
-            <div className="flex justify-end gap-2 pt-2">
-              <button
-                onClick={() => setRejectingVehicle(null)}
-                className="px-3.5 py-1.5 rounded-lg text-xs text-slate-400 hover:text-white hover:bg-slate-800 transition"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleRejectConfirm}
-                disabled={!rejectionReason.trim() || isPending}
-                className="px-4 py-1.5 rounded-lg text-xs font-semibold bg-red-600 hover:bg-red-500 text-white transition disabled:opacity-50"
-              >
-                Confirm Rejection
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Suspend Modal */}
-      {suspendingVehicle && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm">
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-6 space-y-4">
-            <h3 className="text-lg font-bold text-white">Suspend Active Vehicle</h3>
-            <p className="text-xs text-slate-400">
-              Temporarily de-list{" "}
-              <span className="text-white font-semibold">
-                {suspendingVehicle.make} {suspendingVehicle.model} ({suspendingVehicle.registrationNum})
-              </span>{" "}
-              from public bookings. Provide a reason below.
-            </p>
-
-            <textarea
-              value={suspensionReason}
-              onChange={(e) => setSuspensionReason(e.target.value)}
-              placeholder="Enter suspension reason (e.g. Document expired, maintenance audit, vendor request)..."
-              rows={3}
-              className="w-full bg-slate-950 border border-slate-800 rounded-lg p-3 text-sm text-slate-200 placeholder-slate-500 focus:outline-none focus:border-orange-500"
-            />
-
-            <div className="flex justify-end gap-2 pt-2">
-              <button
-                onClick={() => setSuspendingVehicle(null)}
-                className="px-3.5 py-1.5 rounded-lg text-xs text-slate-400 hover:text-white hover:bg-slate-800 transition"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleSuspendConfirm}
-                disabled={!suspensionReason.trim() || isPending}
-                className="px-4 py-1.5 rounded-lg text-xs font-semibold bg-orange-600 hover:bg-orange-500 text-white transition disabled:opacity-50"
-              >
-                Confirm Suspension
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Delete Confirmation Modal */}
-      {deletingVehicle && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm">
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-6 space-y-4">
-            <h3 className="text-lg font-bold text-white">Delete Vehicle</h3>
-            <p className="text-xs text-slate-400">
-              Are you sure you want to permanently delete{" "}
-              <span className="text-white font-semibold">
-                {deletingVehicle.make} {deletingVehicle.model} ({deletingVehicle.registrationNum})
-              </span>
-              ?
-            </p>
-
-            {deletingVehicle.bookingsCount > 0 && (
-              <div className="p-3 rounded-lg bg-red-950/40 border border-red-800/60 text-xs text-red-300">
-                Warning: This vehicle is linked to {deletingVehicle.bookingsCount} booking(s). Hard
-                deletion is prevented to maintain booking history. Suspend the vehicle instead.
-              </div>
-            )}
-
-            <div className="flex justify-end gap-2 pt-2">
-              <button
-                onClick={() => setDeletingVehicle(null)}
-                className="px-3.5 py-1.5 rounded-lg text-xs text-slate-400 hover:text-white hover:bg-slate-800 transition"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleDeleteConfirm}
-                disabled={deletingVehicle.bookingsCount > 0 || isPending}
-                className="px-4 py-1.5 rounded-lg text-xs font-semibold bg-red-600 hover:bg-red-500 text-white transition disabled:opacity-50"
-              >
-                Delete
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Add / Edit Rate Card Modal */}
-      {rateCardModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm">
-          <form
-            onSubmit={handleSaveRateCard}
-            className="bg-slate-900 border border-slate-800 rounded-2xl max-w-lg w-full p-6 space-y-4 max-h-[90vh] overflow-y-auto"
-          >
-            <div className="flex items-start justify-between border-b border-slate-800 pb-3">
-              <h3 className="text-lg font-bold text-white">
-                {editingRateCard ? "Edit Taxi Rate Card" : "New Taxi Rate Card"}
-              </h3>
-              <button
-                type="button"
-                onClick={() => setRateCardModalOpen(false)}
-                className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition"
-              >
-                <X className="w-5 h-5" />
-              </button>
             </div>
 
-            <div>
-              <label className="block text-xs font-semibold text-slate-300 uppercase mb-1">
-                Route / Place Name
-              </label>
-              <input
-                type="text"
-                required
-                placeholder="e.g. SRINAGAR TO GULMARG FULL DAY"
-                value={rateCardPlace}
-                onChange={(e) => setRateCardPlace(e.target.value.toUpperCase())}
-                className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-sm text-slate-200 placeholder-slate-500 focus:outline-none focus:border-emerald-500 uppercase"
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs font-semibold text-slate-300 uppercase mb-2">
-                Vehicle Type Rates (INR)
-              </label>
-              <div className="grid grid-cols-2 gap-2 text-xs">
-                {STANDARD_VEHICLE_TYPES.map((vType) => (
-                  <div key={vType} className="space-y-1">
-                    <span className="text-slate-400 font-mono text-[11px]">{vType}</span>
-                    <input
-                      type="number"
-                      placeholder="e.g. 4500"
-                      value={rateCardRates[vType] || ""}
-                      onChange={(e) =>
-                        setRateCardRates((prev) => ({
-                          ...prev,
-                          [vType]: e.target.value,
-                        }))
-                      }
-                      className="w-full bg-slate-950 border border-slate-800 rounded p-1.5 text-xs text-slate-200 placeholder-slate-600 focus:outline-none focus:border-emerald-500"
-                    />
+            {selectedVehicle.images && selectedVehicle.images.length > 0 && (
+              <div className="grid grid-cols-3 gap-2">
+                {selectedVehicle.images.slice(0, 6).map((url, idx) => (
+                  <div key={idx} className="relative aspect-[4/3] rounded-md overflow-hidden border border-slate-200 bg-slate-100">
+                    <Image src={url} alt={selectedVehicle.model} fill className="object-cover" sizes="180px" />
                   </div>
                 ))}
               </div>
+            )}
+
+            <div className="grid grid-cols-2 gap-3 p-3.5 rounded-lg bg-slate-50 border border-slate-200">
+              <div>
+                <div className="text-[11px] text-slate-500">Vendor</div>
+                <div className="font-medium text-slate-900 mt-0.5">
+                  {selectedVehicle.vendorProfile?.businessName || "—"}
+                </div>
+              </div>
+              <div>
+                <div className="text-[11px] text-slate-500">Contact</div>
+                <div className="font-medium text-slate-900 mt-0.5">
+                  {selectedVehicle.vendorProfile?.phone || selectedVehicle.vendorProfile?.email || "—"}
+                </div>
+              </div>
+              <div>
+                <div className="text-[11px] text-slate-500">Bookings</div>
+                <div className="font-medium text-slate-900 mt-0.5">{selectedVehicle.bookingsCount}</div>
+              </div>
+              <div>
+                <div className="text-[11px] text-slate-500">Tour Segments</div>
+                <div className="font-medium text-slate-900 mt-0.5">{selectedVehicle.tourTransportsCount}</div>
+              </div>
             </div>
 
-            <div className="flex justify-end gap-2 pt-3 border-t border-slate-800">
-              <button
-                type="button"
-                onClick={() => setRateCardModalOpen(false)}
-                className="px-3.5 py-1.5 rounded-lg text-xs text-slate-400 hover:text-white hover:bg-slate-800 transition"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                disabled={isPending}
-                className="px-4 py-1.5 rounded-lg text-xs font-semibold bg-emerald-600 hover:bg-emerald-500 text-white transition disabled:opacity-50"
-              >
-                {editingRateCard ? "Update Rates" : "Create Rate Card"}
-              </button>
-            </div>
-          </form>
-        </div>
-      )}
-
-      {/* Delete Rate Card Confirm Modal */}
-      {deletingRateCard && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm">
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-6 space-y-4">
-            <h3 className="text-lg font-bold text-white">Delete Rate Card</h3>
-            <p className="text-xs text-slate-400">
-              Are you sure you want to delete rate card for{" "}
-              <span className="text-white font-semibold">{deletingRateCard.place}</span>?
-            </p>
-            <div className="flex justify-end gap-2 pt-2">
-              <button
-                onClick={() => setDeletingRateCard(null)}
-                className="px-3.5 py-1.5 rounded-lg text-xs text-slate-400 hover:text-white hover:bg-slate-800 transition"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleDeleteRateCardConfirm}
-                disabled={isPending}
-                className="px-4 py-1.5 rounded-lg text-xs font-semibold bg-red-600 hover:bg-red-500 text-white transition disabled:opacity-50"
-              >
-                Delete
-              </button>
-            </div>
+            {selectedVehicle.rejectionReason && (
+              <div className="p-3 rounded-lg bg-rose-50 border border-rose-200 text-rose-800">
+                <strong className="block mb-0.5">Reason on file:</strong>
+                {selectedVehicle.rejectionReason}
+              </div>
+            )}
           </div>
-        </div>
-      )}
+        )}
+      </AdminModal>
+
+      {/* Reject / Suspend / Delete Dialogs */}
+      <ConfirmActionDialog
+        open={Boolean(rejectingVehicle)}
+        onClose={() => setRejectingVehicle(null)}
+        title={`Reject "${rejectingVehicle?.model || ""}"?`}
+        description="Rejecting this vehicle prevents it from going live and records your reason for the vendor."
+        confirmLabel="Reject Vehicle"
+        tone="danger"
+        requireReason
+        reasonLabel="Rejection Reason"
+        reasonPlaceholder="Explain why this vehicle submission was rejected..."
+        onConfirm={async (reason) => {
+          if (!rejectingVehicle) return;
+          const res = await rejectVehicleAction(rejectingVehicle.id, reason || "");
+          if (!res.success) throw new Error(res.error || "Failed to reject vehicle.");
+          setFeedback({ type: "success", text: "Vehicle rejected." });
+          router.refresh();
+        }}
+      />
+
+      <ConfirmActionDialog
+        open={Boolean(suspendingVehicle)}
+        onClose={() => setSuspendingVehicle(null)}
+        title={`Suspend "${suspendingVehicle?.model || ""}"?`}
+        description="Suspending hides this vehicle from active bookings until reactivated."
+        confirmLabel="Suspend Vehicle"
+        tone="warning"
+        requireReason
+        reasonLabel="Suspension Reason"
+        reasonPlaceholder="Provide the reason for suspending this vehicle..."
+        onConfirm={async (reason) => {
+          if (!suspendingVehicle) return;
+          const res = await suspendVehicleAction(suspendingVehicle.id, reason || "");
+          if (!res.success) throw new Error(res.error || "Failed to suspend vehicle.");
+          setFeedback({ type: "success", text: "Vehicle suspended." });
+          router.refresh();
+        }}
+      />
+
+      <ConfirmActionDialog
+        open={Boolean(deletingVehicle)}
+        onClose={() => setDeletingVehicle(null)}
+        title={`Delete "${deletingVehicle?.model || ""}"?`}
+        description="Permanently remove this vehicle from the database. Vehicles with linked bookings or tour segments cannot be deleted."
+        confirmLabel="Delete Vehicle"
+        tone="danger"
+        onConfirm={async () => {
+          if (!deletingVehicle) return;
+          const res = await deleteVehicleAction(deletingVehicle.id);
+          if (!res.success) throw new Error(res.error || "Failed to delete vehicle.");
+          setFeedback({ type: "success", text: "Vehicle deleted." });
+          router.refresh();
+        }}
+      />
+
+      {/* Rate Card Add/Edit Modal */}
+      <AdminModal
+        open={rateCardModalOpen}
+        onClose={() => setRateCardModalOpen(false)}
+        title={editingRateCard ? `Edit Rate Card: ${editingRateCard.place}` : "Add Taxi Rate Card"}
+        subtitle="Set per-route pricing in INR for each applicable vehicle type."
+        maxWidth="md"
+        footer={
+          <>
+            <button
+              type="button"
+              onClick={() => setRateCardModalOpen(false)}
+              className="px-3.5 py-2 rounded-lg text-xs font-medium text-slate-700 bg-white border border-slate-200 hover:bg-slate-50 cursor-pointer"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              form="rate-card-form"
+              disabled={savingRateCard}
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-md text-xs font-medium text-white bg-[var(--season-primary)] hover:bg-[var(--season-primary-hover)] disabled:opacity-50 cursor-pointer"
+            >
+              {savingRateCard && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+              <span>{editingRateCard ? "Save Changes" : "Create Rate Card"}</span>
+            </button>
+          </>
+        }
+      >
+        <form id="rate-card-form" onSubmit={handleSaveRateCard} className="space-y-4">
+          {rateCardError && (
+            <div role="alert" className="p-2.5 rounded-md bg-rose-50 border border-rose-200 text-xs text-rose-700">
+              {rateCardError}
+            </div>
+          )}
+
+          <div>
+            <label htmlFor="rate-card-place" className="block text-xs font-medium text-slate-700 mb-1.5">
+              Destination / Route Name <span className="text-rose-600">*</span>
+            </label>
+            <input
+              id="rate-card-place"
+              type="text"
+              required
+              value={rateCardPlace}
+              onChange={(e) => setRateCardPlace(e.target.value)}
+              placeholder="e.g., Srinagar to Gulmarg (Day Trip)"
+              className="w-full bg-white border border-slate-200 rounded-md px-3 py-2 text-xs text-slate-900 focus:outline-none focus:border-[var(--season-primary)]"
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            {STANDARD_VEHICLE_TYPES.map((vt) => (
+              <div key={vt}>
+                <label className="block text-[11px] font-medium text-slate-600 mb-1">{vt} (₹)</label>
+                <input
+                  type="number"
+                  min={0}
+                  value={rateCardRates[vt] || ""}
+                  onChange={(e) =>
+                    setRateCardRates((prev) => ({ ...prev, [vt]: e.target.value }))
+                  }
+                  placeholder="0"
+                  className="w-full bg-white border border-slate-200 rounded-md px-2.5 py-1.5 text-xs text-slate-900 focus:outline-none focus:border-[var(--season-primary)]"
+                />
+              </div>
+            ))}
+          </div>
+        </form>
+      </AdminModal>
+
+      <ConfirmActionDialog
+        open={Boolean(deletingRateCard)}
+        onClose={() => setDeletingRateCard(null)}
+        title={`Delete rate card "${deletingRateCard?.place || ""}"?`}
+        description="This permanently removes the destination taxi rate card."
+        confirmLabel="Delete Rate Card"
+        tone="danger"
+        onConfirm={async () => {
+          if (!deletingRateCard) return;
+          const res = await deleteTaxiRateCardAction(deletingRateCard.id);
+          if (!res.success) throw new Error(res.error || "Failed to delete rate card.");
+          setFeedback({ type: "success", text: "Rate card deleted." });
+          router.refresh();
+        }}
+      />
     </div>
   );
 }

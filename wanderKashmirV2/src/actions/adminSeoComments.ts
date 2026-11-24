@@ -1,7 +1,7 @@
 "use server";
 
 import prisma from "@/lib/prisma";
-import { getAdminSession } from "@/lib/admin/auth";
+import { getAdminOrEditorSession } from "@/lib/admin/auth";
 import { revalidatePath } from "next/cache";
 
 export interface ActionResult<T = unknown> {
@@ -38,9 +38,9 @@ export interface GetSeoCommentsParams {
 }
 
 async function verifyAdminAuth() {
-  const session = await getAdminSession();
+  const session = await getAdminOrEditorSession();
   if (!session || !session.userId) {
-    return { ok: false, error: "Unauthorized: Admin session required." };
+    return { ok: false, error: "Unauthorized: Admin or Editor session required." };
   }
 
   const dbUser = await prisma.user.findUnique({
@@ -48,8 +48,8 @@ async function verifyAdminAuth() {
     select: { id: true, role: true, isBanned: true },
   });
 
-  if (!dbUser || dbUser.role !== "ADMIN" || dbUser.isBanned) {
-    return { ok: false, error: "Forbidden: Administrator privileges required." };
+  if (!dbUser || (dbUser.role !== "ADMIN" && dbUser.role !== "EDITOR") || dbUser.isBanned) {
+    return { ok: false, error: "Forbidden: Editor or Administrator privileges required." };
   }
 
   return { ok: true, user: dbUser };
@@ -122,9 +122,10 @@ export async function getAdminSeoCommentsAction(
         totalPages: Math.ceil(total / limit),
       },
     };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("getAdminSeoCommentsAction error:", error);
-    return { success: false, error: error.message || "Failed to load SEO comments." };
+    const message = error instanceof Error ? error.message : "Failed to load SEO comments.";
+    return { success: false, error: message };
   }
 }
 
@@ -152,9 +153,10 @@ export async function toggleSeoCommentApprovalAction(
 
     revalidatePath("/admin/seo-comments");
     return { success: true };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("toggleSeoCommentApprovalAction error:", error);
-    return { success: false, error: error.message || "Failed to update comment approval status." };
+    const message = error instanceof Error ? error.message : "Failed to update comment approval status.";
+    return { success: false, error: message };
   }
 }
 
@@ -182,9 +184,10 @@ export async function replyToSeoCommentAction(
 
     revalidatePath("/admin/seo-comments");
     return { success: true };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("replyToSeoCommentAction error:", error);
-    return { success: false, error: error.message || "Failed to save admin reply." };
+    const message = error instanceof Error ? error.message : "Failed to save admin reply.";
+    return { success: false, error: message };
   }
 }
 
@@ -208,8 +211,9 @@ export async function deleteSeoCommentAction(commentId: string): Promise<ActionR
 
     revalidatePath("/admin/seo-comments");
     return { success: true };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("deleteSeoCommentAction error:", error);
-    return { success: false, error: error.message || "Failed to delete SEO comment." };
+    const message = error instanceof Error ? error.message : "Failed to delete SEO comment.";
+    return { success: false, error: message };
   }
 }

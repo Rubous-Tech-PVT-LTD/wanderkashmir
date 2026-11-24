@@ -1,7 +1,8 @@
-import { getAdminToursList, getAdminTourFormOptions } from "@/lib/admin/tours";
+import prisma from "@/lib/prisma";
+import { getAdminToursList } from "@/lib/admin/tours";
 import TourListClient from "@/components/admin/tours/TourListClient";
 
-export const revalidate = 0; // Fresh admin data on every request
+export const revalidate = 0;
 
 export default async function AdminToursPage({
   searchParams,
@@ -19,7 +20,7 @@ export default async function AdminToursPage({
   const status = params.status || "all";
   const categoryId = params.categoryId || "";
 
-  const [toursData, formOptions] = await Promise.all([
+  const [toursData, categories] = await Promise.all([
     getAdminToursList({
       search,
       status,
@@ -27,7 +28,10 @@ export default async function AdminToursPage({
       page,
       limit: 20,
     }),
-    getAdminTourFormOptions(),
+    prisma.tourCategory.findMany({
+      orderBy: { name: "asc" },
+      select: { id: true, name: true, slug: true },
+    }),
   ]);
 
   return (
@@ -36,7 +40,7 @@ export default async function AdminToursPage({
       totalCount={toursData.totalCount}
       currentPage={toursData.page}
       totalPages={toursData.totalPages}
-      categories={formOptions.categories}
+      categories={categories}
       currentStatus={status}
       currentSearch={search}
       currentCategory={categoryId}

@@ -250,6 +250,19 @@ export async function getAdminReviewById(id: string) {
             isLive: true,
           },
         },
+        vehicle: {
+          select: {
+            id: true,
+            make: true,
+            model: true,
+            type: true,
+          },
+        },
+        guideProfile: {
+          select: {
+            id: true,
+          },
+        },
         booking: {
           select: {
             id: true,

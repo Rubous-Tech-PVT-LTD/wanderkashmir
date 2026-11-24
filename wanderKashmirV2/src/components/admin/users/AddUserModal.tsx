@@ -1,282 +1,180 @@
 "use client";
 
-import React, { useState } from "react";
-import { UserPlus, X, CheckCircle, Loader2, Phone, Mail, User, Shield, Calendar } from "lucide-react";
-import { createAdminUserAction } from "@/actions/adminUsers";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { UserPlus, Loader2, AlertCircle } from "lucide-react";
+import { createAdminUserAction } from "@/actions/adminUsers";
+import { AdminModal } from "@/components/admin/ui";
 
 export default function AddUserModal() {
   const router = useRouter();
-  const [isOpen, setIsOpen] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState(false);
-
-  // Form State
+  const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
-  const [travelDate, setTravelDate] = useState("");
   const [role, setRole] = useState<"CUSTOMER" | "VENDOR">("CUSTOMER");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const resetForm = () => {
     setName("");
     setPhone("");
     setEmail("");
-    setTravelDate("");
     setRole("CUSTOMER");
     setError(null);
-    setSuccess(false);
-  };
-
-  const handleOpen = () => {
-    resetForm();
-    setIsOpen(true);
-  };
-
-  const handleClose = () => {
-    setIsOpen(false);
-    resetForm();
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!phone.trim() && !email.trim()) {
-      setError("Please provide at least a phone/WhatsApp number or email.");
+    setError(null);
+
+    if (!name.trim()) {
+      setError("Full name is required.");
       return;
     }
 
-    setIsSubmitting(true);
-    setError(null);
+    if (!phone.trim() && !email.trim()) {
+      setError("Provide at least a phone number or an email address.");
+      return;
+    }
 
+    setLoading(true);
     try {
       const res = await createAdminUserAction({
-        name: name.trim() || undefined,
+        name: name.trim(),
         phone: phone.trim(),
         email: email.trim() || undefined,
-        travelDate: travelDate.trim() || undefined,
         role,
       });
 
-      if (!res.success) {
-        setError(res.error || "Failed to add user.");
-      } else {
-        setSuccess(true);
+      if (res.success) {
+        resetForm();
+        setOpen(false);
         router.refresh();
+      } else {
+        setError(res.error || "Failed to create user.");
       }
-    } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Something went wrong.");
+    } catch {
+      setError("Network error while creating user.");
     } finally {
-      setIsSubmitting(false);
+      setLoading(false);
     }
   };
 
   return (
     <>
-      {/* Trigger Button */}
       <button
         type="button"
-        onClick={handleOpen}
-        className="inline-flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-semibold bg-emerald-600 hover:bg-emerald-500 text-white shadow-xs hover:shadow-emerald-500/20 active:scale-95 transition cursor-pointer"
+        onClick={() => {
+          resetForm();
+          setOpen(true);
+        }}
+        className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-md text-xs font-semibold text-white bg-[var(--season-primary)] hover:bg-[var(--season-primary-hover)] shadow-xs transition-colors cursor-pointer"
       >
-        <UserPlus className="w-4 h-4" />
-        <span>+ Add User / Contact</span>
+        <UserPlus className="w-3.5 h-3.5" />
+        <span>Add User</span>
       </button>
 
-      {/* Modal Backdrop */}
-      {isOpen && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-slate-950/80 backdrop-blur-xs animate-in fade-in duration-200">
-          <div
-            className="w-full sm:max-w-md bg-slate-900 border border-slate-800 rounded-t-2xl sm:rounded-2xl shadow-2xl flex flex-col max-h-[90vh] overflow-hidden"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* Modal Header */}
-            <div className="px-5 py-4 border-b border-slate-800 flex items-center justify-between shrink-0 bg-slate-900/90">
-              <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-lg bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
-                  <UserPlus className="w-4 h-4" />
-                </div>
-                <div>
-                  <h3 className="text-sm sm:text-base font-bold text-white">
-                    Add User / Marketing Contact
-                  </h3>
-                  <p className="text-[11px] text-slate-400">
-                    Database me marketing aur WhatsApp campaigns ke liye user add karein
-                  </p>
-                </div>
-              </div>
-              <button
-                type="button"
-                onClick={handleClose}
-                className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer"
-              >
-                <X className="w-4 h-4" />
-              </button>
+      <AdminModal
+        open={open}
+        onClose={() => !loading && setOpen(false)}
+        title="Add User / Contact"
+        subtitle="Register a customer, vendor, editor, or administrator account."
+        maxWidth="md"
+        footer={
+          <>
+            <button
+              type="button"
+              disabled={loading}
+              onClick={() => setOpen(false)}
+              className="px-3.5 py-2 rounded-md text-xs font-medium text-slate-700 bg-white border border-slate-200 hover:bg-slate-50 cursor-pointer"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              form="add-admin-user-form"
+              disabled={loading}
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-md text-xs font-semibold text-white bg-[var(--season-primary)] hover:bg-[var(--season-primary-hover)] shadow-xs disabled:opacity-50 cursor-pointer"
+            >
+              {loading && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+              <span>Save User</span>
+            </button>
+          </>
+        }
+      >
+        <form id="add-admin-user-form" onSubmit={handleSubmit} className="space-y-4">
+          {error && (
+            <div role="alert" className="flex items-start gap-2 p-2.5 rounded-md bg-rose-50 border border-rose-200 text-xs text-rose-700">
+              <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+              <span>{error}</span>
+            </div>
+          )}
+
+          <div>
+            <label htmlFor="add-user-name" className="block text-xs font-medium text-slate-700 mb-1.5">
+              Full Name <span className="text-rose-600">*</span>
+            </label>
+            <input
+              id="add-user-name"
+              type="text"
+              required
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="e.g., Aarav Sharma"
+              className="w-full bg-white border border-slate-200 rounded-md px-3 py-2 text-xs text-slate-900 focus:outline-hidden focus:border-[var(--season-primary)] focus:ring-1 focus:ring-[var(--season-primary)]/20"
+            />
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label htmlFor="add-user-phone" className="block text-xs font-medium text-slate-700 mb-1.5">
+                Phone Number
+              </label>
+              <input
+                id="add-user-phone"
+                type="tel"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                placeholder="+91 98765 43210"
+                className="w-full bg-white border border-slate-200 rounded-md px-3 py-2 text-xs text-slate-900 focus:outline-hidden focus:border-[var(--season-primary)] focus:ring-1 focus:ring-[var(--season-primary)]/20"
+              />
             </div>
 
-            {/* Modal Body */}
-            {success ? (
-              <div className="p-6 text-center space-y-4">
-                <div className="w-14 h-14 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 flex items-center justify-center mx-auto">
-                  <CheckCircle className="w-8 h-8" />
-                </div>
-                <div className="space-y-1">
-                  <h4 className="text-base font-bold text-white">User Successfully Added!</h4>
-                  <p className="text-xs text-slate-400 leading-relaxed">
-                    User account database me create ho gaya hai aur CSV Export ya Marketing list me shamil ho chuka hai.
-                  </p>
-                </div>
-
-                <div className="pt-3 flex gap-2">
-                  <button
-                    type="button"
-                    onClick={resetForm}
-                    className="flex-1 py-2 px-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold transition"
-                  >
-                    + Add Another
-                  </button>
-                  <button
-                    type="button"
-                    onClick={handleClose}
-                    className="flex-1 py-2 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold transition"
-                  >
-                    Done
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <form onSubmit={handleSubmit} className="flex flex-col flex-1 overflow-hidden">
-                <div className="p-5 space-y-3.5 overflow-y-auto flex-1">
-                  {error && (
-                    <div className="p-3 rounded-lg bg-red-950/50 border border-red-800 text-red-200 text-xs">
-                      {error}
-                    </div>
-                  )}
-
-                  {/* 1. Name */}
-                  <div>
-                    <label className="block text-xs font-medium text-slate-300 mb-1">
-                      Customer / User Name
-                    </label>
-                    <div className="relative">
-                      <User className="w-4 h-4 text-slate-500 absolute left-3 top-2.5" />
-                      <input
-                        type="text"
-                        value={name}
-                        onChange={(e) => setName(e.target.value)}
-                        placeholder="e.g. Vikram Malhotra"
-                        className="w-full pl-9 pr-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs sm:text-sm text-white placeholder-slate-500 focus:outline-hidden focus:border-emerald-500"
-                      />
-                    </div>
-                  </div>
-
-                  {/* 2. Phone / WhatsApp */}
-                  <div>
-                    <label className="block text-xs font-medium text-slate-300 mb-1">
-                      Phone / WhatsApp Number <span className="text-rose-400">*</span>
-                    </label>
-                    <div className="relative">
-                      <Phone className="w-4 h-4 text-slate-500 absolute left-3 top-2.5" />
-                      <input
-                        type="tel"
-                        required
-                        value={phone}
-                        onChange={(e) => setPhone(e.target.value)}
-                        placeholder="e.g. 9876543210"
-                        className="w-full pl-9 pr-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs sm:text-sm text-white placeholder-slate-500 focus:outline-hidden focus:border-emerald-500 font-mono"
-                      />
-                    </div>
-                  </div>
-
-                  {/* 3. Email (Optional) */}
-                  <div>
-                    <label className="block text-xs font-medium text-slate-300 mb-1">
-                      Email Address <span className="text-slate-500">(Optional)</span>
-                    </label>
-                    <div className="relative">
-                      <Mail className="w-4 h-4 text-slate-500 absolute left-3 top-2.5" />
-                      <input
-                        type="email"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        placeholder="e.g. customer@gmail.com"
-                        className="w-full pl-9 pr-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs sm:text-sm text-white placeholder-slate-500 focus:outline-hidden focus:border-emerald-500"
-                      />
-                    </div>
-                    <p className="text-[10px] text-slate-500 mt-1">
-                      Agar email nahi hai, to system automatically unique marketing identifier assign kar dega.
-                    </p>
-                  </div>
-
-                  {/* Planned Travel Date (Optional - NOT mandatory) */}
-                  <div>
-                    <label className="block text-xs font-medium text-slate-300 mb-1 flex items-center justify-between">
-                      <span>Planned Travel Date</span>
-                      <span className="text-[10px] text-slate-500 font-normal">Optional</span>
-                    </label>
-                    <div className="relative">
-                      <Calendar className="w-4 h-4 text-slate-500 absolute left-3 top-2.5" />
-                      <input
-                        type="text"
-                        value={travelDate}
-                        onChange={(e) => setTravelDate(e.target.value)}
-                        placeholder="e.g. May 2027, Diwali, or 15-20 Oct"
-                        className="w-full pl-9 pr-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs sm:text-sm text-white placeholder-slate-500 focus:outline-hidden focus:border-emerald-500"
-                      />
-                    </div>
-                  </div>
-
-                  {/* 4. Role */}
-                  <div>
-                    <label className="block text-xs font-medium text-slate-300 mb-1">
-                      User Type / Role
-                    </label>
-                    <div className="relative">
-                      <Shield className="w-4 h-4 text-slate-500 absolute left-3 top-2.5" />
-                      <select
-                        value={role}
-                        onChange={(e) => setRole(e.target.value as "CUSTOMER" | "VENDOR")}
-                        className="w-full pl-9 pr-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs sm:text-sm text-white focus:outline-hidden focus:border-emerald-500"
-                      >
-                        <option value="CUSTOMER">Customer / Tourist (Marketing Contact)</option>
-                        <option value="VENDOR">Vendor / Partner</option>
-                      </select>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Footer */}
-                <div className="p-4 border-t border-slate-800 bg-slate-900/90 flex gap-2 shrink-0">
-                  <button
-                    type="button"
-                    onClick={handleClose}
-                    className="flex-1 py-2 px-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold transition"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={isSubmitting}
-                    className="flex-2 py-2 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white text-xs font-bold flex items-center justify-center gap-2 shadow-sm transition active:scale-95"
-                  >
-                    {isSubmitting ? (
-                      <>
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                        <span>Saving...</span>
-                      </>
-                    ) : (
-                      <>
-                        <UserPlus className="w-4 h-4" />
-                        <span>Save to Database</span>
-                      </>
-                    )}
-                  </button>
-                </div>
-              </form>
-            )}
+            <div>
+              <label htmlFor="add-user-email" className="block text-xs font-medium text-slate-700 mb-1.5">
+                Email Address
+              </label>
+              <input
+                id="add-user-email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="name@example.com"
+                className="w-full bg-white border border-slate-200 rounded-md px-3 py-2 text-xs text-slate-900 focus:outline-hidden focus:border-[var(--season-primary)] focus:ring-1 focus:ring-[var(--season-primary)]/20"
+              />
+            </div>
           </div>
-        </div>
-      )}
+
+          <div>
+            <label htmlFor="add-user-role" className="block text-xs font-medium text-slate-700 mb-1.5">
+              Role
+            </label>
+            <select
+              id="add-user-role"
+              value={role}
+              onChange={(e) => setRole(e.target.value as "CUSTOMER" | "VENDOR")}
+              className="w-full bg-white border border-slate-200 rounded-md px-3 py-2 text-xs text-slate-900 focus:outline-hidden focus:border-[var(--season-primary)] focus:ring-1 focus:ring-[var(--season-primary)]/20"
+            >
+              <option value="CUSTOMER">Tourist / Customer</option>
+              <option value="VENDOR">Vendor Partner</option>
+            </select>
+            <p className="text-[11px] text-slate-500 mt-1">
+              Provide at least a phone number or email address.
+            </p>
+          </div>
+        </form>
+      </AdminModal>
     </>
   );
 }

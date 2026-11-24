@@ -48,6 +48,7 @@ export default async function SeoDetailPage({
         updatedAt: page.updatedAt,
         seoResearch: page.seoResearch,
         seoStrategy: page.seoStrategy,
+        faqs: page.faqs,
         validationReport: page.validationReport,
         gscInitialMetrics: page.gscInitialMetrics,
         places: page.places,

@@ -177,22 +177,26 @@ export async function mapDestinationDoc(
   // 2. Resolve Canonical Destination Clean Name
   const cleanName = cmsDoc.cleanName || (page.title ? page.title.split("|")[0].replace(/\s*Travel Guide.*$/i, "").trim() : "") || (page.slug.charAt(0).toUpperCase() + page.slug.slice(1));
 
-  // 3. Map Media Gallery (replaces hardcoded Unsplash fallbacks)
+  // 3. Map Media Gallery (preserve primary imageUrl + gallery items without duplicates)
   const gallery: Array<{ url: string; alt?: string; caption?: string }> = [];
+  const seenUrls = new Set<string>();
+  if (page.imageUrl && typeof page.imageUrl === "string" && page.imageUrl.trim()) {
+    const coverUrl = page.imageUrl.trim();
+    gallery.push({ url: coverUrl, alt: page.h1Heading });
+    seenUrls.add(coverUrl);
+  }
   if (Array.isArray(cmsDoc.gallery) && cmsDoc.gallery.length > 0) {
     cmsDoc.gallery.forEach((img: any) => {
-      if (typeof img === "string") {
-        gallery.push({ url: img, alt: page.h1Heading });
-      } else if (img && img.url) {
+      const url = typeof img === "string" ? img.trim() : img?.url?.trim?.();
+      if (url && !seenUrls.has(url)) {
+        seenUrls.add(url);
         gallery.push({
-          url: img.url,
-          alt: img.alt || page.h1Heading,
-          caption: img.caption,
+          url,
+          alt: (typeof img === "object" && img?.alt) || page.h1Heading,
+          caption: typeof img === "object" ? img?.caption : undefined,
         });
       }
     });
-  } else if (page.imageUrl) {
-    gallery.push({ url: page.imageUrl, alt: page.h1Heading });
   }
 
   // 4. Map Places (from cmsDoc or page)

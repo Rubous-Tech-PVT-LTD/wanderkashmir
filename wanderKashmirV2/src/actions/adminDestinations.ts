@@ -33,6 +33,7 @@ export interface DestinationFormInput {
       name?: string;
       description?: string | null;
       url?: string | null;
+      imageUrl?: string | null;
     }>;
   } | null;
   photographySpots?: {
@@ -119,12 +120,30 @@ function sanitizeNearbyPlacesConfig(inputConfig: Record<string, unknown> | null 
           }
         }
 
+        let imageUrl: string | null = null;
+        if (typeof it.imageUrl === "string" && it.imageUrl.trim()) {
+          const trimmedImg = it.imageUrl.trim();
+          if (trimmedImg.startsWith("/") && !trimmedImg.startsWith("//")) {
+            imageUrl = trimmedImg;
+          } else if (trimmedImg.startsWith("http://") || trimmedImg.startsWith("https://")) {
+            try {
+              const parsedImg = new URL(trimmedImg);
+              if (parsedImg.protocol === "http:" || parsedImg.protocol === "https:") {
+                imageUrl = parsedImg.toString();
+              }
+            } catch {
+              imageUrl = null;
+            }
+          }
+        }
+
         items.push({
           id,
           type: "custom",
           name,
           description,
           url,
+          imageUrl,
         });
       }
     }
@@ -261,7 +280,7 @@ export async function updateDestinationAction(
 
     const existing = await prisma.seoLandingPage.findUnique({
       where: { id },
-      select: { id: true, slug: true, type: true, seoStrategy: true },
+      select: { id: true, slug: true, type: true, seoStrategy: true, content: true, faqs: true },
     });
 
     if (!existing || existing.type !== "DESTINATION") {
@@ -412,8 +431,14 @@ export async function updateDestinationAction(
         h1Heading,
         description: input.description?.trim() || null,
         imageUrl: input.imageUrl?.trim() || null,
-        content: input.content?.trim() || null,
-        faqs: input.faqs || [],
+        content:
+          input.content !== undefined
+            ? input.content?.trim() || null
+            : existing.content,
+        faqs:
+          input.faqs !== undefined
+            ? (input.faqs as Prisma.InputJsonValue)
+            : ((existing.faqs as Prisma.InputJsonValue) ?? []),
         seoStrategy: updatedStrategy,
         ...(input.workflowState ? { workflowState: input.workflowState as SeoWorkflowState } : {}),
       },

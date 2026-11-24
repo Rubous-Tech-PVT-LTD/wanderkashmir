@@ -12,22 +12,23 @@ export const metadata = {
 
 export default function AdminUnauthorizedPage() {
   return (
-    <div className="flex min-h-screen items-center justify-center p-4 sm:p-6 bg-slate-950 text-white">
-      <div className="max-w-md w-full text-center rounded-2xl border border-red-500/20 bg-slate-900/80 p-8 shadow-2xl backdrop-blur-xl">
-        <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-red-500/10 border border-red-500/20 text-red-400 mb-5">
-          <ShieldAlert className="w-7 h-7" />
+    <div className="flex min-h-screen items-center justify-center p-4 sm:p-6 bg-[#F8FAFC]">
+      <div className="max-w-sm w-full text-center rounded-md border border-slate-200/90 bg-white p-8 shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
+        <div className="inline-flex items-center justify-center h-12 w-12 rounded-md bg-rose-50 border border-rose-200 text-rose-600 mb-4">
+          <ShieldAlert className="h-6 w-6" />
         </div>
 
-        <h1 className="text-xl font-bold tracking-tight text-white">Access Denied</h1>
-        <p className="text-sm text-slate-400 mt-2 leading-relaxed">
-          Your account is authenticated, but does not possess the <strong>ADMIN</strong> role required to access this portal.
+        <h1 className="text-lg font-semibold tracking-tight text-slate-900">Access Denied</h1>
+        <p className="text-xs text-slate-500 mt-2 leading-relaxed">
+          Your account is signed in, but does not have the <strong>ADMIN</strong> or{" "}
+          <strong>EDITOR</strong> permissions required to access this workspace.
         </p>
 
-        <div className="mt-8 flex flex-col gap-3">
+        <div className="mt-6 flex flex-col gap-2.5">
           <form action={logoutAdminAction}>
             <button
               type="submit"
-              className="w-full inline-flex items-center justify-center rounded-lg bg-slate-800 px-4 py-2.5 text-sm font-semibold text-slate-200 hover:bg-slate-700 transition-colors border border-slate-700 cursor-pointer"
+              className="w-full inline-flex items-center justify-center rounded-md bg-[var(--season-primary)] px-4 py-2 text-xs font-semibold text-white hover:bg-[var(--season-primary-hover)] shadow-xs transition-colors cursor-pointer"
             >
               Sign Out & Switch Account
             </button>
@@ -35,9 +36,10 @@ export default function AdminUnauthorizedPage() {
 
           <Link
             href="/"
-            className="inline-flex items-center justify-center gap-1.5 text-xs text-slate-400 hover:text-white transition-colors"
+            className="inline-flex items-center justify-center gap-1.5 py-1.5 text-xs font-medium text-slate-500 hover:text-slate-900 transition-colors"
           >
-            <ArrowLeft className="w-3.5 h-3.5" /> Return to WanderKashmir Home
+            <ArrowLeft className="h-3.5 w-3.5" />
+            <span>Return to WanderKashmir Home</span>
           </Link>
         </div>
       </div>

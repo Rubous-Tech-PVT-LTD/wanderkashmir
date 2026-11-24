@@ -572,28 +572,28 @@ export default function EditorJsField({
     <div
       ref={containerRef}
       onClick={handleContainerClick}
-      className="editorjs-dark-theme relative rounded-lg border border-slate-700 bg-slate-800/80 px-3.5 py-2.5 text-xs text-slate-100 transition-colors focus-within:border-emerald-500 focus-within:ring-1 focus-within:ring-emerald-500/20 cursor-text font-sans"
+      className="editorjs-light-theme relative rounded-md border border-slate-200 bg-white px-4 py-3 text-xs text-slate-900 transition-colors focus-within:border-[var(--season-primary)] focus-within:ring-2 focus-within:ring-[var(--season-primary)]/15 cursor-text font-sans"
       style={{ minHeight: `${minHeight}px`, fontFamily: "inherit" }}
     >
       {/* Loading State */}
       {status === "loading" && (
-        <div className="flex items-center gap-2 py-3 px-1 text-slate-400 text-xs italic select-none font-sans">
-          <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+        <div className="flex items-center gap-2 py-3 px-1 text-slate-500 text-xs select-none font-sans">
+          <div className="w-2 h-2 rounded-full bg-[var(--season-primary)] animate-pulse" />
           <span>Loading editor...</span>
         </div>
       )}
 
       {/* Recoverable Error State */}
       {status === "error" && (
-        <div className="flex items-center justify-between gap-3 p-3 my-1 rounded bg-rose-950/40 border border-rose-800/60 text-xs text-rose-300 font-sans">
+        <div className="flex items-center justify-between gap-3 p-3 my-1 rounded-md bg-rose-50 border border-rose-200 text-xs text-rose-700 font-sans">
           <div className="flex items-center gap-2">
-            <AlertTriangle className="w-4 h-4 text-rose-400 shrink-0" />
+            <AlertTriangle className="w-4 h-4 text-rose-600 shrink-0" />
             <span>{errorMessage || "Failed to load rich text editor."}</span>
           </div>
           <button
             type="button"
             onClick={handleRetry}
-            className="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-semibold rounded bg-rose-800 hover:bg-rose-700 text-white transition-colors shrink-0 font-sans"
+            className="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-semibold rounded-md bg-rose-600 hover:bg-rose-700 text-white transition-colors shrink-0 font-sans cursor-pointer"
           >
             <RotateCw className="w-3 h-3" />
             Retry
@@ -605,174 +605,180 @@ export default function EditorJsField({
       <div
         ref={holderRef}
         id={holderId}
-        className={`w-full prose-invert font-sans ${
-          status === "ready" ? "opacity-100" : status === "loading" ? "opacity-20 pointer-events-none" : "hidden"
+        className={`w-full font-sans ${
+          status === "ready" ? "opacity-100" : status === "loading" ? "opacity-25 pointer-events-none" : "hidden"
         }`}
       />
 
-      {/* Editor.js dark theme overrides */}
+      {/* Editor.js light-neutral SaaS theme overrides */}
       <style jsx global>{`
-        .editorjs-dark-theme,
-        .editorjs-dark-theme .codex-editor,
-        .editorjs-dark-theme .ce-block,
-        .editorjs-dark-theme .ce-block__content,
-        .editorjs-dark-theme .ce-paragraph,
-        .editorjs-dark-theme .ce-header,
-        .editorjs-dark-theme .cdx-list,
-        .editorjs-dark-theme .cdx-list__item,
-        .editorjs-dark-theme .cdx-quote,
-        .editorjs-dark-theme .cdx-quote__text,
-        .editorjs-dark-theme .cdx-quote__caption,
-        .editorjs-dark-theme .ce-delimiter,
-        .editorjs-dark-theme .tc-table,
-        .editorjs-dark-theme .tc-row,
-        .editorjs-dark-theme .tc-cell,
-        .editorjs-dark-theme [contenteditable] {
+        .editorjs-light-theme,
+        .editorjs-light-theme .codex-editor,
+        .editorjs-light-theme .ce-block,
+        .editorjs-light-theme .ce-block__content,
+        .editorjs-light-theme .ce-paragraph,
+        .editorjs-light-theme .ce-header,
+        .editorjs-light-theme .cdx-list,
+        .editorjs-light-theme .cdx-list__item,
+        .editorjs-light-theme .cdx-quote,
+        .editorjs-light-theme .cdx-quote__text,
+        .editorjs-light-theme .cdx-quote__caption,
+        .editorjs-light-theme .ce-delimiter,
+        .editorjs-light-theme .tc-table,
+        .editorjs-light-theme .tc-row,
+        .editorjs-light-theme .tc-cell,
+        .editorjs-light-theme [contenteditable] {
           font-family: inherit;
         }
-        .editorjs-dark-theme .codex-editor {
-          color: #f1f5f9;
+        .editorjs-light-theme .codex-editor {
+          color: #0f172a;
           font-family: inherit;
         }
-        .editorjs-dark-theme .ce-block__content,
-        .editorjs-dark-theme .ce-toolbar__content {
+        .editorjs-light-theme .ce-block__content,
+        .editorjs-light-theme .ce-toolbar__content {
           max-width: 100%;
           font-family: inherit;
         }
-        .editorjs-dark-theme .codex-editor__redactor {
+        .editorjs-light-theme .ce-block--selected .ce-block__content {
+          background-color: var(--season-primary-light, #ecfdf5);
+          border-radius: 6px;
+        }
+        .editorjs-light-theme .codex-editor__redactor {
           padding-bottom: 16px !important;
           font-family: inherit;
         }
-        .editorjs-dark-theme .ce-paragraph {
+        .editorjs-light-theme .ce-paragraph {
           font-family: inherit;
-          line-height: 1.6;
-          font-size: 0.8125rem;
-          color: #e2e8f0;
+          line-height: 1.65;
+          font-size: 0.875rem;
+          color: #1e293b;
         }
-        .editorjs-dark-theme .ce-header {
+        .editorjs-light-theme .ce-header {
           font-family: inherit;
-          color: #ffffff;
+          color: #0f172a;
           font-weight: 700;
           letter-spacing: -0.015em;
           margin-top: 0.75rem;
           margin-bottom: 0.5rem;
         }
-        .editorjs-dark-theme h2.ce-header {
+        .editorjs-light-theme h2.ce-header {
           font-family: inherit;
           font-size: 1.25rem;
         }
-        .editorjs-dark-theme h3.ce-header {
+        .editorjs-light-theme h3.ce-header {
           font-family: inherit;
           font-size: 1.1rem;
         }
-        .editorjs-dark-theme h4.ce-header {
+        .editorjs-light-theme h4.ce-header {
           font-family: inherit;
           font-size: 0.95rem;
         }
-        .editorjs-dark-theme .cdx-list {
+        .editorjs-light-theme .cdx-list {
           font-family: inherit;
           padding-left: 1.25rem;
-          color: #e2e8f0;
-          font-size: 0.8125rem;
+          color: #1e293b;
+          font-size: 0.875rem;
         }
-        .editorjs-dark-theme .cdx-list__item {
+        .editorjs-light-theme .cdx-list__item {
           font-family: inherit;
           padding: 0.15rem 0;
         }
-        .editorjs-dark-theme .cdx-quote {
+        .editorjs-light-theme .cdx-quote {
           font-family: inherit;
-          border-left: 3px solid #10b981;
+          border-left: 3px solid var(--season-primary, #0f5132);
           padding: 0.5rem 0.75rem;
           margin: 0.5rem 0;
-          color: #cbd5e1;
+          color: #334155;
           font-style: italic;
+          background-color: #f8fafc;
         }
-        .editorjs-dark-theme .cdx-quote__text {
+        .editorjs-light-theme .cdx-quote__text {
           font-family: inherit;
-          font-size: 0.8125rem;
+          font-size: 0.875rem;
           margin-bottom: 0.25rem;
         }
-        .editorjs-dark-theme .cdx-quote__caption {
+        .editorjs-light-theme .cdx-quote__caption {
           font-family: inherit;
-          font-size: 0.7rem;
-          color: #94a3b8;
+          font-size: 0.75rem;
+          color: #64748b;
           font-style: normal;
         }
-        .editorjs-dark-theme .ce-delimiter {
+        .editorjs-light-theme .ce-delimiter {
           font-family: inherit;
           line-height: 1.6em;
           text-align: center;
-          color: #64748b;
+          color: #94a3b8;
         }
-        .editorjs-dark-theme .tc-table {
+        .editorjs-light-theme .tc-table {
           font-family: inherit;
           border-collapse: collapse;
           width: 100%;
-          border: 1px solid #334155;
+          border: 1px solid #cbd5e1;
         }
-        .editorjs-dark-theme .tc-row {
+        .editorjs-light-theme .tc-row {
           font-family: inherit;
-          border-bottom: 1px solid #334155;
+          border-bottom: 1px solid #e2e8f0;
         }
-        .editorjs-dark-theme .tc-cell {
+        .editorjs-light-theme .tc-cell {
           font-family: inherit;
-          border-right: 1px solid #334155;
-          padding: 0.4rem 0.5rem;
+          border-right: 1px solid #e2e8f0;
+          padding: 0.45rem 0.6rem;
           font-size: 0.8125rem;
-          color: #e2e8f0;
+          color: #1e293b;
         }
-        .editorjs-dark-theme .ce-toolbar__plus,
-        .editorjs-dark-theme .ce-toolbar__settings-btn {
+        .editorjs-light-theme .ce-toolbar__plus,
+        .editorjs-light-theme .ce-toolbar__settings-btn {
+          color: #475569;
+          background-color: #ffffff;
+          border: 1px solid #e2e8f0;
+        }
+        .editorjs-light-theme .ce-toolbar__plus:hover,
+        .editorjs-light-theme .ce-toolbar__settings-btn:hover {
+          color: #0f172a;
+          background-color: #f1f5f9;
+        }
+        .editorjs-light-theme .ce-popover {
+          background-color: #ffffff;
+          border: 1px solid #e2e8f0;
+          color: #0f172a;
+          box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.12);
+        }
+        .editorjs-light-theme .ce-popover-item {
+          color: #334155;
+        }
+        .editorjs-light-theme .ce-popover-item:hover {
+          background-color: #f1f5f9;
+          color: #0f172a;
+        }
+        .editorjs-light-theme .ce-popover-item__icon {
+          background-color: #f8fafc;
+          color: var(--season-primary, #0f5132);
+        }
+        .editorjs-light-theme .ce-inline-toolbar {
+          background-color: #ffffff;
+          border: 1px solid #e2e8f0;
+          color: #0f172a;
+          box-shadow: 0 4px 12px rgba(15, 23, 42, 0.1);
+        }
+        .editorjs-light-theme .ce-inline-tool {
+          color: #475569;
+        }
+        .editorjs-light-theme .ce-inline-tool:hover {
+          background-color: #f1f5f9;
+          color: #0f172a;
+        }
+        .editorjs-light-theme .ce-inline-tool--active {
+          color: var(--season-primary, #0f5132);
+        }
+        .editorjs-light-theme .ce-inline-toolbar__dropdown {
+          border-right: 1px solid #e2e8f0;
+          color: #475569;
+        }
+        .editorjs-light-theme .ce-inline-toolbar__dropdown:hover {
+          background-color: #f1f5f9;
+        }
+        .editorjs-light-theme [data-placeholder]:empty::before {
           color: #94a3b8;
-          background-color: #1e293b;
-          border: 1px solid #334155;
-        }
-        .editorjs-dark-theme .ce-toolbar__plus:hover,
-        .editorjs-dark-theme .ce-toolbar__settings-btn:hover {
-          color: #ffffff;
-          background-color: #334155;
-        }
-        .editorjs-dark-theme .ce-popover {
-          background-color: #0f172a;
-          border: 1px solid #334155;
-          color: #f1f5f9;
-          box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
-        }
-        .editorjs-dark-theme .ce-popover-item {
-          color: #cbd5e1;
-        }
-        .editorjs-dark-theme .ce-popover-item:hover {
-          background-color: #1e293b;
-          color: #ffffff;
-        }
-        .editorjs-dark-theme .ce-popover-item__icon {
-          background-color: #1e293b;
-          color: #10b981;
-        }
-        .editorjs-dark-theme .ce-inline-toolbar {
-          background-color: #0f172a;
-          border: 1px solid #334155;
-          color: #f1f5f9;
-        }
-        .editorjs-dark-theme .ce-inline-tool {
-          color: #cbd5e1;
-        }
-        .editorjs-dark-theme .ce-inline-tool:hover {
-          background-color: #1e293b;
-          color: #ffffff;
-        }
-        .editorjs-dark-theme .ce-inline-tool--active {
-          color: #10b981;
-        }
-        .editorjs-dark-theme .ce-inline-toolbar__dropdown {
-          border-right: 1px solid #334155;
-          color: #cbd5e1;
-        }
-        .editorjs-dark-theme .ce-inline-toolbar__dropdown:hover {
-          background-color: #1e293b;
-        }
-        .editorjs-dark-theme [data-placeholder]:empty::before {
-          color: #64748b;
         }
       `}</style>
     </div>

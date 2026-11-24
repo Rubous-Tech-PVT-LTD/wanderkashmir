@@ -50,6 +50,19 @@ export default async function ReviewDetailPage({ params }: ReviewDetailPageProps
               isLive: review.tour.isLive,
             }
           : null,
+        vehicle: review.vehicle
+          ? {
+              id: review.vehicle.id,
+              make: review.vehicle.make,
+              model: review.vehicle.model,
+              type: review.vehicle.type,
+            }
+          : null,
+        guideProfile: review.guideProfile
+          ? {
+              id: review.guideProfile.id,
+            }
+          : null,
         booking: review.booking
           ? {
               id: review.booking.id,

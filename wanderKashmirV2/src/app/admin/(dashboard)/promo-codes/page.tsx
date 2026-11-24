@@ -14,9 +14,5 @@ export default async function AdminPromoCodesPage() {
   const promoCodes = promosRes.data?.promoCodes || [];
   const targets = targetsRes.data || { tours: [], properties: [], vehicles: [] };
 
-  return (
-    <div className="container mx-auto p-4 sm:p-6 lg:p-8 max-w-7xl">
-      <PromoCodesClient initialPromoCodes={promoCodes} targets={targets} />
-    </div>
-  );
+  return <PromoCodesClient initialPromoCodes={promoCodes} targets={targets} />;
 }

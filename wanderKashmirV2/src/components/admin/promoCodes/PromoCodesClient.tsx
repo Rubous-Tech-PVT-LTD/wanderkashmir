@@ -1,27 +1,23 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import {
   Tag,
   Search,
   Plus,
-  Edit,
+  Pencil,
   Trash2,
-  CheckCircle,
-  XCircle,
   Loader2,
-  Percent,
   Compass,
   Building,
   Car,
   Copy,
   Check,
   Globe,
-  AlertTriangle,
-  X,
-  Sparkles,
   RefreshCw,
+  Info,
+  X,
 } from "lucide-react";
 import {
   AdminPromoCodeItem,
@@ -32,6 +28,15 @@ import {
   approvePromoCodeAction,
   deleteAdminPromoCodeAction,
 } from "@/actions/adminPromoCodes";
+import {
+  AdminPageHeader,
+  AdminToastBanner,
+  AdminModal,
+  ConfirmActionDialog,
+  AdminEmptyState,
+  StatusBadge,
+  type FeedbackMessage,
+} from "@/components/admin/ui";
 
 interface PromoCodesClientProps {
   initialPromoCodes: AdminPromoCodeItem[];
@@ -42,6 +47,8 @@ interface PromoCodesClientProps {
   };
 }
 
+type PromoStatusFilter = "ALL" | "ACTIVE" | "INACTIVE" | "PENDING" | "REJECTED";
+
 export default function PromoCodesClient({
   initialPromoCodes,
   targets,
@@ -49,11 +56,11 @@ export default function PromoCodesClient({
   const router = useRouter();
 
   const [searchVal, setSearchVal] = useState("");
-  const [statusFilter, setStatusFilter] = useState<"ALL" | "ACTIVE" | "INACTIVE" | "PENDING">("ALL");
+  const [statusFilter, setStatusFilter] = useState<PromoStatusFilter>("ALL");
   const [togglingId, setTogglingId] = useState<string | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [feedback, setFeedback] = useState<FeedbackMessage | null>(null);
 
-  // Create / Edit Modal State
   const [modalMode, setModalMode] = useState<"CREATE" | "EDIT" | null>(null);
   const [editingItem, setEditingItem] = useState<AdminPromoCodeItem | null>(null);
   const [formData, setFormData] = useState<PromoCodeFormInput>({
@@ -67,25 +74,41 @@ export default function PromoCodesClient({
   const [formError, setFormError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
 
-  // Delete Modal State
   const [deleteModalItem, setDeleteModalItem] = useState<AdminPromoCodeItem | null>(null);
-  const [isDeleting, setIsDeleting] = useState(false);
-  const [deleteError, setDeleteError] = useState<string | null>(null);
 
-  const filteredCodes = initialPromoCodes.filter((p) => {
-    if (statusFilter === "ACTIVE" && !p.isActive) return false;
-    if (statusFilter === "INACTIVE" && p.isActive) return false;
-    if (statusFilter === "PENDING" && p.status !== "PENDING") return false;
-
-    if (searchVal.trim()) {
-      const term = searchVal.toLowerCase();
-      const codeMatch = p.code.toLowerCase().includes(term);
-      const tourMatch = p.tour?.title.toLowerCase().includes(term);
-      const propMatch = p.property?.name.toLowerCase().includes(term);
-      return codeMatch || tourMatch || propMatch;
+  const counts = useMemo(() => {
+    let active = 0;
+    let inactive = 0;
+    let pending = 0;
+    let rejected = 0;
+    for (const p of initialPromoCodes) {
+      if (p.isActive) active++;
+      else inactive++;
+      if (p.status === "PENDING") pending++;
+      if (p.status === "REJECTED") rejected++;
     }
-    return true;
-  });
+    return { all: initialPromoCodes.length, active, inactive, pending, rejected };
+  }, [initialPromoCodes]);
+
+  const filteredCodes = useMemo(() => {
+    return initialPromoCodes.filter((p) => {
+      if (statusFilter === "ACTIVE" && !p.isActive) return false;
+      if (statusFilter === "INACTIVE" && p.isActive) return false;
+      if (statusFilter === "PENDING" && p.status !== "PENDING") return false;
+      if (statusFilter === "REJECTED" && p.status !== "REJECTED") return false;
+
+      if (searchVal.trim()) {
+        const term = searchVal.toLowerCase().trim();
+        const codeMatch = p.code.toLowerCase().includes(term);
+        const tourMatch = p.tour?.title.toLowerCase().includes(term);
+        const propMatch = p.property?.name.toLowerCase().includes(term);
+        const vehicleMatch = p.vehicle?.model.toLowerCase().includes(term);
+        const vendorMatch = p.vendorProfile?.businessName.toLowerCase().includes(term);
+        return Boolean(codeMatch || tourMatch || propMatch || vehicleMatch || vendorMatch);
+      }
+      return true;
+    });
+  }, [initialPromoCodes, searchVal, statusFilter]);
 
   const handleCopy = (code: string, id: string) => {
     navigator.clipboard.writeText(code);
@@ -95,31 +118,44 @@ export default function PromoCodesClient({
 
   const handleToggleStatus = async (item: AdminPromoCodeItem) => {
     setTogglingId(item.id);
+    setFeedback(null);
     try {
       const res = await togglePromoCodeStatusAction(item.id, !item.isActive);
       if (res.success) {
+        setFeedback({
+          type: "success",
+          text: `${item.code} is now ${!item.isActive ? "Active" : "Inactive"}.`,
+        });
         router.refresh();
       } else {
-        alert(res.error || "Failed to update promo status");
+        setFeedback({ type: "error", text: res.error || "Failed to update promo status." });
       }
     } catch {
-      alert("Network error updating status.");
+      setFeedback({ type: "error", text: "Network error updating promo status." });
     } finally {
       setTogglingId(null);
     }
   };
 
-  const handleApprove = async (id: string, isApproved: boolean) => {
-    setTogglingId(id);
+  const handleApprove = async (item: AdminPromoCodeItem, isApproved: boolean) => {
+    setTogglingId(item.id);
+    setFeedback(null);
     try {
-      const res = await approvePromoCodeAction(id, isApproved);
+      const res = await approvePromoCodeAction(item.id, isApproved);
       if (res.success) {
+        setFeedback({
+          type: "success",
+          text: `${item.code} ${isApproved ? "approved" : "rejected"}.`,
+        });
         router.refresh();
       } else {
-        alert(res.error || "Failed to approve promo code.");
+        setFeedback({
+          type: "error",
+          text: res.error || `Failed to ${isApproved ? "approve" : "reject"} promo code.`,
+        });
       }
     } catch {
-      alert("Network error approving code.");
+      setFeedback({ type: "error", text: "Network error updating promo approval." });
     } finally {
       setTogglingId(null);
     }
@@ -169,9 +205,14 @@ export default function PromoCodesClient({
 
   const handleSaveSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsSaving(true);
     setFormError(null);
 
+    if (formData.targetType !== "ALL" && !formData.targetId) {
+      setFormError(`Please select a specific ${formData.targetType.toLowerCase()} target.`);
+      return;
+    }
+
+    setIsSaving(true);
     try {
       let res;
       if (modalMode === "CREATE") {
@@ -182,12 +223,16 @@ export default function PromoCodesClient({
 
       if (res && res.success) {
         setModalMode(null);
+        setFeedback({
+          type: "success",
+          text: modalMode === "CREATE" ? "Promo code created." : "Promo code updated.",
+        });
         router.refresh();
       } else {
         setFormError(res?.error || "Failed to save promo code.");
       }
-    } catch (err: any) {
-      setFormError(err?.message || "Communication error.");
+    } catch (err: unknown) {
+      setFormError(err instanceof Error ? err.message : "Communication error.");
     } finally {
       setIsSaving(false);
     }
@@ -195,457 +240,530 @@ export default function PromoCodesClient({
 
   const handleDeleteConfirm = async () => {
     if (!deleteModalItem) return;
-    setIsDeleting(true);
-    setDeleteError(null);
-
-    try {
-      const res = await deleteAdminPromoCodeAction(deleteModalItem.id);
-      if (res.success) {
-        setDeleteModalItem(null);
-        router.refresh();
-      } else {
-        setDeleteError(res.error || "Failed to delete promo code.");
-      }
-    } catch (err: any) {
-      setDeleteError(err?.message || "Communication error.");
-    } finally {
-      setIsDeleting(false);
+    const res = await deleteAdminPromoCodeAction(deleteModalItem.id);
+    if (res.success) {
+      setFeedback({ type: "success", text: `Deleted promo code ${deleteModalItem.code}.` });
+      setDeleteModalItem(null);
+      router.refresh();
+    } else {
+      throw new Error(res.error || "Failed to delete promo code.");
     }
   };
 
+  const statusTabs: { key: PromoStatusFilter; label: string; count: number }[] = [
+    { key: "ALL", label: "All Codes", count: counts.all },
+    { key: "ACTIVE", label: "Active", count: counts.active },
+    { key: "INACTIVE", label: "Inactive", count: counts.inactive },
+    { key: "PENDING", label: "Pending", count: counts.pending },
+    { key: "REJECTED", label: "Rejected", count: counts.rejected },
+  ];
+
   return (
     <div className="space-y-6">
-      {/* Top Banner */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-slate-900 border border-slate-800 p-6 rounded-2xl">
-        <div>
+      <AdminPageHeader
+        title="Promo Codes & Discounts"
+        subtitle="Manage discount vouchers for tours, stays, taxis, and seasonal campaigns."
+        badge={
+          <StatusBadge
+            status="PENDING"
+            label="Ready — Pending Public Integration"
+            tone="amber"
+          />
+        }
+        actions={
           <div className="flex items-center gap-2">
-            <span className="p-2 rounded-xl bg-purple-500/10 text-purple-400 border border-purple-500/20">
-              <Tag className="w-5 h-5" />
-            </span>
-            <h1 className="text-xl font-bold text-white tracking-tight">Promo Codes & Discounts</h1>
+            <button
+              type="button"
+              onClick={() => router.refresh()}
+              className="rounded-md border border-slate-200 bg-white p-2 text-slate-600 hover:bg-slate-50 transition-colors cursor-pointer"
+              title="Refresh list"
+              aria-label="Refresh promo codes"
+            >
+              <RefreshCw className="h-3.5 w-3.5" />
+            </button>
+            <button
+              type="button"
+              onClick={openCreateModal}
+              className="inline-flex items-center gap-1.5 rounded-md bg-[var(--season-primary)] px-3.5 py-2 text-xs font-semibold text-white shadow-xs hover:bg-[var(--season-primary-hover)] transition-colors cursor-pointer"
+            >
+              <Plus className="h-3.5 w-3.5" />
+              <span>Create Promo Code</span>
+            </button>
           </div>
-          <p className="text-slate-400 text-sm mt-1">
-            Create and manage promotional discount vouchers for tours, hotels, taxis, and seasonal campaigns.
+        }
+      />
+
+      <AdminToastBanner message={feedback} onDismiss={() => setFeedback(null)} />
+
+      {/* Public Integration Status Notice */}
+      <div className="rounded-md border border-amber-200/80 bg-amber-50/70 p-4 flex items-start gap-3">
+        <Info className="h-4 w-4 text-amber-700 shrink-0 mt-0.5" />
+        <div className="text-xs text-amber-900 space-y-0.5">
+          <div className="font-semibold">Ready — Pending Public Integration</div>
+          <p className="text-amber-800 leading-relaxed">
+            Promo codes and Homepage Highlight flags are managed and persisted here, ready for
+            checkout and homepage banner integration on the public site.
           </p>
-        </div>
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => router.refresh()}
-            className="p-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl transition border border-slate-700"
-            title="Refresh list"
-          >
-            <RefreshCw className="w-4 h-4" />
-          </button>
-          <button
-            onClick={openCreateModal}
-            className="px-4 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs flex items-center gap-1.5 transition shadow-lg shadow-emerald-500/10"
-          >
-            <Plus className="w-4 h-4" />
-            Create Promo Code
-          </button>
         </div>
       </div>
 
-      {/* Toolbar */}
-      <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 bg-slate-900/60 border border-slate-800/80 p-4 rounded-2xl">
-        <div className="relative flex-1 max-w-md">
-          <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
-          <input
-            type="text"
-            placeholder="Search by promo code or target..."
-            value={searchVal}
-            onChange={(e) => setSearchVal(e.target.value)}
-            className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-10 pr-4 py-2 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:border-purple-500/50"
-          />
+      {/* Filter & Search Bar */}
+      <div className="rounded-md border border-slate-200/90 bg-white p-3.5 shadow-[0_1px_2px_rgba(15,23,42,0.04)] space-y-3">
+        <div className="flex flex-wrap items-center gap-1.5 border-b border-slate-100 pb-3">
+          {statusTabs.map((tab) => {
+            const active = statusFilter === tab.key;
+            return (
+              <button
+                key={tab.key}
+                type="button"
+                onClick={() => setStatusFilter(tab.key)}
+                className={`inline-flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-medium transition-colors cursor-pointer ${
+                  active
+                    ? "bg-[var(--season-primary)] text-white shadow-xs"
+                    : "bg-slate-50 text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+                }`}
+              >
+                <span>{tab.label}</span>
+                <span
+                  className={`rounded-full px-1.5 text-[10px] font-semibold ${
+                    active ? "bg-white/20 text-white" : "bg-slate-200/80 text-slate-600"
+                  }`}
+                >
+                  {tab.count}
+                </span>
+              </button>
+            );
+          })}
         </div>
 
-        <div className="flex items-center gap-2 overflow-x-auto">
-          <span className="text-xs font-medium text-slate-400 mr-1 hidden sm:inline">Status:</span>
-          {(["ALL", "ACTIVE", "INACTIVE", "PENDING"] as const).map((st) => (
+        <div className="relative max-w-md">
+          <Search className="h-3.5 w-3.5 text-slate-400 absolute left-3 top-2.5" />
+          <input
+            type="text"
+            placeholder="Search by code, tour, property, vehicle, or vendor..."
+            value={searchVal}
+            onChange={(e) => setSearchVal(e.target.value)}
+            className="w-full rounded-md border border-slate-200 bg-slate-50 pl-9 pr-8 py-1.5 text-xs text-slate-900 placeholder:text-slate-400 focus:border-[var(--season-primary)] focus:bg-white focus:outline-hidden"
+          />
+          {searchVal && (
             <button
-              key={st}
-              onClick={() => setStatusFilter(st)}
-              className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition ${
-                statusFilter === st
-                  ? "bg-purple-500 text-white shadow-md shadow-purple-500/20"
-                  : "bg-slate-800 text-slate-400 hover:bg-slate-700 hover:text-white"
-              }`}
+              type="button"
+              onClick={() => setSearchVal("")}
+              aria-label="Clear search"
+              className="absolute right-2.5 top-2 text-slate-400 hover:text-slate-600 cursor-pointer"
             >
-              {st === "ALL" ? "All Codes" : st === "ACTIVE" ? "Active" : st === "INACTIVE" ? "Inactive" : "Pending"}
+              <X className="h-3.5 w-3.5" />
             </button>
-          ))}
+          )}
         </div>
       </div>
 
       {/* Promo Codes Grid */}
       {filteredCodes.length === 0 ? (
-        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-12 text-center">
-          <div className="w-12 h-12 rounded-2xl bg-slate-800 border border-slate-700 text-slate-400 flex items-center justify-center mx-auto mb-4">
-            <Tag className="w-6 h-6" />
-          </div>
-          <h3 className="text-base font-bold text-white">No promo codes found</h3>
-          <p className="text-sm text-slate-400 mt-1 max-w-sm mx-auto">
-            {searchVal || statusFilter !== "ALL"
-              ? "No promo codes matched your current filter criteria."
-              : "No promotional discount codes exist yet. Click 'Create Promo Code' to get started."}
-          </p>
-        </div>
+        <AdminEmptyState
+          icon={<Tag className="h-5 w-5" />}
+          title="No promo codes found"
+          description={
+            searchVal || statusFilter !== "ALL"
+              ? "No promo codes match your active filter criteria."
+              : "Create your first promotional voucher to prepare seasonal discounts."
+          }
+          action={
+            searchVal || statusFilter !== "ALL" ? (
+              <button
+                type="button"
+                onClick={() => {
+                  setSearchVal("");
+                  setStatusFilter("ALL");
+                }}
+                className="rounded-md border border-slate-200 bg-white px-3.5 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50 cursor-pointer"
+              >
+                Reset Filters
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={openCreateModal}
+                className="inline-flex items-center gap-1.5 rounded-md bg-[var(--season-primary)] px-3.5 py-2 text-xs font-semibold text-white shadow-xs hover:bg-[var(--season-primary-hover)] cursor-pointer"
+              >
+                <Plus className="h-3.5 w-3.5" />
+                <span>Create Promo Code</span>
+              </button>
+            )
+          }
+        />
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filteredCodes.map((promo) => (
-            <div
-              key={promo.id}
-              className={`bg-slate-900 border rounded-2xl p-5 flex flex-col justify-between gap-4 transition ${
-                promo.isActive ? "border-slate-800 hover:border-slate-700" : "border-slate-800/60 opacity-75"
-              }`}
-            >
-              <div className="space-y-3">
-                {/* Header: Code & Discount */}
-                <div className="flex items-start justify-between gap-2">
-                  <div className="flex items-center gap-2">
-                    <span className="font-mono font-black text-lg text-emerald-400 tracking-wider bg-emerald-500/10 px-3 py-1 rounded-xl border border-emerald-500/20">
-                      {promo.code}
+          {filteredCodes.map((promo) => {
+            const isBusy = togglingId === promo.id;
+            return (
+              <div
+                key={promo.id}
+                className="rounded-md border border-slate-200/90 bg-white p-4.5 flex flex-col justify-between gap-4 shadow-[0_1px_2px_rgba(15,23,42,0.04)]"
+              >
+                <div className="space-y-3">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex items-center gap-1.5">
+                      <span className="font-mono font-bold text-sm text-[var(--season-primary-hover)] tracking-wide bg-[var(--season-primary-light)] border border-[var(--season-primary)]/25 px-2.5 py-1 rounded-md">
+                        {promo.code}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => handleCopy(promo.code, promo.id)}
+                        className="rounded-md p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-700 transition-colors cursor-pointer"
+                        title="Copy promo code"
+                        aria-label={`Copy ${promo.code}`}
+                      >
+                        {copiedId === promo.id ? (
+                          <Check className="h-3.5 w-3.5 text-[var(--season-primary)]" />
+                        ) : (
+                          <Copy className="h-3.5 w-3.5" />
+                        )}
+                      </button>
+                    </div>
+                    <span className="rounded-md border border-slate-200 bg-slate-50 px-2.5 py-1 text-xs font-bold text-slate-900 tabular-nums">
+                      {promo.discountPercent}% OFF
                     </span>
+                  </div>
+
+                  {/* Scope */}
+                  <div className="text-xs text-slate-600 flex items-center gap-1.5">
+                    {promo.tour ? (
+                      <span className="inline-flex items-center gap-1.5 rounded-md bg-slate-100 px-2 py-1 text-slate-700 truncate">
+                        <Compass className="h-3.5 w-3.5 text-slate-500 shrink-0" />
+                        <span className="truncate">{promo.tour.title}</span>
+                      </span>
+                    ) : promo.property ? (
+                      <span className="inline-flex items-center gap-1.5 rounded-md bg-slate-100 px-2 py-1 text-slate-700 truncate">
+                        <Building className="h-3.5 w-3.5 text-slate-500 shrink-0" />
+                        <span className="truncate">{promo.property.name}</span>
+                      </span>
+                    ) : promo.vehicle ? (
+                      <span className="inline-flex items-center gap-1.5 rounded-md bg-slate-100 px-2 py-1 text-slate-700 truncate">
+                        <Car className="h-3.5 w-3.5 text-slate-500 shrink-0" />
+                        <span className="truncate">{promo.vehicle.model}</span>
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1.5 rounded-md bg-slate-100 px-2 py-1 text-slate-700">
+                        <Globe className="h-3.5 w-3.5 text-slate-500 shrink-0" />
+                        <span>All Services & Bookings</span>
+                      </span>
+                    )}
+                  </div>
+
+                  {promo.vendorProfile && (
+                    <div className="text-[11px] text-slate-500">
+                      Vendor: <span className="font-medium text-slate-700">{promo.vendorProfile.businessName}</span>
+                    </div>
+                  )}
+
+                  {/* Status Badges */}
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    <StatusBadge status={promo.isActive ? "ACTIVE" : "INACTIVE"} />
+                    {promo.status === "PENDING" && (
+                      <StatusBadge status="PENDING" label="Pending Approval" />
+                    )}
+                    {promo.status === "REJECTED" && <StatusBadge status="REJECTED" />}
+                    {promo.showOnHomepage && (
+                      <StatusBadge
+                        status="PENDING"
+                        label="Homepage Highlight (Pending Integration)"
+                        tone="amber"
+                        showDot={false}
+                      />
+                    )}
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between pt-3 border-t border-slate-100 gap-2">
+                  <div className="flex flex-wrap items-center gap-1.5">
                     <button
-                      onClick={() => handleCopy(promo.code, promo.id)}
-                      className="p-1.5 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800 transition"
-                      title="Copy promo code"
+                      type="button"
+                      onClick={() => handleToggleStatus(promo)}
+                      disabled={isBusy}
+                      className={`rounded-md px-2.5 py-1.5 text-xs font-medium border transition-colors cursor-pointer disabled:opacity-50 ${
+                        promo.isActive
+                          ? "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
+                          : "border-[var(--season-primary)]/30 bg-[var(--season-primary-light)] text-[var(--season-primary-hover)] hover:bg-[var(--season-primary)]/20"
+                      }`}
                     >
-                      {copiedId === promo.id ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
+                      {isBusy ? (
+                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                      ) : promo.isActive ? (
+                        "Deactivate"
+                      ) : (
+                        "Activate"
+                      )}
+                    </button>
+
+                    {promo.status === "PENDING" && (
+                      <>
+                        <button
+                          type="button"
+                          disabled={isBusy}
+                          onClick={() => handleApprove(promo, true)}
+                          className="rounded-md bg-[var(--season-primary)] px-2.5 py-1.5 text-xs font-medium text-white shadow-xs hover:bg-[var(--season-primary-hover)] disabled:opacity-50 cursor-pointer"
+                        >
+                          Approve
+                        </button>
+                        <button
+                          type="button"
+                          disabled={isBusy}
+                          onClick={() => handleApprove(promo, false)}
+                          className="rounded-md border border-rose-200 bg-rose-50 px-2.5 py-1.5 text-xs font-medium text-rose-700 hover:bg-rose-100 disabled:opacity-50 cursor-pointer"
+                        >
+                          Reject
+                        </button>
+                      </>
+                    )}
+                  </div>
+
+                  <div className="flex items-center gap-1">
+                    <button
+                      type="button"
+                      onClick={() => openEditModal(promo)}
+                      className="rounded-md p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-700 transition-colors cursor-pointer"
+                      title="Edit promo code"
+                      aria-label={`Edit ${promo.code}`}
+                    >
+                      <Pencil className="h-4 w-4" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setDeleteModalItem(promo)}
+                      className="rounded-md p-1.5 text-slate-400 hover:bg-rose-50 hover:text-rose-600 transition-colors cursor-pointer"
+                      title="Delete promo code"
+                      aria-label={`Delete ${promo.code}`}
+                    >
+                      <Trash2 className="h-4 w-4" />
                     </button>
                   </div>
-                  <span className="text-lg font-black text-white bg-purple-500/10 border border-purple-500/20 px-2.5 py-0.5 rounded-xl">
-                    {promo.discountPercent}% OFF
-                  </span>
-                </div>
-
-                {/* Target Scope */}
-                <div className="text-xs text-slate-300 flex items-center gap-1.5">
-                  {promo.tour ? (
-                    <span className="flex items-center gap-1 text-sky-400 bg-sky-500/10 px-2 py-0.5 rounded-lg border border-sky-500/20 truncate">
-                      <Compass className="w-3.5 h-3.5 shrink-0" />
-                      {promo.tour.title}
-                    </span>
-                  ) : promo.property ? (
-                    <span className="flex items-center gap-1 text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded-lg border border-amber-500/20 truncate">
-                      <Building className="w-3.5 h-3.5 shrink-0" />
-                      {promo.property.name}
-                    </span>
-                  ) : promo.vehicle ? (
-                    <span className="flex items-center gap-1 text-indigo-400 bg-indigo-500/10 px-2 py-0.5 rounded-lg border border-indigo-500/20 truncate">
-                      <Car className="w-3.5 h-3.5 shrink-0" />
-                      {promo.vehicle.model}
-                    </span>
-                  ) : (
-                    <span className="flex items-center gap-1 text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-lg border border-emerald-500/20">
-                      <Globe className="w-3.5 h-3.5" />
-                      All Services & Bookings
-                    </span>
-                  )}
-                </div>
-
-                {/* Metadata & Status */}
-                <div className="flex flex-wrap items-center gap-2 pt-1 text-[11px]">
-                  <span
-                    className={`px-2 py-0.5 rounded-full font-bold uppercase tracking-wider ${
-                      promo.isActive
-                        ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
-                        : "bg-slate-800 text-slate-500 border border-slate-700"
-                    }`}
-                  >
-                    {promo.isActive ? "Active" : "Inactive"}
-                  </span>
-
-                  {promo.status === "PENDING" && (
-                    <span className="px-2 py-0.5 rounded-full font-bold uppercase tracking-wider bg-amber-500/10 text-amber-400 border border-amber-500/20">
-                      Pending Approval
-                    </span>
-                  )}
-
-                  {promo.showOnHomepage && (
-                    <span className="px-2 py-0.5 rounded-full font-bold uppercase tracking-wider bg-purple-500/10 text-purple-400 border border-purple-500/20 flex items-center gap-1">
-                      <Sparkles className="w-3 h-3" />
-                      Homepage Banner
-                    </span>
-                  )}
                 </div>
               </div>
-
-              {/* Action Buttons */}
-              <div className="flex items-center justify-between pt-3 border-t border-slate-800 gap-2">
-                <div className="flex items-center gap-1.5">
-                  <button
-                    onClick={() => handleToggleStatus(promo)}
-                    disabled={togglingId === promo.id}
-                    className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition border ${
-                      promo.isActive
-                        ? "bg-slate-800 text-slate-300 border-slate-700 hover:bg-slate-700"
-                        : "bg-emerald-500/10 text-emerald-400 border-emerald-500/20 hover:bg-emerald-500/20"
-                    }`}
-                  >
-                    {togglingId === promo.id ? (
-                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                    ) : promo.isActive ? (
-                      "Deactivate"
-                    ) : (
-                      "Activate"
-                    )}
-                  </button>
-
-                  {promo.status === "PENDING" && (
-                    <button
-                      onClick={() => handleApprove(promo.id, true)}
-                      className="px-2.5 py-1 rounded-lg text-xs font-bold bg-emerald-500 text-slate-950 hover:bg-emerald-400"
-                    >
-                      Approve
-                    </button>
-                  )}
-                </div>
-
-                <div className="flex items-center gap-1">
-                  <button
-                    onClick={() => openEditModal(promo)}
-                    className="p-1.5 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800 transition"
-                    title="Edit Promo Code"
-                  >
-                    <Edit className="w-4 h-4" />
-                  </button>
-                  <button
-                    onClick={() => setDeleteModalItem(promo)}
-                    className="p-1.5 text-slate-500 hover:text-red-400 rounded-lg hover:bg-red-500/10 transition"
-                    title="Delete Promo Code"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                </div>
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
 
       {/* Create / Edit Modal */}
-      {modalMode && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-in fade-in">
-          <div className="bg-slate-900 border border-slate-800 w-full max-w-lg rounded-2xl p-6 shadow-2xl relative">
-            <button
-              onClick={() => setModalMode(null)}
-              className="absolute top-4 right-4 text-slate-400 hover:text-white p-1"
+      <AdminModal
+        open={Boolean(modalMode)}
+        onClose={() => !isSaving && setModalMode(null)}
+        title={modalMode === "CREATE" ? "Create Promo Code" : `Edit Promo: ${editingItem?.code || ""}`}
+        maxWidth="md"
+      >
+        <form onSubmit={handleSaveSubmit} className="space-y-4">
+          {formError && (
+            <div
+              role="alert"
+              className="rounded-md border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-700"
             >
-              <X className="w-5 h-5" />
+              {formError}
+            </div>
+          )}
+
+          <div>
+            <label htmlFor="promo-code-input" className="block text-xs font-medium text-slate-700 mb-1">
+              Coupon Code (Uppercase Alphanumeric) <span className="text-rose-600">*</span>
+            </label>
+            <input
+              id="promo-code-input"
+              type="text"
+              required
+              placeholder="e.g. KASHMIR10, WINTER2026"
+              value={formData.code}
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  code: e.target.value.toUpperCase().replace(/\s+/g, ""),
+                })
+              }
+              className="w-full rounded-md border border-slate-200 bg-white px-3 py-2 font-mono text-sm font-semibold uppercase tracking-wider text-slate-900 focus:border-[var(--season-primary)] focus:outline-hidden"
+            />
+          </div>
+
+          <div>
+            <label htmlFor="promo-discount" className="block text-xs font-medium text-slate-700 mb-1">
+              Discount Percentage (1% – 100%)
+            </label>
+            <div className="flex items-center gap-3">
+              <input
+                id="promo-discount"
+                type="number"
+                min="1"
+                max="100"
+                required
+                value={formData.discountPercent}
+                onChange={(e) =>
+                  setFormData({ ...formData, discountPercent: Number(e.target.value) })
+                }
+                className="w-20 rounded-md border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-900 focus:border-[var(--season-primary)] focus:outline-hidden"
+              />
+              <input
+                type="range"
+                min="1"
+                max="100"
+                value={formData.discountPercent}
+                onChange={(e) =>
+                  setFormData({ ...formData, discountPercent: Number(e.target.value) })
+                }
+                className="flex-1 accent-[var(--season-primary)]"
+              />
+              <span className="w-10 text-right text-xs font-semibold text-slate-900 tabular-nums">
+                {formData.discountPercent}%
+              </span>
+            </div>
+          </div>
+
+          <div>
+            <label htmlFor="promo-scope" className="block text-xs font-medium text-slate-700 mb-1">
+              Applicable Target Scope
+            </label>
+            <select
+              id="promo-scope"
+              value={formData.targetType}
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  targetType: e.target.value as PromoCodeFormInput["targetType"],
+                  targetId: null,
+                })
+              }
+              className="w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-xs text-slate-900 focus:border-[var(--season-primary)] focus:outline-hidden"
+            >
+              <option value="ALL">Universal (All Tours, Stays & Taxis)</option>
+              <option value="TOUR">Specific Tour Only</option>
+              <option value="PROPERTY">Specific Stay / Hotel Only</option>
+              <option value="VEHICLE">Specific Taxi / Vehicle Only</option>
+            </select>
+          </div>
+
+          {formData.targetType === "TOUR" && (
+            <div>
+              <label htmlFor="promo-tour" className="block text-xs font-medium text-slate-700 mb-1">
+                Select Tour <span className="text-rose-600">*</span>
+              </label>
+              <select
+                id="promo-tour"
+                required
+                value={formData.targetId || ""}
+                onChange={(e) => setFormData({ ...formData, targetId: e.target.value || null })}
+                className="w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-xs text-slate-900 focus:border-[var(--season-primary)] focus:outline-hidden"
+              >
+                <option value="">-- Choose a Tour --</option>
+                {targets.tours.map((t) => (
+                  <option key={t.id} value={t.id}>
+                    {t.title}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+
+          {formData.targetType === "PROPERTY" && (
+            <div>
+              <label htmlFor="promo-property" className="block text-xs font-medium text-slate-700 mb-1">
+                Select Property <span className="text-rose-600">*</span>
+              </label>
+              <select
+                id="promo-property"
+                required
+                value={formData.targetId || ""}
+                onChange={(e) => setFormData({ ...formData, targetId: e.target.value || null })}
+                className="w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-xs text-slate-900 focus:border-[var(--season-primary)] focus:outline-hidden"
+              >
+                <option value="">-- Choose a Property --</option>
+                {targets.properties.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+
+          {formData.targetType === "VEHICLE" && (
+            <div>
+              <label htmlFor="promo-vehicle" className="block text-xs font-medium text-slate-700 mb-1">
+                Select Vehicle <span className="text-rose-600">*</span>
+              </label>
+              <select
+                id="promo-vehicle"
+                required
+                value={formData.targetId || ""}
+                onChange={(e) => setFormData({ ...formData, targetId: e.target.value || null })}
+                className="w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-xs text-slate-900 focus:border-[var(--season-primary)] focus:outline-hidden"
+              >
+                <option value="">-- Choose a Vehicle --</option>
+                {targets.vehicles.map((v) => (
+                  <option key={v.id} value={v.id}>
+                    {v.model} ({v.type})
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+
+          <div className="space-y-2 pt-1">
+            <label className="flex items-center gap-2 text-xs text-slate-700 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={Boolean(formData.isActive)}
+                onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
+                className="rounded-xs border-slate-300 text-[var(--season-primary)] accent-[var(--season-primary)] focus:ring-[var(--season-primary)]"
+              />
+              <span>Active</span>
+            </label>
+
+            <label className="flex items-center gap-2 text-xs text-slate-700 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={Boolean(formData.showOnHomepage)}
+                onChange={(e) => setFormData({ ...formData, showOnHomepage: e.target.checked })}
+                className="rounded-xs border-slate-300 text-[var(--season-primary)] accent-[var(--season-primary)] focus:ring-[var(--season-primary)]"
+              />
+              <span>
+                Highlight on Homepage{" "}
+                <span className="text-amber-700 font-medium">
+                  (Ready — Pending Public Integration)
+                </span>
+              </span>
+            </label>
+          </div>
+
+          <div className="flex justify-end gap-2 pt-3 border-t border-slate-200">
+            <button
+              type="button"
+              onClick={() => setModalMode(null)}
+              className="rounded-md border border-slate-200 bg-white px-4 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50 cursor-pointer"
+            >
+              Cancel
             </button>
-
-            <h3 className="text-lg font-bold text-white flex items-center gap-2">
-              <Tag className="w-5 h-5 text-emerald-400" />
-              {modalMode === "CREATE" ? "Create Promo Code" : `Edit Promo: ${editingItem?.code}`}
-            </h3>
-
-            {formError && (
-              <div className="mt-3 p-3 bg-red-500/10 border border-red-500/20 text-red-400 rounded-xl text-xs">
-                {formError}
-              </div>
-            )}
-
-            <form onSubmit={handleSaveSubmit} className="mt-4 space-y-4">
-              <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1.5">
-                  Coupon Code (Uppercase Alphanumeric):
-                </label>
-                <input
-                  type="text"
-                  required
-                  placeholder="e.g. KASHMIR10, WINTER2026"
-                  value={formData.code}
-                  onChange={(e) => setFormData({ ...formData, code: e.target.value.toUpperCase().replace(/\s+/g, "") })}
-                  className="w-full bg-slate-950 font-mono tracking-wider font-bold border border-slate-800 rounded-xl px-3 py-2 text-sm text-emerald-400 uppercase focus:outline-none focus:border-emerald-500"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1.5">
-                  Discount Percentage (1% - 100%):
-                </label>
-                <div className="flex items-center gap-3">
-                  <input
-                    type="number"
-                    min="1"
-                    max="100"
-                    required
-                    value={formData.discountPercent}
-                    onChange={(e) => setFormData({ ...formData, discountPercent: Number(e.target.value) })}
-                    className="w-24 bg-slate-950 font-bold border border-slate-800 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500"
-                  />
-                  <input
-                    type="range"
-                    min="1"
-                    max="100"
-                    value={formData.discountPercent}
-                    onChange={(e) => setFormData({ ...formData, discountPercent: Number(e.target.value) })}
-                    className="flex-1 accent-emerald-500"
-                  />
-                  <span className="text-sm font-bold text-white w-12 text-right">{formData.discountPercent}%</span>
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1.5">Applicable Target Scope:</label>
-                <select
-                  value={formData.targetType}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      targetType: e.target.value as any,
-                      targetId: null,
-                    })
-                  }
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500"
-                >
-                  <option value="ALL">Universal (All Tours, Stays & Taxis)</option>
-                  <option value="TOUR">Specific Tour Only</option>
-                  <option value="PROPERTY">Specific Hotel/Homestay Only</option>
-                  <option value="VEHICLE">Specific Taxi/Vehicle Only</option>
-                </select>
-              </div>
-
-              {formData.targetType === "TOUR" && (
-                <div>
-                  <label className="block text-xs font-semibold text-slate-300 mb-1.5">Select Tour:</label>
-                  <select
-                    value={formData.targetId || ""}
-                    onChange={(e) => setFormData({ ...formData, targetId: e.target.value || null })}
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500"
-                  >
-                    <option value="">-- Choose a Tour --</option>
-                    {targets.tours.map((t) => (
-                      <option key={t.id} value={t.id}>
-                        {t.title}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              )}
-
-              {formData.targetType === "PROPERTY" && (
-                <div>
-                  <label className="block text-xs font-semibold text-slate-300 mb-1.5">Select Property:</label>
-                  <select
-                    value={formData.targetId || ""}
-                    onChange={(e) => setFormData({ ...formData, targetId: e.target.value || null })}
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500"
-                  >
-                    <option value="">-- Choose a Property --</option>
-                    {targets.properties.map((p) => (
-                      <option key={p.id} value={p.id}>
-                        {p.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              )}
-
-              {formData.targetType === "VEHICLE" && (
-                <div>
-                  <label className="block text-xs font-semibold text-slate-300 mb-1.5">Select Vehicle:</label>
-                  <select
-                    value={formData.targetId || ""}
-                    onChange={(e) => setFormData({ ...formData, targetId: e.target.value || null })}
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500"
-                  >
-                    <option value="">-- Choose a Vehicle --</option>
-                    {targets.vehicles.map((v) => (
-                      <option key={v.id} value={v.id}>
-                        {v.model} ({v.type})
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              )}
-
-              <div className="flex items-center justify-between pt-2">
-                <label className="flex items-center gap-2 text-xs font-medium text-slate-300 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={formData.isActive}
-                    onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
-                    className="rounded border-slate-800 text-emerald-500 focus:ring-0"
-                  />
-                  Immediately Active
-                </label>
-
-                <label className="flex items-center gap-2 text-xs font-medium text-purple-400 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={formData.showOnHomepage}
-                    onChange={(e) => setFormData({ ...formData, showOnHomepage: e.target.checked })}
-                    className="rounded border-slate-800 text-purple-500 focus:ring-0"
-                  />
-                  Highlight on Homepage
-                </label>
-              </div>
-
-              <div className="flex justify-end gap-2 pt-4">
-                <button
-                  type="button"
-                  onClick={() => setModalMode(null)}
-                  className="px-4 py-2 rounded-xl text-xs font-semibold bg-slate-800 text-slate-300 hover:bg-slate-700"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={isSaving}
-                  className="px-5 py-2 rounded-xl text-xs font-bold bg-emerald-500 text-slate-950 hover:bg-emerald-400 flex items-center gap-1.5 disabled:opacity-50"
-                >
-                  {isSaving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Tag className="w-3.5 h-3.5" />}
-                  {modalMode === "CREATE" ? "Save Promo Code" : "Update Promo Code"}
-                </button>
-              </div>
-            </form>
+            <button
+              type="submit"
+              disabled={isSaving}
+              className="inline-flex items-center gap-1.5 rounded-md bg-[var(--season-primary)] px-4 py-2 text-xs font-semibold text-white shadow-xs hover:bg-[var(--season-primary-hover)] disabled:opacity-50 cursor-pointer"
+            >
+              {isSaving && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+              <span>{modalMode === "CREATE" ? "Save Promo Code" : "Update Promo Code"}</span>
+            </button>
           </div>
-        </div>
-      )}
+        </form>
+      </AdminModal>
 
-      {/* Delete Confirmation Modal */}
-      {deleteModalItem && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-in fade-in">
-          <div className="bg-slate-900 border border-slate-800 w-full max-w-md rounded-2xl p-6 shadow-2xl">
-            <div className="w-12 h-12 rounded-2xl bg-red-500/10 text-red-400 flex items-center justify-center mx-auto mb-4 border border-red-500/20">
-              <AlertTriangle className="w-6 h-6" />
-            </div>
-            <h3 className="text-base font-bold text-white text-center">Delete Promo Code</h3>
-            <p className="text-xs text-slate-400 text-center mt-1">
-              Are you sure you want to permanently delete code{" "}
-              <strong className="text-white font-mono">{deleteModalItem.code}</strong>? Past bookings that already
-              used this code will retain their historical discount record.
-            </p>
-
-            {deleteError && (
-              <div className="mt-3 p-3 bg-red-500/10 border border-red-500/20 text-red-400 rounded-xl text-xs text-center">
-                {deleteError}
-              </div>
-            )}
-
-            <div className="flex items-center justify-end gap-2 mt-6">
-              <button
-                type="button"
-                onClick={() => setDeleteModalItem(null)}
-                className="px-4 py-2 rounded-xl text-xs font-semibold bg-slate-800 text-slate-300 hover:bg-slate-700"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={handleDeleteConfirm}
-                disabled={isDeleting}
-                className="px-4 py-2 rounded-xl text-xs font-semibold bg-red-500 text-white hover:bg-red-600 font-bold flex items-center gap-1.5 disabled:opacity-50"
-              >
-                {isDeleting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
-                Delete Code
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <ConfirmActionDialog
+        open={Boolean(deleteModalItem)}
+        onClose={() => setDeleteModalItem(null)}
+        onConfirm={handleDeleteConfirm}
+        title="Delete Promo Code"
+        description={
+          deleteModalItem
+            ? `Permanently delete code ${deleteModalItem.code}? Past bookings that already applied this code keep their historical discount record.`
+            : ""
+        }
+        confirmLabel="Delete Code"
+        tone="danger"
+      />
     </div>
   );
 }

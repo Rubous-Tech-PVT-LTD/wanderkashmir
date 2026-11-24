@@ -5,25 +5,30 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import {
-  Search,
   Plus,
   ExternalLink,
-  Edit,
+  Pencil,
   Loader2,
-  CheckCircle,
-  EyeOff,
   Sparkles,
   Compass,
   MapPin,
   Clock,
-  IndianRupee,
-  ShieldCheck,
-  ChevronLeft,
-  ChevronRight,
   Trash2,
 } from "lucide-react";
 import { AdminExperienceListItem, AdminExperiencesStats } from "@/lib/admin/experiences";
 import { toggleExperienceStatusAction, deleteExperienceAction } from "@/actions/adminExperiences";
+import {
+  AdminPageHeader,
+  AdminStatStrip,
+  AdminFilterBar,
+  AdminToastBanner,
+  ConfirmActionDialog,
+  AdminEmptyState,
+  AdminPagination,
+  StatusBadge,
+  useAdminBasePath,
+  type FeedbackMessage,
+} from "@/components/admin/ui";
 
 interface ExperienceListClientProps {
   experiences: AdminExperienceListItem[];
@@ -46,10 +51,12 @@ export default function ExperienceListClient({
 }: ExperienceListClientProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const basePath = useAdminBasePath();
 
   const [searchVal, setSearchVal] = useState(currentSearch);
   const [togglingId, setTogglingId] = useState<string | null>(null);
-  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<AdminExperienceListItem | null>(null);
+  const [feedback, setFeedback] = useState<FeedbackMessage | null>(null);
 
   const applyFilters = (updates: Record<string, string | null>) => {
     const params = new URLSearchParams(searchParams.toString());
@@ -63,200 +70,118 @@ export default function ExperienceListClient({
     if (!updates.page) {
       params.delete("page");
     }
-    router.push(`/admin/experiences?${params.toString()}`);
+    const qs = params.toString();
+    router.push(qs ? `${basePath}/experiences?${qs}` : `${basePath}/experiences`);
   };
 
-  const handleSearchSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    applyFilters({ search: searchVal });
-  };
-
-  const handleToggleStatus = async (experienceId: string, currentStatus: string) => {
-    setTogglingId(experienceId);
+  const handleToggleStatus = async (exp: AdminExperienceListItem) => {
+    setTogglingId(exp.id);
+    setFeedback(null);
     try {
-      const nextStatus = currentStatus === "ACTIVE" ? "INACTIVE" : "ACTIVE";
-      const res = await toggleExperienceStatusAction(experienceId, nextStatus);
+      const nextStatus = exp.status === "ACTIVE" ? "INACTIVE" : "ACTIVE";
+      const res = await toggleExperienceStatusAction(exp.id, nextStatus);
       if (res.success) {
+        setFeedback({
+          type: "success",
+          text: `"${exp.title}" is now ${nextStatus === "ACTIVE" ? "Active" : "Inactive"}.`,
+        });
         router.refresh();
       } else {
-        alert(res.error || "Failed to update experience status.");
+        setFeedback({ type: "error", text: res.error || "Failed to update experience status." });
       }
     } catch {
-      alert("Network error communicating with server.");
+      setFeedback({ type: "error", text: "Network error communicating with server." });
     } finally {
       setTogglingId(null);
     }
   };
 
-  const handleDeleteExperience = async (experienceId: string, title: string, toursCount: number) => {
-    if (toursCount > 0) {
-      alert(
-        `Cannot delete "${title}" because it is currently linked to ${toursCount} tour(s). Please remove it from linked tours or set its status to Inactive.`
-      );
-      return;
-    }
-    if (!confirm(`Are you sure you want to permanently delete the experience "${title}"? This cannot be undone.`)) {
-      return;
-    }
-    setDeletingId(experienceId);
-    try {
-      const res = await deleteExperienceAction(experienceId);
-      if (res.success) {
-        router.refresh();
-      } else {
-        alert(res.error || "Failed to delete experience.");
-      }
-    } catch {
-      alert("Network error communicating with server.");
-    } finally {
-      setDeletingId(null);
+  const handleConfirmDelete = async () => {
+    if (!deleteTarget) return;
+    const res = await deleteExperienceAction(deleteTarget.id);
+    if (res.success) {
+      setFeedback({ type: "success", text: `Deleted experience "${deleteTarget.title}".` });
+      setDeleteTarget(null);
+      router.refresh();
+    } else {
+      throw new Error(res.error || "Failed to delete experience.");
     }
   };
 
+  const hasFilters = Boolean(currentSearch || currentStatus !== "ALL");
+
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight text-white sm:text-3xl">
-            Experiences & Activities
-          </h1>
-          <p className="text-sm text-slate-400 mt-1">
-            Manage curated Kashmiri experiences, activities, pricing, and their tour package associations.
-          </p>
-        </div>
-        <Link
-          href="/admin/experiences/new"
-          className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-medium text-sm transition shadow-sm hover:shadow-emerald-500/20"
-        >
-          <Plus className="w-4 h-4" />
-          <span>New Experience</span>
-        </Link>
-      </div>
+      <AdminPageHeader
+        title="Experiences & Activities"
+        subtitle="Manage curated Kashmir experiences, pricing, and tour package associations."
+        actions={
+          <Link
+            href={`${basePath}/experiences/new`}
+            className="inline-flex items-center gap-1.5 rounded-md bg-[var(--season-primary)] px-3.5 py-2 text-xs font-semibold text-white hover:bg-[var(--season-primary-hover)] transition-colors"
+          >
+            <Plus className="h-3.5 w-3.5" />
+            <span>New Experience</span>
+          </Link>
+        }
+      />
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="bg-slate-900/60 border border-slate-800 rounded-xl p-4">
-          <div className="flex items-center justify-between text-slate-400 mb-1">
-            <span className="text-xs font-semibold uppercase tracking-wider">Total</span>
-            <Sparkles className="w-4 h-4 text-emerald-400" />
-          </div>
-          <div className="text-2xl font-bold text-white">{stats.total}</div>
-          <div className="text-xs text-slate-500 mt-1">Curated activities in DB</div>
-        </div>
+      <AdminToastBanner message={feedback} onDismiss={() => setFeedback(null)} />
 
-        <div className="bg-slate-900/60 border border-slate-800 rounded-xl p-4">
-          <div className="flex items-center justify-between text-slate-400 mb-1">
-            <span className="text-xs font-semibold uppercase tracking-wider">Active</span>
-            <CheckCircle className="w-4 h-4 text-emerald-400" />
-          </div>
-          <div className="text-2xl font-bold text-emerald-400">{stats.active}</div>
-          <div className="text-xs text-slate-500 mt-1">Publicly visible</div>
-        </div>
+      <AdminStatStrip
+        columns={4}
+        items={[
+          { label: "Total Experiences", value: stats.total },
+          { label: "Active", value: stats.active, tone: "primary" },
+          { label: "Inactive", value: stats.inactive, tone: "amber" },
+          { label: "Tour Links", value: stats.totalTourLinks, tone: "blue" },
+        ]}
+      />
 
-        <div className="bg-slate-900/60 border border-slate-800 rounded-xl p-4">
-          <div className="flex items-center justify-between text-slate-400 mb-1">
-            <span className="text-xs font-semibold uppercase tracking-wider">Inactive</span>
-            <EyeOff className="w-4 h-4 text-amber-400" />
-          </div>
-          <div className="text-2xl font-bold text-amber-400">{stats.inactive}</div>
-          <div className="text-xs text-slate-500 mt-1">Draft or hidden</div>
-        </div>
+      <AdminFilterBar
+        searchValue={searchVal}
+        onSearchChange={setSearchVal}
+        onSearchSubmit={() => applyFilters({ search: searchVal.trim() })}
+        searchPlaceholder="Search by title, slug, or destination..."
+        tabs={[
+          { key: "ALL", label: "All", count: stats.total },
+          { key: "ACTIVE", label: "Active", count: stats.active },
+          { key: "INACTIVE", label: "Inactive", count: stats.inactive },
+        ]}
+        activeTab={currentStatus}
+        onTabChange={(status) => applyFilters({ status })}
+        hasActiveFilters={hasFilters}
+        onReset={() => {
+          setSearchVal("");
+          router.push(`${basePath}/experiences`);
+        }}
+      />
 
-        <div className="bg-slate-900/60 border border-slate-800 rounded-xl p-4">
-          <div className="flex items-center justify-between text-slate-400 mb-1">
-            <span className="text-xs font-semibold uppercase tracking-wider">Tour Links</span>
-            <Compass className="w-4 h-4 text-blue-400" />
-          </div>
-          <div className="text-2xl font-bold text-blue-400">{stats.totalTourLinks}</div>
-          <div className="text-xs text-slate-500 mt-1">Package associations</div>
-        </div>
-      </div>
-
-      {/* Filter and Search Bar */}
-      <div className="bg-slate-900/40 border border-slate-800 rounded-xl p-4 space-y-4">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          {/* Status Tabs */}
-          <div className="flex items-center gap-1.5 bg-slate-950 p-1 rounded-lg border border-slate-800 overflow-x-auto">
-            {(["ALL", "ACTIVE", "INACTIVE"] as const).map((statusKey) => {
-              const active = currentStatus === statusKey;
-              return (
-                <button
-                  key={statusKey}
-                  onClick={() => applyFilters({ status: statusKey })}
-                  className={`px-3 py-1.5 rounded-md text-xs font-medium whitespace-nowrap transition ${
-                    active
-                      ? "bg-slate-800 text-white shadow"
-                      : "text-slate-400 hover:text-white"
-                  }`}
-                >
-                  {statusKey === "ALL"
-                    ? "All"
-                    : statusKey === "ACTIVE"
-                    ? "Active"
-                    : "Inactive"}
-                </button>
-              );
-            })}
-          </div>
-
-          {/* Search Form */}
-          <form onSubmit={handleSearchSubmit} className="relative flex-1 max-w-md">
-            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-            <input
-              type="text"
-              value={searchVal}
-              onChange={(e) => setSearchVal(e.target.value)}
-              placeholder="Search by title, slug, or destination..."
-              className="w-full bg-slate-950 border border-slate-800 rounded-lg pl-9 pr-20 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500"
-            />
-            {searchVal && (
-              <button
-                type="button"
-                onClick={() => {
-                  setSearchVal("");
-                  applyFilters({ search: null });
-                }}
-                className="absolute right-12 top-1/2 -translate-y-1/2 text-xs text-slate-500 hover:text-white"
-              >
-                Clear
-              </button>
-            )}
-            <button
-              type="submit"
-              className="absolute right-2 top-1/2 -translate-y-1/2 px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-white rounded text-xs font-medium"
-            >
-              Go
-            </button>
-          </form>
-        </div>
-      </div>
-
-      {/* Experiences Table */}
-      <div className="bg-slate-900/60 border border-slate-800 rounded-xl overflow-hidden shadow-sm">
+      <div className="rounded-md border border-slate-200 bg-white overflow-hidden shadow-xs">
         {experiences.length === 0 ? (
-          <div className="p-12 text-center">
-            <Sparkles className="w-10 h-10 text-slate-600 mx-auto mb-3" />
-            <h3 className="text-base font-medium text-slate-300">No experiences found</h3>
-            <p className="text-sm text-slate-500 mt-1">
-              Try adjusting your search criteria or create a new experience.
-            </p>
-            {(currentSearch || currentStatus !== "ALL") && (
-              <button
-                onClick={() => {
-                  setSearchVal("");
-                  router.push("/admin/experiences");
-                }}
-                className="mt-4 px-3 py-1.5 rounded-lg bg-slate-800 text-xs font-medium text-slate-300 hover:text-white"
-              >
-                Reset filters
-              </button>
-            )}
-          </div>
+          <AdminEmptyState
+            icon={<Sparkles className="h-5 w-5" />}
+            title="No experiences found"
+            description="Adjust your search or create a new curated experience."
+            action={
+              hasFilters ? (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSearchVal("");
+                    router.push(`${basePath}/experiences`);
+                  }}
+                  className="rounded-lg border border-slate-200 bg-white px-3.5 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50 cursor-pointer"
+                >
+                  Reset Filters
+                </button>
+              ) : undefined
+            }
+          />
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm text-slate-300">
-              <thead className="bg-slate-950 text-xs uppercase tracking-wider text-slate-400 border-b border-slate-800">
+            <table className="w-full text-left text-xs border-collapse">
+              <thead className="bg-slate-50 text-[11px] uppercase tracking-wider text-slate-500 border-b border-slate-200 font-semibold">
                 <tr>
                   <th className="py-3 px-4">Experience</th>
                   <th className="py-3 px-4">Destination</th>
@@ -266,149 +191,138 @@ export default function ExperienceListClient({
                   <th className="py-3 px-4 text-right">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-800/60">
+              <tbody className="divide-y divide-slate-100">
                 {experiences.map((exp) => {
                   const isActive = exp.status === "ACTIVE";
                   const isToggling = togglingId === exp.id;
-                  const thumb = exp.images?.[0] || "/images/placeholder.jpg";
 
                   return (
-                    <tr
-                      key={exp.id}
-                      className="hover:bg-slate-800/30 transition-colors"
-                    >
-                      {/* Experience Info */}
+                    <tr key={exp.id} className="hover:bg-slate-50/80 transition-colors">
                       <td className="py-3.5 px-4">
                         <div className="flex items-center gap-3">
-                          <div className="relative w-12 h-12 rounded-lg overflow-hidden bg-slate-800 shrink-0 border border-slate-700/50">
+                          <div className="relative h-10 w-12 rounded-lg overflow-hidden bg-slate-100 shrink-0 border border-slate-200">
                             {exp.images?.[0] ? (
                               <Image
-                                src={thumb}
+                                src={exp.images[0]}
                                 alt={exp.title}
                                 fill
                                 sizes="48px"
                                 className="object-cover"
                               />
                             ) : (
-                              <div className="w-full h-full flex items-center justify-center text-slate-500">
-                                <Sparkles className="w-5 h-5" />
+                              <div className="h-full w-full flex items-center justify-center text-slate-400">
+                                <Sparkles className="h-4 w-4" />
                               </div>
                             )}
                           </div>
                           <div className="min-w-0 max-w-xs">
-                            <div className="font-medium text-white truncate hover:text-emerald-400 transition">
-                              <Link href={`/admin/experiences/${exp.id}`}>
-                                {exp.title}
-                              </Link>
-                            </div>
-                            <div className="text-xs text-slate-500 font-mono truncate">
+                            <Link
+                              href={`${basePath}/experiences/${exp.id}`}
+                              className="font-semibold text-slate-900 hover:text-[var(--season-primary)] truncate block transition-colors"
+                            >
+                              {exp.title}
+                            </Link>
+                            <div className="font-mono text-[11px] text-slate-500 truncate">
                               /{exp.slug}
                             </div>
                           </div>
                         </div>
                       </td>
 
-                      {/* Destination */}
-                      <td className="py-3.5 px-4 text-slate-300">
-                        <div className="flex items-center gap-1.5 text-xs">
-                          <MapPin className="w-3.5 h-3.5 text-slate-500 shrink-0" />
-                          <span className="truncate">{exp.destination}</span>
-                        </div>
+                      <td className="py-3.5 px-4 text-slate-700">
+                        <span className="inline-flex items-center gap-1">
+                          <MapPin className="h-3.5 w-3.5 text-slate-400 shrink-0" />
+                          <span>{exp.destination}</span>
+                        </span>
                       </td>
 
-                      {/* Duration & Pricing */}
                       <td className="py-3.5 px-4">
-                        <div className="space-y-0.5 text-xs">
+                        <div className="space-y-0.5">
                           {exp.duration && (
-                            <div className="flex items-center gap-1 text-slate-400">
-                              <Clock className="w-3.5 h-3.5 text-slate-500" />
+                            <div className="flex items-center gap-1 text-slate-500">
+                              <Clock className="h-3 w-3 text-slate-400" />
                               <span>{exp.duration}</span>
                             </div>
                           )}
-                          <div className="flex items-center gap-1 text-slate-300 font-medium">
-                            <IndianRupee className="w-3.5 h-3.5 text-emerald-400" />
-                            <span>
-                              {exp.basePrice !== null && exp.basePrice !== undefined
-                                ? `₹${exp.basePrice.toLocaleString("en-IN")}`
-                                : "Custom / On request"}
-                            </span>
+                          <div className="font-semibold text-slate-900 tabular-nums">
+                            {exp.basePrice !== null && exp.basePrice !== undefined
+                              ? `₹${exp.basePrice.toLocaleString("en-IN")}`
+                              : "On request"}
                           </div>
                         </div>
                       </td>
 
-                      {/* Tour Links */}
-                      <td className="py-3.5 px-4">
-                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium bg-slate-800/80 text-blue-400 border border-blue-500/20">
-                          <Compass className="w-3.5 h-3.5" />
-                          {exp.toursCount} {exp.toursCount === 1 ? "tour" : "tours"}
+                      <td className="py-3.5 px-4 whitespace-nowrap">
+                        <span className="inline-flex items-center gap-1 rounded-md border border-slate-200 bg-slate-50 px-2 py-0.5 text-[11px] font-medium text-slate-700">
+                          <Compass className="h-3 w-3 text-slate-400" />
+                          <span>
+                            {exp.toursCount} {exp.toursCount === 1 ? "tour" : "tours"}
+                          </span>
                         </span>
                       </td>
 
-                      {/* Status & Quick Toggle */}
-                      <td className="py-3.5 px-4">
+                      <td className="py-3.5 px-4 whitespace-nowrap">
                         <button
                           type="button"
-                          onClick={() => handleToggleStatus(exp.id, exp.status)}
+                          onClick={() => handleToggleStatus(exp)}
                           disabled={isToggling}
-                          className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold transition border ${
-                            isActive
-                              ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/30 hover:bg-emerald-500/20"
-                              : "bg-slate-800 text-slate-400 border-slate-700 hover:bg-slate-700"
-                          }`}
+                          className="inline-flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
                           title={`Click to ${isActive ? "deactivate" : "activate"}`}
                         >
                           {isToggling ? (
-                            <Loader2 className="w-3 h-3 animate-spin" />
-                          ) : isActive ? (
-                            <CheckCircle className="w-3 h-3 text-emerald-400" />
+                            <Loader2 className="h-3.5 w-3.5 animate-spin text-slate-400" />
                           ) : (
-                            <EyeOff className="w-3 h-3 text-slate-500" />
+                            <StatusBadge status={isActive ? "ACTIVE" : "INACTIVE"} />
                           )}
-                          <span>{isActive ? "Active" : "Inactive"}</span>
                         </button>
                       </td>
 
-                      {/* Actions */}
-                      <td className="py-3.5 px-4 text-right">
-                        <div className="flex items-center justify-end gap-2">
+                      <td className="py-3.5 px-4 text-right whitespace-nowrap">
+                        <div className="inline-flex items-center gap-1.5">
                           {isActive && (
                             <Link
                               href={`/experiences/${exp.slug}`}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition"
-                              title="View Public Experience Page"
+                              className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-700 transition-colors"
+                              title="View public page"
                             >
-                              <ExternalLink className="w-4 h-4" />
+                              <ExternalLink className="h-3.5 w-3.5" />
                             </Link>
                           )}
                           <Link
-                            href={`/admin/experiences/${exp.id}`}
-                            className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium text-emerald-400 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 transition"
+                            href={`${basePath}/experiences/${exp.id}`}
+                            className="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 transition-colors"
                           >
-                            <Edit className="w-3.5 h-3.5" />
+                            <Pencil className="h-3 w-3" />
                             <span>Edit</span>
                           </Link>
                           <button
                             type="button"
-                            onClick={() => handleDeleteExperience(exp.id, exp.title, exp.toursCount)}
-                            disabled={deletingId === exp.id || exp.toursCount > 0}
-                            className={`p-1.5 rounded-lg transition ${
+                            onClick={() => {
+                              if (exp.toursCount > 0) {
+                                setFeedback({
+                                  type: "warning",
+                                  text: `Cannot delete "${exp.title}" while linked to ${exp.toursCount} tour(s). Unlink it from tours or set it Inactive.`,
+                                });
+                                return;
+                              }
+                              setDeleteTarget(exp);
+                            }}
+                            disabled={exp.toursCount > 0}
+                            className={`rounded-lg p-1.5 transition-colors ${
                               exp.toursCount > 0
-                                ? "text-slate-600 cursor-not-allowed opacity-40"
-                                : "text-slate-400 hover:text-red-400 hover:bg-red-500/10"
+                                ? "text-slate-300 cursor-not-allowed"
+                                : "text-slate-400 hover:bg-rose-50 hover:text-rose-600 cursor-pointer"
                             }`}
                             title={
                               exp.toursCount > 0
-                                ? `Cannot delete: Assigned to ${exp.toursCount} tour(s)`
+                                ? `Linked to ${exp.toursCount} tour(s)`
                                 : "Delete experience"
                             }
+                            aria-label={`Delete ${exp.title}`}
                           >
-                            {deletingId === exp.id ? (
-                              <Loader2 className="w-3.5 h-3.5 animate-spin text-red-400" />
-                            ) : (
-                              <Trash2 className="w-3.5 h-3.5" />
-                            )}
+                            <Trash2 className="h-3.5 w-3.5" />
                           </button>
                         </div>
                       </td>
@@ -420,40 +334,28 @@ export default function ExperienceListClient({
           </div>
         )}
 
-        {/* Safety Note & Pagination Footer */}
-        <div className="bg-slate-950 px-4 py-3.5 border-t border-slate-800 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div className="flex items-center gap-2 text-xs text-slate-500">
-            <ShieldCheck className="w-4 h-4 text-emerald-500 shrink-0" />
-            <span>
-              Safe database rules: Experiences assigned to tours cannot be deleted (remove tour links or set status to Inactive). Unassigned experiences can be safely removed.
-            </span>
-          </div>
-
-          {totalPages > 1 && (
-            <div className="flex items-center gap-2 self-end sm:self-auto">
-              <span className="text-xs text-slate-400 mr-2">
-                Page {currentPage} of {totalPages} ({totalCount} items)
-              </span>
-              <button
-                onClick={() => applyFilters({ page: String(currentPage - 1) })}
-                disabled={currentPage <= 1}
-                className="p-1.5 rounded bg-slate-900 border border-slate-800 text-slate-300 disabled:opacity-40 hover:bg-slate-800"
-                aria-label="Previous page"
-              >
-                <ChevronLeft className="w-4 h-4" />
-              </button>
-              <button
-                onClick={() => applyFilters({ page: String(currentPage + 1) })}
-                disabled={currentPage >= totalPages}
-                className="p-1.5 rounded bg-slate-900 border border-slate-800 text-slate-300 disabled:opacity-40 hover:bg-slate-800"
-                aria-label="Next page"
-              >
-                <ChevronRight className="w-4 h-4" />
-              </button>
-            </div>
-          )}
-        </div>
+        <AdminPagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          totalCount={totalCount}
+          itemLabel="experiences"
+          onPageChange={(page) => applyFilters({ page: String(page) })}
+        />
       </div>
+
+      <ConfirmActionDialog
+        open={Boolean(deleteTarget)}
+        onClose={() => setDeleteTarget(null)}
+        onConfirm={handleConfirmDelete}
+        title="Delete Experience"
+        description={
+          deleteTarget
+            ? `Permanently delete "${deleteTarget.title}"? This action cannot be undone.`
+            : ""
+        }
+        confirmLabel="Delete Experience"
+        tone="danger"
+      />
     </div>
   );
 }

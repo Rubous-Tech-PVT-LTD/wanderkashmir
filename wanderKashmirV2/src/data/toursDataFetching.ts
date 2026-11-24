@@ -443,7 +443,7 @@ export const getTourFromDB = cache(async function(slug: string): Promise<TourPac
       travelGuides,
       isLive: tour.isLive,
       maxPersons: tour.maxPersons || 2,
-      badge: "",
+      badge: tour.badge || "",
     };
   } catch (error) {
     console.error("DB Connection failed for Tour detail:", slug, error);

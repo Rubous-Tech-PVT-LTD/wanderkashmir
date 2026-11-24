@@ -2,23 +2,19 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
-import {
-  ArrowLeft,
-  Save,
-  Loader2,
-  AlertCircle,
-  CheckCircle2,
-  Info,
-  Search,
-  Check,
-  Compass,
-} from "lucide-react";
+import { Save, Loader2, Info, Search, Check } from "lucide-react";
 import {
   createTravelStyleAction,
   updateTravelStyleAction,
   TravelStyleFormInput,
 } from "@/actions/adminTravelStyles";
+import {
+  AdminPageHeader,
+  AdminToastBanner,
+  StatusBadge,
+  useAdminBasePath,
+  type FeedbackMessage,
+} from "@/components/admin/ui";
 
 interface TourOption {
   id: string;
@@ -50,6 +46,7 @@ export default function TravelStyleForm({
   isEdit = false,
 }: TravelStyleFormProps) {
   const router = useRouter();
+  const basePath = useAdminBasePath();
 
   const [name, setName] = useState(initialData?.name || "");
   const [slug, setSlug] = useState(initialData?.slug || "");
@@ -66,12 +63,15 @@ export default function TravelStyleForm({
 
   const [tourSearch, setTourSearch] = useState("");
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [successMsg, setSuccessMsg] = useState<string | null>(null);
+  const [feedback, setFeedback] = useState<FeedbackMessage | null>(null);
 
   const handleNameChange = (val: string) => {
     setName(val);
-    if (!isEdit && (!slug || slug === name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)+/g, ""))) {
+    const prevAutoSlug = name
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/(^-|-$)+/g, "");
+    if (!isEdit && (!slug || slug === prevAutoSlug)) {
       setSlug(
         val
           .toLowerCase()
@@ -96,8 +96,7 @@ export default function TravelStyleForm({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null);
-    setSuccessMsg(null);
+    setFeedback(null);
     setLoading(true);
 
     try {
@@ -115,329 +114,261 @@ export default function TravelStyleForm({
       if (isEdit && initialData?.id) {
         const res = await updateTravelStyleAction(initialData.id, payload);
         if (res.success) {
-          setSuccessMsg("Travel style updated successfully in production database!");
+          setFeedback({ type: "success", text: "Travel style updated successfully." });
           router.refresh();
         } else {
-          setError(res.error || "Failed to update travel style.");
+          setFeedback({ type: "error", text: res.error || "Failed to update travel style." });
         }
       } else {
         const res = await createTravelStyleAction(payload);
         if (res.success && res.data?.id) {
-          setSuccessMsg("Travel style created successfully!");
-          router.push(`/admin/travel-styles/${res.data.id}`);
+          router.push(`${basePath}/travel-styles/${res.data.id}`);
           router.refresh();
         } else {
-          setError(res.error || "Failed to create travel style.");
+          setFeedback({ type: "error", text: res.error || "Failed to create travel style." });
         }
       }
     } catch {
-      setError("An unexpected network or server error occurred.");
+      setFeedback({ type: "error", text: "An unexpected network or server error occurred." });
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-8 max-w-4xl mx-auto pb-16">
-      {/* Top Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-slate-800 pb-5">
-        <div>
-          <Link
-            href="/admin/travel-styles"
-            className="text-xs text-slate-400 hover:text-white inline-flex items-center gap-1 transition-colors mb-2"
-          >
-            <ArrowLeft className="w-3.5 h-3.5" /> Back to Travel Styles
-          </Link>
-          <h1 className="text-2xl font-bold tracking-tight text-white">
-            {isEdit ? "Edit Travel Style" : "Create New Travel Style"}
-          </h1>
-          <p className="text-xs text-slate-400 mt-1">
-            {isEdit
-              ? "Modify travel style categorization, SEO metadata, and tour associations"
-              : "Register a new travel style category into the production database"}
-          </p>
-        </div>
-
-        <div className="flex items-center gap-3">
-          <Link
-            href="/admin/travel-styles"
-            className="px-4 py-2 rounded-lg text-xs font-semibold text-slate-300 bg-slate-800 hover:bg-slate-700 transition-colors border border-slate-700"
-          >
-            Cancel
-          </Link>
+    <form onSubmit={handleSubmit} className="space-y-6 max-w-4xl mx-auto pb-16">
+      <AdminPageHeader
+        title={isEdit ? "Edit Travel Style" : "New Travel Style"}
+        subtitle={
+          isEdit
+            ? "Manage style details, cover media, display order, and linked tour packages."
+            : "Create a new travel style and link it to existing tour packages."
+        }
+        backHref={`${basePath}/travel-styles`}
+        backLabel="Back to Travel Styles"
+        badge={isEdit ? <StatusBadge status={isActive ? "ACTIVE" : "INACTIVE"} /> : undefined}
+        actions={
           <button
             type="submit"
             disabled={loading}
-            className="inline-flex items-center gap-2 px-5 py-2 rounded-lg text-xs font-semibold text-white bg-emerald-600 hover:bg-emerald-500 shadow-lg shadow-emerald-600/20 transition-all disabled:opacity-60 cursor-pointer"
+            className="inline-flex items-center gap-1.5 rounded-md bg-[var(--season-primary)] px-4 py-2 text-xs font-semibold text-white hover:bg-[var(--season-primary-hover)] disabled:opacity-60 shadow-xs transition-colors cursor-pointer"
           >
-            {loading ? (
-              <Loader2 className="w-4 h-4 animate-spin" />
-            ) : (
-              <Save className="w-4 h-4" />
-            )}
-            {isEdit ? "Save Changes" : "Create Style"}
+            {loading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Save className="h-3.5 w-3.5" />}
+            <span>{isEdit ? "Save Changes" : "Create Style"}</span>
           </button>
-        </div>
-      </div>
+        }
+      />
 
-      {/* Notifications */}
-      {error && (
-        <div className="rounded-xl border border-red-500/20 bg-red-500/10 p-4 text-sm text-red-400 flex items-start gap-3">
-          <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
-          <div>{error}</div>
-        </div>
-      )}
-
-      {successMsg && (
-        <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/10 p-4 text-sm text-emerald-400 flex items-start gap-3">
-          <CheckCircle2 className="w-5 h-5 shrink-0 mt-0.5" />
-          <div>{successMsg}</div>
-        </div>
-      )}
+      <AdminToastBanner message={feedback} onDismiss={() => setFeedback(null)} />
 
       {/* General Settings */}
-      <div className="rounded-xl border border-slate-800 bg-slate-950/60 p-6 space-y-6">
-        <div className="flex items-center justify-between border-b border-slate-800/80 pb-4">
+      <div className="rounded-md border border-slate-200/90 bg-white p-5 sm:p-6 space-y-5 shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-4">
           <div>
-            <h2 className="text-sm font-semibold text-white">Status & Ordering</h2>
-            <p className="text-xs text-slate-400 mt-0.5">
-              Only active styles appear publicly in Help Me Choose and on style listing pages
+            <h2 className="text-sm font-semibold text-slate-900">Status & Ordering</h2>
+            <p className="text-xs text-slate-500 mt-0.5">
+              Active styles appear in public travel style filters and discovery pages.
             </p>
           </div>
 
-          <label className="relative inline-flex items-center cursor-pointer">
+          <label className="inline-flex items-center gap-2.5 text-xs font-medium text-slate-700 cursor-pointer">
             <input
               type="checkbox"
               checked={isActive}
               onChange={(e) => setIsActive(e.target.checked)}
-              className="sr-only peer"
+              className="rounded border-slate-300 text-[var(--season-primary)] focus:ring-[var(--season-primary)]"
             />
-            <div className="w-11 h-6 bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500"></div>
-            <span className="ml-3 text-xs font-semibold text-slate-300">
-              {isActive ? "Active (Public)" : "Inactive (Hidden)"}
-            </span>
+            <span>{isActive ? "Active (Public)" : "Inactive (Hidden)"}</span>
           </label>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="md:col-span-2">
-            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-1.5">
-              Style Name *
+            <label htmlFor="ts-name" className="block text-xs font-medium text-slate-700 mb-1.5">
+              Style Name <span className="text-rose-600">*</span>
             </label>
             <input
+              id="ts-name"
               type="text"
               required
               value={name}
               onChange={(e) => handleNameChange(e.target.value)}
               placeholder="e.g. Adventure, Spiritual, Family"
-              className="w-full rounded-lg border border-slate-700 bg-slate-800/80 px-3.5 py-2.5 text-sm text-white focus:border-emerald-500 focus:outline-none"
+              className="w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-xs text-slate-900 focus:border-[var(--season-primary)] focus:outline-hidden"
             />
           </div>
 
           <div>
-            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-1.5">
-              Display Order *
+            <label htmlFor="ts-order" className="block text-xs font-medium text-slate-700 mb-1.5">
+              Display Order <span className="text-rose-600">*</span>
             </label>
             <input
+              id="ts-order"
               type="number"
               min="0"
               required
               value={displayOrder}
               onChange={(e) => setDisplayOrder(e.target.value)}
-              placeholder="1"
-              className="w-full rounded-lg border border-slate-700 bg-slate-800/80 px-3.5 py-2.5 text-sm text-white focus:border-emerald-500 focus:outline-none font-mono"
+              className="w-full rounded-md border border-slate-200 bg-white px-3 py-2 font-mono text-xs text-slate-900 focus:border-[var(--season-primary)] focus:outline-hidden"
             />
           </div>
 
           <div className="md:col-span-3">
-            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-1.5">
-              URL Slug *
+            <label htmlFor="ts-slug" className="block text-xs font-medium text-slate-700 mb-1.5">
+              URL Slug <span className="text-rose-600">*</span>
             </label>
             <input
+              id="ts-slug"
               type="text"
               required
               value={slug}
               onChange={(e) => setSlug(e.target.value)}
               placeholder="e.g. adventure, spiritual, luxury-stays"
-              className="w-full rounded-lg border border-slate-700 bg-slate-800/80 px-3.5 py-2.5 text-sm text-white focus:border-emerald-500 focus:outline-none font-mono"
+              className="w-full rounded-md border border-slate-200 bg-white px-3 py-2 font-mono text-xs text-slate-900 focus:border-[var(--season-primary)] focus:outline-hidden"
             />
             {isEdit && (
-              <p className="text-[11px] text-amber-400 mt-1 flex items-center gap-1">
-                <Info className="w-3 h-3" /> Changing this slug alters the public URL (/tours/{slug}).
+              <p className="text-[11px] text-amber-700 mt-1 flex items-center gap-1">
+                <Info className="h-3 w-3" />
+                <span>Changing this slug updates the public URL (/tours/{slug}).</span>
               </p>
             )}
           </div>
 
           <div className="md:col-span-3">
-            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-1.5">
+            <label htmlFor="ts-desc" className="block text-xs font-medium text-slate-700 mb-1.5">
               Description
             </label>
             <textarea
+              id="ts-desc"
               rows={3}
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              placeholder="Brief description for category cards and SEO snippets..."
-              className="w-full rounded-lg border border-slate-700 bg-slate-800/80 px-3.5 py-2.5 text-sm text-white focus:border-emerald-500 focus:outline-none"
+              placeholder="Short description displayed on travel style cards..."
+              className="w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-xs text-slate-900 focus:border-[var(--season-primary)] focus:outline-hidden"
             />
           </div>
         </div>
       </div>
 
-      {/* Media & Images */}
-      <div className="rounded-xl border border-slate-800 bg-slate-950/60 p-6 space-y-5">
-        <h2 className="text-sm font-semibold text-white">Media & Visuals</h2>
+      {/* Media */}
+      <div className="rounded-md border border-slate-200/90 bg-white p-5 sm:p-6 space-y-4 shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
+        <h2 className="text-sm font-semibold text-slate-900">Cover Media</h2>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-1.5">
+            <label htmlFor="ts-img" className="block text-xs font-medium text-slate-700 mb-1.5">
               Cover Image URL
             </label>
             <input
+              id="ts-img"
               type="text"
               value={imageUrl}
               onChange={(e) => setImageUrl(e.target.value)}
               placeholder="https://res.cloudinary.com/..."
-              className="w-full rounded-lg border border-slate-700 bg-slate-800/80 px-3.5 py-2.5 text-xs text-white focus:border-emerald-500 focus:outline-none font-mono"
+              className="w-full rounded-md border border-slate-200 bg-white px-3 py-2 font-mono text-xs text-slate-900 focus:border-[var(--season-primary)] focus:outline-hidden"
             />
           </div>
 
           <div>
-            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-1.5">
+            <label htmlFor="ts-alt" className="block text-xs font-medium text-slate-700 mb-1.5">
               Image Alt Text
             </label>
             <input
+              id="ts-alt"
               type="text"
               value={imageAlt}
               onChange={(e) => setImageAlt(e.target.value)}
               placeholder="e.g. Adventure and trekking in Kashmir"
-              className="w-full rounded-lg border border-slate-700 bg-slate-800/80 px-3.5 py-2.5 text-sm text-white focus:border-emerald-500 focus:outline-none"
+              className="w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-xs text-slate-900 focus:border-[var(--season-primary)] focus:outline-hidden"
             />
           </div>
         </div>
 
-        {imageUrl && (
-          <div className="mt-3">
-            <span className="text-[11px] text-slate-400 block mb-1.5">Image Preview:</span>
-            <div className="relative w-40 h-24 rounded-lg overflow-hidden border border-slate-800 bg-slate-900">
+        {imageUrl.trim() && (
+          <div>
+            <span className="text-[11px] font-medium text-slate-500 block mb-1.5">Preview</span>
+            <div className="relative w-44 h-28 rounded-md overflow-hidden border border-slate-200 bg-slate-100">
+              {/* Keyed by imageUrl so correcting an invalid URL remounts cleanly */}
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
+                key={imageUrl}
                 src={imageUrl}
                 alt={imageAlt || name}
                 className="w-full h-full object-cover"
-                onError={(e) => {
-                  (e.target as HTMLElement).style.display = "none";
-                }}
               />
             </div>
           </div>
         )}
       </div>
 
-      {/* Connected Tours Manager */}
-      <div className="rounded-xl border border-slate-800 bg-slate-950/60 p-6 space-y-5">
+      {/* Connected Tours */}
+      <div className="rounded-md border border-slate-200/90 bg-white p-5 sm:p-6 space-y-4 shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div>
-            <h2 className="text-sm font-semibold text-white">
-              Connected Tour Packages ({selectedTourIds.length} Selected)
+            <h2 className="text-sm font-semibold text-slate-900">
+              Connected Tour Packages ({selectedTourIds.length} selected)
             </h2>
-            <p className="text-xs text-slate-400 mt-0.5">
-              Assign or unassign existing production tours to this travel style category
+            <p className="text-xs text-slate-500 mt-0.5">
+              Link or unlink tour packages without modifying the tour records themselves.
             </p>
           </div>
 
           <div className="relative sm:w-64">
-            <Search className="absolute left-3 top-2.5 h-3.5 w-3.5 text-slate-500" />
+            <Search className="absolute left-3 top-2.5 h-3.5 w-3.5 text-slate-400" />
             <input
               type="text"
               value={tourSearch}
               onChange={(e) => setTourSearch(e.target.value)}
               placeholder="Filter tours..."
-              className="w-full rounded-lg border border-slate-700 bg-slate-800/80 py-1.5 pl-9 pr-3 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500"
+              className="w-full rounded-md border border-slate-200 bg-slate-50 py-1.5 pl-9 pr-3 text-xs text-slate-900 placeholder:text-slate-400 focus:border-[var(--season-primary)] focus:bg-white focus:outline-hidden"
             />
           </div>
         </div>
 
-        <div className="rounded-lg border border-slate-800 bg-slate-900/40 p-4 text-xs text-slate-400">
-          <p className="font-semibold text-slate-300">Phase 6B Relation Safety Guarantee:</p>
-          <p className="mt-0.5 leading-relaxed">
-            Selecting or removing tours here strictly updates the <code>TourTravelStyle</code> mapping.
-            Tours themselves are <strong>never</strong> deleted or altered in title, pricing, or publishing status.
-          </p>
-        </div>
-
         {availableTours.length === 0 ? (
-          <div className="p-8 text-center text-xs text-slate-500">
-            No production tours found in database.
-          </div>
+          <p className="py-6 text-center text-xs text-slate-500">No tours found.</p>
         ) : (
-          <div className="max-h-80 overflow-y-auto space-y-2 pr-1">
+          <div className="max-h-80 overflow-y-auto space-y-1.5 pr-1">
             {filteredTours.map((tour) => {
               const isSelected = selectedTourIds.includes(tour.id);
               return (
-                <div
+                <button
                   key={tour.id}
+                  type="button"
                   onClick={() => toggleTour(tour.id)}
-                  className={`flex items-center justify-between p-3 rounded-lg border transition-all cursor-pointer ${
+                  className={`w-full text-left flex items-center justify-between p-3 rounded-md border transition-colors cursor-pointer ${
                     isSelected
-                      ? "border-emerald-500/40 bg-emerald-500/10 text-white"
-                      : "border-slate-800/80 bg-slate-900/60 text-slate-300 hover:border-slate-700"
+                      ? "border-[var(--season-primary)]/40 bg-[var(--season-primary-light)]"
+                      : "border-slate-200 bg-white hover:bg-slate-50"
                   }`}
                 >
                   <div className="flex items-center gap-3 min-w-0">
-                    <div
-                      className={`w-5 h-5 rounded flex items-center justify-center border text-xs shrink-0 ${
+                    <span
+                      className={`h-4 w-4 rounded flex items-center justify-center border shrink-0 ${
                         isSelected
-                          ? "bg-emerald-500 border-emerald-400 text-white"
-                          : "border-slate-700 bg-slate-800"
+                          ? "bg-[var(--season-primary)] border-[var(--season-primary)] text-white"
+                          : "border-slate-300 bg-white"
                       }`}
                     >
-                      {isSelected && <Check className="w-3.5 h-3.5 stroke-[3]" />}
-                    </div>
-
+                      {isSelected && <Check className="h-3 w-3 stroke-[3]" />}
+                    </span>
                     <div className="min-w-0">
-                      <div className="font-medium text-xs sm:text-sm truncate">
+                      <div className="font-medium text-xs text-slate-900 truncate">
                         {tour.title}
                       </div>
-                      <div className="text-[11px] text-slate-400 font-mono flex items-center gap-2 mt-0.5">
-                        <span>{tour.duration}</span>
-                        <span>•</span>
-                        <span className={tour.isLive ? "text-emerald-400" : "text-slate-500"}>
-                          {tour.isLive ? "Live" : "Draft"}
-                        </span>
+                      <div className="text-[11px] text-slate-500 mt-0.5">
+                        {tour.duration} · {tour.isLive ? "Live" : "Draft"}
                       </div>
                     </div>
                   </div>
-
-                  <div className="shrink-0 text-right text-xs font-mono text-slate-400">
+                  <span className="shrink-0 font-mono text-[11px] text-slate-400 ml-3">
                     /{tour.slug}
-                  </div>
-                </div>
+                  </span>
+                </button>
               );
             })}
           </div>
         )}
-      </div>
-
-      {/* Bottom Save Bar */}
-      <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-800">
-        <Link
-          href="/admin/travel-styles"
-          className="px-4 py-2 rounded-lg text-xs font-semibold text-slate-300 bg-slate-800 hover:bg-slate-700 transition-colors border border-slate-700"
-        >
-          Cancel
-        </Link>
-        <button
-          type="submit"
-          disabled={loading}
-          className="inline-flex items-center gap-2 px-6 py-2.5 rounded-lg text-xs font-semibold text-white bg-emerald-600 hover:bg-emerald-500 shadow-lg shadow-emerald-600/20 transition-all disabled:opacity-60 cursor-pointer"
-        >
-          {loading ? (
-            <Loader2 className="w-4 h-4 animate-spin" />
-          ) : (
-            <Save className="w-4 h-4" />
-          )}
-          {isEdit ? "Save Style Changes" : "Create Travel Style"}
-        </button>
       </div>
     </form>
   );

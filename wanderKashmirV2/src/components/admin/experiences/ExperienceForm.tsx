@@ -5,20 +5,14 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import {
-  ArrowLeft,
-  Sparkles,
   Save,
   Loader2,
-  AlertCircle,
   Plus,
   Trash2,
   Compass,
-  CheckCircle2,
   ExternalLink,
-  ShieldCheck,
   MapPin,
   Clock,
-  IndianRupee,
 } from "lucide-react";
 import {
   createExperienceAction,
@@ -28,6 +22,14 @@ import {
   deleteExperienceAction,
   ExperienceFormInput,
 } from "@/actions/adminExperiences";
+import {
+  AdminPageHeader,
+  AdminToastBanner,
+  ConfirmActionDialog,
+  StatusBadge,
+  useAdminBasePath,
+  type FeedbackMessage,
+} from "@/components/admin/ui";
 
 interface ConnectedTour {
   id: string;
@@ -79,9 +81,9 @@ function sanitizeSlug(slug: string): string {
 
 export default function ExperienceForm({ initialData, availableTours = [] }: ExperienceFormProps) {
   const router = useRouter();
-  const isEdit = !!initialData?.id;
+  const basePath = useAdminBasePath();
+  const isEdit = Boolean(initialData?.id);
 
-  // Form State
   const [title, setTitle] = useState(initialData?.title || "");
   const [slug, setSlug] = useState(initialData?.slug || "");
   const [slugManual, setSlugManual] = useState(isEdit);
@@ -99,22 +101,19 @@ export default function ExperienceForm({ initialData, availableTours = [] }: Exp
   const [images, setImages] = useState<string[]>(initialData?.images || []);
   const [newImageUrl, setNewImageUrl] = useState("");
 
-  // Connected Tours State
   const [connectedTours, setConnectedTours] = useState<ConnectedTour[]>(
     initialData?.tourExperiences || []
   );
   const [selectedTourId, setSelectedTourId] = useState("");
   const [isOptionalTour, setIsOptionalTour] = useState(false);
   const [tourDayNumber, setTourDayNumber] = useState<string>("");
-  const [tourDisplayOrder, setTourDisplayOrder] = useState<string>("0");
   const [isLinkingTour, setIsLinkingTour] = useState(false);
   const [removingTourId, setRemovingTourId] = useState<string | null>(null);
+  const [tourToDetach, setTourToDetach] = useState<ConnectedTour | null>(null);
 
-  // Status & Validation State
   const [isSaving, setIsSaving] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [feedback, setFeedback] = useState<FeedbackMessage | null>(null);
 
   const handleTitleChange = (val: string) => {
     setTitle(val);
@@ -127,9 +126,10 @@ export default function ExperienceForm({ initialData, availableTours = [] }: Exp
     const url = newImageUrl.trim();
     if (!url) return;
     if (images.includes(url)) {
-      alert("This image URL is already in the list.");
+      setFeedback({ type: "warning", text: "This image URL is already in the list." });
       return;
     }
+    setFeedback(null);
     setImages([...images, url]);
     setNewImageUrl("");
   };
@@ -138,28 +138,26 @@ export default function ExperienceForm({ initialData, availableTours = [] }: Exp
     setImages(images.filter((_, i) => i !== index));
   };
 
-  // Form Submission
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setErrorMessage(null);
-    setSuccessMessage(null);
+    setFeedback(null);
 
     if (!title.trim()) {
-      setErrorMessage("Experience title is required.");
+      setFeedback({ type: "error", text: "Experience title is required." });
       return;
     }
     if (!destination.trim()) {
-      setErrorMessage("Destination location is required (e.g. Srinagar, Gulmarg).");
+      setFeedback({ type: "error", text: "Destination location is required." });
       return;
     }
     if (!description.trim() || description.trim().length < 5) {
-      setErrorMessage("Description must be at least 5 characters.");
+      setFeedback({ type: "error", text: "Description must be at least 5 characters." });
       return;
     }
 
     const cleanSlug = sanitizeSlug(slug || title);
     if (!cleanSlug) {
-      setErrorMessage("A valid URL slug is required.");
+      setFeedback({ type: "error", text: "A valid URL slug is required." });
       return;
     }
 
@@ -179,39 +177,38 @@ export default function ExperienceForm({ initialData, availableTours = [] }: Exp
       if (isEdit && initialData?.id) {
         const res = await updateExperienceAction(initialData.id, payload);
         if (res.success && res.data) {
-          setSuccessMessage("Experience updated successfully.");
+          setFeedback({ type: "success", text: "Experience updated successfully." });
           router.refresh();
         } else {
-          setErrorMessage(res.error || "Failed to update experience.");
+          setFeedback({ type: "error", text: res.error || "Failed to update experience." });
         }
       } else {
         const res = await createExperienceAction(payload);
         if (res.success && res.data) {
-          router.push(`/admin/experiences/${res.data.id}`);
+          router.push(`${basePath}/experiences/${res.data.id}`);
         } else {
-          setErrorMessage(res.error || "Failed to create experience.");
+          setFeedback({ type: "error", text: res.error || "Failed to create experience." });
         }
       }
     } catch {
-      setErrorMessage("An unexpected network error occurred.");
+      setFeedback({ type: "error", text: "An unexpected network error occurred." });
     } finally {
       setIsSaving(false);
     }
   };
 
-  // Tour Linking in Edit Mode
   const handleAssignTour = async () => {
     if (!isEdit || !initialData?.id || !selectedTourId) return;
 
     setIsLinkingTour(true);
-    setErrorMessage(null);
+    setFeedback(null);
     try {
       const res = await assignTourToExperienceAction({
         experienceId: initialData.id,
         tourId: selectedTourId,
         isOptional: isOptionalTour,
         dayNumber: tourDayNumber ? parseInt(tourDayNumber, 10) : null,
-        displayOrder: tourDisplayOrder ? parseInt(tourDisplayOrder, 10) : 0,
+        displayOrder: 0,
       });
 
       if (res.success) {
@@ -224,7 +221,7 @@ export default function ExperienceForm({ initialData, availableTours = [] }: Exp
               tourId: selectedTourId,
               isOptional: isOptionalTour,
               dayNumber: tourDayNumber ? parseInt(tourDayNumber, 10) : null,
-              displayOrder: tourDisplayOrder ? parseInt(tourDisplayOrder, 10) : 0,
+              displayOrder: 0,
               tour: {
                 id: linkedTourObj.id,
                 title: linkedTourObj.title,
@@ -239,66 +236,43 @@ export default function ExperienceForm({ initialData, availableTours = [] }: Exp
         setSelectedTourId("");
         setTourDayNumber("");
         setIsOptionalTour(false);
-        setSuccessMessage("Tour linked to experience successfully.");
+        setFeedback({ type: "success", text: "Tour linked to experience." });
         router.refresh();
       } else {
-        setErrorMessage(res.error || "Failed to link tour.");
+        setFeedback({ type: "error", text: res.error || "Failed to link tour." });
       }
     } catch {
-      setErrorMessage("Failed to assign tour.");
+      setFeedback({ type: "error", text: "Failed to assign tour." });
     } finally {
       setIsLinkingTour(false);
     }
   };
 
-  const handleRemoveTour = async (tourId: string) => {
-    if (!isEdit || !initialData?.id) return;
-    if (!confirm("Are you sure you want to detach this tour from the experience? The tour itself will NOT be deleted or altered.")) {
-      return;
-    }
-
-    setRemovingTourId(tourId);
-    setErrorMessage(null);
+  const handleConfirmDetachTour = async () => {
+    if (!isEdit || !initialData?.id || !tourToDetach) return;
+    setRemovingTourId(tourToDetach.tourId);
     try {
-      const res = await removeTourFromExperienceAction(initialData.id, tourId);
+      const res = await removeTourFromExperienceAction(initialData.id, tourToDetach.tourId);
       if (res.success) {
-        setConnectedTours((prev) => prev.filter((t) => t.tourId !== tourId));
-        setSuccessMessage("Tour link removed successfully.");
+        setConnectedTours((prev) => prev.filter((t) => t.tourId !== tourToDetach.tourId));
+        setFeedback({ type: "success", text: "Tour link removed." });
+        setTourToDetach(null);
         router.refresh();
       } else {
-        setErrorMessage(res.error || "Failed to remove tour link.");
+        throw new Error(res.error || "Failed to remove tour link.");
       }
-    } catch {
-      setErrorMessage("Failed to remove tour link.");
     } finally {
       setRemovingTourId(null);
     }
   };
 
-  const handleDeleteExperience = async () => {
+  const handleConfirmDeleteExperience = async () => {
     if (!initialData?.id) return;
-    if (connectedTours.length > 0) {
-      setErrorMessage(
-        `Cannot delete experience because it is assigned to ${connectedTours.length} tour(s). Please remove all tour links first or set its status to Inactive.`
-      );
-      return;
-    }
-    if (!confirm("Are you sure you want to permanently delete this experience? This action cannot be undone.")) {
-      return;
-    }
-    setIsDeleting(true);
-    setErrorMessage(null);
-    try {
-      const res = await deleteExperienceAction(initialData.id);
-      if (res.success) {
-        router.push("/admin/experiences");
-      } else {
-        setErrorMessage(res.error || "Failed to delete experience.");
-      }
-    } catch {
-      setErrorMessage("An unexpected network error occurred.");
-    } finally {
-      setIsDeleting(false);
+    const res = await deleteExperienceAction(initialData.id);
+    if (res.success) {
+      router.push(`${basePath}/experiences`);
+    } else {
+      throw new Error(res.error || "Failed to delete experience.");
     }
   };
 
@@ -306,110 +280,94 @@ export default function ExperienceForm({ initialData, availableTours = [] }: Exp
   const unassignedTours = availableTours.filter((t) => !alreadyAssignedIds.has(t.id));
 
   return (
-    <div className="space-y-6 max-w-5xl mx-auto pb-12">
-      {/* Top Bar Navigation */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-slate-800 pb-5">
-        <div className="flex items-center gap-3">
-          <Link
-            href="/admin/experiences"
-            className="p-2 rounded-lg bg-slate-900 border border-slate-800 text-slate-400 hover:text-white hover:bg-slate-800 transition"
-          >
-            <ArrowLeft className="w-5 h-5" />
-          </Link>
-          <div>
-            <h1 className="text-xl sm:text-2xl font-bold text-white flex items-center gap-2">
-              <Sparkles className="w-6 h-6 text-emerald-400" />
-              <span>{isEdit ? "Edit Experience" : "Create New Experience"}</span>
-            </h1>
-            <p className="text-xs sm:text-sm text-slate-400">
-              {isEdit ? `Managing: ${initialData?.title}` : "Fill out details to publish a new experience"}
-            </p>
-          </div>
-        </div>
-
-        {isEdit && (
-          <div className="flex items-center gap-2">
-            {initialData?.slug && (
-              <Link
-                href={`/experiences/${initialData.slug}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-900 text-slate-300 hover:text-white border border-slate-800 hover:bg-slate-800 transition"
-              >
-                <span>View Public Page</span>
-                <ExternalLink className="w-3.5 h-3.5" />
-              </Link>
-            )}
-            <button
-              type="button"
-              onClick={handleDeleteExperience}
-              disabled={isDeleting || connectedTours.length > 0}
-              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border transition ${
-                connectedTours.length > 0
-                  ? "border-slate-800 text-slate-600 cursor-not-allowed opacity-50"
-                  : "border-red-500/30 bg-red-500/10 text-red-400 hover:bg-red-500/20"
-              }`}
-              title={
-                connectedTours.length > 0
-                  ? `Cannot delete: Assigned to ${connectedTours.length} tour(s)`
-                  : "Delete experience"
-              }
-            >
-              {isDeleting ? (
-                <Loader2 className="w-3.5 h-3.5 animate-spin" />
-              ) : (
-                <Trash2 className="w-3.5 h-3.5" />
+    <div className="space-y-6 max-w-5xl mx-auto pb-16">
+      <AdminPageHeader
+        title={isEdit ? "Edit Experience" : "New Experience"}
+        subtitle={
+          isEdit
+            ? `Editing ${initialData?.title}`
+            : "Configure activity details, pricing, and gallery images."
+        }
+        backHref={`${basePath}/experiences`}
+        backLabel="Back to Experiences"
+        badge={isEdit ? <StatusBadge status={status} /> : undefined}
+        actions={
+          isEdit ? (
+            <div className="flex items-center gap-2">
+              {initialData?.slug && (
+                <Link
+                  href={`/experiences/${initialData.slug}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 transition-colors"
+                >
+                  <span>View Public</span>
+                  <ExternalLink className="h-3.5 w-3.5 text-slate-400" />
+                </Link>
               )}
-              <span>Delete</span>
-            </button>
-          </div>
-        )}
-      </div>
+              <button
+                type="button"
+                onClick={() => {
+                  if (connectedTours.length > 0) {
+                    setFeedback({
+                      type: "warning",
+                      text: `Cannot delete while linked to ${connectedTours.length} tour(s). Unlink them first or set status to Inactive.`,
+                    });
+                    return;
+                  }
+                  setDeleteDialogOpen(true);
+                }}
+                disabled={connectedTours.length > 0}
+                className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-medium transition-colors ${
+                  connectedTours.length > 0
+                    ? "border-slate-200 bg-slate-50 text-slate-400 cursor-not-allowed"
+                    : "border-rose-200 bg-rose-50 text-rose-700 hover:bg-rose-100 cursor-pointer"
+                }`}
+                title={
+                  connectedTours.length > 0
+                    ? `Linked to ${connectedTours.length} tour(s)`
+                    : "Delete experience"
+                }
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+                <span>Delete</span>
+              </button>
+            </div>
+          ) : undefined
+        }
+      />
 
-      {/* Notifications */}
-      {errorMessage && (
-        <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 flex items-start gap-3 text-sm">
-          <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
-          <div>{errorMessage}</div>
-        </div>
-      )}
-
-      {successMessage && (
-        <div className="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-start gap-3 text-sm">
-          <CheckCircle2 className="w-5 h-5 shrink-0 mt-0.5" />
-          <div>{successMessage}</div>
-        </div>
-      )}
+      <AdminToastBanner message={feedback} onDismiss={() => setFeedback(null)} />
 
       <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Basic Information Card */}
-        <div className="bg-slate-900/60 border border-slate-800 rounded-xl p-5 sm:p-6 space-y-5">
-          <h2 className="text-base font-semibold text-white border-b border-slate-800/80 pb-3 flex items-center gap-2">
-            <span>Basic Information</span>
+        {/* Basic Information */}
+        <div className="rounded-md border border-slate-200/90 bg-white p-5 sm:p-6 space-y-5 shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
+          <h2 className="text-sm font-semibold text-slate-900 border-b border-slate-100 pb-3">
+            Basic Information
           </h2>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-            {/* Title */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-medium uppercase tracking-wider text-slate-300 mb-1.5">
-                Experience Title <span className="text-red-400">*</span>
+              <label htmlFor="exp-title" className="block text-xs font-medium text-slate-700 mb-1.5">
+                Experience Title <span className="text-rose-600">*</span>
               </label>
               <input
+                id="exp-title"
                 type="text"
                 value={title}
                 onChange={(e) => handleTitleChange(e.target.value)}
                 placeholder="e.g. Traditional Shikara Ride at Sunset"
-                className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3.5 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500"
+                className="w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-xs text-slate-900 placeholder:text-slate-400 focus:border-[var(--season-primary)] focus:outline-hidden"
                 required
               />
             </div>
 
-            {/* Slug */}
             <div>
-              <label className="block text-xs font-medium uppercase tracking-wider text-slate-300 mb-1.5">
-                URL Slug <span className="text-red-400">*</span>
+              <label htmlFor="exp-slug" className="block text-xs font-medium text-slate-700 mb-1.5">
+                URL Slug <span className="text-rose-600">*</span>
               </label>
               <input
+                id="exp-slug"
                 type="text"
                 value={slug}
                 onChange={(e) => {
@@ -417,7 +375,7 @@ export default function ExperienceForm({ initialData, availableTours = [] }: Exp
                   setSlug(sanitizeSlug(e.target.value));
                 }}
                 placeholder="traditional-shikara-ride-sunset"
-                className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3.5 py-2.5 text-sm font-mono text-emerald-400 placeholder-slate-500 focus:outline-none focus:border-emerald-500"
+                className="w-full rounded-md border border-slate-200 bg-white px-3 py-2 font-mono text-xs text-slate-900 placeholder:text-slate-400 focus:border-[var(--season-primary)] focus:outline-hidden"
                 required
               />
               <p className="text-[11px] text-slate-500 mt-1">
@@ -425,125 +383,125 @@ export default function ExperienceForm({ initialData, availableTours = [] }: Exp
               </p>
             </div>
 
-            {/* Destination */}
             <div>
-              <label className="block text-xs font-medium uppercase tracking-wider text-slate-300 mb-1.5">
-                Destination <span className="text-red-400">*</span>
+              <label htmlFor="exp-dest" className="block text-xs font-medium text-slate-700 mb-1.5">
+                Destination <span className="text-rose-600">*</span>
               </label>
               <div className="relative">
-                <MapPin className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
+                <MapPin className="h-3.5 w-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
                 <input
+                  id="exp-dest"
                   type="text"
                   value={destination}
                   onChange={(e) => setDestination(e.target.value)}
                   placeholder="e.g. Srinagar, Dal Lake"
-                  className="w-full bg-slate-950 border border-slate-800 rounded-lg pl-9 pr-3.5 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500"
+                  className="w-full rounded-md border border-slate-200 bg-white pl-9 pr-3 py-2 text-xs text-slate-900 placeholder:text-slate-400 focus:border-[var(--season-primary)] focus:outline-hidden"
                   required
                 />
               </div>
             </div>
 
-            {/* Duration */}
             <div>
-              <label className="block text-xs font-medium uppercase tracking-wider text-slate-300 mb-1.5">
+              <label htmlFor="exp-dur" className="block text-xs font-medium text-slate-700 mb-1.5">
                 Duration
               </label>
               <div className="relative">
-                <Clock className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
+                <Clock className="h-3.5 w-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
                 <input
+                  id="exp-dur"
                   type="text"
                   value={duration}
                   onChange={(e) => setDuration(e.target.value)}
                   placeholder="e.g. 2 Hours, Full Day"
-                  className="w-full bg-slate-950 border border-slate-800 rounded-lg pl-9 pr-3.5 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500"
+                  className="w-full rounded-md border border-slate-200 bg-white pl-9 pr-3 py-2 text-xs text-slate-900 placeholder:text-slate-400 focus:border-[var(--season-primary)] focus:outline-hidden"
                 />
               </div>
             </div>
 
-            {/* Base Price */}
             <div>
-              <label className="block text-xs font-medium uppercase tracking-wider text-slate-300 mb-1.5">
+              <label htmlFor="exp-price" className="block text-xs font-medium text-slate-700 mb-1.5">
                 Base Price (₹ INR)
               </label>
               <div className="relative">
-                <IndianRupee className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-slate-400">
+                  ₹
+                </span>
                 <input
+                  id="exp-price"
                   type="number"
                   min="0"
                   step="any"
                   value={basePrice}
                   onChange={(e) => setBasePrice(e.target.value)}
                   placeholder="e.g. 1500"
-                  className="w-full bg-slate-950 border border-slate-800 rounded-lg pl-9 pr-3.5 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500"
+                  className="w-full rounded-md border border-slate-200 bg-white pl-7 pr-3 py-2 text-xs text-slate-900 placeholder:text-slate-400 focus:border-[var(--season-primary)] focus:outline-hidden"
                 />
               </div>
             </div>
 
-            {/* Status */}
             <div>
-              <label className="block text-xs font-medium uppercase tracking-wider text-slate-300 mb-1.5">
+              <label htmlFor="exp-status" className="block text-xs font-medium text-slate-700 mb-1.5">
                 Publishing Status
               </label>
               <select
+                id="exp-status"
                 value={status}
                 onChange={(e) => setStatus(e.target.value as "ACTIVE" | "INACTIVE")}
-                className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-emerald-500"
+                className="w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-xs text-slate-900 focus:border-[var(--season-primary)] focus:outline-hidden"
               >
-                <option value="ACTIVE">ACTIVE (Published publicly)</option>
-                <option value="INACTIVE">INACTIVE (Hidden / Draft)</option>
+                <option value="ACTIVE">Active (Published)</option>
+                <option value="INACTIVE">Inactive (Hidden / Draft)</option>
               </select>
             </div>
           </div>
 
-          {/* Description */}
           <div>
-            <label className="block text-xs font-medium uppercase tracking-wider text-slate-300 mb-1.5">
-              Experience Description <span className="text-red-400">*</span>
+            <label htmlFor="exp-desc" className="block text-xs font-medium text-slate-700 mb-1.5">
+              Description <span className="text-rose-600">*</span>
             </label>
             <textarea
+              id="exp-desc"
               rows={5}
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Describe the experience highlights, inclusions, meeting points, and cultural relevance..."
-              className="w-full bg-slate-950 border border-slate-800 rounded-lg p-3.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500"
+              className="w-full rounded-md border border-slate-200 bg-white p-3 text-xs text-slate-900 placeholder:text-slate-400 focus:border-[var(--season-primary)] focus:outline-hidden leading-relaxed"
               required
             />
           </div>
         </div>
 
-        {/* Media & Images Card */}
-        <div className="bg-slate-900/60 border border-slate-800 rounded-xl p-5 sm:p-6 space-y-4">
-          <div className="flex items-center justify-between border-b border-slate-800/80 pb-3">
-            <h2 className="text-base font-semibold text-white">Media & Photos</h2>
-            <span className="text-xs text-slate-400">{images.length} images added</span>
+        {/* Media & Images */}
+        <div className="rounded-md border border-slate-200 bg-white p-5 sm:p-6 space-y-4 shadow-xs">
+          <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+            <h2 className="text-sm font-semibold text-slate-900">Media & Photos</h2>
+            <span className="text-xs text-slate-500">{images.length} images</span>
           </div>
 
-          {/* Add Image Input */}
           <div className="flex gap-2">
             <input
               type="url"
               value={newImageUrl}
               onChange={(e) => setNewImageUrl(e.target.value)}
               placeholder="https://res.cloudinary.com/... or image URL"
-              className="flex-1 bg-slate-950 border border-slate-800 rounded-lg px-3.5 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500"
+              className="flex-1 rounded-md border border-slate-200 bg-white px-3 py-2 text-xs text-slate-900 placeholder:text-slate-400 focus:border-[var(--season-primary)] focus:outline-hidden"
             />
             <button
               type="button"
               onClick={handleAddImage}
-              className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-lg text-sm font-medium inline-flex items-center gap-1.5 transition"
+              className="inline-flex items-center gap-1.5 rounded-md border border-slate-200 bg-white px-3.5 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50 transition-colors cursor-pointer"
             >
-              <Plus className="w-4 h-4" />
+              <Plus className="h-3.5 w-3.5" />
               <span>Add URL</span>
             </button>
           </div>
 
-          {/* Image Previews */}
           {images.length > 0 ? (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 pt-2">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 pt-1">
               {images.map((img, idx) => (
                 <div
                   key={idx}
-                  className="relative group rounded-lg overflow-hidden border border-slate-800 bg-slate-950 aspect-video"
+                  className="relative group rounded-lg overflow-hidden border border-slate-200 bg-slate-100 aspect-video"
                 >
                   <Image
                     src={img}
@@ -552,18 +510,18 @@ export default function ExperienceForm({ initialData, availableTours = [] }: Exp
                     sizes="200px"
                     className="object-cover"
                   />
-                  <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                  <div className="absolute inset-0 bg-slate-900/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                     <button
                       type="button"
                       onClick={() => handleRemoveImage(idx)}
-                      className="p-1.5 rounded-md bg-red-600/80 text-white hover:bg-red-500"
+                      className="rounded-lg bg-rose-600 p-1.5 text-white hover:bg-rose-700 cursor-pointer"
                       title="Remove image"
                     >
-                      <Trash2 className="w-4 h-4" />
+                      <Trash2 className="h-3.5 w-3.5" />
                     </button>
                   </div>
                   {idx === 0 && (
-                    <span className="absolute bottom-1.5 left-1.5 px-1.5 py-0.5 rounded bg-black/80 text-[10px] text-emerald-400 font-semibold">
+                    <span className="absolute bottom-1.5 left-1.5 rounded bg-slate-900/75 px-1.5 py-0.5 text-[10px] text-white font-medium">
                       Cover
                     </span>
                   )}
@@ -572,69 +530,57 @@ export default function ExperienceForm({ initialData, availableTours = [] }: Exp
             </div>
           ) : (
             <p className="text-xs text-slate-500 italic">
-              No images added yet. Provide Cloudinary or web URLs to showcase this experience.
+              No images added yet. Add Cloudinary or web URLs above to showcase this experience.
             </p>
           )}
         </div>
 
         {/* Submit Actions */}
-        <div className="flex items-center justify-end gap-3 pt-2">
+        <div className="flex items-center justify-end gap-2">
           <Link
-            href="/admin/experiences"
-            className="px-4 py-2.5 rounded-lg border border-slate-800 text-slate-400 hover:text-white hover:bg-slate-900 text-sm font-medium transition"
+            href={`${basePath}/experiences`}
+            className="rounded-md border border-slate-200 bg-white px-4 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50 transition-colors"
           >
             Cancel
           </Link>
           <button
             type="submit"
             disabled={isSaving}
-            className="inline-flex items-center gap-2 px-6 py-2.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-medium text-sm transition shadow-sm hover:shadow-emerald-500/20 disabled:opacity-50"
+            className="inline-flex items-center gap-1.5 rounded-md bg-[var(--season-primary)] px-4 py-2 text-xs font-semibold text-white hover:bg-[var(--season-primary-hover)] disabled:opacity-50 transition-colors cursor-pointer"
           >
-            {isSaving ? (
-              <>
-                <Loader2 className="w-4 h-4 animate-spin" />
-                <span>Saving...</span>
-              </>
-            ) : (
-              <>
-                <Save className="w-4 h-4" />
-                <span>{isEdit ? "Update Experience" : "Create Experience"}</span>
-              </>
-            )}
+            {isSaving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Save className="h-3.5 w-3.5" />}
+            <span>{isEdit ? "Save Changes" : "Create Experience"}</span>
           </button>
         </div>
       </form>
 
-      {/* Connected Tours Card (Available in Edit Mode) */}
+      {/* Connected Tours (Edit Mode) */}
       {isEdit && (
-        <div className="bg-slate-900/60 border border-slate-800 rounded-xl p-5 sm:p-6 space-y-5 mt-8">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 border-b border-slate-800/80 pb-3">
+        <div className="rounded-md border border-slate-200 bg-white p-5 sm:p-6 space-y-4 shadow-xs">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 border-b border-slate-100 pb-3">
             <div>
-              <h2 className="text-base font-semibold text-white flex items-center gap-2">
-                <Compass className="w-5 h-5 text-blue-400" />
+              <h2 className="text-sm font-semibold text-slate-900 flex items-center gap-2">
+                <Compass className="h-4 w-4 text-slate-400" />
                 <span>Connected Tour Packages</span>
               </h2>
-              <p className="text-xs text-slate-400 mt-0.5">
-                Manage which tour itineraries include this experience via TourExperience relation.
+              <p className="text-xs text-slate-500 mt-0.5">
+                Link or unlink itineraries that include this experience without modifying the tour records.
               </p>
             </div>
-            <span className="text-xs text-slate-400 font-mono">
+            <span className="text-xs font-medium text-slate-500 tabular-nums">
               {connectedTours.length} connected
             </span>
           </div>
 
-          {/* Tour Assignment Form */}
           {unassignedTours.length > 0 ? (
-            <div className="bg-slate-950 p-4 rounded-lg border border-slate-800/80 space-y-3">
-              <span className="text-xs font-semibold uppercase tracking-wider text-slate-300 block">
-                Link an Existing Tour
-              </span>
+            <div className="rounded-md border border-slate-200 bg-slate-50/70 p-4 space-y-3">
+              <span className="text-xs font-medium text-slate-700 block">Link an Existing Tour</span>
               <div className="grid grid-cols-1 sm:grid-cols-12 gap-3">
                 <div className="sm:col-span-6">
                   <select
                     value={selectedTourId}
                     onChange={(e) => setSelectedTourId(e.target.value)}
-                    className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500"
+                    className="w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-xs text-slate-900 focus:border-[var(--season-primary)] focus:outline-hidden"
                   >
                     <option value="">Select a tour package...</option>
                     {unassignedTours.map((t) => (
@@ -652,20 +598,20 @@ export default function ExperienceForm({ initialData, availableTours = [] }: Exp
                     placeholder="Day #"
                     value={tourDayNumber}
                     onChange={(e) => setTourDayNumber(e.target.value)}
-                    className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-blue-500"
+                    className="w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-xs text-slate-900 placeholder:text-slate-400 focus:border-[var(--season-primary)] focus:outline-hidden"
                     title="Day of itinerary when this experience occurs (optional)"
                   />
                 </div>
 
                 <div className="sm:col-span-2 flex items-center">
-                  <label className="flex items-center gap-2 text-xs text-slate-300 cursor-pointer">
+                  <label className="flex items-center gap-2 text-xs text-slate-700 cursor-pointer">
                     <input
                       type="checkbox"
                       checked={isOptionalTour}
                       onChange={(e) => setIsOptionalTour(e.target.checked)}
-                      className="rounded border-slate-800 bg-slate-900 text-blue-600 focus:ring-0"
+                      className="rounded border-slate-300 text-[var(--season-primary)] focus:ring-[var(--season-primary)]"
                     />
-                    <span>Optional addon</span>
+                    <span>Optional</span>
                   </label>
                 </div>
 
@@ -674,79 +620,70 @@ export default function ExperienceForm({ initialData, availableTours = [] }: Exp
                     type="button"
                     onClick={handleAssignTour}
                     disabled={!selectedTourId || isLinkingTour}
-                    className="w-full sm:w-auto px-4 py-2 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white rounded-lg text-sm font-medium transition inline-flex items-center justify-center gap-1.5"
+                    className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 rounded-md bg-[var(--season-primary)] px-3.5 py-2 text-xs font-semibold text-white hover:bg-[var(--season-primary-hover)] disabled:opacity-50 transition-colors cursor-pointer"
                   >
                     {isLinkingTour ? (
-                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
                     ) : (
-                      <Plus className="w-4 h-4" />
+                      <Plus className="h-3.5 w-3.5" />
                     )}
-                    <span>Link Tour</span>
+                    <span>Link</span>
                   </button>
                 </div>
               </div>
             </div>
           ) : (
             <p className="text-xs text-slate-500 italic">
-              All active production tours are currently linked to this experience or no additional tours are available.
+              All available tours are already linked to this experience.
             </p>
           )}
 
-          {/* List of Connected Tours */}
           {connectedTours.length > 0 ? (
-            <div className="divide-y divide-slate-800/80 rounded-lg border border-slate-800 overflow-hidden bg-slate-950">
+            <div className="divide-y divide-slate-100 rounded-lg border border-slate-200 overflow-hidden">
               {connectedTours.map((ct) => (
                 <div
                   key={ct.tourId}
-                  className="flex flex-col sm:flex-row sm:items-center justify-between p-3.5 gap-3 hover:bg-slate-900/40 transition"
+                  className="flex flex-col sm:flex-row sm:items-center justify-between p-3.5 gap-3 hover:bg-slate-50/70 transition-colors"
                 >
                   <div className="min-w-0">
                     <div className="flex items-center gap-2">
-                      <span className="font-medium text-white text-sm truncate">
+                      <span className="font-medium text-xs text-slate-900 truncate">
                         {ct.tour.title}
                       </span>
-                      {ct.tour.isLive ? (
-                        <span className="px-1.5 py-0.5 rounded text-[10px] bg-emerald-500/10 text-emerald-400 font-semibold border border-emerald-500/20">
-                          Live
-                        </span>
-                      ) : (
-                        <span className="px-1.5 py-0.5 rounded text-[10px] bg-slate-800 text-slate-400">
-                          Draft
-                        </span>
-                      )}
+                      <StatusBadge status={ct.tour.isLive ? "LIVE" : "DRAFT"} />
                     </div>
-                    <div className="flex items-center gap-3 text-xs text-slate-500 mt-1">
-                      <span>Duration: {ct.tour.duration}</span>
+                    <div className="flex items-center gap-3 text-[11px] text-slate-500 mt-1">
+                      <span>{ct.tour.duration}</span>
                       {ct.dayNumber !== null && ct.dayNumber !== undefined && (
-                        <span>Day: {ct.dayNumber}</span>
+                        <span>Day {ct.dayNumber}</span>
                       )}
                       {ct.isOptional && (
-                        <span className="text-amber-400 font-medium">Optional Addon</span>
+                        <span className="text-amber-700 font-medium">Optional addon</span>
                       )}
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-2 self-end sm:self-auto">
+                  <div className="flex items-center gap-1.5 self-end sm:self-auto">
                     <Link
                       href={`/tours/${ct.tour.slug}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition"
-                      title="View Public Tour Page"
+                      className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-700 transition-colors"
+                      title="View public tour page"
                     >
-                      <ExternalLink className="w-4 h-4" />
+                      <ExternalLink className="h-3.5 w-3.5" />
                     </Link>
                     <button
                       type="button"
-                      onClick={() => handleRemoveTour(ct.tourId)}
+                      onClick={() => setTourToDetach(ct)}
                       disabled={removingTourId === ct.tourId}
-                      className="p-1.5 rounded-lg text-red-400 hover:text-white hover:bg-red-500/20 transition disabled:opacity-50"
-                      title="Remove relation from this experience"
+                      className="rounded-lg p-1.5 text-slate-400 hover:bg-rose-50 hover:text-rose-600 transition-colors disabled:opacity-50 cursor-pointer"
+                      title="Detach tour"
                     >
                       {removingTourId === ct.tourId ? (
-                        <Loader2 className="w-4 h-4 animate-spin" />
+                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
                       ) : (
-                        <Trash2 className="w-4 h-4" />
+                        <Trash2 className="h-3.5 w-3.5" />
                       )}
                     </button>
                   </div>
@@ -754,24 +691,37 @@ export default function ExperienceForm({ initialData, availableTours = [] }: Exp
               ))}
             </div>
           ) : (
-            <div className="p-6 text-center border border-dashed border-slate-800 rounded-lg">
-              <Compass className="w-8 h-8 text-slate-600 mx-auto mb-2" />
-              <p className="text-sm text-slate-400">No tours linked to this experience yet.</p>
-              <p className="text-xs text-slate-500 mt-0.5">
-                Use the dropdown above to link this experience to relevant tour itineraries.
-              </p>
+            <div className="rounded-lg border border-dashed border-slate-200 bg-slate-50 p-6 text-center">
+              <Compass className="h-6 w-6 text-slate-400 mx-auto mb-1.5" />
+              <p className="text-xs font-medium text-slate-600">No tours linked yet.</p>
             </div>
           )}
-
-          {/* Safety Notice */}
-          <div className="flex items-center gap-2 text-xs text-slate-500 pt-2 border-t border-slate-800/60">
-            <ShieldCheck className="w-4 h-4 text-emerald-500 shrink-0" />
-            <span>
-              Tour Safety Guarantee: Linking or unlinking experiences ONLY modifies the join relation. The underlying Tour records, itineraries, and live statuses are never modified or deleted.
-            </span>
-          </div>
         </div>
       )}
+
+      <ConfirmActionDialog
+        open={Boolean(tourToDetach)}
+        onClose={() => setTourToDetach(null)}
+        onConfirm={handleConfirmDetachTour}
+        title="Detach Tour"
+        description={
+          tourToDetach
+            ? `Remove the link to "${tourToDetach.tour.title}"? The tour package itself will not be deleted or altered.`
+            : ""
+        }
+        confirmLabel="Detach Tour"
+        tone="warning"
+      />
+
+      <ConfirmActionDialog
+        open={deleteDialogOpen}
+        onClose={() => setDeleteDialogOpen(false)}
+        onConfirm={handleConfirmDeleteExperience}
+        title="Delete Experience"
+        description={`Permanently delete "${initialData?.title || title}"? This action cannot be undone.`}
+        confirmLabel="Delete Experience"
+        tone="danger"
+      />
     </div>
   );
 }

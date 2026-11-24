@@ -5,23 +5,16 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import {
-  ArrowLeft,
   Save,
   Loader2,
-  AlertCircle,
-  CheckCircle2,
   ExternalLink,
   MapPin,
-  Compass,
-  Layers,
   Plus,
   Trash2,
   ArrowUp,
   ArrowDown,
-  ShieldAlert,
-  Image as ImageIcon,
-  Camera,
   Building,
+  Image as ImageIcon,
 } from "lucide-react";
 import {
   createDestinationAction,
@@ -37,6 +30,16 @@ import NearbyPlacesEditor, {
   AvailablePlaceOption,
 } from "./NearbyPlacesEditor";
 import type { AvailablePropertyOption } from "@/lib/admin/destinations";
+import { GalleryImageItem, isValidImageUrl } from "@/lib/places/galleryValidation";
+import {
+  AdminPageHeader,
+  AdminToastBanner,
+  AdminMediaGalleryField,
+  ConfirmActionDialog,
+  StatusBadge,
+  useAdminBasePath,
+  type FeedbackMessage,
+} from "@/components/admin/ui";
 
 interface PlaceOption extends AvailablePlaceOption {
   id: string;
@@ -77,13 +80,17 @@ interface DestinationFormProps {
     imageUrl: string | null;
     content: string | null;
     workflowState: string;
-    seoStrategy?: any;
-    faqs?: any;
+    seoStrategy?: unknown;
+    faqs?: unknown;
     places?: LinkedPlaceItem[];
   };
   availablePlaces: PlaceOption[];
   availableProperties?: AvailablePropertyOption[];
   isEdit?: boolean;
+}
+
+function asEditableString(val: unknown): string {
+  return typeof val === "string" ? val : "";
 }
 
 export default function DestinationForm({
@@ -93,144 +100,132 @@ export default function DestinationForm({
   isEdit = false,
 }: DestinationFormProps) {
   const router = useRouter();
+  const { adminHref } = useAdminBasePath();
 
-  // Extract initial seoStrategy values
-  const strategy = (typeof initialData?.seoStrategy === "object" && initialData?.seoStrategy !== null)
-    ? initialData.seoStrategy
-    : {};
+  const [activeTab, setActiveTab] = useState<
+    "basics" | "editorial" | "media" | "relations" | "faqs"
+  >("basics");
 
-  // Form Fields
+  const strategy =
+    typeof initialData?.seoStrategy === "object" && initialData?.seoStrategy !== null
+      ? (initialData.seoStrategy as Record<string, unknown>)
+      : {};
+
+  // Basics & SEO
   const [title, setTitle] = useState(initialData?.title || "");
   const [slug, setSlug] = useState(initialData?.slug || "");
   const [h1Heading, setH1Heading] = useState(initialData?.h1Heading || "");
-  const [cleanName, setCleanName] = useState(strategy.cleanName || "");
+  const [cleanName, setCleanName] = useState(asEditableString(strategy.cleanName));
   const [description, setDescription] = useState(initialData?.description || "");
   const [imageUrl, setImageUrl] = useState(initialData?.imageUrl || "");
-  const [workflowState, setWorkflowState] = useState<"PUBLISHED" | "DRAFT" | "ARCHIVED">(
-    (initialData?.workflowState as any) || "DRAFT"
+  const [workflowState, setWorkflowState] = useState<"PUBLISHED" | "DRAFT">(
+    initialData?.workflowState === "PUBLISHED" ? "PUBLISHED" : "DRAFT"
   );
 
-  // Content Sections
-  const [overview, setOverview] = useState(strategy.overview || initialData?.content || "");
-  const [bestTimeToVisit, setBestTimeToVisit] = useState(strategy.bestTimeToVisit || "");
-  const [howToReach, setHowToReach] = useState(strategy.howToReach || "");
-  const [itinerary, setItinerary] = useState(strategy.itinerary || "");
-  const [food, setFood] = useState(strategy.food || "");
-  const [shopping, setShopping] = useState(strategy.shopping || "");
-  const [activities, setActivities] = useState(strategy.activities || "");
-  const initialNearbyConfig = strategy.nearbyPlacesConfig;
+  // Editorial Sections
+  const [overview, setOverview] = useState(
+    asEditableString(strategy.overview) || initialData?.content || ""
+  );
+  const [bestTimeToVisit, setBestTimeToVisit] = useState(asEditableString(strategy.bestTimeToVisit));
+  const [howToReach, setHowToReach] = useState(asEditableString(strategy.howToReach));
+  const [itinerary, setItinerary] = useState(asEditableString(strategy.itinerary));
+  const [food, setFood] = useState(asEditableString(strategy.food));
+  const [shopping, setShopping] = useState(asEditableString(strategy.shopping));
+  const [activities, setActivities] = useState(asEditableString(strategy.activities));
+
+  const initialNearbyConfig = strategy.nearbyPlacesConfig as
+    | { introContent?: string | null; items?: NearbyPlaceItemConfig[] }
+    | undefined;
   const [nearbyPlacesIntro, setNearbyPlacesIntro] = useState<string>(
     initialNearbyConfig?.introContent !== undefined
       ? initialNearbyConfig.introContent || ""
-      : strategy.nearbyPlacesContent || ""
+      : asEditableString(strategy.nearbyPlacesContent)
   );
   const [nearbyPlacesItems, setNearbyPlacesItems] = useState<NearbyPlaceItemConfig[]>(
     Array.isArray(initialNearbyConfig?.items) ? initialNearbyConfig.items : []
   );
 
-  // Gallery
-  const initialGalleryStr = Array.isArray(strategy.gallery)
-    ? strategy.gallery.map((g: any) => (typeof g === "string" ? g : g?.url || "")).filter(Boolean).join("\n")
-    : "";
-  const [galleryStr, setGalleryStr] = useState(initialGalleryStr);
+  // Media Gallery
+  const [galleryItems, setGalleryItems] = useState<GalleryImageItem[]>(() => {
+    const raw = strategy.gallery;
+    if (!Array.isArray(raw)) return [];
+    return raw
+      .map((g, idx): GalleryImageItem | null => {
+        const url = typeof g === "string" ? g.trim() : typeof g === "object" && g && "url" in g ? String((g as { url?: unknown }).url || "").trim() : "";
+        if (!url) return null;
+        const alt =
+          typeof g === "object" && g && "alt" in g && typeof (g as { alt?: unknown }).alt === "string"
+            ? (g as { alt: string }).alt
+            : `${initialData?.h1Heading || "Destination"} photo ${idx + 1}`;
+        return {
+          url,
+          alt,
+          caption: null,
+          order: idx,
+          isFeatured: idx === 0,
+        };
+      })
+      .filter((x): x is GalleryImageItem => x !== null);
+  });
 
-  // FAQs
-  const initialFaqs = Array.isArray(initialData?.faqs)
-    ? initialData.faqs.map((f: any) => ({
-        question: f.question || f.q || "",
-        answer: f.answer || f.a || "",
-      }))
+  // Photography Spots
+  const dynamicSections = Array.isArray(strategy.dynamicSections)
+    ? (strategy.dynamicSections as Array<Record<string, unknown>>)
     : [];
-  const [faqs, setFaqs] = useState<{ question: string; answer: string }[]>(initialFaqs);
-  const [newQuestion, setNewQuestion] = useState("");
-  const [newAnswer, setNewAnswer] = useState("");
-  // Photography Spots (Dynamic Section)
-  const initialPhotoBlock = Array.isArray(strategy.dynamicSections)
-    ? strategy.dynamicSections.find((b: any) => b.blockType === "photographySpots")
-    : null;
+  const initialPhotoBlock = dynamicSections.find((b) => b.blockType === "photographySpots");
   const [photoSectionTitle, setPhotoSectionTitle] = useState(
-    initialPhotoBlock?.sectionTitle || "Top Photography & Sunset Frames"
+    asEditableString(initialPhotoBlock?.sectionTitle) || "Top Photography & Sunset Frames"
   );
   const [photoSectionSubtitle, setPhotoSectionSubtitle] = useState(
-    initialPhotoBlock?.sectionSubtitle || "Iconic vantage points for capturing the golden glow of the valley."
+    asEditableString(initialPhotoBlock?.sectionSubtitle) ||
+      "Iconic vantage points for capturing the golden glow of the valley."
   );
   const [photoSpots, setPhotoSpots] = useState<
     Array<{ spotName: string; bestTime: string; image: string; tip: string }>
-  >(
-    Array.isArray(initialPhotoBlock?.spots)
-      ? initialPhotoBlock.spots.map((s: any) => ({
-          spotName: s.spotName || "",
-          bestTime: s.bestTime || "",
-          image: typeof s.image === "string" ? s.image : s.image?.url || "",
-          tip: s.tip || "",
-        }))
-      : []
-  );
+  >(() => {
+    const rawSpots = initialPhotoBlock?.spots;
+    if (!Array.isArray(rawSpots)) return [];
+    return rawSpots.map((s: Record<string, unknown>) => ({
+      spotName: asEditableString(s.spotName),
+      bestTime: asEditableString(s.bestTime),
+      image:
+        typeof s.image === "string"
+          ? s.image
+          : typeof s.image === "object" && s.image && "url" in s.image
+          ? asEditableString((s.image as { url?: unknown }).url)
+          : "",
+      tip: asEditableString(s.tip),
+    }));
+  });
 
-  const handleAddPhotoSpot = () => {
-    setPhotoSpots((prev) => [
-      ...prev,
-      { spotName: "", bestTime: "Golden Hour (5:30 PM - 6:30 PM)", image: "", tip: "" },
-    ]);
-  };
-
-  const handleUpdatePhotoSpot = (index: number, field: string, value: string) => {
-    setPhotoSpots((prev) =>
-      prev.map((spot, i) => (i === index ? { ...spot, [field]: value } : spot))
-    );
-  };
-
-  const handleRemovePhotoSpot = (index: number) => {
-    setPhotoSpots((prev) => prev.filter((_, i) => i !== index));
-  };
-
-  const handleMovePhotoSpot = (index: number, direction: "up" | "down") => {
-    const newIdx = direction === "up" ? index - 1 : index + 1;
-    if (newIdx < 0 || newIdx >= photoSpots.length) return;
-    const updated = [...photoSpots];
-    const [moved] = updated.splice(index, 1);
-    updated.splice(newIdx, 0, moved);
-    setPhotoSpots(updated);
-  };
-
-  // Featured Properties ("Where to Stay")
+  // Featured Properties & Linked Places
   const [featuredPropertyIds, setFeaturedPropertyIds] = useState<string[]>(
-    Array.isArray(strategy.featuredPropertyIds) ? strategy.featuredPropertyIds : []
+    Array.isArray(strategy.featuredPropertyIds)
+      ? (strategy.featuredPropertyIds as string[])
+      : []
   );
   const [selectedPropertyToAdd, setSelectedPropertyToAdd] = useState("");
 
-  const handleAddFeaturedProperty = (propId: string) => {
-    if (!propId || featuredPropertyIds.includes(propId)) return;
-    setFeaturedPropertyIds([...featuredPropertyIds, propId]);
-    setSelectedPropertyToAdd("");
-  };
-
-  const handleRemoveFeaturedProperty = (propId: string) => {
-    setFeaturedPropertyIds(featuredPropertyIds.filter((id) => id !== propId));
-  };
-
-  const handleMoveFeaturedProperty = (index: number, direction: "up" | "down") => {
-    const newIdx = direction === "up" ? index - 1 : index + 1;
-    if (newIdx < 0 || newIdx >= featuredPropertyIds.length) return;
-    const updated = [...featuredPropertyIds];
-    const [moved] = updated.splice(index, 1);
-    updated.splice(newIdx, 0, moved);
-    setFeaturedPropertyIds(updated);
-  };
-
-  // Linked Places State
-  const [linkedPlaces, setLinkedPlaces] = useState<LinkedPlaceItem[]>(
-    initialData?.places || []
-  );
+  const [linkedPlaces, setLinkedPlaces] = useState<LinkedPlaceItem[]>(initialData?.places || []);
   const [selectedPlaceIdToAdd, setSelectedPlaceIdToAdd] = useState("");
   const [isLinkingPlace, setIsLinkingPlace] = useState(false);
+  const [unlinkTarget, setUnlinkTarget] = useState<LinkedPlaceItem | null>(null);
 
-  // Feedback States
+  // FAQs
+  const [faqs, setFaqs] = useState<{ question: string; answer: string }[]>(() => {
+    if (!Array.isArray(initialData?.faqs)) return [];
+    return (initialData.faqs as Array<Record<string, unknown>>).map((f) => ({
+      question: asEditableString(f.question || f.q),
+      answer: asEditableString(f.answer || f.a),
+    }));
+  });
+  const [newQuestion, setNewQuestion] = useState("");
+  const [newAnswer, setNewAnswer] = useState("");
+
+  // Save / Publish Feedback
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [successMsg, setSuccessMsg] = useState<string | null>(null);
+  const [feedback, setFeedback] = useState<FeedbackMessage | null>(null);
 
-  // Auto-fill slug if user types title on create
   const handleTitleChange = (val: string) => {
     setTitle(val);
     if (!isEdit && !slug) {
@@ -243,27 +238,14 @@ export default function DestinationForm({
     }
   };
 
-  const handleAddFaq = () => {
-    if (!newQuestion.trim() || !newAnswer.trim()) return;
-    setFaqs([...faqs, { question: newQuestion.trim(), answer: newAnswer.trim() }]);
-    setNewQuestion("");
-    setNewAnswer("");
-  };
-
-  const handleRemoveFaq = (index: number) => {
-    setFaqs(faqs.filter((_, i) => i !== index));
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setError(null);
-    setSuccessMsg(null);
+    setFeedback(null);
 
-    const gallery = galleryStr
-      .split(/[\n,]+/)
-      .map((s: string) => s.trim())
-      .filter((s: string) => s.startsWith("http://") || s.startsWith("https://"));
+    const gallery = galleryItems
+      .map((g) => g.url.trim())
+      .filter((u) => u.startsWith("http://") || u.startsWith("https://"));
 
     const payload: DestinationFormInput = {
       title,
@@ -299,27 +281,25 @@ export default function DestinationForm({
       if (isEdit && initialData) {
         const res = await updateDestinationAction(initialData.id, payload);
         if (!res.success) {
-          setError(res.error || "Failed to update destination.");
-          setLoading(false);
+          setFeedback({ type: "error", text: res.error || "Failed to update destination." });
           return;
         }
-        setSuccessMsg("Destination updated successfully.");
+        setFeedback({ type: "success", text: "Destination changes saved." });
       } else {
         const res = await createDestinationAction(payload);
         if (!res.success) {
-          setError(res.error || "Failed to create destination.");
-          setLoading(false);
+          setFeedback({ type: "error", text: res.error || "Failed to create destination." });
           return;
         }
-        setSuccessMsg("Destination created successfully.");
+        setFeedback({ type: "success", text: "Destination created." });
         if (res.data?.id) {
-          router.push(`/admin/destinations/${res.data.id}`);
+          router.push(adminHref(`/admin/destinations/${res.data.id}`));
           return;
         }
       }
       router.refresh();
     } catch {
-      setError("An unexpected error occurred while saving.");
+      setFeedback({ type: "error", text: "An unexpected error occurred while saving." });
     } finally {
       setLoading(false);
     }
@@ -328,101 +308,91 @@ export default function DestinationForm({
   const handleTogglePublish = async (publish: boolean) => {
     if (!initialData) return;
     setLoading(true);
-    setError(null);
-    setSuccessMsg(null);
-
+    setFeedback(null);
     try {
       const res = await toggleDestinationPublishAction(initialData.id, publish);
       if (res.success && res.data) {
-        setWorkflowState(res.data.workflowState as any);
-        setSuccessMsg(
-          publish ? "Destination published successfully." : "Destination unpublished successfully."
-        );
+        setWorkflowState(res.data.workflowState === "PUBLISHED" ? "PUBLISHED" : "DRAFT");
+        setFeedback({
+          type: "success",
+          text: publish ? "Destination published." : "Destination reverted to draft.",
+        });
         router.refresh();
       } else {
-        setError(res.error || "Failed to toggle publication.");
+        setFeedback({ type: "error", text: res.error || "Failed to update publication status." });
       }
     } catch {
-      setError("Error communicating with server.");
+      setFeedback({ type: "error", text: "Error communicating with server." });
     } finally {
       setLoading(false);
     }
   };
 
-  // Place Link / Unlink / Reorder Handlers
   const handleAssignPlace = async () => {
     if (!initialData || !selectedPlaceIdToAdd) return;
     setIsLinkingPlace(true);
-
+    setFeedback(null);
     try {
       const res = await assignPlaceToDestinationAction(initialData.id, selectedPlaceIdToAdd);
       if (res.success && res.data) {
         const placeObj = availablePlaces.find((p) => p.id === selectedPlaceIdToAdd);
         if (placeObj) {
-          const newLinked: LinkedPlaceItem = {
-            id: res.data.id,
-            displayOrder: linkedPlaces.length,
-            place: {
-              id: placeObj.id,
-              name: placeObj.name,
-              slug: placeObj.slug,
-              description: null,
-              imageUrl: placeObj.imageUrl,
-              status: placeObj.status,
+          setLinkedPlaces([
+            ...linkedPlaces,
+            {
+              id: res.data.id,
+              displayOrder: linkedPlaces.length,
+              place: {
+                id: placeObj.id,
+                name: placeObj.name,
+                slug: placeObj.slug,
+                description: null,
+                imageUrl: placeObj.imageUrl,
+                status: placeObj.status,
+              },
             },
-          };
-          setLinkedPlaces([...linkedPlaces, newLinked]);
+          ]);
         }
         setSelectedPlaceIdToAdd("");
         router.refresh();
       } else {
-        alert(res.error || "Failed to assign place.");
+        setFeedback({ type: "error", text: res.error || "Failed to link place." });
       }
     } catch {
-      alert("Error assigning place.");
+      setFeedback({ type: "error", text: "Error linking place." });
     } finally {
       setIsLinkingPlace(false);
     }
   };
 
-  const handleRemovePlace = async (placeId: string) => {
-    if (!initialData) return;
-    if (!confirm("Unlink this place from destination? (The place record will not be deleted)")) return;
-
-    try {
-      const res = await removePlaceFromDestinationAction(initialData.id, placeId);
-      if (res.success) {
-        setLinkedPlaces(linkedPlaces.filter((lp) => lp.place.id !== placeId));
-        router.refresh();
-      } else {
-        alert(res.error || "Failed to unlink place.");
-      }
-    } catch {
-      alert("Error unlinking place.");
+  const handleConfirmUnlinkPlace = async () => {
+    if (!initialData || !unlinkTarget) return;
+    const res = await removePlaceFromDestinationAction(initialData.id, unlinkTarget.place.id);
+    if (!res.success) {
+      throw new Error(res.error || "Failed to unlink place.");
     }
+    setLinkedPlaces(linkedPlaces.filter((lp) => lp.place.id !== unlinkTarget.place.id));
+    router.refresh();
   };
 
   const handleMovePlace = async (index: number, direction: "up" | "down") => {
     if (!initialData) return;
     const newIdx = direction === "up" ? index - 1 : index + 1;
     if (newIdx < 0 || newIdx >= linkedPlaces.length) return;
-
     const copy = [...linkedPlaces];
-    const temp = copy[index];
-    copy[index] = copy[newIdx];
-    copy[newIdx] = temp;
-
+    [copy[index], copy[newIdx]] = [copy[newIdx], copy[index]];
     setLinkedPlaces(copy);
-
     try {
-      const placeIds = copy.map((lp) => lp.place.id);
-      const res = await reorderDestinationPlacesAction(initialData.id, placeIds);
+      const res = await reorderDestinationPlacesAction(
+        initialData.id,
+        copy.map((lp) => lp.place.id)
+      );
       if (!res.success) {
-        alert(res.error || "Failed to save reordered places.");
+        setFeedback({ type: "error", text: res.error || "Failed to save place order." });
         router.refresh();
       }
     } catch {
-      alert("Error updating order.");
+      setFeedback({ type: "error", text: "Error updating order." });
       router.refresh();
     }
   };
@@ -432,107 +402,131 @@ export default function DestinationForm({
     (ap) => !linkedPlaces.some((lp) => lp.place.id === ap.id)
   );
 
+  const tabs: Array<{
+    key: "basics" | "editorial" | "media" | "relations" | "faqs";
+    label: string;
+    count?: number;
+  }> = [
+    { key: "basics", label: "Basics & SEO" },
+    { key: "editorial", label: "Editorial & Nearby" },
+    { key: "media", label: "Gallery & Photo Spots", count: galleryItems.length },
+    { key: "relations", label: "Places & Stays", count: linkedPlaces.length + featuredPropertyIds.length },
+    { key: "faqs", label: "FAQs", count: faqs.length },
+  ];
+
   return (
-    <div className="space-y-6 max-w-5xl">
-      {/* Top Bar Navigation */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <Link
-          href="/admin/destinations"
-          className="inline-flex items-center gap-2 text-xs font-medium text-slate-400 hover:text-white transition-colors"
-        >
-          <ArrowLeft className="w-4 h-4" /> Back to Destinations
-        </Link>
-
-        {isEdit && initialData && (
-          <div className="flex items-center gap-2">
-            <span
-              className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold border ${
-                isPublished
-                  ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
-                  : "bg-amber-500/10 text-amber-400 border-amber-500/20"
-              }`}
-            >
-              <span className={`w-1.5 h-1.5 rounded-full ${isPublished ? "bg-emerald-400" : "bg-amber-400"}`} />
-              {workflowState}
-            </span>
-
-            {isPublished && (
+    <form onSubmit={handleSubmit} className="space-y-6 max-w-5xl mx-auto pb-16">
+      <AdminPageHeader
+        title={isEdit ? initialData?.title.split("|")[0].trim() || "Edit Destination" : "New Destination"}
+        subtitle={isEdit ? `/destinations/${slug}` : "Create a new destination travel guide."}
+        backHref={adminHref("/admin/destinations")}
+        backLabel="Back to Destinations"
+        badge={isEdit ? <StatusBadge status={workflowState} /> : undefined}
+        actions={
+          <>
+            {isEdit && initialData && isPublished && (
               <Link
                 href={`/destinations/${initialData.slug}`}
                 target="_blank"
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-800 text-xs font-medium text-slate-300 hover:text-white hover:bg-slate-800 transition-colors"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium text-slate-700 bg-white border border-slate-200 hover:bg-slate-50 transition-colors"
               >
-                <ExternalLink className="w-3.5 h-3.5" /> View Public Page
+                <ExternalLink className="w-3.5 h-3.5 text-slate-400" />
+                <span>View Live</span>
               </Link>
             )}
-          </div>
-        )}
+            {isEdit && initialData && (
+              <button
+                type="button"
+                disabled={loading}
+                onClick={() => handleTogglePublish(!isPublished)}
+                className={`px-3 py-2 rounded-md text-xs font-medium border transition-colors cursor-pointer disabled:opacity-50 ${
+                  isPublished
+                    ? "text-amber-800 bg-amber-50 border-amber-200 hover:bg-amber-100"
+                    : "text-[var(--season-primary-hover)] bg-[var(--season-primary-light)] border-[var(--season-primary)]/25 hover:bg-[var(--season-primary-light)]/80"
+                }`}
+              >
+                {isPublished ? "Unpublish" : "Publish"}
+              </button>
+            )}
+            <button
+              type="submit"
+              disabled={loading}
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-md text-xs font-medium text-white bg-[var(--season-primary)] hover:bg-[var(--season-primary-hover)] disabled:opacity-50 transition-colors cursor-pointer shadow-xs"
+            >
+              {loading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
+              <span>{isEdit ? "Save Changes" : "Create Destination"}</span>
+            </button>
+          </>
+        }
+      />
+
+      <AdminToastBanner message={feedback} onDismiss={() => setFeedback(null)} />
+
+      {/* Section Tabs */}
+      <div className="flex items-center gap-1 overflow-x-auto border-b border-slate-200 pb-px">
+        {tabs.map((tab) => {
+          const isActive = activeTab === tab.key;
+          return (
+            <button
+              key={tab.key}
+              type="button"
+              onClick={() => setActiveTab(tab.key)}
+              className={`inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-medium border-b-2 whitespace-nowrap transition-colors cursor-pointer ${
+                isActive
+                  ? "border-[var(--season-primary)] text-[var(--season-primary-hover)] font-semibold"
+                  : "border-transparent text-slate-500 hover:text-slate-800 hover:border-slate-300"
+              }`}
+            >
+              <span>{tab.label}</span>
+              {typeof tab.count === "number" && (
+                <span className="px-1.5 py-0.5 rounded text-[10px] bg-slate-100 text-slate-600 tabular-nums">
+                  {tab.count}
+                </span>
+              )}
+            </button>
+          );
+        })}
       </div>
 
-      {/* Title & Description */}
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight text-white sm:text-3xl">
-          {isEdit ? `Edit Destination: ${initialData?.title.split("|")[0].trim()}` : "Create New Destination"}
-        </h1>
-        <p className="mt-1 text-sm text-slate-400">
-          Configure destination metadata, SEO landing architecture, rich editorial sections, and tourist attraction places.
-        </p>
-      </div>
-
-      {/* Alerts */}
-      {error && (
-        <div className="p-4 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-300 text-xs flex items-center gap-3">
-          <AlertCircle className="w-4 h-4 shrink-0 text-rose-400" />
-          <span>{error}</span>
-        </div>
-      )}
-      {successMsg && (
-        <div className="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 text-xs flex items-center gap-3">
-          <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-400" />
-          <span>{successMsg}</span>
-        </div>
-      )}
-
-      {/* Main Form */}
-      <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Section 1: Overview & SEO Meta */}
-        <div className="bg-slate-900/60 border border-slate-800 rounded-xl p-5 space-y-4">
-          <h2 className="text-base font-semibold text-white flex items-center gap-2 border-b border-slate-800/80 pb-3">
-            <Compass className="w-4 h-4 text-emerald-400" />
-            1. Overview & SEO Landing Metadata
+      {/* TAB 1: BASICS & SEO */}
+      {activeTab === "basics" && (
+        <div className="bg-white border border-slate-200 rounded-lg p-5 space-y-4">
+          <h2 className="text-sm font-semibold text-slate-900 pb-2.5 border-b border-slate-100">
+            Destination Metadata &amp; SEO
           </h2>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-medium text-slate-300 mb-1.5">
-                Page Title <span className="text-rose-400">*</span>
+              <label className="block text-xs font-medium text-slate-700 mb-1.5">
+                Page Title <span className="text-rose-600">*</span>
               </label>
               <input
                 type="text"
                 required
                 value={title}
                 onChange={(e) => handleTitleChange(e.target.value)}
-                placeholder="e.g. Srinagar Travel Guide | Places to Visit & Stays"
-                className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500"
+                placeholder="e.g., Srinagar Travel Guide | Places to Visit & Stays"
+                className="w-full bg-white border border-slate-200 rounded-md px-3 py-2 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[var(--season-primary)] focus:ring-1 focus:ring-[var(--season-primary)]/20"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-medium text-slate-300 mb-1.5">
-                Clean Name (Hub Label)
+              <label className="block text-xs font-medium text-slate-700 mb-1.5">
+                Short Name (Hub Label)
               </label>
               <input
                 type="text"
                 value={cleanName}
                 onChange={(e) => setCleanName(e.target.value)}
-                placeholder="e.g. Srinagar"
-                className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500"
+                placeholder="e.g., Srinagar"
+                className="w-full bg-white border border-slate-200 rounded-md px-3 py-2 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[var(--season-primary)] focus:ring-1 focus:ring-[var(--season-primary)]/20"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-medium text-slate-300 mb-1.5">
-                URL Slug <span className="text-rose-400">*</span>
+              <label className="block text-xs font-medium text-slate-700 mb-1.5">
+                URL Slug <span className="text-rose-600">*</span>
               </label>
               <input
                 type="text"
@@ -540,596 +534,405 @@ export default function DestinationForm({
                 value={slug}
                 onChange={(e) => setSlug(e.target.value)}
                 placeholder="srinagar"
-                className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white font-mono placeholder-slate-500 focus:outline-none focus:border-emerald-500"
+                className="w-full bg-white border border-slate-200 rounded-md px-3 py-2 text-xs font-mono text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[var(--season-primary)] focus:ring-1 focus:ring-[var(--season-primary)]/20"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-medium text-slate-300 mb-1.5">
-                H1 Heading <span className="text-rose-400">*</span>
+              <label className="block text-xs font-medium text-slate-700 mb-1.5">
+                Primary H1 Heading <span className="text-rose-600">*</span>
               </label>
               <input
                 type="text"
                 required
                 value={h1Heading}
                 onChange={(e) => setH1Heading(e.target.value)}
-                placeholder="e.g. Discover Srinagar — Venice of the East"
-                className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500"
+                placeholder="e.g., Discover Srinagar"
+                className="w-full bg-white border border-slate-200 rounded-md px-3 py-2 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[var(--season-primary)] focus:ring-1 focus:ring-[var(--season-primary)]/20"
               />
             </div>
           </div>
 
-          <div>
-            <label className="block text-xs font-medium text-slate-300 mb-1.5">
-              Featured Hero Image URL
-            </label>
-            <input
-              type="text"
-              value={imageUrl}
-              onChange={(e) => setImageUrl(e.target.value)}
-              placeholder="https://res.cloudinary.com/..."
-              className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white font-mono text-[11px] placeholder-slate-500 focus:outline-none focus:border-emerald-500"
-            />
-          </div>
-
-          <div>
-            <label className="block text-xs font-medium text-slate-300 mb-1.5">
-              Meta Description
-            </label>
-            <textarea
-              rows={2}
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="Compelling SEO meta description summarizing destination attractions, weather, and travel tips..."
-              className="w-full bg-slate-950 border border-slate-800 rounded-lg p-3 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500"
-            />
-          </div>
-        </div>
-
-        {/* Section 2: Structured Editorial Content Sections */}
-        <div className="bg-slate-900/60 border border-slate-800 rounded-xl p-5 space-y-4">
-          <h2 className="text-base font-semibold text-white flex items-center gap-2 border-b border-slate-800/80 pb-3">
-            <Compass className="w-4 h-4 text-emerald-400" />
-            2. Structured Editorial Content Sections
-          </h2>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-xs font-medium text-slate-300 mb-1.5">
-                Overview & Introduction
+          <div className="flex flex-col sm:flex-row gap-4 items-start pt-2">
+            <div className="w-32 h-22 rounded-md bg-slate-50 border border-slate-200 relative overflow-hidden shrink-0">
+              {imageUrl && isValidImageUrl(imageUrl) ? (
+                <Image key={imageUrl} src={imageUrl} alt={title || "Hero"} fill className="object-cover" sizes="128px" />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center text-slate-400">
+                  <ImageIcon className="w-5 h-5" />
+                </div>
+              )}
+            </div>
+            <div className="flex-1 w-full">
+              <label className="block text-xs font-medium text-slate-700 mb-1.5">
+                Featured Hero Image URL
               </label>
-              <textarea
-                rows={4}
-                value={overview}
-                onChange={(e) => setOverview(e.target.value)}
-                placeholder="Comprehensive introduction to the valley or town..."
-                className="w-full bg-slate-950 border border-slate-800 rounded-lg p-3 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500"
+              <input
+                type="url"
+                value={imageUrl}
+                onChange={(e) => setImageUrl(e.target.value)}
+                placeholder="https://res.cloudinary.com/..."
+                className="w-full bg-white border border-slate-200 rounded-md px-3 py-2 text-xs font-mono text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[var(--season-primary)] focus:ring-1 focus:ring-[var(--season-primary)]/20"
               />
-            </div>
-
-            <div>
-              <label className="block text-xs font-medium text-slate-300 mb-1.5">
-                Best Time to Visit & Weather
-              </label>
-              <textarea
-                rows={4}
-                value={bestTimeToVisit}
-                onChange={(e) => setBestTimeToVisit(e.target.value)}
-                placeholder="Seasonal breakdown: Summer vs Autumn vs Snow winter..."
-                className="w-full bg-slate-950 border border-slate-800 rounded-lg p-3 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500"
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs font-medium text-slate-300 mb-1.5">
-                How to Reach (Air, Rail, Road)
-              </label>
-              <textarea
-                rows={4}
-                value={howToReach}
-                onChange={(e) => setHowToReach(e.target.value)}
-                placeholder="Route options from Srinagar airport or Jammu railway station..."
-                className="w-full bg-slate-950 border border-slate-800 rounded-lg p-3 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500"
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs font-medium text-slate-300 mb-1.5">
-                Suggested Itinerary & Sightseeing
-              </label>
-              <textarea
-                rows={4}
-                value={itinerary}
-                onChange={(e) => setItinerary(e.target.value)}
-                placeholder="Day-by-day sightseeing highlights..."
-                className="w-full bg-slate-950 border border-slate-800 rounded-lg p-3 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500"
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs font-medium text-slate-300 mb-1.5">
-                Food & Kashmiri Dining Culture
-              </label>
-              <textarea
-                rows={4}
-                value={food}
-                onChange={(e) => setFood(e.target.value)}
-                placeholder="Wazwan delicacies, Noon Chai, Kahwa, local bakeries..."
-                className="w-full bg-slate-950 border border-slate-800 rounded-lg p-3 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500"
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs font-medium text-slate-300 mb-1.5">
-                Shopping & Handcrafted Souvenirs
-              </label>
-              <textarea
-                rows={4}
-                value={shopping}
-                onChange={(e) => setShopping(e.target.value)}
-                placeholder="Pashmina shawls, walnut wood carvings, saffron, carpets..."
-                className="w-full bg-slate-950 border border-slate-800 rounded-lg p-3 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500"
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs font-medium text-slate-300 mb-1.5">
-                Top Activities & Adventures
-              </label>
-              <textarea
-                rows={4}
-                value={activities}
-                onChange={(e) => setActivities(e.target.value)}
-                placeholder="Shikara ride, Gondola cable car, pony trekking, skiing..."
-                className="w-full bg-slate-950 border border-slate-800 rounded-lg p-3 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500"
-              />
-            </div>
-
-            <div className="pt-2 border-t border-slate-800/80">
-              <label className="block text-xs font-semibold text-slate-200 uppercase tracking-wider mb-2">
-                8. Nearby Places & Day Excursions
-              </label>
-              <NearbyPlacesEditor
-                introContent={nearbyPlacesIntro}
-                onChangeIntroContent={setNearbyPlacesIntro}
-                items={nearbyPlacesItems}
-                onChangeItems={setNearbyPlacesItems}
-                availablePlaces={availablePlaces}
-              />
-            </div>
-          </div>
-        </div>
-
-        {/* Section 3: Media Gallery */}
-        <div className="bg-slate-900/60 border border-slate-800 rounded-xl p-5 space-y-4">
-          <h2 className="text-base font-semibold text-white flex items-center gap-2 border-b border-slate-800/80 pb-3">
-            <ImageIcon className="w-4 h-4 text-emerald-400" />
-            3. Photo Gallery (Cloudinary URLs)
-          </h2>
-
-          <div>
-            <label className="block text-xs font-medium text-slate-300 mb-1.5">
-              Gallery Image URLs (one per line)
-            </label>
-            <textarea
-              rows={4}
-              value={galleryStr}
-              onChange={(e) => setGalleryStr(e.target.value)}
-              placeholder="https://res.cloudinary.com/..."
-              className="w-full bg-slate-950 border border-slate-800 rounded-lg p-3 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 font-mono text-[11px]"
-            />
-          </div>
-
-          {galleryStr.trim() && (
-            <div className="flex flex-wrap gap-2 pt-2">
-              {galleryStr
-                .split(/[\n,]+/)
-                .map((url: string) => url.trim())
-                .filter((url: string) => url.startsWith("http"))
-                .slice(0, 6)
-                .map((url: string, idx: number) => (
-                  <div
-                    key={idx}
-                    className="w-20 h-16 rounded-lg bg-slate-800 relative overflow-hidden border border-slate-700/60"
-                  >
-                    <Image src={url} alt={`Gallery preview ${idx + 1}`} fill className="object-cover" sizes="80px" />
-                  </div>
-                ))}
-            </div>
-          )}
-        </div>
-
-        {/* Section: Photography & Sunset Spots (Dynamic Section) */}
-        <div className="bg-slate-900/60 border border-slate-800 rounded-xl p-5 space-y-4">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-slate-800/80 pb-3">
-            <div>
-              <h2 className="text-base font-semibold text-white flex items-center gap-2">
-                <Camera className="w-4 h-4 text-emerald-400" />
-                Photography & Sunset Spots ({photoSpots.length})
-              </h2>
-              <p className="text-xs text-slate-400 mt-0.5">
-                Curate prime camera angles, golden hour timings, and vantage points with photos.
+              <p className="text-[11px] text-slate-500 mt-1">
+                Displayed as the lead cover photo in the destination Bento gallery and social preview cards.
               </p>
             </div>
-            <button
-              type="button"
-              onClick={handleAddPhotoSpot}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600 text-white text-xs font-semibold hover:bg-emerald-500 transition-colors cursor-pointer self-start sm:self-auto"
-            >
-              <Plus className="w-3.5 h-3.5" /> Add Photography Spot
-            </button>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div>
-              <label className="block text-xs font-medium text-slate-300 mb-1">
-                Section Heading
-              </label>
-              <input
-                type="text"
-                value={photoSectionTitle}
-                onChange={(e) => setPhotoSectionTitle(e.target.value)}
-                placeholder="Top Photography & Sunset Frames"
-                className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-emerald-500"
-              />
+          <div>
+            <div className="flex items-center justify-between mb-1.5">
+              <label className="text-xs font-medium text-slate-700">Meta Description</label>
+              <span className={`text-[11px] tabular-nums ${description.length > 160 ? "text-amber-700" : "text-slate-400"}`}>
+                {description.length} / 160 chars
+              </span>
             </div>
-            <div>
-              <label className="block text-xs font-medium text-slate-300 mb-1">
-                Section Subtitle
-              </label>
-              <input
-                type="text"
-                value={photoSectionSubtitle}
-                onChange={(e) => setPhotoSectionSubtitle(e.target.value)}
-                placeholder="Iconic vantage points for capturing the golden glow of the valley."
-                className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-emerald-500"
-              />
+            <textarea
+              rows={3}
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="Summarize destination highlights, best visiting months, and travel tips..."
+              className="w-full bg-white border border-slate-200 rounded-md p-3 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[var(--season-primary)] focus:ring-1 focus:ring-[var(--season-primary)]/20"
+            />
+          </div>
+        </div>
+      )}
+
+      {/* TAB 2: EDITORIAL & NEARBY */}
+      {activeTab === "editorial" && (
+        <div className="space-y-5">
+          <div className="bg-white border border-slate-200 rounded-lg p-5 space-y-4">
+            <h2 className="text-sm font-semibold text-slate-900 pb-2.5 border-b border-slate-100">
+              Travel Guide Sections
+            </h2>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {[
+                { label: "Overview & Introduction", value: overview, set: setOverview, placeholder: "Introduction to the destination..." },
+                { label: "Best Time to Visit & Weather", value: bestTimeToVisit, set: setBestTimeToVisit, placeholder: "Seasonal guide across spring, summer, autumn, winter..." },
+                { label: "How to Reach (Air, Rail, Road)", value: howToReach, set: setHowToReach, placeholder: "Routes from Srinagar airport or Jammu railway station..." },
+                { label: "Suggested Itinerary", value: itinerary, set: setItinerary, placeholder: "Recommended sightseeing plan..." },
+                { label: "Food & Local Dining", value: food, set: setFood, placeholder: "Wazwan, Kahwa, Noon Chai, local bakeries..." },
+                { label: "Shopping & Crafts", value: shopping, set: setShopping, placeholder: "Pashmina, walnut wood, saffron, carpets..." },
+                { label: "Top Activities & Experiences", value: activities, set: setActivities, placeholder: "Shikara ride, gondola, trekking, skiing..." },
+              ].map((field) => (
+                <div key={field.label}>
+                  <label className="block text-xs font-medium text-slate-700 mb-1.5">
+                    {field.label}
+                  </label>
+                  <textarea
+                    rows={4}
+                    value={field.value}
+                    onChange={(e) => field.set(e.target.value)}
+                    placeholder={field.placeholder}
+                    className="w-full bg-white border border-slate-200 rounded-md p-3 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[var(--season-primary)] focus:ring-1 focus:ring-[var(--season-primary)]/20"
+                  />
+                </div>
+              ))}
             </div>
           </div>
 
-          {photoSpots.length === 0 ? (
-            <div className="p-6 rounded-lg border border-dashed border-slate-800 text-center text-xs text-slate-500">
-              No photography spots configured yet. Click &quot;Add Photography Spot&quot; above to add viewpoints and golden hour spots.
+          <div className="bg-white border border-slate-200 rounded-md p-5 space-y-3">
+            <h2 className="text-sm font-semibold text-slate-900 pb-2.5 border-b border-slate-100">
+              Nearby Places &amp; Day Excursions
+            </h2>
+            <NearbyPlacesEditor
+              introContent={nearbyPlacesIntro}
+              onChangeIntroContent={setNearbyPlacesIntro}
+              items={nearbyPlacesItems}
+              onChangeItems={setNearbyPlacesItems}
+              availablePlaces={availablePlaces}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* TAB 3: GALLERY & PHOTO SPOTS */}
+      {activeTab === "media" && (
+        <div className="space-y-5">
+          <AdminMediaGalleryField
+            title="Destination Bento Gallery"
+            description="High-resolution photos displayed in the destination hero Bento gallery alongside the cover image."
+            items={galleryItems}
+            onChange={setGalleryItems}
+            entityName={cleanName || title || "Destination"}
+            showBentoPreview
+            showCaption={false}
+            showFeaturedStar={false}
+          />
+
+          <div className="bg-white border border-slate-200 rounded-md p-5 space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-3 border-b border-slate-100">
+              <div>
+                <h2 className="text-sm font-semibold text-slate-900">
+                  Photography &amp; Viewpoint Spots ({photoSpots.length})
+                </h2>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  Curate golden-hour viewpoints and framing tips.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() =>
+                  setPhotoSpots((prev) => [
+                    ...prev,
+                    { spotName: "", bestTime: "", image: "", tip: "" },
+                  ])
+                }
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-[var(--season-primary)] text-white text-xs font-medium hover:bg-[var(--season-primary-hover)] transition-colors cursor-pointer self-start shadow-xs"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                <span>Add Spot</span>
+              </button>
             </div>
-          ) : (
-            <div className="space-y-3">
-              {photoSpots.map((spot, index) => (
-                <div
-                  key={index}
-                  className="p-3.5 rounded-lg bg-slate-950 border border-slate-800/90 space-y-3 relative"
-                >
-                  <div className="flex items-center justify-between gap-2 border-b border-slate-800/60 pb-2">
-                    <div className="flex items-center gap-2">
-                      <div className="flex gap-1">
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label className="block text-xs font-medium text-slate-700 mb-1">Section Heading</label>
+                <input
+                  type="text"
+                  value={photoSectionTitle}
+                  onChange={(e) => setPhotoSectionTitle(e.target.value)}
+                  className="w-full bg-white border border-slate-200 rounded-md px-3 py-2 text-xs text-slate-900 focus:outline-none focus:border-[var(--season-primary)] focus:ring-1 focus:ring-[var(--season-primary)]/20"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-slate-700 mb-1">Section Subtitle</label>
+                <input
+                  type="text"
+                  value={photoSectionSubtitle}
+                  onChange={(e) => setPhotoSectionSubtitle(e.target.value)}
+                  className="w-full bg-white border border-slate-200 rounded-md px-3 py-2 text-xs text-slate-900 focus:outline-none focus:border-[var(--season-primary)] focus:ring-1 focus:ring-[var(--season-primary)]/20"
+                />
+              </div>
+            </div>
+
+            {photoSpots.length === 0 ? (
+              <div className="p-6 rounded-md border border-dashed border-slate-200 text-center text-xs text-slate-500 bg-slate-50/50">
+                No photography spots added yet.
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {photoSpots.map((spot, index) => (
+                  <div
+                    key={index}
+                    className="p-4 rounded-md bg-slate-50/70 border border-slate-200 space-y-3"
+                  >
+                    <div className="flex items-center justify-between gap-2 pb-2 border-b border-slate-200/70">
+                      <span className="text-xs font-semibold text-slate-800">
+                        Spot #{index + 1}: {spot.spotName || "Untitled"}
+                      </span>
+                      <div className="flex items-center gap-1">
                         <button
                           type="button"
                           disabled={index === 0}
-                          onClick={() => handleMovePhotoSpot(index, "up")}
-                          className="p-1 rounded text-slate-400 hover:text-white disabled:opacity-30 cursor-pointer"
-                          title="Move Up"
+                          onClick={() => {
+                            const updated = [...photoSpots];
+                            [updated[index], updated[index - 1]] = [updated[index - 1], updated[index]];
+                            setPhotoSpots(updated);
+                          }}
+                          className="p-1 rounded border border-slate-200 bg-white text-slate-500 hover:text-slate-900 disabled:opacity-35 cursor-pointer"
+                          aria-label="Move spot up"
                         >
                           <ArrowUp className="w-3.5 h-3.5" />
                         </button>
                         <button
                           type="button"
                           disabled={index === photoSpots.length - 1}
-                          onClick={() => handleMovePhotoSpot(index, "down")}
-                          className="p-1 rounded text-slate-400 hover:text-white disabled:opacity-30 cursor-pointer"
-                          title="Move Down"
+                          onClick={() => {
+                            const updated = [...photoSpots];
+                            [updated[index], updated[index + 1]] = [updated[index + 1], updated[index]];
+                            setPhotoSpots(updated);
+                          }}
+                          className="p-1 rounded border border-slate-200 bg-white text-slate-500 hover:text-slate-900 disabled:opacity-35 cursor-pointer"
+                          aria-label="Move spot down"
                         >
                           <ArrowDown className="w-3.5 h-3.5" />
                         </button>
+                        <button
+                          type="button"
+                          onClick={() => setPhotoSpots(photoSpots.filter((_, i) => i !== index))}
+                          className="p-1 rounded border border-slate-200 bg-white text-slate-400 hover:text-rose-600 cursor-pointer"
+                          aria-label="Delete spot"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
                       </div>
-                      <span className="text-xs font-semibold text-slate-300">
-                        Spot #{index + 1}: {spot.spotName || "Untitled Spot"}
-                      </span>
                     </div>
 
-                    <button
-                      type="button"
-                      onClick={() => handleRemovePhotoSpot(index)}
-                      className="p-1 rounded text-slate-400 hover:text-rose-400 cursor-pointer transition-colors"
-                      title="Delete Spot"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div>
-                      <label className="block text-[11px] font-medium text-slate-400 mb-1">
-                        Spot / Viewpoint Name *
-                      </label>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <input
                         type="text"
                         value={spot.spotName}
-                        onChange={(e) => handleUpdatePhotoSpot(index, "spotName", e.target.value)}
-                        placeholder="e.g. Char Chinar Island at Sunset"
-                        className="w-full bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-emerald-500"
+                        onChange={(e) =>
+                          setPhotoSpots((prev) =>
+                            prev.map((s, i) => (i === index ? { ...s, spotName: e.target.value } : s))
+                          )
+                        }
+                        placeholder="Viewpoint name"
+                        className="w-full bg-white border border-slate-200 rounded-md px-3 py-1.5 text-xs text-slate-900 focus:outline-none focus:border-[var(--season-primary)] focus:ring-1 focus:ring-[var(--season-primary)]/20"
                       />
-                    </div>
-                    <div>
-                      <label className="block text-[11px] font-medium text-slate-400 mb-1">
-                        Best Time To Shoot *
-                      </label>
                       <input
                         type="text"
                         value={spot.bestTime}
-                        onChange={(e) => handleUpdatePhotoSpot(index, "bestTime", e.target.value)}
-                        placeholder="e.g. Golden Hour (5:30 PM - 6:30 PM)"
-                        className="w-full bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-emerald-500"
+                        onChange={(e) =>
+                          setPhotoSpots((prev) =>
+                            prev.map((s, i) => (i === index ? { ...s, bestTime: e.target.value } : s))
+                          )
+                        }
+                        placeholder="Best time to shoot (e.g., Golden hour)"
+                        className="w-full bg-white border border-slate-200 rounded-md px-3 py-1.5 text-xs text-slate-900 focus:outline-none focus:border-[var(--season-primary)] focus:ring-1 focus:ring-[var(--season-primary)]/20"
                       />
                     </div>
-                  </div>
 
-                  <div>
-                    <label className="block text-[11px] font-medium text-slate-400 mb-1">
-                      Photo / Image URL (Cloudinary or Web URL)
-                    </label>
-                    <div className="flex gap-2 items-center">
+                    <div className="flex items-center gap-2">
                       <input
-                        type="text"
+                        type="url"
                         value={spot.image}
-                        onChange={(e) => handleUpdatePhotoSpot(index, "image", e.target.value)}
-                        placeholder="https://res.cloudinary.com/..."
-                        className="flex-1 bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-emerald-500 font-mono text-[11px]"
+                        onChange={(e) =>
+                          setPhotoSpots((prev) =>
+                            prev.map((s, i) => (i === index ? { ...s, image: e.target.value } : s))
+                          )
+                        }
+                        placeholder="Image URL (https://...)"
+                        className="flex-1 bg-white border border-slate-200 rounded-md px-3 py-1.5 text-xs font-mono text-slate-900 focus:outline-none focus:border-[var(--season-primary)] focus:ring-1 focus:ring-[var(--season-primary)]/20"
                       />
-                      {spot.image && (
-                        <div className="w-10 h-8 rounded bg-slate-800 relative overflow-hidden border border-slate-700 shrink-0">
-                          <Image src={spot.image} alt={spot.spotName || "preview"} fill className="object-cover" sizes="40px" />
+                      {spot.image && isValidImageUrl(spot.image) && (
+                        <div className="w-10 h-8 rounded bg-white relative overflow-hidden border border-slate-200 shrink-0">
+                          <Image src={spot.image} alt={spot.spotName || "Spot"} fill className="object-cover" sizes="40px" />
                         </div>
                       )}
                     </div>
-                  </div>
 
-                  <div>
-                    <label className="block text-[11px] font-medium text-slate-400 mb-1">
-                      Framing Advice & Photography Tip
-                    </label>
                     <textarea
                       rows={2}
                       value={spot.tip}
-                      onChange={(e) => handleUpdatePhotoSpot(index, "tip", e.target.value)}
-                      placeholder="e.g. Position your camera from an approaching Shikara with the Zabarwan silhouette behind the trees..."
-                      className="w-full bg-slate-900 border border-slate-800 rounded-lg p-2 text-xs text-white focus:outline-none focus:border-emerald-500"
+                      onChange={(e) =>
+                        setPhotoSpots((prev) =>
+                          prev.map((s, i) => (i === index ? { ...s, tip: e.target.value } : s))
+                        )
+                      }
+                      placeholder="Framing or lighting advice..."
+                      className="w-full bg-white border border-slate-200 rounded-md p-2 text-xs text-slate-900 focus:outline-none focus:border-[var(--season-primary)] focus:ring-1 focus:ring-[var(--season-primary)]/20"
                     />
                   </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* Where to Stay (Featured Properties & Accommodations) */}
-        <div className="bg-slate-900/60 border border-slate-800 rounded-xl p-5 space-y-4">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-slate-800/80 pb-3">
-            <div>
-              <h2 className="text-base font-semibold text-white flex items-center gap-2">
-                <Building className="w-4 h-4 text-emerald-400" />
-                Where to Stay & Featured Accommodations ({featuredPropertyIds.length})
-              </h2>
-              <p className="text-xs text-slate-400 mt-0.5">
-                Pin and reorder verified hotels, resorts, and homestays displayed under &quot;Where to Stay&quot; on the public destination page.
-              </p>
-            </div>
-          </div>
-
-          <div className="flex flex-col sm:flex-row gap-2">
-            <select
-              value={selectedPropertyToAdd}
-              onChange={(e) => setSelectedPropertyToAdd(e.target.value)}
-              className="flex-1 bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-emerald-500 cursor-pointer"
-            >
-              <option value="">-- Choose a verified property to feature --</option>
-              {availableProperties
-                .filter((p) => !featuredPropertyIds.includes(p.id))
-                .map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.name} — {p.location} (₹{p.pricePerNight?.toLocaleString("en-IN")}/night) [{p.propertyType}]
-                  </option>
                 ))}
-            </select>
-            <button
-              type="button"
-              disabled={!selectedPropertyToAdd}
-              onClick={() => handleAddFeaturedProperty(selectedPropertyToAdd)}
-              className="inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-lg bg-emerald-600 text-white text-xs font-semibold hover:bg-emerald-500 disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer shrink-0"
-            >
-              <Plus className="w-3.5 h-3.5" /> Add Property
-            </button>
+              </div>
+            )}
           </div>
-
-          {featuredPropertyIds.length === 0 ? (
-            <div className="p-5 rounded-lg border border-dashed border-slate-800 text-center text-xs text-slate-500">
-              No specific properties pinned. The public destination page will automatically query and display verified properties matching this destination&apos;s location.
-            </div>
-          ) : (
-            <div className="space-y-2">
-              {featuredPropertyIds.map((propId, index) => {
-                const prop = availableProperties.find((p) => p.id === propId);
-                return (
-                  <div
-                    key={propId}
-                    className="flex items-center justify-between gap-3 p-3 rounded-lg bg-slate-950 border border-slate-800/80 hover:border-slate-700/80 transition-colors"
-                  >
-                    <div className="flex items-center gap-3 min-w-0">
-                      <div className="flex gap-1 shrink-0">
-                        <button
-                          type="button"
-                          disabled={index === 0}
-                          onClick={() => handleMoveFeaturedProperty(index, "up")}
-                          className="p-1 rounded text-slate-400 hover:text-white disabled:opacity-30 cursor-pointer"
-                          title="Move Up"
-                        >
-                          <ArrowUp className="w-3.5 h-3.5" />
-                        </button>
-                        <button
-                          type="button"
-                          disabled={index === featuredPropertyIds.length - 1}
-                          onClick={() => handleMoveFeaturedProperty(index, "down")}
-                          className="p-1 rounded text-slate-400 hover:text-white disabled:opacity-30 cursor-pointer"
-                          title="Move Down"
-                        >
-                          <ArrowDown className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
-
-                      <div className="w-12 h-10 rounded bg-slate-800 relative overflow-hidden shrink-0 border border-slate-700/60">
-                        {prop?.imageUrl ? (
-                          <Image src={prop.imageUrl} alt={prop.name} fill className="object-cover" sizes="48px" />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center text-slate-500">
-                            <Building className="w-4 h-4" />
-                          </div>
-                        )}
-                      </div>
-
-                      <div className="min-w-0">
-                        <div className="flex items-center gap-2">
-                          <p className="text-xs font-semibold text-white truncate">
-                            {prop ? prop.name : `Property ID: ${propId}`}
-                          </p>
-                          {prop?.propertyType && (
-                            <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700/50 shrink-0">
-                              {prop.propertyType}
-                            </span>
-                          )}
-                        </div>
-                        {prop && (
-                          <div className="flex items-center gap-3 text-[11px] text-slate-400 mt-0.5">
-                            <span className="flex items-center gap-1 truncate">
-                              <MapPin className="w-3 h-3 text-emerald-400 shrink-0" />
-                              <span className="truncate">{prop.location}</span>
-                            </span>
-                            <span className="text-emerald-400 font-medium shrink-0">
-                              ₹{prop.pricePerNight?.toLocaleString("en-IN")}/night
-                            </span>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-
-                    <button
-                      type="button"
-                      onClick={() => handleRemoveFeaturedProperty(propId)}
-                      className="p-1.5 rounded text-slate-400 hover:text-rose-400 cursor-pointer transition-colors shrink-0"
-                      title="Remove Property"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </div>
-                );
-              })}
-            </div>
-          )}
         </div>
+      )}
 
-        {/* Section 4: Places to Visit (DestinationPlace Relations) - Only in Edit Mode */}
-        {isEdit && initialData && (
-          <div className="bg-slate-900/60 border border-slate-800 rounded-xl p-5 space-y-4">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-slate-800/80 pb-3">
+      {/* TAB 4: PLACES & STAYS */}
+      {activeTab === "relations" && (
+        <div className="space-y-5">
+          {/* Linked Places */}
+          <div className="bg-white border border-slate-200 rounded-md p-5 space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-3 border-b border-slate-100">
               <div>
-                <h2 className="text-base font-semibold text-white flex items-center gap-2">
-                  <Layers className="w-4 h-4 text-emerald-400" />
-                  4. Places to Visit in this Destination ({linkedPlaces.length})
+                <h2 className="text-sm font-semibold text-slate-900">
+                  Linked Places to Visit ({linkedPlaces.length})
                 </h2>
-                <p className="text-xs text-slate-400 mt-0.5">
-                  Ordered tourist attractions linked via DestinationPlace join records.
+                <p className="text-xs text-slate-500 mt-0.5">
+                  Active linked places appear in the &ldquo;Top Places to Visit&rdquo; section on the public destination page.
                 </p>
               </div>
-
-              {/* Add Place Picker */}
-              <div className="flex items-center gap-2">
-                <select
-                  value={selectedPlaceIdToAdd}
-                  onChange={(e) => setSelectedPlaceIdToAdd(e.target.value)}
-                  className="bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-slate-300 focus:outline-none focus:border-emerald-500 max-w-[200px]"
-                >
-                  <option value="">Select Place to Link...</option>
-                  {unlinkedPlaces.map((p) => (
-                    <option key={p.id} value={p.id}>
-                      {p.name} ({p.slug})
-                    </option>
-                  ))}
-                </select>
-
-                <button
-                  type="button"
-                  disabled={!selectedPlaceIdToAdd || isLinkingPlace}
-                  onClick={handleAssignPlace}
-                  className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-emerald-600 text-white text-xs font-semibold hover:bg-emerald-500 transition-colors disabled:opacity-50 cursor-pointer"
-                >
-                  <Plus className="w-3.5 h-3.5" /> Link
-                </button>
-              </div>
+              {isEdit && initialData && (
+                <div className="flex items-center gap-2">
+                  <select
+                    value={selectedPlaceIdToAdd}
+                    onChange={(e) => setSelectedPlaceIdToAdd(e.target.value)}
+                    className="bg-white border border-slate-200 rounded-md px-2.5 py-1.5 text-xs text-slate-700 max-w-[220px] focus:outline-none focus:border-[var(--season-primary)] focus:ring-1 focus:ring-[var(--season-primary)]/20"
+                  >
+                    <option value="">Select place to link...</option>
+                    {unlinkedPlaces.map((p) => (
+                      <option key={p.id} value={p.id}>
+                        {p.name} ({p.status})
+                      </option>
+                    ))}
+                  </select>
+                  <button
+                    type="button"
+                    disabled={!selectedPlaceIdToAdd || isLinkingPlace}
+                    onClick={handleAssignPlace}
+                    className="inline-flex items-center gap-1 px-3 py-1.5 rounded-md bg-[var(--season-primary)] text-white text-xs font-medium hover:bg-[var(--season-primary-hover)] disabled:opacity-40 cursor-pointer shadow-xs"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    <span>Link</span>
+                  </button>
+                </div>
+              )}
             </div>
 
-            {linkedPlaces.length === 0 ? (
-              <div className="py-6 text-center text-slate-500 text-xs">
-                No tourist attraction places are currently linked to this destination.
-              </div>
+            {!isEdit ? (
+              <p className="text-xs text-slate-500 py-4 text-center">
+                Save this destination first to link and order Places.
+              </p>
+            ) : linkedPlaces.length === 0 ? (
+              <p className="text-xs text-slate-500 py-4 text-center">
+                No places linked yet. Select an attraction above or manage them in{" "}
+                <Link href={adminHref("/admin/places")} className="text-[var(--season-primary)] font-medium underline">
+                  Places CMS
+                </Link>
+                .
+              </p>
             ) : (
-              <div className="divide-y divide-slate-800/80">
+              <div className="divide-y divide-slate-100">
                 {linkedPlaces.map((lp, index) => (
-                  <div key={lp.id} className="py-3 flex items-center justify-between gap-4">
-                    <div className="flex items-center gap-3">
-                      <div className="flex flex-col gap-0.5">
+                  <div key={lp.id} className="py-2.5 flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="flex items-center gap-1 shrink-0">
                         <button
                           type="button"
                           disabled={index === 0}
                           onClick={() => handleMovePlace(index, "up")}
-                          className="p-1 rounded text-slate-400 hover:text-white disabled:opacity-30 cursor-pointer"
-                          title="Move Up"
+                          className="p-1 rounded border border-slate-200 bg-white text-slate-500 hover:text-slate-900 disabled:opacity-35 cursor-pointer"
+                          aria-label="Move up"
                         >
-                          <ArrowUp className="w-3.5 h-3.5" />
+                          <ArrowUp className="w-3 h-3" />
                         </button>
                         <button
                           type="button"
                           disabled={index === linkedPlaces.length - 1}
                           onClick={() => handleMovePlace(index, "down")}
-                          className="p-1 rounded text-slate-400 hover:text-white disabled:opacity-30 cursor-pointer"
-                          title="Move Down"
+                          className="p-1 rounded border border-slate-200 bg-white text-slate-500 hover:text-slate-900 disabled:opacity-35 cursor-pointer"
+                          aria-label="Move down"
                         >
-                          <ArrowDown className="w-3.5 h-3.5" />
+                          <ArrowDown className="w-3 h-3" />
                         </button>
                       </div>
-
-                      <div className="w-10 h-9 rounded-lg overflow-hidden bg-slate-800 relative border border-slate-700/60 shrink-0">
+                      <div className="w-10 h-8 rounded bg-slate-100 relative overflow-hidden border border-slate-200 shrink-0">
                         {lp.place.imageUrl ? (
                           <Image src={lp.place.imageUrl} alt={lp.place.name} fill className="object-cover" sizes="40px" />
                         ) : (
-                          <div className="w-full h-full flex items-center justify-center text-slate-600">
+                          <div className="w-full h-full flex items-center justify-center text-slate-400">
                             <MapPin className="w-3.5 h-3.5" />
                           </div>
                         )}
                       </div>
-
-                      <div>
-                        <div className="font-semibold text-white text-xs">{lp.place.name}</div>
-                        <div className="text-[11px] text-slate-400 font-mono">
-                          /destinations/{initialData.slug}/{lp.place.slug}
+                      <div className="min-w-0">
+                        <Link
+                          href={adminHref(`/admin/places/${lp.place.id}/edit`)}
+                          className="text-xs font-medium text-slate-900 hover:text-[var(--season-primary)] block truncate transition-colors"
+                        >
+                          {lp.place.name}
+                        </Link>
+                        <div className="text-[11px] text-slate-400 font-mono truncate">
+                          /destinations/{initialData?.slug}/{lp.place.slug}
                         </div>
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-2">
-                      <span
-                        className={`text-[10px] px-2 py-0.5 rounded-full border ${
-                          lp.place.status === "ACTIVE"
-                            ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
-                            : "bg-rose-500/10 text-rose-400 border-rose-500/20"
-                        }`}
-                      >
-                        {lp.place.status}
-                      </span>
-
+                    <div className="flex items-center gap-2 shrink-0">
+                      <StatusBadge status={lp.place.status === "ACTIVE" ? "PUBLISHED" : "DRAFT"} />
                       <button
                         type="button"
-                        onClick={() => handleRemovePlace(lp.place.id)}
-                        className="p-1.5 rounded-lg text-rose-400 hover:bg-rose-500/10 transition-colors cursor-pointer"
-                        title="Unlink from Destination (Does not delete place)"
+                        onClick={() => setUnlinkTarget(lp)}
+                        className="p-1.5 rounded-md text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer"
+                        title="Unlink from destination"
+                        aria-label={`Unlink ${lp.place.name}`}
                       >
-                        <Trash2 className="w-4 h-4" />
+                        <Trash2 className="w-3.5 h-3.5" />
                       </button>
                     </div>
                   </div>
@@ -1137,138 +940,191 @@ export default function DestinationForm({
               </div>
             )}
           </div>
-        )}
 
-        {/* Section 5: FAQs */}
-        <div className="bg-slate-900/60 border border-slate-800 rounded-xl p-5 space-y-4">
-          <h2 className="text-base font-semibold text-white border-b border-slate-800/80 pb-3">
-            5. Frequently Asked Questions ({faqs.length})
+          {/* Featured Properties */}
+          <div className="bg-white border border-slate-200 rounded-md p-5 space-y-4">
+            <div className="pb-3 border-b border-slate-100">
+              <h2 className="text-sm font-semibold text-slate-900">
+                Featured Stays ({featuredPropertyIds.length})
+              </h2>
+              <p className="text-xs text-slate-500 mt-0.5">
+                Pin approved hotels and homestays for the &ldquo;Where to Stay&rdquo; section. Leave empty to auto-match by location.
+              </p>
+            </div>
+
+            <div className="flex flex-col sm:flex-row gap-2">
+              <select
+                value={selectedPropertyToAdd}
+                onChange={(e) => setSelectedPropertyToAdd(e.target.value)}
+                className="flex-1 bg-white border border-slate-200 rounded-md px-3 py-2 text-xs text-slate-700 focus:outline-none focus:border-[var(--season-primary)] focus:ring-1 focus:ring-[var(--season-primary)]/20"
+              >
+                <option value="">Choose an approved stay to pin...</option>
+                {availableProperties
+                  .filter((p) => !featuredPropertyIds.includes(p.id))
+                  .map((p) => (
+                    <option key={p.id} value={p.id}>
+                      {p.name} — {p.location} (₹{p.pricePerNight?.toLocaleString("en-IN")}/night)
+                    </option>
+                  ))}
+              </select>
+              <button
+                type="button"
+                disabled={!selectedPropertyToAdd}
+                onClick={() => {
+                  if (!selectedPropertyToAdd || featuredPropertyIds.includes(selectedPropertyToAdd)) return;
+                  setFeaturedPropertyIds([...featuredPropertyIds, selectedPropertyToAdd]);
+                  setSelectedPropertyToAdd("");
+                }}
+                className="inline-flex items-center justify-center gap-1 px-3.5 py-2 rounded-md bg-[var(--season-primary)] text-white text-xs font-medium hover:bg-[var(--season-primary-hover)] disabled:opacity-40 cursor-pointer shrink-0 shadow-xs"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                <span>Add Stay</span>
+              </button>
+            </div>
+
+            {featuredPropertyIds.length > 0 && (
+              <div className="divide-y divide-slate-100">
+                {featuredPropertyIds.map((propId, index) => {
+                  const prop = availableProperties.find((p) => p.id === propId);
+                  return (
+                    <div key={propId} className="py-2.5 flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="flex gap-1 shrink-0">
+                          <button
+                            type="button"
+                            disabled={index === 0}
+                            onClick={() => {
+                              const next = [...featuredPropertyIds];
+                              [next[index], next[index - 1]] = [next[index - 1], next[index]];
+                              setFeaturedPropertyIds(next);
+                            }}
+                            className="p-1 rounded border border-slate-200 bg-white text-slate-500 hover:text-slate-900 disabled:opacity-35 cursor-pointer"
+                            aria-label="Move stay up"
+                          >
+                            <ArrowUp className="w-3 h-3" />
+                          </button>
+                          <button
+                            type="button"
+                            disabled={index === featuredPropertyIds.length - 1}
+                            onClick={() => {
+                              const next = [...featuredPropertyIds];
+                              [next[index], next[index + 1]] = [next[index + 1], next[index]];
+                              setFeaturedPropertyIds(next);
+                            }}
+                            className="p-1 rounded border border-slate-200 bg-white text-slate-500 hover:text-slate-900 disabled:opacity-35 cursor-pointer"
+                            aria-label="Move stay down"
+                          >
+                            <ArrowDown className="w-3 h-3" />
+                          </button>
+                        </div>
+                        <div className="w-10 h-8 rounded bg-slate-100 relative overflow-hidden border border-slate-200 shrink-0">
+                          {prop?.imageUrl ? (
+                            <Image src={prop.imageUrl} alt={prop.name} fill className="object-cover" sizes="40px" />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center text-slate-400">
+                              <Building className="w-3.5 h-3.5" />
+                            </div>
+                          )}
+                        </div>
+                        <div className="min-w-0">
+                          <div className="text-xs font-medium text-slate-900 truncate">
+                            {prop ? prop.name : propId}
+                          </div>
+                          {prop && (
+                            <div className="text-[11px] text-slate-500 truncate">
+                              {prop.location} · ₹{prop.pricePerNight?.toLocaleString("en-IN")}/night
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setFeaturedPropertyIds(featuredPropertyIds.filter((id) => id !== propId))}
+                        className="p-1.5 rounded-md text-slate-400 hover:text-rose-600 hover:bg-rose-50 cursor-pointer"
+                        aria-label="Remove stay"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* TAB 5: FAQs */}
+      {activeTab === "faqs" && (
+        <div className="bg-white border border-slate-200 rounded-lg p-5 space-y-4">
+          <h2 className="text-sm font-semibold text-slate-900 pb-2.5 border-b border-slate-100">
+            Frequently Asked Questions ({faqs.length})
           </h2>
 
-          <div className="space-y-3">
-            {faqs.map((faq, index) => (
-              <div key={index} className="p-3 rounded-lg bg-slate-950 border border-slate-800/80 space-y-1 relative">
-                <div className="flex items-start justify-between gap-2">
-                  <span className="font-semibold text-xs text-white">Q: {faq.question}</span>
-                  <button
-                    type="button"
-                    onClick={() => handleRemoveFaq(index)}
-                    className="text-slate-500 hover:text-rose-400 cursor-pointer"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </button>
+          {faqs.length > 0 && (
+            <div className="space-y-2.5">
+              {faqs.map((faq, index) => (
+                <div key={index} className="p-3.5 rounded-lg bg-slate-50 border border-slate-200/80 space-y-1">
+                  <div className="flex items-start justify-between gap-2">
+                    <span className="font-medium text-xs text-slate-900">{faq.question}</span>
+                    <button
+                      type="button"
+                      onClick={() => setFaqs(faqs.filter((_, i) => i !== index))}
+                      className="p-1 text-slate-400 hover:text-rose-600 cursor-pointer shrink-0"
+                      aria-label="Remove FAQ"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                  <p className="text-xs text-slate-600 leading-relaxed">{faq.answer}</p>
                 </div>
-                <p className="text-xs text-slate-400">A: {faq.answer}</p>
-              </div>
-            ))}
-
-            {/* Add New FAQ Input */}
-            <div className="p-3 rounded-lg bg-slate-950/60 border border-slate-800 space-y-2">
-              <input
-                type="text"
-                value={newQuestion}
-                onChange={(e) => setNewQuestion(e.target.value)}
-                placeholder="Question (e.g. Is prepaid mobile network working in Srinagar?)"
-                className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-emerald-500"
-              />
-              <textarea
-                rows={2}
-                value={newAnswer}
-                onChange={(e) => setNewAnswer(e.target.value)}
-                placeholder="Answer (e.g. Only postpaid SIMs work across Kashmir...)"
-                className="w-full bg-slate-900 border border-slate-800 rounded-lg p-2 text-xs text-white focus:outline-none focus:border-emerald-500"
-              />
-              <div className="flex justify-end">
-                <button
-                  type="button"
-                  onClick={handleAddFaq}
-                  className="px-3 py-1.5 rounded-lg bg-slate-800 border border-slate-700 text-xs font-semibold text-slate-200 hover:text-white hover:bg-slate-700 transition-colors cursor-pointer"
-                >
-                  <Plus className="w-3 h-3 inline mr-1" /> Add FAQ
-                </button>
-              </div>
+              ))}
             </div>
-          </div>
-        </div>
+          )}
 
-        {/* Section 6: Publishing Lifecycle (Only in Edit Mode) */}
-        {isEdit && initialData && (
-          <div className="bg-slate-900/60 border border-slate-800 rounded-xl p-5 space-y-4">
-            <div className="flex items-center justify-between border-b border-slate-800/80 pb-3">
-              <h2 className="text-base font-semibold text-white">6. Publishing Lifecycle</h2>
-              <span
-                className={`text-xs px-2.5 py-0.5 rounded-full border ${
-                  isPublished
-                    ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
-                    : "bg-amber-500/10 text-amber-400 border-amber-500/20"
-                }`}
+          <div className="p-4 rounded-md bg-slate-50/70 border border-slate-200 space-y-2.5">
+            <input
+              type="text"
+              value={newQuestion}
+              onChange={(e) => setNewQuestion(e.target.value)}
+              placeholder="Question (e.g., Do prepaid SIM cards work in Srinagar?)"
+              className="w-full bg-white border border-slate-200 rounded-md px-3 py-2 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[var(--season-primary)] focus:ring-1 focus:ring-[var(--season-primary)]/20"
+            />
+            <textarea
+              rows={2}
+              value={newAnswer}
+              onChange={(e) => setNewAnswer(e.target.value)}
+              placeholder="Answer..."
+              className="w-full bg-white border border-slate-200 rounded-md p-2.5 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[var(--season-primary)] focus:ring-1 focus:ring-[var(--season-primary)]/20"
+            />
+            <div className="flex justify-end">
+              <button
+                type="button"
+                onClick={() => {
+                  if (!newQuestion.trim() || !newAnswer.trim()) return;
+                  setFaqs([...faqs, { question: newQuestion.trim(), answer: newAnswer.trim() }]);
+                  setNewQuestion("");
+                  setNewAnswer("");
+                }}
+                className="inline-flex items-center gap-1 px-3 py-1.5 rounded-md bg-white border border-slate-200 text-xs font-medium text-slate-700 hover:bg-slate-50 cursor-pointer"
               >
-                {workflowState}
-              </span>
-            </div>
-
-            <p className="text-xs text-slate-400">
-              Only published destinations (<code className="text-emerald-400">workflowState === &apos;PUBLISHED&apos;</code>) are
-              served on <code className="text-slate-300">/destinations</code> and rendered in the sitemap.
-            </p>
-
-            <div className="flex items-center gap-3">
-              {isPublished ? (
-                <button
-                  type="button"
-                  disabled={loading}
-                  onClick={() => handleTogglePublish(false)}
-                  className="px-4 py-2 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-400 text-xs font-semibold hover:bg-amber-500/20 transition-colors cursor-pointer"
-                >
-                  Unpublish Destination
-                </button>
-              ) : (
-                <button
-                  type="button"
-                  disabled={loading}
-                  onClick={() => handleTogglePublish(true)}
-                  className="px-4 py-2 rounded-lg bg-emerald-600 text-white text-xs font-semibold hover:bg-emerald-500 transition-colors shadow-lg shadow-emerald-600/20 cursor-pointer"
-                >
-                  Publish Destination
-                </button>
-              )}
-            </div>
-
-            <div className="flex items-center gap-2 pt-2 text-slate-500 text-[11px]">
-              <ShieldAlert className="w-3.5 h-3.5 text-slate-500 shrink-0" />
-              <span>
-                Delete: <strong>NOT IMPLEMENTED</strong>. Soft unpublishing is used to preserve SEO rankings,
-                internal links, and place relations.
-              </span>
+                <Plus className="w-3.5 h-3.5" />
+                <span>Add FAQ</span>
+              </button>
             </div>
           </div>
-        )}
-
-        {/* Submit Button */}
-        <div className="flex items-center justify-end gap-3 pt-4">
-          <Link
-            href="/admin/destinations"
-            className="px-4 py-2.5 rounded-lg border border-slate-800 text-xs font-semibold text-slate-400 hover:text-white hover:bg-slate-900 transition-colors"
-          >
-            Cancel
-          </Link>
-          <button
-            type="submit"
-            disabled={loading}
-            className="inline-flex items-center justify-center gap-2 rounded-lg bg-emerald-600 px-6 py-2.5 text-xs font-semibold text-white shadow-lg shadow-emerald-600/20 hover:bg-emerald-500 transition-all disabled:opacity-50 cursor-pointer"
-          >
-            {loading ? (
-              <>
-                <Loader2 className="w-4 h-4 animate-spin" /> Saving...
-              </>
-            ) : (
-              <>
-                <Save className="w-4 h-4" /> {isEdit ? "Update Destination" : "Create Destination"}
-              </>
-            )}
-          </button>
         </div>
-      </form>
-    </div>
+      )}
+
+      <ConfirmActionDialog
+        open={Boolean(unlinkTarget)}
+        onClose={() => setUnlinkTarget(null)}
+        title={`Unlink "${unlinkTarget?.place.name || ""}"?`}
+        description="This removes the place from this destination guide without deleting the underlying Place record."
+        confirmLabel="Unlink Place"
+        tone="warning"
+        onConfirm={handleConfirmUnlinkPlace}
+      />
+    </form>
   );
 }

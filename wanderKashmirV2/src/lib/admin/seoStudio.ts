@@ -1,6 +1,8 @@
 import prisma from "@/lib/prisma";
 import { getGsc90DayOverview } from "@/lib/admin/seoGsc";
 import { SeoWorkflowState } from "@prisma/client";
+import type { GeneratedDraftContent } from "@/lib/admin/seoGeneration";
+import type { SeoValidationReport } from "@/lib/admin/seoValidation";
 
 export interface CompetingPageCandidate {
   id?: string;
@@ -116,9 +118,9 @@ export interface SeoResearchStudioPayload {
     workflowState: SeoWorkflowState;
     createdAt: Date;
     updatedAt: Date;
-    faqs?: any;
-    places?: any;
-    validationReport?: any;
+    faqs?: unknown;
+    places?: unknown;
+    validationReport?: unknown;
   };
   savedResearch: SeoResearchData | null;
   savedStrategy: SeoStrategyData | null;
@@ -126,9 +128,9 @@ export interface SeoResearchStudioPayload {
   matchedOpportunity: SeoResearchData["opportunityEvidence"];
   cannibalization: CannibalizationAnalysis;
   verifiedDbFacts: VerifiedDbFact[];
-  generatedDraft?: any | null;
+  generatedDraft?: GeneratedDraftContent | null;
   activeJob?: { id: string; status: string; startedAt: Date | null } | null;
-  savedValidationReport?: any | null;
+  savedValidationReport?: SeoValidationReport | null;
 }
 
 /**
@@ -392,7 +394,7 @@ export async function getSeoResearchStudioData(
 
     if (!page) return null;
 
-    let pagePlaces: any[] = [];
+    let pagePlaces: unknown[] = [];
     try {
       pagePlaces = await prisma.destinationPlace.findMany({
         where: { destinationId: page.id },
@@ -432,13 +434,24 @@ export async function getSeoResearchStudioData(
         );
 
         if (matchedGscPage) {
+          const slugTokens = page.slug
+            .toLowerCase()
+            .split("-")
+            .filter((t) => t.length >= 4);
+          const pageRelevantQueries = gscOverview.topQueries
+            .filter((q) => {
+              const lower = q.query.toLowerCase();
+              return slugTokens.some((tok) => lower.includes(tok));
+            })
+            .slice(0, 5);
+
           liveGscEvidence = {
             hasData: true,
             clicks: matchedGscPage.clicks,
             impressions: matchedGscPage.impressions,
             ctr: matchedGscPage.ctr,
             position: matchedGscPage.position,
-            topQueries: gscOverview.topQueries.slice(0, 5),
+            topQueries: pageRelevantQueries,
           };
         }
       }
@@ -488,7 +501,7 @@ export async function getSeoResearchStudioData(
     const savedStrategy = (page.seoStrategy as unknown as SeoStrategyData) || null;
 
     // 5. Load generated draft from ContentAsset if present
-    let generatedDraft: any = null;
+    let generatedDraft: GeneratedDraftContent | null = null;
     try {
       const asset = await prisma.contentAsset.findUnique({
         where: {
@@ -509,9 +522,9 @@ export async function getSeoResearchStudioData(
 
       if (asset?.jsonData) {
         generatedDraft = {
-          ...(asset.jsonData as any),
+          ...(asset.jsonData as unknown as GeneratedDraftContent),
           assetId: asset.id,
-          updatedAt: asset.updatedAt,
+          generatedAt: asset.updatedAt.toISOString(),
         };
       }
     } catch (e) {
@@ -564,7 +577,7 @@ export async function getSeoResearchStudioData(
       verifiedDbFacts,
       generatedDraft,
       activeJob,
-      savedValidationReport: (page.validationReport as any) || null,
+      savedValidationReport: (page.validationReport as unknown as SeoValidationReport) || null,
     };
   } catch (error) {
     console.error("Error loading SeoResearchStudioData:", error);

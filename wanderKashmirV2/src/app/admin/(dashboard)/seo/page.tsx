@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { Globe, ShieldCheck, FileText, Lightbulb, BarChart3 } from "lucide-react";
+import { headers } from "next/headers";
+import { FileText, Lightbulb, BarChart3 } from "lucide-react";
 import {
   getAdminSeoList,
   getAdminSeoStats,
@@ -16,8 +17,9 @@ import {
 import SeoListClient from "@/components/admin/seo/SeoListClient";
 import SeoOpportunitiesClient from "@/components/admin/seo/SeoOpportunitiesClient";
 import SeoGscOverviewClient from "@/components/admin/seo/SeoGscOverviewClient";
+import { AdminPageHeader } from "@/components/admin/ui";
 
-export const revalidate = 0; // Fresh admin data on every request
+export const revalidate = 0;
 
 export default async function AdminSeoPage({
   searchParams,
@@ -33,77 +35,27 @@ export default async function AdminSeoPage({
     page?: string;
   }>;
 }) {
-  const params = await searchParams;
-  const isOpportunities = params.tab === "opportunities";
-  const isGsc = params.tab === "gsc";
+  const [params, headerList] = await Promise.all([searchParams, headers()]);
+  const base = headerList.get("x-admin-alias") === "wander-admin" ? "/wander-admin" : "/admin";
+  const activeTab =
+    params.tab === "opportunities"
+      ? "opportunities"
+      : params.tab === "gsc"
+      ? "gsc"
+      : "pages";
 
-  // Pre-fetch opportunity statistics so the subtab count badge is accurate everywhere
-  const oppStats = await getAdminSeoOpportunityStats();
+  const [oppStats, stats, gscConnection] = await Promise.all([
+    getAdminSeoOpportunityStats(),
+    getAdminSeoStats(),
+    getGscConnectionStatus(),
+  ]);
 
-  // Tab: GSC Overview
-  if (isGsc) {
-    const [overview, connection] = await Promise.all([
-      getGsc90DayOverview(),
-      getGscConnectionStatus(),
-    ]);
+  let tabContent: React.ReactNode = null;
 
-    return (
-      <div className="space-y-6">
-        {/* Module Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight text-white sm:text-3xl flex items-center gap-2.5">
-              <Globe className="w-7 h-7 text-cyan-400" />
-              <span>SEO Intelligence & Operations</span>
-            </h1>
-            <p className="text-sm text-slate-400 mt-1">
-              Programmatic landing pages, keyword clusters, Search Console signals, and discovery opportunities.
-            </p>
-          </div>
-
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-800 text-xs text-slate-300">
-            <ShieldCheck className="w-4 h-4 text-emerald-400" />
-            <span>Admin Module #19</span>
-          </div>
-        </div>
-
-        {/* Subtabs Bar */}
-        <div className="flex items-center gap-2 border-b border-slate-800 pb-3 overflow-x-auto">
-          <Link
-            href="/admin/seo"
-            className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors text-slate-400 hover:text-slate-200 hover:bg-slate-900/60 whitespace-nowrap"
-          >
-            <FileText className="w-4 h-4" />
-            <span>Pages & Content</span>
-          </Link>
-          <Link
-            href="/admin/seo?tab=opportunities"
-            className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors text-slate-400 hover:text-slate-200 hover:bg-slate-900/60 whitespace-nowrap"
-          >
-            <Lightbulb className="w-4 h-4 text-orange-400" />
-            <span>Opportunities</span>
-            <span className="ml-1 text-xs px-2 py-0.5 rounded-full bg-orange-500/20 text-orange-400 font-semibold">
-              {oppStats.discovered}
-            </span>
-          </Link>
-          <Link
-            href="/admin/seo?tab=gsc"
-            className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors bg-cyan-500/10 text-cyan-400 border border-cyan-500/30 shadow-sm whitespace-nowrap"
-          >
-            <BarChart3 className="w-4 h-4 text-cyan-400" />
-            <span>GSC Overview</span>
-            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse ml-0.5" />
-          </Link>
-        </div>
-
-        {/* GSC Overview Tab Content */}
-        <SeoGscOverviewClient overview={overview} connection={connection} />
-      </div>
-    );
-  }
-
-  // Tab: Opportunities
-  if (isOpportunities) {
+  if (activeTab === "gsc") {
+    const overview = await getGsc90DayOverview();
+    tabContent = <SeoGscOverviewClient overview={overview} connection={gscConnection} />;
+  } else if (activeTab === "opportunities") {
     const page = parseInt(params.page || "1", 10) || 1;
     const search = params.search || "";
     const status = params.status || "ALL";
@@ -123,142 +75,37 @@ export default async function AdminSeoPage({
       limit: 20,
     });
 
-    return (
-      <div className="space-y-6">
-        {/* Module Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight text-white sm:text-3xl flex items-center gap-2.5">
-              <Globe className="w-7 h-7 text-cyan-400" />
-              <span>SEO Intelligence & Operations</span>
-            </h1>
-            <p className="text-sm text-slate-400 mt-1">
-              Programmatic landing pages, keyword clusters, Search Console signals, and discovery opportunities.
-            </p>
-          </div>
-
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-800 text-xs text-slate-300">
-            <ShieldCheck className="w-4 h-4 text-emerald-400" />
-            <span>Admin Module #19</span>
-          </div>
-        </div>
-
-        {/* Subtabs Bar */}
-        <div className="flex items-center gap-2 border-b border-slate-800 pb-3 overflow-x-auto">
-          <Link
-            href="/admin/seo"
-            className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors text-slate-400 hover:text-slate-200 hover:bg-slate-900/60 whitespace-nowrap"
-          >
-            <FileText className="w-4 h-4" />
-            <span>Pages & Content</span>
-          </Link>
-          <Link
-            href="/admin/seo?tab=opportunities"
-            className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors bg-cyan-500/10 text-cyan-400 border border-cyan-500/30 shadow-sm whitespace-nowrap"
-          >
-            <Lightbulb className="w-4 h-4 text-orange-400" />
-            <span>Opportunities</span>
-            <span className="ml-1 text-xs px-2 py-0.5 rounded-full bg-orange-500/20 text-orange-400 font-semibold">
-              {oppStats.discovered}
-            </span>
-          </Link>
-          <Link
-            href="/admin/seo?tab=gsc"
-            className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors text-slate-400 hover:text-slate-200 hover:bg-slate-900/60 whitespace-nowrap"
-          >
-            <BarChart3 className="w-4 h-4 text-cyan-400" />
-            <span>GSC Overview</span>
-            <span className="w-2 h-2 rounded-full bg-emerald-400 ml-0.5" />
-          </Link>
-        </div>
-
-        {/* Opportunities Tab Content */}
-        <SeoOpportunitiesClient
-          opportunities={oppsResult.opportunities}
-          totalCount={oppsResult.totalCount}
-          currentPage={oppsResult.page}
-          totalPages={oppsResult.totalPages}
-          currentStatus={status}
-          currentType={type}
-          currentSort={sort}
-          currentSearch={search}
-          stats={oppStats}
-        />
-      </div>
+    tabContent = (
+      <SeoOpportunitiesClient
+        opportunities={oppsResult.opportunities}
+        totalCount={oppsResult.totalCount}
+        currentPage={oppsResult.page}
+        totalPages={oppsResult.totalPages}
+        currentStatus={status}
+        currentType={type}
+        currentSort={sort}
+        currentSearch={search}
+        stats={oppStats}
+      />
     );
-  }
+  } else {
+    const page = parseInt(params.page || "1", 10) || 1;
+    const search = params.search || "";
+    const workflowState = params.workflowState || "ALL";
+    const type = params.type || "ALL";
 
-  // Default: Pages & Content subtab
-  const page = parseInt(params.page || "1", 10) || 1;
-  const search = params.search || "";
-  const workflowState = params.workflowState || "ALL";
-  const type = params.type || "ALL";
+    const [seoResult, gscOverview] = await Promise.all([
+      getAdminSeoList({
+        search,
+        workflowState,
+        type,
+        page,
+        limit: 20,
+      }),
+      getGscIntegrationOverview(),
+    ]);
 
-  const [seoResult, stats, gscOverview] = await Promise.all([
-    getAdminSeoList({
-      search,
-      workflowState,
-      type,
-      page,
-      limit: 20,
-    }),
-    getAdminSeoStats(),
-    getGscIntegrationOverview(),
-  ]);
-
-  return (
-    <div className="space-y-6">
-      {/* Module Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight text-white sm:text-3xl flex items-center gap-2.5">
-            <Globe className="w-7 h-7 text-cyan-400" />
-            <span>SEO Intelligence & Operations</span>
-          </h1>
-          <p className="text-sm text-slate-400 mt-1">
-            Programmatic landing pages, keyword clusters, Search Console signals, and discovery opportunities.
-          </p>
-        </div>
-
-        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-800 text-xs text-slate-300">
-          <ShieldCheck className="w-4 h-4 text-emerald-400" />
-          <span>Admin Module #19</span>
-        </div>
-      </div>
-
-      {/* Subtabs Bar */}
-      <div className="flex items-center gap-2 border-b border-slate-800 pb-3 overflow-x-auto">
-        <Link
-          href="/admin/seo"
-          className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors bg-cyan-500/10 text-cyan-400 border border-cyan-500/30 shadow-sm whitespace-nowrap"
-        >
-          <FileText className="w-4 h-4" />
-          <span>Pages & Content</span>
-          <span className="ml-1 text-xs px-2 py-0.5 rounded-full bg-slate-800 text-slate-300">
-            {stats.total}
-          </span>
-        </Link>
-        <Link
-          href="/admin/seo?tab=opportunities"
-          className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors text-slate-400 hover:text-slate-200 hover:bg-slate-900/60 whitespace-nowrap"
-        >
-          <Lightbulb className="w-4 h-4 text-orange-400" />
-          <span>Opportunities</span>
-          <span className="ml-1 text-xs px-2 py-0.5 rounded-full bg-orange-500/20 text-orange-400 font-semibold">
-            {oppStats.discovered}
-          </span>
-        </Link>
-        <Link
-          href="/admin/seo?tab=gsc"
-          className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors text-slate-400 hover:text-slate-200 hover:bg-slate-900/60 whitespace-nowrap"
-        >
-          <BarChart3 className="w-4 h-4 text-cyan-400" />
-          <span>GSC Overview</span>
-          <span className="w-2 h-2 rounded-full bg-emerald-400 ml-0.5" />
-        </Link>
-      </div>
-
-      {/* Pages Tab Content */}
+    tabContent = (
       <SeoListClient
         pages={seoResult.pages}
         totalCount={seoResult.totalCount}
@@ -271,6 +118,68 @@ export default async function AdminSeoPage({
         stats={stats}
         gscOverview={gscOverview}
       />
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      <AdminPageHeader
+        title="SEO Intelligence"
+        subtitle="Manage blogs, programmatic landing pages, keyword opportunities, and Search Console performance."
+      />
+
+      {/* Single Shared Subtabs Bar */}
+      <div className="flex items-center gap-1 border-b border-slate-200 overflow-x-auto pb-px">
+        <Link
+          href={`${base}/seo`}
+          className={`inline-flex items-center gap-2 px-3.5 py-2 text-xs font-medium border-b-2 whitespace-nowrap transition-colors ${
+            activeTab === "pages"
+              ? "border-[var(--season-primary)] text-[var(--season-primary-hover)] font-semibold"
+              : "border-transparent text-slate-500 hover:text-slate-900 hover:border-slate-300"
+          }`}
+        >
+          <FileText className="w-3.5 h-3.5" />
+          <span>Pages &amp; Content</span>
+          <span className="px-1.5 py-0.5 rounded text-[10px] bg-slate-100 text-slate-600 tabular-nums">
+            {stats.total}
+          </span>
+        </Link>
+
+        <Link
+          href={`${base}/seo?tab=opportunities`}
+          className={`inline-flex items-center gap-2 px-3.5 py-2 text-xs font-medium border-b-2 whitespace-nowrap transition-colors ${
+            activeTab === "opportunities"
+              ? "border-[var(--season-primary)] text-[var(--season-primary-hover)] font-semibold"
+              : "border-transparent text-slate-500 hover:text-slate-900 hover:border-slate-300"
+          }`}
+        >
+          <Lightbulb className="w-3.5 h-3.5" />
+          <span>Opportunities</span>
+          <span className="px-1.5 py-0.5 rounded text-[10px] bg-amber-50 text-amber-800 border border-amber-200/80 tabular-nums">
+            {oppStats.discovered}
+          </span>
+        </Link>
+
+        <Link
+          href={`${base}/seo?tab=gsc`}
+          className={`inline-flex items-center gap-2 px-3.5 py-2 text-xs font-medium border-b-2 whitespace-nowrap transition-colors ${
+            activeTab === "gsc"
+              ? "border-[var(--season-primary)] text-[var(--season-primary-hover)] font-semibold"
+              : "border-transparent text-slate-500 hover:text-slate-900 hover:border-slate-300"
+          }`}
+        >
+          <BarChart3 className="w-3.5 h-3.5" />
+          <span>GSC Overview</span>
+          <span
+            className={`w-1.5 h-1.5 rounded-full ${
+              gscConnection.connected ? "bg-[var(--season-primary)]" : "bg-slate-300"
+            }`}
+            title={gscConnection.connected ? "Connected" : "Disconnected"}
+          />
+        </Link>
+      </div>
+
+      {tabContent}
     </div>
   );
 }

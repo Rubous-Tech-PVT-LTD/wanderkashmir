@@ -1,12 +1,12 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { headers } from "next/headers";
+import { ExternalLink } from "lucide-react";
 import { getAdminOrEditorSession } from "@/lib/admin/auth";
 import AdminSidebar from "@/components/admin/AdminSidebar";
-import { logoutAdminAction } from "@/actions/adminAuth";
-import { LogOut } from "lucide-react";
 
 export const metadata = {
-  title: "Admin Dashboard | WanderKashmir",
+  title: "Dashboard | WanderKashmir Admin",
   robots: {
     index: false,
     follow: false,
@@ -33,45 +33,37 @@ export default async function AdminDashboardLayout({
   const isEditor = session.role === "EDITOR";
 
   return (
-    <div className="min-h-screen bg-slate-900 text-slate-100 flex flex-col lg:flex-row">
+    <div className="min-h-screen bg-[#F8FAFC] text-slate-900 flex flex-col lg:flex-row">
       {/* Sidebar Navigation */}
       <AdminSidebar userEmail={session.email} userRole={session.role} />
 
       {/* Main Content Area */}
-      <div className="flex-1 lg:pl-64 flex flex-col min-w-0">
-        {/* Top Header Status Bar */}
-        <header className="sticky top-0 z-30 hidden lg:flex items-center justify-between border-b border-slate-800 bg-slate-950/80 px-8 py-3.5 backdrop-blur-md">
-          <div className="flex items-center gap-3">
-            <span className="text-xs font-semibold text-slate-400">Environment:</span>
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 px-2.5 py-0.5 text-xs font-medium text-emerald-400 border border-emerald-500/20">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-              Production DB Connected
-            </span>
-            <span className="inline-flex items-center rounded-full bg-blue-500/10 px-2.5 py-0.5 text-xs font-medium text-blue-400 border border-blue-500/20">
-              {isEditor ? "Editorial Access" : "Read-Only Safety"}
+      <div className="flex-1 lg:pl-60 flex flex-col min-w-0">
+        {/* Minimal Top Utility Bar (Desktop) */}
+        <header className="sticky top-0 z-30 hidden lg:flex items-center justify-between border-b border-slate-200/90 bg-white/90 px-8 h-13 backdrop-blur-sm print:hidden">
+          <div className="flex items-center gap-2.5 text-xs">
+            <span className="font-medium text-slate-900">WanderKashmir Workspace</span>
+            <span className="text-slate-300">/</span>
+            <span className="inline-flex items-center rounded-md bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-600 border border-slate-200/80">
+              {isEditor ? "Editorial Role" : "Administrator"}
             </span>
           </div>
 
-          <div className="flex items-center gap-4 text-xs text-slate-400">
-            <div>
-              {isEditor ? "Authenticated Editor: " : "Authenticated Admin: "}
-              <span className="text-white font-medium">{session.email}</span>
-            </div>
-            <form action={logoutAdminAction}>
-              <button
-                type="submit"
-                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium text-red-400 bg-red-500/10 border border-red-500/20 hover:bg-red-500/20 transition-colors cursor-pointer"
-                title="Sign out of Admin session"
-              >
-                <LogOut className="w-3 h-3" />
-                <span>Sign Out</span>
-              </button>
-            </form>
+          <div className="flex items-center gap-3 text-xs">
+            <Link
+              href="/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors"
+            >
+              <span>View Live Site</span>
+              <ExternalLink className="w-3.5 h-3.5 text-slate-400" />
+            </Link>
           </div>
         </header>
 
         {/* Page Content */}
-        <main className="flex-1 p-4 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto">
+        <main className="flex-1 px-4 py-6 sm:px-6 lg:px-8 max-w-7xl w-full mx-auto">
           {children}
         </main>
       </div>

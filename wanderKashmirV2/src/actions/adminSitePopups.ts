@@ -1,7 +1,7 @@
 "use server";
 
 import prisma from "@/lib/prisma";
-import { getAdminSession } from "@/lib/admin/auth";
+import { getAdminOrEditorSession } from "@/lib/admin/auth";
 import { revalidatePath } from "next/cache";
 
 export interface ActionResult<T = unknown> {
@@ -38,9 +38,9 @@ export interface SitePopupFormInput {
 }
 
 async function verifyAdminAuth() {
-  const session = await getAdminSession();
+  const session = await getAdminOrEditorSession();
   if (!session || !session.userId) {
-    return { ok: false, error: "Unauthorized: Admin session required." };
+    return { ok: false, error: "Unauthorized: Admin or Editor session required." };
   }
 
   const dbUser = await prisma.user.findUnique({
@@ -48,8 +48,8 @@ async function verifyAdminAuth() {
     select: { id: true, role: true, isBanned: true },
   });
 
-  if (!dbUser || dbUser.role !== "ADMIN" || dbUser.isBanned) {
-    return { ok: false, error: "Forbidden: Administrator privileges required." };
+  if (!dbUser || (dbUser.role !== "ADMIN" && dbUser.role !== "EDITOR") || dbUser.isBanned) {
+    return { ok: false, error: "Forbidden: Editor or Administrator privileges required." };
   }
 
   return { ok: true, user: dbUser };
@@ -78,9 +78,10 @@ export async function getAdminSitePopupsAction(): Promise<
         total: popups.length,
       },
     };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("getAdminSitePopupsAction error:", error);
-    return { success: false, error: error.message || "Failed to load site popups." };
+    const message = error instanceof Error ? error.message : "Failed to load site popups.";
+    return { success: false, error: message };
   }
 }
 
@@ -128,9 +129,10 @@ export async function createAdminSitePopupAction(
     revalidatePath("/");
     revalidatePath("/admin/popups");
     return { success: true, data: created as unknown as AdminSitePopupItem };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("createAdminSitePopupAction error:", error);
-    return { success: false, error: error.message || "Failed to create site popup." };
+    const message = error instanceof Error ? error.message : "Failed to create site popup.";
+    return { success: false, error: message };
   }
 }
 
@@ -176,9 +178,10 @@ export async function updateAdminSitePopupAction(
     revalidatePath("/");
     revalidatePath("/admin/popups");
     return { success: true, data: updated as unknown as AdminSitePopupItem };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("updateAdminSitePopupAction error:", error);
-    return { success: false, error: error.message || "Failed to update site popup." };
+    const message = error instanceof Error ? error.message : "Failed to update site popup.";
+    return { success: false, error: message };
   }
 }
 
@@ -211,9 +214,10 @@ export async function toggleAdminSitePopupAction(
     revalidatePath("/");
     revalidatePath("/admin/popups");
     return { success: true };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("toggleAdminSitePopupAction error:", error);
-    return { success: false, error: error.message || "Failed to update popup status." };
+    const message = error instanceof Error ? error.message : "Failed to update popup status.";
+    return { success: false, error: message };
   }
 }
 
@@ -234,8 +238,9 @@ export async function deleteAdminSitePopupAction(id: string): Promise<ActionResu
     revalidatePath("/");
     revalidatePath("/admin/popups");
     return { success: true };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("deleteAdminSitePopupAction error:", error);
-    return { success: false, error: error.message || "Failed to delete site popup." };
+    const message = error instanceof Error ? error.message : "Failed to delete site popup.";
+    return { success: false, error: message };
   }
 }

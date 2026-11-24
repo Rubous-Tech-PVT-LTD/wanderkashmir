@@ -6,11 +6,8 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import {
-  ArrowLeft,
   Save,
   Loader2,
-  AlertCircle,
-  CheckCircle2,
   Plus,
   Trash2,
   ExternalLink,
@@ -42,6 +39,14 @@ import TourFixedContentSectionsEditor from "./TourFixedContentSectionsEditor";
 import TourDynamicBlocksEditor from "./TourDynamicBlocksEditor";
 import EditorJsField from "@/components/admin/editor/EditorJsField";
 import { AvailablePlaceOption } from "@/components/admin/destinations/NearbyPlacesEditor";
+import {
+  AdminPageHeader,
+  AdminToastBanner,
+  ConfirmActionDialog,
+  StatusBadge,
+  useAdminBasePath,
+  type FeedbackMessage,
+} from "@/components/admin/ui";
 
 interface TourCategoryOption {
   id: string;
@@ -147,6 +152,7 @@ export default function TourForm({
   isEdit = false,
 }: TourFormProps) {
   const router = useRouter();
+  const basePath = useAdminBasePath();
 
   // Normalize initial itinerary & bundled CMS payload
   const rawItinerary = initialData?.itinerary;
@@ -278,12 +284,10 @@ export default function TourForm({
   );
 
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [successMsg, setSuccessMsg] = useState<string | null>(null);
+  const [toast, setToast] = useState<FeedbackMessage | null>(null);
 
   // Delete state
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [deleting, setDeleting] = useState(false);
 
   // Auto-slug generator on create if user hasn't typed a custom slug
   const handleTitleChange = (val: string) => {
@@ -318,7 +322,7 @@ export default function TourForm({
     if (!newImageUrl.trim()) return;
     const url = newImageUrl.trim();
     if (!url.startsWith("http://") && !url.startsWith("https://")) {
-      alert("Please enter a valid HTTP/HTTPS URL.");
+      setToast({ type: "error", text: "Please enter a valid HTTP/HTTPS image URL." });
       return;
     }
     setImagesList([...imagesList, url]);
@@ -431,7 +435,7 @@ export default function TourForm({
         destination: "Srinagar Hotel",
         purpose: "Airport Transfer",
         vehicleId: vehicles[0]?.id || null,
-        driverId: drivers[0]?.id || null,
+        driverId: null,
         displayOrder: transports.length + 1,
       },
     ]);
@@ -496,8 +500,7 @@ export default function TourForm({
   // Main Save
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null);
-    setSuccessMsg(null);
+    setToast(null);
     setLoading(true);
 
     try {
@@ -565,23 +568,23 @@ export default function TourForm({
       if (isEdit && initialData?.id) {
         const res = await updateTourAction(initialData.id, payload);
         if (res.success) {
-          setSuccessMsg("Tour updated successfully in production database!");
+          setToast({ type: "success", text: "Tour updated successfully." });
           router.refresh();
         } else {
-          setError(res.error || "Failed to update tour.");
+          setToast({ type: "error", text: res.error || "Failed to update tour." });
         }
       } else {
         const res = await createTourAction(payload);
         if (res.success && res.data?.id) {
-          setSuccessMsg("Tour created successfully!");
-          router.push(`/admin/tours/${res.data.id}`);
+          setToast({ type: "success", text: "Tour created successfully." });
+          router.push(`${basePath}/tours/${res.data.id}`);
           router.refresh();
         } else {
-          setError(res.error || "Failed to create tour.");
+          setToast({ type: "error", text: res.error || "Failed to create tour." });
         }
       }
     } catch {
-      setError("An unexpected network or server error occurred.");
+      setToast({ type: "error", text: "An unexpected network or server error occurred." });
     } finally {
       setLoading(false);
     }
@@ -589,123 +592,117 @@ export default function TourForm({
 
   const handleDelete = async () => {
     if (!initialData?.id) return;
-    setDeleting(true);
-    try {
-      const res = await deleteTourAction(initialData.id);
-      if (res.success) {
-        router.push("/admin/tours");
-        router.refresh();
-      } else {
-        alert(res.error || "Failed to delete tour.");
-        setShowDeleteModal(false);
-      }
-    } catch {
-      alert("Error deleting tour.");
-      setShowDeleteModal(false);
-    } finally {
-      setDeleting(false);
+    const res = await deleteTourAction(initialData.id);
+    if (!res.success) {
+      throw new Error(res.error || "Failed to delete tour.");
     }
+    setShowDeleteModal(false);
+    router.push(`${basePath}/tours`);
+    router.refresh();
   };
 
+  const inputClass =
+    "w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-[var(--season-primary)] focus:outline-none focus:ring-1 focus:ring-[var(--season-primary)]/20 transition-colors";
+  const compactInputClass =
+    "w-full rounded-md border border-slate-200 bg-white px-2.5 py-1.5 text-xs text-slate-900 placeholder:text-slate-400 focus:border-[var(--season-primary)] focus:outline-none focus:ring-1 focus:ring-[var(--season-primary)]/20 transition-colors";
+  const labelClass = "block text-xs font-medium text-slate-700 mb-1.5";
+  const cardClass = "rounded-md border border-slate-200 bg-white p-5 sm:p-6 space-y-5";
+
   return (
-    <form onSubmit={handleSubmit} className="space-y-8 max-w-4xl mx-auto pb-16">
-      {/* Top Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-slate-800 pb-5">
-        <div>
-          <Link
-            href="/admin/tours"
-            className="text-xs text-slate-400 hover:text-white inline-flex items-center gap-1 transition-colors mb-2"
-          >
-            <ArrowLeft className="w-3.5 h-3.5" /> Back to Tours Listing
-          </Link>
-          <h1 className="text-2xl font-bold tracking-tight text-white">
-            {isEdit ? "Edit Tour Package" : "Create New Tour Package"}
-          </h1>
-          <p className="text-xs text-slate-400 mt-1">
-            {isEdit
-              ? "Modify production tour details with strict relation safeguards"
-              : "Register a new tour directly to the shared production database"}
-          </p>
-        </div>
-
-        <div className="flex items-center gap-3">
-          {isEdit && (
-            <button
-              type="button"
-              onClick={() => setShowDeleteModal(true)}
-              className="px-3.5 py-2 rounded-lg text-xs font-semibold text-rose-400 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/20 transition-colors flex items-center gap-1.5"
+    <form onSubmit={handleSubmit} className="mx-auto max-w-5xl space-y-6 pb-16">
+      <AdminPageHeader
+        title={isEdit ? initialData?.title || "Edit Tour Package" : "Create New Tour Package"}
+        subtitle={
+          isEdit
+            ? "Manage itinerary, stays, transport, content sections, and publishing settings."
+            : "Create a new Kashmir tour package with itinerary, stays, and SEO metadata."
+        }
+        backHref={`${basePath}/tours`}
+        backLabel="Back to Tours"
+        badge={
+          <StatusBadge
+            status={isLive ? "PUBLISHED" : "DRAFT"}
+            label={isLive ? "Live" : "Draft"}
+            showDot
+          />
+        }
+        actions={
+          <div className="flex flex-wrap items-center gap-2">
+            {isEdit && initialData?.slug && isLive && (
+              <Link
+                href={`/tours/${initialData.slug}`}
+                target="_blank"
+                className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50 transition-colors"
+              >
+                <ExternalLink className="h-3.5 w-3.5" />
+                View Live
+              </Link>
+            )}
+            {isEdit && (
+              <button
+                type="button"
+                onClick={() => setShowDeleteModal(true)}
+                className="inline-flex items-center gap-1.5 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-medium text-rose-700 hover:bg-rose-100 transition-colors cursor-pointer"
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+                Delete
+              </button>
+            )}
+            <Link
+              href={`${basePath}/tours`}
+              className="rounded-md border border-slate-200 bg-white px-3.5 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50 transition-colors"
             >
-              <Trash2 className="w-3.5 h-3.5" /> Delete Tour
+              Cancel
+            </Link>
+            <button
+              type="submit"
+              disabled={loading}
+              className="inline-flex items-center gap-1.5 rounded-md bg-[var(--season-primary)] px-4 py-2 text-xs font-medium text-white hover:bg-[var(--season-primary-hover)] transition-colors disabled:opacity-60 cursor-pointer shadow-xs"
+            >
+              {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+              {isEdit ? "Save Changes" : "Create Tour"}
             </button>
-          )}
+          </div>
+        }
+      />
 
-          <Link
-            href="/admin/tours"
-            className="px-4 py-2 rounded-lg text-xs font-semibold text-slate-300 bg-slate-800 hover:bg-slate-700 transition-colors border border-slate-700"
-          >
-            Cancel
-          </Link>
-          <button
-            type="submit"
-            disabled={loading}
-            className="inline-flex items-center gap-2 px-5 py-2 rounded-lg text-xs font-semibold text-white bg-emerald-600 hover:bg-emerald-500 shadow-lg shadow-emerald-600/20 transition-all disabled:opacity-60 cursor-pointer"
-          >
-            {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-            {isEdit ? "Save Changes" : "Create Tour"}
-          </button>
-        </div>
-      </div>
-
-      {/* Notifications */}
-      {error && (
-        <div className="rounded-xl border border-red-500/20 bg-red-500/10 p-4 text-sm text-red-400 flex items-start gap-3">
-          <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
-          <div>{error}</div>
-        </div>
-      )}
-
-      {successMsg && (
-        <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/10 p-4 text-sm text-emerald-400 flex items-start gap-3">
-          <CheckCircle2 className="w-5 h-5 shrink-0 mt-0.5" />
-          <div>{successMsg}</div>
-        </div>
-      )}
+      <AdminToastBanner message={toast} onDismiss={() => setToast(null)} />
 
       {/* 1. Publishing Status & Core Info */}
-      <div className="rounded-xl border border-slate-800 bg-slate-950/60 p-6 space-y-6">
-        <div className="flex items-center justify-between border-b border-slate-800/80 pb-4">
+      <section className={cardClass}>
+        <div className="flex flex-col gap-3 border-b border-slate-100 pb-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h2 className="text-sm font-semibold text-white">Publishing Status</h2>
-            <p className="text-xs text-slate-400 mt-0.5">
-              Controls visibility on the V2 public website and XML sitemap
+            <h2 className="text-sm font-semibold text-slate-900">Publishing Status</h2>
+            <p className="mt-0.5 text-xs text-slate-500">
+              Controls visibility on the public website and XML sitemap.
             </p>
           </div>
 
-          <label className="relative inline-flex items-center cursor-pointer">
+          <label className="relative inline-flex cursor-pointer items-center">
             <input
               type="checkbox"
               checked={isLive}
               onChange={(e) => setIsLive(e.target.checked)}
-              className="sr-only peer"
+              className="peer sr-only"
             />
-            <div className="w-11 h-6 bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500"></div>
-            <span className="ml-3 text-xs font-semibold text-slate-300">
+            <div className="h-6 w-11 rounded-full bg-slate-200 after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-slate-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-[var(--season-primary)] peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:outline-none" />
+            <span className="ml-3 text-xs font-medium text-slate-700">
               {isLive ? "Live (Publicly Visible)" : "Draft (Hidden)"}
             </span>
           </label>
         </div>
 
         {/* Homepage Visibility / Popular Tour */}
-        <div className="border-b border-slate-800/80 pb-4 space-y-3">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div className="space-y-3 border-b border-slate-100 pb-4">
+          <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
             <div>
-              <h2 className="text-sm font-semibold text-white">Homepage Visibility</h2>
-              <p className="text-xs text-slate-400 mt-0.5">
-                Controls whether this tour can appear in the homepage Popular Kashmir Tours section.
+              <h2 className="text-sm font-semibold text-slate-900">Homepage Visibility</h2>
+              <p className="mt-0.5 text-xs text-slate-500">
+                Controls whether this tour appears in the homepage Popular Kashmir Tours section.
               </p>
             </div>
 
-            <label className="relative inline-flex items-center cursor-pointer">
+            <label className="relative inline-flex cursor-pointer items-center">
               <input
                 type="checkbox"
                 checked={isPopular}
@@ -716,20 +713,18 @@ export default function TourForm({
                     setPopularOrder("1");
                   }
                 }}
-                className="sr-only peer"
+                className="peer sr-only"
               />
-              <div className="w-11 h-6 bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-amber-500"></div>
-              <span className="ml-3 text-xs font-semibold text-slate-300">
+              <div className="h-6 w-11 rounded-full bg-slate-200 after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-slate-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-amber-500 peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:outline-none" />
+              <span className="ml-3 text-xs font-medium text-slate-700">
                 {isPopular ? "Popular Tour (Featured)" : "Standard Tour"}
               </span>
             </label>
           </div>
 
           {isPopular && (
-            <div className="flex items-center gap-3 pt-2">
-              <label className="text-xs font-semibold uppercase tracking-wider text-slate-300">
-                Popular Order:
-              </label>
+            <div className="flex flex-wrap items-center gap-3 pt-1">
+              <label className="text-xs font-medium text-slate-700">Popular Order</label>
               <input
                 type="number"
                 min="1"
@@ -742,19 +737,19 @@ export default function TourForm({
                   }
                 }}
                 placeholder="1"
-                className="w-24 rounded-lg border border-slate-700 bg-slate-800/80 px-3 py-1.5 text-sm text-white focus:border-amber-500 focus:outline-none"
+                className="w-24 rounded-md border border-slate-200 bg-white px-3 py-1.5 text-sm text-slate-900 focus:border-[var(--season-primary)] focus:outline-none focus:ring-1 focus:ring-[var(--season-primary)]/20"
               />
-              <span className="text-xs text-slate-400">
-                (Lower numbers appear first on homepage, e.g. 1, 2, 3...)
+              <span className="text-xs text-slate-500">
+                Lower numbers appear first on the homepage (e.g. 1, 2, 3).
               </span>
             </div>
           )}
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           <div className="md:col-span-2">
-            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-1.5">
-              Tour Title *
+            <label className={labelClass}>
+              Tour Title <span className="text-rose-600">*</span>
             </label>
             <input
               type="text"
@@ -762,13 +757,13 @@ export default function TourForm({
               value={title}
               onChange={(e) => handleTitleChange(e.target.value)}
               placeholder="e.g. 5 Days Complete Kashmir Experience"
-              className="w-full rounded-lg border border-slate-700 bg-slate-800/80 px-3.5 py-2.5 text-sm text-white focus:border-emerald-500 focus:outline-none"
+              className={inputClass}
             />
           </div>
 
           <div>
-            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-1.5">
-              URL Slug *
+            <label className={labelClass}>
+              URL Slug <span className="text-rose-600">*</span>
             </label>
             <input
               type="text"
@@ -776,32 +771,33 @@ export default function TourForm({
               value={slug}
               onChange={(e) => setSlug(e.target.value)}
               placeholder="e.g. 5-days-complete-kashmir-experience"
-              className="w-full rounded-lg border border-slate-700 bg-slate-800/80 px-3.5 py-2.5 text-sm text-white focus:border-emerald-500 focus:outline-none font-mono"
+              className={`${inputClass} font-mono text-xs`}
             />
             {isEdit && (
-              <p className="text-[11px] text-amber-400 mt-1 flex items-center gap-1">
-                <Info className="w-3 h-3" /> Changing an existing slug alters public canonical URLs.
+              <p className="mt-1 flex items-center gap-1 text-[11px] text-amber-700">
+                <Info className="h-3 w-3 shrink-0" />
+                Changing an existing slug alters public canonical URLs.
               </p>
             )}
           </div>
 
           <div>
-            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-1.5">
-              Duration *
+            <label className={labelClass}>
+              Duration <span className="text-rose-600">*</span>
             </label>
             <input
               type="text"
               required
               value={duration}
               onChange={(e) => setDuration(e.target.value)}
-              placeholder="e.g. 5D/4N or 5 Days • 4 Nights"
-              className="w-full rounded-lg border border-slate-700 bg-slate-800/80 px-3.5 py-2.5 text-sm text-white focus:border-emerald-500 focus:outline-none"
+              placeholder="e.g. 5D/4N or 5 Days · 4 Nights"
+              className={inputClass}
             />
           </div>
 
           <div>
-            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-1.5">
-              Price (INR) *
+            <label className={labelClass}>
+              Price (INR) <span className="text-rose-600">*</span>
             </label>
             <input
               type="number"
@@ -811,14 +807,12 @@ export default function TourForm({
               value={price}
               onChange={(e) => setPrice(e.target.value)}
               placeholder="12999"
-              className="w-full rounded-lg border border-slate-700 bg-slate-800/80 px-3.5 py-2.5 text-sm text-white focus:border-emerald-500 focus:outline-none font-mono"
+              className={`${inputClass} font-mono`}
             />
           </div>
 
           <div>
-            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-1.5">
-              Original Price (Optional)
-            </label>
+            <label className={labelClass}>Original Price (Optional)</label>
             <input
               type="number"
               min="0"
@@ -826,18 +820,16 @@ export default function TourForm({
               value={originalPrice}
               onChange={(e) => setOriginalPrice(e.target.value)}
               placeholder="15999"
-              className="w-full rounded-lg border border-slate-700 bg-slate-800/80 px-3.5 py-2.5 text-sm text-white focus:border-emerald-500 focus:outline-none font-mono"
+              className={`${inputClass} font-mono`}
             />
           </div>
 
           <div>
-            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-1.5">
-              Category
-            </label>
+            <label className={labelClass}>Category</label>
             <select
               value={categoryId}
               onChange={(e) => handleCategorySelect(e.target.value)}
-              className="w-full rounded-lg border border-slate-700 bg-slate-800/80 px-3.5 py-2.5 text-sm text-white focus:border-emerald-500 focus:outline-none"
+              className={inputClass}
             >
               {categories.map((c) => (
                 <option key={c.id} value={c.id}>
@@ -848,102 +840,98 @@ export default function TourForm({
           </div>
 
           <div>
-            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-1.5">
-              Max Persons
-            </label>
+            <label className={labelClass}>Max Persons</label>
             <input
               type="number"
               min="1"
               value={maxPersons}
               onChange={(e) => setMaxPersons(e.target.value)}
               placeholder="15"
-              className="w-full rounded-lg border border-slate-700 bg-slate-800/80 px-3.5 py-2.5 text-sm text-white focus:border-emerald-500 focus:outline-none font-mono"
+              className={`${inputClass} font-mono`}
             />
           </div>
 
           <div className="md:col-span-2">
-            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-1.5">
-              Badge / Ribbon Label
-            </label>
+            <label className={labelClass}>Badge / Ribbon Label</label>
             <input
               type="text"
               value={badge}
               onChange={(e) => setBadge(e.target.value)}
               placeholder="e.g. Best Seller, Most Popular, Winter Special"
-              className="w-full rounded-lg border border-slate-700 bg-slate-800/80 px-3.5 py-2.5 text-sm text-white focus:border-emerald-500 focus:outline-none"
+              className={inputClass}
             />
           </div>
         </div>
-      </div>
+      </section>
 
       {/* 2. Travel Styles */}
-      <div className="rounded-xl border border-slate-800 bg-slate-950/60 p-6 space-y-4">
+      <section className={cardClass}>
         <div>
-          <h2 className="text-sm font-semibold text-white">Travel Styles</h2>
-          <p className="text-xs text-slate-400 mt-0.5">
-            Select one or more active travel styles to link this tour to style category pages
+          <h2 className="text-sm font-semibold text-slate-900">Travel Styles</h2>
+          <p className="mt-0.5 text-xs text-slate-500">
+            Select one or more active travel styles to link this tour to style category pages.
           </p>
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+        <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3">
           {travelStyles.map((style) => {
             const isSelected = selectedStyleIds.includes(style.id);
             return (
               <label
                 key={style.id}
-                className={`flex items-center gap-2.5 p-3 rounded-lg border text-xs font-medium cursor-pointer transition-colors ${
+                className={`flex cursor-pointer items-center gap-2.5 rounded-md border px-3 py-2.5 text-xs font-medium transition-colors ${
                   isSelected
-                    ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-300"
-                    : "border-slate-800 bg-slate-900/60 text-slate-400 hover:border-slate-700"
+                    ? "border-[var(--season-primary)]/30 bg-[var(--season-primary-light)] text-[var(--season-primary-hover)]"
+                    : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
                 }`}
               >
                 <input
                   type="checkbox"
                   checked={isSelected}
                   onChange={() => toggleStyle(style.id)}
-                  className="rounded border-slate-700 text-emerald-600 focus:ring-emerald-500 bg-slate-800"
+                  className="h-4 w-4 rounded border-slate-300 text-[var(--season-primary)] focus:ring-[var(--season-primary)]"
                 />
                 <span>{style.name}</span>
               </label>
             );
           })}
         </div>
-      </div>
+      </section>
 
       {/* 3. Images Management */}
-      <div className="rounded-xl border border-slate-800 bg-slate-950/60 p-6 space-y-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <h2 className="text-sm font-semibold text-white">Tour Images ({imagesList.length})</h2>
-            <p className="text-xs text-slate-400 mt-0.5">
-              Add Cloudinary or verified CDN image URLs. The first image is used as the cover photo.
-            </p>
-          </div>
+      <section className={cardClass}>
+        <div>
+          <h2 className="text-sm font-semibold text-slate-900">
+            Tour Images ({imagesList.length})
+          </h2>
+          <p className="mt-0.5 text-xs text-slate-500">
+            Add Cloudinary or verified CDN image URLs. The first image is used as the cover photo.
+          </p>
         </div>
 
-        <div className="flex gap-2">
+        <div className="flex flex-col gap-2 sm:flex-row">
           <input
             type="url"
             value={newImageUrl}
             onChange={(e) => setNewImageUrl(e.target.value)}
             placeholder="Add image URL (https://res.cloudinary.com/...)"
-            className="flex-1 rounded-lg border border-slate-700 bg-slate-800/80 px-3.5 py-2 text-xs text-white focus:border-emerald-500 focus:outline-none"
+            className="flex-1 rounded-md border border-slate-200 bg-white px-3 py-2 text-xs text-slate-900 placeholder:text-slate-400 focus:border-[var(--season-primary)] focus:outline-none focus:ring-1 focus:ring-[var(--season-primary)]/20"
           />
           <button
             type="button"
             onClick={handleAddImage}
-            className="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-lg text-xs font-semibold whitespace-nowrap transition-colors"
+            className="rounded-md border border-slate-200 bg-white px-3.5 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50 whitespace-nowrap transition-colors cursor-pointer"
           >
             Add Photo
           </button>
         </div>
 
         {imagesList.length > 0 ? (
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
             {imagesList.map((img, idx) => (
               <div
                 key={idx}
-                className="group relative aspect-video bg-slate-900 border border-slate-800 rounded-xl overflow-hidden shadow-sm"
+                className="group relative aspect-video overflow-hidden rounded-md border border-slate-200 bg-slate-100"
               >
                 <Image
                   src={img}
@@ -952,15 +940,15 @@ export default function TourForm({
                   className="object-cover"
                   sizes="(max-width: 768px) 50vw, 25vw"
                 />
-                <div className="absolute top-1 left-1 bg-black/70 px-1.5 py-0.5 rounded text-[10px] text-white font-mono">
+                <div className="absolute left-1.5 top-1.5 rounded bg-black/70 px-1.5 py-0.5 font-mono text-[10px] text-white">
                   #{idx + 1} {idx === 0 && "(Cover)"}
                 </div>
-                <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1.5 p-1">
+                <div className="absolute inset-0 flex items-center justify-center gap-1.5 bg-black/55 p-1 opacity-0 transition-opacity group-hover:opacity-100">
                   {idx > 0 && (
                     <button
                       type="button"
                       onClick={() => handleMoveImage(idx, "left")}
-                      className="p-1 bg-slate-800 text-white rounded hover:bg-slate-700 text-xs"
+                      className="rounded bg-white/95 px-2 py-1 text-xs font-semibold text-slate-800 hover:bg-white cursor-pointer"
                       title="Move left"
                     >
                       ←
@@ -970,7 +958,7 @@ export default function TourForm({
                     <button
                       type="button"
                       onClick={() => handleMoveImage(idx, "right")}
-                      className="p-1 bg-slate-800 text-white rounded hover:bg-slate-700 text-xs"
+                      className="rounded bg-white/95 px-2 py-1 text-xs font-semibold text-slate-800 hover:bg-white cursor-pointer"
                       title="Move right"
                     >
                       →
@@ -979,100 +967,94 @@ export default function TourForm({
                   <button
                     type="button"
                     onClick={() => handleRemoveImage(idx)}
-                    className="p-1 bg-rose-600 text-white rounded hover:bg-rose-500 text-xs"
+                    className="rounded bg-rose-600 p-1.5 text-white hover:bg-rose-700 cursor-pointer"
                     title="Remove"
                   >
-                    <Trash2 className="w-3 h-3" />
+                    <Trash2 className="h-3 w-3" />
                   </button>
                 </div>
               </div>
             ))}
           </div>
         ) : (
-          <div className="text-center py-8 border border-dashed border-slate-800 rounded-xl text-xs text-slate-500">
+          <div className="rounded-md border border-dashed border-slate-200 bg-slate-50/70 py-8 text-center text-xs text-slate-500">
             No images added. Paste an image URL above to add a photo.
           </div>
         )}
-      </div>
+      </section>
 
       {/* 4. Overview, Highlights, Inclusions, Exclusions */}
-      <div className="rounded-xl border border-slate-800 bg-slate-950/60 p-6 space-y-5">
-        <h2 className="text-sm font-semibold text-white">Content & Inclusions</h2>
+      <section className={cardClass}>
+        <div className="border-b border-slate-100 pb-3">
+          <h2 className="text-sm font-semibold text-slate-900">Content & Inclusions</h2>
+        </div>
 
         <div>
-          <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-1.5">
-            Overview / Description
-          </label>
+          <label className={labelClass}>Overview / Description</label>
           <textarea
             rows={4}
             value={overview}
             onChange={(e) => setOverview(e.target.value)}
             placeholder="Detailed description of the tour experience..."
-            className="w-full rounded-lg border border-slate-700 bg-slate-800/80 px-3.5 py-2.5 text-sm text-white focus:border-emerald-500 focus:outline-none"
+            className={inputClass}
           />
         </div>
 
         <div>
-          <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-1.5">
-            Destinations (Comma-separated)
-          </label>
+          <label className={labelClass}>Destinations (Comma-separated)</label>
           <input
             type="text"
             value={destinationsStr}
             onChange={(e) => setDestinationsStr(e.target.value)}
             placeholder="Srinagar, Gulmarg, Pahalgam, Sonamarg"
-            className="w-full rounded-lg border border-slate-700 bg-slate-800/80 px-3.5 py-2.5 text-sm text-white focus:border-emerald-500 focus:outline-none"
+            className={inputClass}
           />
         </div>
 
         <div>
-          <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-1.5">
-            Key Highlights (Comma-separated)
-          </label>
+          <label className={labelClass}>Key Highlights (Comma-separated)</label>
           <input
             type="text"
             value={highlightsStr}
             onChange={(e) => setHighlightsStr(e.target.value)}
             placeholder="Dal Lake Shikara Ride, Gulmarg Gondola Phase 2, Betaab Valley Excursion"
-            className="w-full rounded-lg border border-slate-700 bg-slate-800/80 px-3.5 py-2.5 text-sm text-white focus:border-emerald-500 focus:outline-none"
+            className={inputClass}
           />
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           <div>
-            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-1.5">
-              Inclusions (Comma-separated)
-            </label>
+            <label className={labelClass}>Inclusions (Comma-separated)</label>
             <input
               type="text"
               value={inclusionsStr}
               onChange={(e) => setInclusionsStr(e.target.value)}
               placeholder="Hotel, Daily Breakfast, Private Cab, Shikara Ride"
-              className="w-full rounded-lg border border-slate-700 bg-slate-800/80 px-3.5 py-2.5 text-sm text-white focus:border-emerald-500 focus:outline-none"
+              className={inputClass}
             />
           </div>
 
           <div>
-            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-1.5">
-              Exclusions (Comma-separated)
-            </label>
+            <label className={labelClass}>Exclusions (Comma-separated)</label>
             <input
               type="text"
               value={exclusionsStr}
               onChange={(e) => setExclusionsStr(e.target.value)}
               placeholder="Airfare, Gondola Tickets, Personal Expenses"
-              className="w-full rounded-lg border border-slate-700 bg-slate-800/80 px-3.5 py-2.5 text-sm text-white focus:border-emerald-500 focus:outline-none"
+              className={inputClass}
             />
           </div>
         </div>
-      </div>
+      </section>
 
       {/* 5. Day-by-Day Itinerary Builder (with Reorder Up / Down) */}
-      <div className="rounded-xl border border-slate-800 bg-slate-950/60 p-6 space-y-5">
-        <div className="flex items-center justify-between">
+      <section className={cardClass}>
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-3">
           <div>
-            <h2 className="text-sm font-semibold text-white">Day-by-Day Itinerary</h2>
-            <p className="text-xs text-slate-400 mt-0.5">
+            <h2 className="text-sm font-semibold text-slate-900">
+              Day-by-Day Itinerary ({itinerary.length})
+            </h2>
+            <p className="mt-0.5 text-xs text-slate-500">
               Add structured itinerary milestones for each day. Reorder using up/down arrows.
             </p>
           </div>
@@ -1082,7 +1064,7 @@ export default function TourForm({
               <button
                 type="button"
                 onClick={renumberItineraryDays}
-                className="px-2.5 py-1 text-xs text-slate-400 hover:text-white bg-slate-800 rounded transition-colors"
+                className="rounded-md border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-50 transition-colors cursor-pointer"
                 title="Renumber days sequentially"
               >
                 Renumber
@@ -1091,15 +1073,16 @@ export default function TourForm({
             <button
               type="button"
               onClick={addItineraryDay}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 hover:bg-emerald-500/20 transition-colors"
+              className="inline-flex items-center gap-1.5 rounded-md border border-[var(--season-primary)]/25 bg-[var(--season-primary-light)] px-3 py-1.5 text-xs font-medium text-[var(--season-primary-hover)] hover:bg-[var(--season-primary)]/15 transition-colors cursor-pointer"
             >
-              <Plus className="w-3.5 h-3.5" /> Add Day
+              <Plus className="h-3.5 w-3.5" />
+              Add Day
             </button>
           </div>
         </div>
 
         {itinerary.length === 0 ? (
-          <div className="rounded-lg border border-dashed border-slate-800 p-8 text-center text-xs text-slate-400">
+          <div className="rounded-md border border-dashed border-slate-200 bg-slate-50/70 p-8 text-center text-xs text-slate-500">
             No itinerary items added yet. Click &quot;Add Day&quot; to begin building the day-by-day plan.
           </div>
         ) : (
@@ -1107,27 +1090,27 @@ export default function TourForm({
             {itinerary.map((item, idx) => (
               <div
                 key={idx}
-                className="rounded-lg border border-slate-800 bg-slate-900/60 p-4 space-y-3.5"
+                className="space-y-3.5 rounded-md border border-slate-200 bg-slate-50/70 p-4"
               >
                 {/* Row 1: Day Number, Title, Reorder & Remove Buttons */}
-                <div className="flex items-center justify-between gap-3">
-                  <div className="w-28 shrink-0">
+                <div className="flex flex-wrap items-center justify-between gap-2.5 sm:flex-nowrap">
+                  <div className="w-24 shrink-0">
                     <input
                       type="text"
                       value={item.day}
                       onChange={(e) => updateItineraryItem(idx, "day", e.target.value)}
                       placeholder={`Day ${idx + 1}`}
-                      className="w-full rounded border border-slate-700 bg-slate-800 px-2.5 py-1.5 text-xs font-semibold text-white focus:border-emerald-500 focus:outline-none"
+                      className={`${compactInputClass} font-semibold`}
                     />
                   </div>
 
-                  <div className="flex-1">
+                  <div className="min-w-0 flex-1">
                     <input
                       type="text"
                       value={item.title}
                       onChange={(e) => updateItineraryItem(idx, "title", e.target.value)}
                       placeholder="Day Title (e.g. Arrival in Srinagar & Dal Lake Shikara Ride)"
-                      className="w-full rounded border border-slate-700 bg-slate-800 px-2.5 py-1.5 text-xs text-white focus:border-emerald-500 focus:outline-none font-medium"
+                      className={`${compactInputClass} font-medium`}
                     />
                   </div>
 
@@ -1136,66 +1119,66 @@ export default function TourForm({
                       type="button"
                       disabled={idx === 0}
                       onClick={() => moveItineraryDay(idx, "up")}
-                      className="p-1 text-slate-400 hover:text-white disabled:opacity-30 transition-colors rounded hover:bg-slate-800"
+                      className="rounded p-1 text-slate-500 hover:bg-white hover:text-slate-900 disabled:opacity-30 transition-colors cursor-pointer"
                       title="Move day up"
                     >
-                      <ChevronUp className="w-4 h-4" />
+                      <ChevronUp className="h-4 w-4" />
                     </button>
                     <button
                       type="button"
                       disabled={idx === itinerary.length - 1}
                       onClick={() => moveItineraryDay(idx, "down")}
-                      className="p-1 text-slate-400 hover:text-white disabled:opacity-30 transition-colors rounded hover:bg-slate-800"
+                      className="rounded p-1 text-slate-500 hover:bg-white hover:text-slate-900 disabled:opacity-30 transition-colors cursor-pointer"
                       title="Move day down"
                     >
-                      <ChevronDown className="w-4 h-4" />
+                      <ChevronDown className="h-4 w-4" />
                     </button>
                     <button
                       type="button"
                       onClick={() => removeItineraryDay(idx)}
-                      className="p-1 text-slate-500 hover:text-red-400 transition-colors rounded hover:bg-slate-800"
+                      className="rounded p-1 text-slate-400 hover:bg-rose-50 hover:text-rose-600 transition-colors cursor-pointer"
                       title="Remove day"
                     >
-                      <Trash2 className="w-4 h-4" />
+                      <Trash2 className="h-4 w-4" />
                     </button>
                   </div>
                 </div>
 
                 {/* Row 2: Location & Day Photo URL with Live Preview */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 items-start">
+                <div className="grid grid-cols-1 items-start gap-3 sm:grid-cols-2">
                   <div>
-                    <label className="block text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1">
+                    <label className="mb-1 block text-[11px] font-medium text-slate-600">
                       Location / Stop
                     </label>
                     <div className="relative">
-                      <MapPin className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-2.5 pointer-events-none" />
+                      <MapPin className="pointer-events-none absolute left-2.5 top-2 h-3.5 w-3.5 text-slate-400" />
                       <input
                         type="text"
                         value={item.location}
                         onChange={(e) => updateItineraryItem(idx, "location", e.target.value)}
                         placeholder="e.g. Srinagar, Gulmarg, or Pahalgam"
-                        className="w-full rounded border border-slate-700 bg-slate-800 pl-8 pr-2.5 py-1.5 text-xs text-white focus:border-emerald-500 focus:outline-none"
+                        className="w-full rounded-md border border-slate-200 bg-white py-1.5 pl-8 pr-2.5 text-xs text-slate-900 placeholder:text-slate-400 focus:border-[var(--season-primary)] focus:outline-none focus:ring-1 focus:ring-[var(--season-primary)]/20"
                       />
                     </div>
                   </div>
 
                   <div>
-                    <label className="block text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1">
+                    <label className="mb-1 block text-[11px] font-medium text-slate-600">
                       Day Photo URL
                     </label>
-                    <div className="flex gap-2 items-center">
+                    <div className="flex items-center gap-2">
                       <div className="relative flex-1">
-                        <ImageIcon className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-2.5 pointer-events-none" />
+                        <ImageIcon className="pointer-events-none absolute left-2.5 top-2 h-3.5 w-3.5 text-slate-400" />
                         <input
                           type="url"
                           value={item.image}
                           onChange={(e) => updateItineraryItem(idx, "image", e.target.value)}
                           placeholder="https://... (Day featured photo)"
-                          className="w-full rounded border border-slate-700 bg-slate-800 pl-8 pr-2.5 py-1.5 text-xs text-white focus:border-emerald-500 focus:outline-none"
+                          className="w-full rounded-md border border-slate-200 bg-white py-1.5 pl-8 pr-2.5 text-xs text-slate-900 placeholder:text-slate-400 focus:border-[var(--season-primary)] focus:outline-none focus:ring-1 focus:ring-[var(--season-primary)]/20"
                         />
                       </div>
                       {item.image && (
-                        <div className="relative w-8 h-8 rounded border border-slate-700 bg-slate-800 overflow-hidden shrink-0">
+                        <div className="relative h-8 w-8 shrink-0 overflow-hidden rounded border border-slate-200 bg-slate-100">
                           <Image
                             src={item.image}
                             alt="Day"
@@ -1210,9 +1193,9 @@ export default function TourForm({
                 </div>
 
                 {/* Row 3: Stay accommodation note & Meal plan note */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                   <div>
-                    <label className="block text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1">
+                    <label className="mb-1 block text-[11px] font-medium text-slate-600">
                       Overnight Stay Note
                     </label>
                     <input
@@ -1220,12 +1203,12 @@ export default function TourForm({
                       value={item.stay}
                       onChange={(e) => updateItineraryItem(idx, "stay", e.target.value)}
                       placeholder="e.g. Premium Houseboat, Dal Lake"
-                      className="w-full rounded border border-slate-700 bg-slate-800 px-2.5 py-1.5 text-xs text-white focus:border-emerald-500 focus:outline-none"
+                      className={compactInputClass}
                     />
                   </div>
 
                   <div>
-                    <label className="block text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1">
+                    <label className="mb-1 block text-[11px] font-medium text-slate-600">
                       Meal Plan Note
                     </label>
                     <input
@@ -1233,28 +1216,28 @@ export default function TourForm({
                       value={item.meals}
                       onChange={(e) => updateItineraryItem(idx, "meals", e.target.value)}
                       placeholder="e.g. Dinner Included or Breakfast & Dinner"
-                      className="w-full rounded border border-slate-700 bg-slate-800 px-2.5 py-1.5 text-xs text-white focus:border-emerald-500 focus:outline-none"
+                      className={compactInputClass}
                     />
                   </div>
                 </div>
 
                 {/* Row 4: Daily Activities list */}
                 <div>
-                  <label className="block text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1">
+                  <label className="mb-1 block text-[11px] font-medium text-slate-600">
                     Daily Activities (Comma-separated)
                   </label>
                   <input
                     type="text"
                     value={item.activities}
                     onChange={(e) => updateItineraryItem(idx, "activities", e.target.value)}
-                    placeholder="e.g. Shikara Ride on Dal Lake, Mughal Gardens, Nishat Bagh, Sunset over Boulevard"
-                    className="w-full rounded border border-slate-700 bg-slate-800 px-2.5 py-1.5 text-xs text-white focus:border-emerald-500 focus:outline-none"
+                    placeholder="e.g. Shikara Ride on Dal Lake, Mughal Gardens, Nishat Bagh"
+                    className={compactInputClass}
                   />
                 </div>
 
                 {/* Row 5: Detailed Description */}
                 <div className="space-y-1">
-                  <label className="block text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1">
+                  <label className="mb-1 block text-[11px] font-medium text-slate-600">
                     Day Schedule Details
                   </label>
                   <EditorJsField
@@ -1268,7 +1251,7 @@ export default function TourForm({
             ))}
           </div>
         )}
-      </div>
+      </section>
 
       {/* 6. Fixed Content Sections Editor (Best Time, Food, Shopping, Nearby, FAQs) */}
       <TourFixedContentSectionsEditor
@@ -1284,23 +1267,25 @@ export default function TourForm({
       />
 
       {/* 6. Tour Stays (TourStay Relation Management) */}
-      <div className="rounded-xl border border-slate-800 bg-slate-950/60 p-6 space-y-4">
-        <div className="flex items-center justify-between">
+      <section className={cardClass}>
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-3">
           <div>
-            <h2 className="text-sm font-semibold text-white flex items-center gap-2">
-              <Building className="w-4 h-4 text-emerald-400" /> Accommodation Stays ({stays.length})
+            <h2 className="flex items-center gap-2 text-sm font-semibold text-slate-900">
+              <Building className="h-4 w-4 text-[var(--season-primary)]" />
+              Accommodation Stays ({stays.length})
             </h2>
-            <p className="text-xs text-slate-400 mt-0.5">
-              Assign real approved properties/hotels for each destination in this package
+            <p className="mt-0.5 text-xs text-slate-500">
+              Assign approved properties and hotels for each destination in this package.
             </p>
           </div>
 
           <button
             type="button"
             onClick={addStay}
-            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 hover:bg-emerald-500/20 transition-colors"
+            className="inline-flex items-center gap-1 rounded-md border border-[var(--season-primary)]/25 bg-[var(--season-primary-light)] px-3 py-1.5 text-xs font-medium text-[var(--season-primary-hover)] hover:bg-[var(--season-primary)]/15 transition-colors cursor-pointer"
           >
-            <Plus className="w-3.5 h-3.5" /> Add Stay
+            <Plus className="h-3.5 w-3.5" />
+            Add Stay
           </button>
         </div>
 
@@ -1309,24 +1294,28 @@ export default function TourForm({
             {stays.map((stay, idx) => (
               <div
                 key={idx}
-                className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-center p-3 rounded-lg border border-slate-800 bg-slate-900/60 text-xs"
+                className="grid grid-cols-1 items-end gap-3 rounded-md border border-slate-200 bg-slate-50/70 p-3 text-xs sm:grid-cols-12"
               >
                 <div className="sm:col-span-3">
-                  <label className="text-[10px] text-slate-400 block mb-1">Destination</label>
+                  <label className="mb-1 block text-[11px] font-medium text-slate-600">
+                    Destination
+                  </label>
                   <input
                     type="text"
                     value={stay.destination}
                     onChange={(e) => updateStay(idx, { destination: e.target.value })}
                     placeholder="e.g. Srinagar"
-                    className="w-full rounded border border-slate-700 bg-slate-800 px-2.5 py-1.5 text-white"
+                    className={compactInputClass}
                   />
                 </div>
                 <div className="sm:col-span-2">
-                  <label className="text-[10px] text-slate-400 block mb-1">Stay Type</label>
+                  <label className="mb-1 block text-[11px] font-medium text-slate-600">
+                    Stay Type
+                  </label>
                   <select
                     value={stay.stayType || "Hotel"}
                     onChange={(e) => updateStay(idx, { stayType: e.target.value })}
-                    className="w-full rounded border border-slate-700 bg-slate-800 px-2 py-1.5 text-white"
+                    className={compactInputClass}
                   >
                     <option value="Hotel">Hotel</option>
                     <option value="Resort">Resort</option>
@@ -1335,11 +1324,13 @@ export default function TourForm({
                   </select>
                 </div>
                 <div className="sm:col-span-4">
-                  <label className="text-[10px] text-slate-400 block mb-1">Linked Property</label>
+                  <label className="mb-1 block text-[11px] font-medium text-slate-600">
+                    Linked Property
+                  </label>
                   <select
                     value={stay.propertyId || ""}
                     onChange={(e) => updateStay(idx, { propertyId: e.target.value || null })}
-                    className="w-full rounded border border-slate-700 bg-slate-800 px-2 py-1.5 text-white"
+                    className={compactInputClass}
                   >
                     <option value="">-- No specific property --</option>
                     {properties.map((p) => (
@@ -1350,7 +1341,9 @@ export default function TourForm({
                   </select>
                 </div>
                 <div className="sm:col-span-2">
-                  <label className="text-[10px] text-slate-400 block mb-1">Nights</label>
+                  <label className="mb-1 block text-[11px] font-medium text-slate-600">
+                    Nights
+                  </label>
                   <input
                     type="number"
                     min="1"
@@ -1358,47 +1351,49 @@ export default function TourForm({
                     onChange={(e) =>
                       updateStay(idx, { nights: Math.max(1, parseInt(e.target.value, 10) || 1) })
                     }
-                    className="w-full rounded border border-slate-700 bg-slate-800 px-2.5 py-1.5 text-white"
+                    className={compactInputClass}
                   />
                 </div>
-                <div className="sm:col-span-1 text-right">
+                <div className="text-right sm:col-span-1">
                   <button
                     type="button"
                     onClick={() => removeStay(idx)}
-                    className="p-1.5 text-slate-500 hover:text-rose-400 transition-colors"
+                    className="rounded p-1.5 text-slate-400 hover:bg-rose-50 hover:text-rose-600 transition-colors cursor-pointer"
                     title="Remove stay"
                   >
-                    <Trash2 className="w-4 h-4" />
+                    <Trash2 className="h-4 w-4" />
                   </button>
                 </div>
               </div>
             ))}
           </div>
         ) : (
-          <div className="text-center py-6 border border-dashed border-slate-800 rounded-xl text-xs text-slate-500">
+          <div className="rounded-md border border-dashed border-slate-200 bg-slate-50/70 py-6 text-center text-xs text-slate-500">
             No stay accommodations assigned. Click &quot;Add Stay&quot; to link properties to this tour.
           </div>
         )}
-      </div>
+      </section>
 
       {/* 7. Tour Transport (TourTransport Relation Management) */}
-      <div className="rounded-xl border border-slate-800 bg-slate-950/60 p-6 space-y-4">
-        <div className="flex items-center justify-between">
+      <section className={cardClass}>
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-3">
           <div>
-            <h2 className="text-sm font-semibold text-white flex items-center gap-2">
-              <Car className="w-4 h-4 text-sky-400" /> Transportation Segments ({transports.length})
+            <h2 className="flex items-center gap-2 text-sm font-semibold text-slate-900">
+              <Car className="h-4 w-4 text-[var(--season-primary)]" />
+              Transportation Segments ({transports.length})
             </h2>
-            <p className="text-xs text-slate-400 mt-0.5">
-              Assign transport routes, dedicated vehicles, and drivers
+            <p className="mt-0.5 text-xs text-slate-500">
+              Assign transport routes, dedicated vehicles, and drivers.
             </p>
           </div>
 
           <button
             type="button"
             onClick={addTransport}
-            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold text-sky-400 bg-sky-500/10 border border-sky-500/20 hover:bg-sky-500/20 transition-colors"
+            className="inline-flex items-center gap-1 rounded-md border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 transition-colors cursor-pointer"
           >
-            <Plus className="w-3.5 h-3.5" /> Add Transport
+            <Plus className="h-3.5 w-3.5" />
+            Add Transport
           </button>
         </div>
 
@@ -1407,36 +1402,42 @@ export default function TourForm({
             {transports.map((trans, idx) => (
               <div
                 key={idx}
-                className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-center p-3 rounded-lg border border-slate-800 bg-slate-900/60 text-xs"
+                className="grid grid-cols-1 items-end gap-3 rounded-md border border-slate-200 bg-slate-50/70 p-3 text-xs sm:grid-cols-12"
               >
-                <div className="sm:col-span-3">
-                  <label className="text-[10px] text-slate-400 block mb-1">Origin</label>
+                <div className="sm:col-span-2">
+                  <label className="mb-1 block text-[11px] font-medium text-slate-600">
+                    Origin
+                  </label>
                   <input
                     type="text"
                     value={trans.origin}
                     onChange={(e) => updateTransport(idx, { origin: e.target.value })}
                     placeholder="e.g. Srinagar Airport"
-                    className="w-full rounded border border-slate-700 bg-slate-800 px-2.5 py-1.5 text-white"
+                    className={compactInputClass}
                   />
                 </div>
-                <div className="sm:col-span-3">
-                  <label className="text-[10px] text-slate-400 block mb-1">Destination</label>
+                <div className="sm:col-span-2">
+                  <label className="mb-1 block text-[11px] font-medium text-slate-600">
+                    Destination
+                  </label>
                   <input
                     type="text"
                     value={trans.destination}
                     onChange={(e) => updateTransport(idx, { destination: e.target.value })}
                     placeholder="e.g. Gulmarg"
-                    className="w-full rounded border border-slate-700 bg-slate-800 px-2.5 py-1.5 text-white"
+                    className={compactInputClass}
                   />
                 </div>
                 <div className="sm:col-span-3">
-                  <label className="text-[10px] text-slate-400 block mb-1">Vehicle</label>
+                  <label className="mb-1 block text-[11px] font-medium text-slate-600">
+                    Vehicle
+                  </label>
                   <select
                     value={trans.vehicleId || ""}
                     onChange={(e) => updateTransport(idx, { vehicleId: e.target.value || null })}
-                    className="w-full rounded border border-slate-700 bg-slate-800 px-2 py-1.5 text-white"
+                    className={compactInputClass}
                   >
-                    <option value="">-- No specific vehicle --</option>
+                    <option value="">No specific vehicle</option>
                     {vehicles.map((v) => (
                       <option key={v.id} value={v.id}>
                         {v.make} {v.model} ({v.type})
@@ -1445,73 +1446,93 @@ export default function TourForm({
                   </select>
                 </div>
                 <div className="sm:col-span-2">
-                  <label className="text-[10px] text-slate-400 block mb-1">Purpose</label>
+                  <label className="mb-1 block text-[11px] font-medium text-slate-600">
+                    Driver
+                  </label>
+                  <select
+                    value={trans.driverId || ""}
+                    onChange={(e) => updateTransport(idx, { driverId: e.target.value || null })}
+                    className={compactInputClass}
+                  >
+                    <option value="">Unassigned</option>
+                    {drivers.map((d) => (
+                      <option key={d.id} value={d.id}>
+                        {d.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="sm:col-span-2">
+                  <label className="mb-1 block text-[11px] font-medium text-slate-600">
+                    Purpose
+                  </label>
                   <input
                     type="text"
                     value={trans.purpose}
                     onChange={(e) => updateTransport(idx, { purpose: e.target.value })}
                     placeholder="Transfer / Tour"
-                    className="w-full rounded border border-slate-700 bg-slate-800 px-2.5 py-1.5 text-white"
+                    className={compactInputClass}
                   />
                 </div>
-                <div className="sm:col-span-1 text-right">
+                <div className="text-right sm:col-span-1">
                   <button
                     type="button"
                     onClick={() => removeTransport(idx)}
-                    className="p-1.5 text-slate-500 hover:text-rose-400 transition-colors"
+                    className="rounded p-1.5 text-slate-400 hover:bg-rose-50 hover:text-rose-600 transition-colors cursor-pointer"
                     title="Remove segment"
                   >
-                    <Trash2 className="w-4 h-4" />
+                    <Trash2 className="h-4 w-4" />
                   </button>
                 </div>
               </div>
             ))}
           </div>
         ) : (
-          <div className="text-center py-6 border border-dashed border-slate-800 rounded-xl text-xs text-slate-500">
+          <div className="rounded-md border border-dashed border-slate-200 bg-slate-50/70 py-6 text-center text-xs text-slate-500">
             No transport segments added. Click &quot;Add Transport&quot; to configure travel legs.
           </div>
         )}
-      </div>
+      </section>
 
-      {/* 11. Tour Experiences & Travel Guides */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      {/* 8. Tour Experiences & Travel Guides */}
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
         {/* Experiences */}
-        <div className="rounded-xl border border-slate-800 bg-slate-950/60 p-6 space-y-4">
-          <div className="flex items-center justify-between">
+        <section className={cardClass}>
+          <div className="flex flex-wrap items-start justify-between gap-2 border-b border-slate-100 pb-3">
             <div>
-              <div className="flex items-center gap-2">
-                <h2 className="text-sm font-semibold text-white flex items-center gap-2">
-                  <Sparkles className="w-4 h-4 text-amber-400" /> Experiences ({tourExperiences.length})
+              <div className="flex flex-wrap items-center gap-2">
+                <h2 className="flex items-center gap-2 text-sm font-semibold text-slate-900">
+                  <Sparkles className="h-4 w-4 text-amber-600" />
+                  Experiences ({tourExperiences.length})
                 </h2>
                 <span
-                  className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${
+                  className={`rounded-full border px-2 py-0.5 text-[10px] font-medium ${
                     experiences.length > 0
-                      ? "bg-slate-800 text-slate-300 border border-slate-700"
-                      : "bg-amber-500/10 text-amber-400 border border-amber-500/30"
+                      ? "border-slate-200 bg-slate-50 text-slate-600"
+                      : "border-amber-200 bg-amber-50 text-amber-800"
                   }`}
                   title={
                     experiences.length > 0
                       ? `${experiences.length} master experiences in catalog`
-                      : "0 master experiences in DB catalog"
+                      : "0 master experiences in catalog"
                   }
                 >
-                  Catalog: {experiences.length} in DB
+                  {experiences.length} in catalog
                 </span>
               </div>
-              <p className="text-[11px] text-slate-400 mt-0.5">
-                Link curated master activities from catalog
+              <p className="mt-0.5 text-xs text-slate-500">
+                Link curated master activities from catalog.
               </p>
             </div>
             <div className="flex items-center gap-2">
               <Link
-                href="/admin/experiences"
+                href={`${basePath}/experiences`}
                 target="_blank"
-                className="text-[11px] text-slate-400 hover:text-amber-400 flex items-center gap-0.5"
+                className="inline-flex items-center gap-1 text-xs font-medium text-slate-500 hover:text-[var(--season-primary)]"
                 title="Open master experiences in new tab"
               >
-                <span>Manage</span>
-                <ExternalLink className="w-3 h-3" />
+                Manage
+                <ExternalLink className="h-3 w-3" />
               </Link>
               <button
                 type="button"
@@ -1522,9 +1543,10 @@ export default function TourForm({
                     ? "Cannot add: 0 master experiences in catalog. Create one first."
                     : "Add an experience to this tour"
                 }
-                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold text-amber-400 bg-amber-500/10 border border-amber-500/20 hover:bg-amber-500/20 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                className="inline-flex items-center gap-1 rounded-md border border-slate-200 bg-white px-2.5 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50 transition-colors disabled:cursor-not-allowed disabled:opacity-40 cursor-pointer"
               >
-                <Plus className="w-3 h-3" /> Add
+                <Plus className="h-3 w-3" />
+                Add
               </button>
             </div>
           </div>
@@ -1534,13 +1556,13 @@ export default function TourForm({
               {tourExperiences.map((exp, idx) => (
                 <div
                   key={idx}
-                  className="p-3 rounded-lg border border-slate-800 bg-slate-900/60 text-xs space-y-2"
+                  className="space-y-2 rounded-md border border-slate-200 bg-slate-50/70 p-3 text-xs"
                 >
                   <div className="flex items-center gap-2">
                     <select
                       value={exp.experienceId}
                       onChange={(e) => updateExperience(idx, { experienceId: e.target.value })}
-                      className="flex-1 rounded border border-slate-700 bg-slate-800 px-2.5 py-1.5 text-white"
+                      className={`flex-1 ${compactInputClass}`}
                     >
                       {experiences.map((item) => (
                         <option key={item.id} value={item.id}>
@@ -1551,15 +1573,15 @@ export default function TourForm({
                     <button
                       type="button"
                       onClick={() => removeExperience(idx)}
-                      className="p-1.5 text-slate-500 hover:text-rose-400 transition-colors rounded hover:bg-slate-800"
+                      className="rounded p-1.5 text-slate-400 hover:bg-rose-50 hover:text-rose-600 transition-colors cursor-pointer"
                     >
-                      <Trash2 className="w-3.5 h-3.5" />
+                      <Trash2 className="h-3.5 w-3.5" />
                     </button>
                   </div>
 
-                  <div className="flex items-center gap-4 text-[11px]">
+                  <div className="flex flex-wrap items-center gap-4 text-[11px]">
                     <div className="flex items-center gap-1.5">
-                      <span className="text-slate-400">Day:</span>
+                      <span className="text-slate-600">Day:</span>
                       <input
                         type="number"
                         min={1}
@@ -1569,18 +1591,18 @@ export default function TourForm({
                             dayNumber: parseInt(e.target.value, 10) || 1,
                           })
                         }
-                        className="w-16 rounded border border-slate-700 bg-slate-800 px-2 py-0.5 text-white text-center"
+                        className="w-16 rounded border border-slate-200 bg-white px-2 py-0.5 text-center text-slate-900 focus:border-[var(--season-primary)] focus:outline-none"
                       />
                     </div>
 
-                    <label className="flex items-center gap-1.5 text-slate-300 cursor-pointer">
+                    <label className="inline-flex cursor-pointer items-center gap-1.5 text-slate-700">
                       <input
                         type="checkbox"
                         checked={exp.isOptional}
                         onChange={(e) =>
                           updateExperience(idx, { isOptional: e.target.checked })
                         }
-                        className="rounded border-slate-700 bg-slate-800 text-emerald-500 focus:ring-0"
+                        className="rounded border-slate-300 text-[var(--season-primary)] focus:ring-[var(--season-primary)]"
                       />
                       <span>Optional Activity</span>
                     </label>
@@ -1589,66 +1611,70 @@ export default function TourForm({
               ))}
             </div>
           ) : experiences.length === 0 ? (
-            <div className="text-center py-6 px-4 border border-dashed border-amber-500/25 bg-amber-500/5 rounded-xl text-xs space-y-2">
-              <div className="text-amber-400 font-medium flex items-center justify-center gap-1.5">
-                <Sparkles className="w-4 h-4" /> 0 Experiences in Database Catalog
+            <div className="space-y-2 rounded-md border border-dashed border-amber-200 bg-amber-50/60 px-4 py-6 text-center text-xs">
+              <div className="flex items-center justify-center gap-1.5 font-medium text-amber-800">
+                <Sparkles className="h-4 w-4" />
+                No experiences in catalog yet
               </div>
-              <p className="text-slate-400 text-[11px] max-w-sm mx-auto leading-relaxed">
-                The &quot;+ Add&quot; button is disabled because no master activities exist in the catalog yet. Click below to create your first experience in the catalog.
+              <p className="mx-auto max-w-sm text-[11px] leading-relaxed text-amber-900/75">
+                Create a master experience first to link it with tour packages.
               </p>
               <div className="pt-1">
                 <Link
-                  href="/admin/experiences/new"
+                  href={`${basePath}/experiences/new`}
                   target="_blank"
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-amber-300 bg-amber-500/15 border border-amber-500/30 hover:bg-amber-500/25 transition-colors"
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-amber-300 bg-white px-3 py-1.5 text-xs font-medium text-amber-800 hover:bg-amber-50 transition-colors"
                 >
-                  <Plus className="w-3.5 h-3.5" /> Create Master Experience <ExternalLink className="w-3 h-3 ml-0.5" />
+                  <Plus className="h-3.5 w-3.5" />
+                  Create Experience
+                  <ExternalLink className="h-3 w-3" />
                 </Link>
               </div>
             </div>
           ) : (
-            <div className="text-center py-6 border border-dashed border-slate-800 rounded-xl text-xs text-slate-500">
-              No experiences linked yet. Click &quot;Add&quot; to link from {experiences.length} available catalog items.
+            <div className="rounded-md border border-dashed border-slate-200 bg-slate-50/70 py-6 text-center text-xs text-slate-500">
+              No experiences linked yet. Click &quot;Add&quot; to choose from {experiences.length} catalog items.
             </div>
           )}
-        </div>
+        </section>
 
         {/* Travel Guides */}
-        <div className="rounded-xl border border-slate-800 bg-slate-950/60 p-6 space-y-4">
-          <div className="flex items-center justify-between">
+        <section className={cardClass}>
+          <div className="flex flex-wrap items-start justify-between gap-2 border-b border-slate-100 pb-3">
             <div>
-              <div className="flex items-center gap-2">
-                <h2 className="text-sm font-semibold text-white flex items-center gap-2">
-                  <BookOpen className="w-4 h-4 text-purple-400" /> Travel Guides ({tourGuides.length})
+              <div className="flex flex-wrap items-center gap-2">
+                <h2 className="flex items-center gap-2 text-sm font-semibold text-slate-900">
+                  <BookOpen className="h-4 w-4 text-[var(--season-primary)]" />
+                  Travel Guides ({tourGuides.length})
                 </h2>
                 <span
-                  className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${
+                  className={`rounded-full border px-2 py-0.5 text-[10px] font-medium ${
                     travelGuides.length > 0
-                      ? "bg-slate-800 text-slate-300 border border-slate-700"
-                      : "bg-purple-500/10 text-purple-400 border border-purple-500/30"
+                      ? "border-slate-200 bg-slate-50 text-slate-600"
+                      : "border-amber-200 bg-amber-50 text-amber-800"
                   }`}
                   title={
                     travelGuides.length > 0
                       ? `${travelGuides.length} published articles available`
-                      : "0 published articles in DB"
+                      : "0 published articles available"
                   }
                 >
-                  Catalog: {travelGuides.length} in DB
+                  {travelGuides.length} published
                 </span>
               </div>
-              <p className="text-[11px] text-slate-400 mt-0.5">
-                Link published blog guides & field notes
+              <p className="mt-0.5 text-xs text-slate-500">
+                Link published blog guides and field notes.
               </p>
             </div>
             <div className="flex items-center gap-2">
               <Link
-                href="/admin/seo"
+                href={`${basePath}/seo`}
                 target="_blank"
-                className="text-[11px] text-slate-400 hover:text-purple-400 flex items-center gap-0.5"
+                className="inline-flex items-center gap-1 text-xs font-medium text-slate-500 hover:text-[var(--season-primary)]"
                 title="Open SEO blog studio in new tab"
               >
-                <span>Articles</span>
-                <ExternalLink className="w-3 h-3" />
+                Articles
+                <ExternalLink className="h-3 w-3" />
               </Link>
               <button
                 type="button"
@@ -1656,12 +1682,13 @@ export default function TourForm({
                 disabled={travelGuides.length === 0}
                 title={
                   travelGuides.length === 0
-                    ? "Cannot add: 0 published articles in catalog."
+                    ? "Cannot add: 0 published articles available."
                     : "Add an article to this tour"
                 }
-                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold text-purple-400 bg-purple-500/10 border border-purple-500/20 hover:bg-purple-500/20 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                className="inline-flex items-center gap-1 rounded-md border border-slate-200 bg-white px-2.5 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50 transition-colors disabled:cursor-not-allowed disabled:opacity-40 cursor-pointer"
               >
-                <Plus className="w-3 h-3" /> Add
+                <Plus className="h-3 w-3" />
+                Add
               </button>
             </div>
           </div>
@@ -1671,12 +1698,12 @@ export default function TourForm({
               {tourGuides.map((guide, idx) => (
                 <div
                   key={idx}
-                  className="flex items-center gap-2 p-2.5 rounded-lg border border-slate-800 bg-slate-900/60 text-xs"
+                  className="flex items-center gap-2 rounded-md border border-slate-200 bg-slate-50/70 p-2.5 text-xs"
                 >
                   <select
                     value={guide.guideId}
                     onChange={(e) => updateTravelGuide(idx, { guideId: e.target.value })}
-                    className="flex-1 rounded border border-slate-700 bg-slate-800 px-2 py-1 text-white"
+                    className={`flex-1 ${compactInputClass}`}
                   >
                     {travelGuides.map((g) => (
                       <option key={g.id} value={g.id}>
@@ -1687,74 +1714,91 @@ export default function TourForm({
                   <button
                     type="button"
                     onClick={() => removeTravelGuide(idx)}
-                    className="p-1 text-slate-500 hover:text-rose-400 transition-colors"
+                    className="rounded p-1 text-slate-400 hover:bg-rose-50 hover:text-rose-600 transition-colors cursor-pointer"
                   >
-                    <Trash2 className="w-3.5 h-3.5" />
+                    <Trash2 className="h-3.5 w-3.5" />
                   </button>
                 </div>
               ))}
             </div>
           ) : (
-            <div className="text-center py-6 border border-dashed border-slate-800 rounded-xl text-xs text-slate-500">
+            <div className="rounded-md border border-dashed border-slate-200 bg-slate-50/70 py-6 text-center text-xs text-slate-500">
               No travel guides linked yet.
             </div>
           )}
-        </div>
+        </section>
       </div>
 
-      {/* Search Engine Optimization (SEO) & Headings */}
-      <div className="rounded-xl border border-slate-800 bg-slate-950/60 p-6 space-y-6">
-        <div className="flex items-start justify-between border-b border-slate-800/80 pb-4">
+      {/* 9. Search Engine Optimization (SEO) & Headings */}
+      <section className={cardClass}>
+        <div className="flex flex-wrap items-start justify-between gap-3 border-b border-slate-100 pb-4">
           <div>
             <div className="flex items-center gap-2">
-              <Search className="w-4 h-4 text-emerald-400" />
-              <h2 className="text-sm font-semibold text-white">Search Engine Optimization (SEO) & Headings</h2>
+              <Search className="h-4 w-4 text-[var(--season-primary)]" />
+              <h2 className="text-sm font-semibold text-slate-900">
+                Search Engine Optimization (SEO) & Headings
+              </h2>
             </div>
-            <p className="text-xs text-slate-400 mt-1">
-              Optional Google search metadata and custom page heading override. If left empty, intelligent fallbacks will be used automatically.
+            <p className="mt-1 text-xs text-slate-500">
+              Optional search metadata and page heading override. Fallbacks apply automatically when blank.
             </p>
           </div>
-          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-[11px] font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-            <Globe className="w-3 h-3" /> Search Ready
+          <span className="inline-flex items-center gap-1 rounded-md border border-[var(--season-primary)]/25 bg-[var(--season-primary-light)] px-2.5 py-1 text-[11px] font-medium text-[var(--season-primary-hover)]">
+            <Globe className="h-3 w-3" />
+            Search Ready
           </span>
         </div>
 
-        <div className="space-y-5">
+        <div className="space-y-4">
           {/* H1 Heading */}
           <div>
-            <div className="flex items-center justify-between mb-1.5">
-              <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300">
+            <div className="mb-1.5 flex flex-wrap items-center justify-between gap-2">
+              <label className="block text-xs font-medium text-slate-700">
                 H1 / Page Title Heading (Optional Override)
               </label>
-              <span className="text-[11px] text-slate-400">
-                Fallback: <span className="font-mono text-slate-300">{title ? `"${title}"` : "Tour Title"}</span>
+              <span className="text-[11px] text-slate-500">
+                Fallback:{" "}
+                <span className="font-mono text-slate-700">
+                  {title ? `"${title}"` : "Tour Title"}
+                </span>
               </span>
             </div>
             <input
               type="text"
               value={h1Heading}
               onChange={(e) => setH1Heading(e.target.value)}
-              placeholder={title ? `Fallback: ${title}` : "e.g. 5 Days Kashmir Honeymoon Tour: Gulmarg & Pahalgam"}
-              className="w-full rounded-lg border border-slate-700 bg-slate-800/80 px-3.5 py-2.5 text-sm text-white focus:border-emerald-500 focus:outline-none"
+              placeholder={
+                title
+                  ? `Fallback: ${title}`
+                  : "e.g. 5 Days Kashmir Honeymoon Tour: Gulmarg & Pahalgam"
+              }
+              className={inputClass}
             />
-            <p className="text-[11px] text-slate-400 mt-1">
-              Primary <code className="text-emerald-400">&lt;h1&gt;</code> heading displayed on the tour detail page. If left blank, automatically uses Tour Title.
+            <p className="mt-1 text-[11px] text-slate-500">
+              Primary <code className="rounded bg-slate-100 px-1 py-0.5 text-slate-700">&lt;h1&gt;</code> heading displayed on the tour detail page.
             </p>
           </div>
 
           {/* SEO Title */}
           <div>
-            <div className="flex items-center justify-between mb-1.5">
-              <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300">
+            <div className="mb-1.5 flex flex-wrap items-center justify-between gap-2">
+              <label className="block text-xs font-medium text-slate-700">
                 SEO Title (Meta Title)
               </label>
               <div className="flex items-center gap-2 text-[11px]">
-                <span className={seoTitle.length > 60 ? "text-amber-400 font-semibold" : "text-slate-400"}>
+                <span
+                  className={
+                    seoTitle.length > 60 ? "font-semibold text-amber-700" : "text-slate-500"
+                  }
+                >
                   {seoTitle.length}/60 chars
                 </span>
-                <span className="text-slate-500">•</span>
-                <span className="text-slate-400">
-                  Fallback: <span className="font-mono text-slate-300">&quot;Title (Duration) | WanderKashmir&quot;</span>
+                <span className="text-slate-300">·</span>
+                <span className="text-slate-500">
+                  Fallback:{" "}
+                  <span className="font-mono text-slate-700">
+                    &quot;Title (Duration) | WanderKashmir&quot;
+                  </span>
                 </span>
               </div>
             </div>
@@ -1767,26 +1811,32 @@ export default function TourForm({
                   ? `Fallback: ${title} (${duration || "Duration"}) | WanderKashmir`
                   : "e.g. 5 Days Kashmir Tour Package | WanderKashmir"
               }
-              className="w-full rounded-lg border border-slate-700 bg-slate-800/80 px-3.5 py-2.5 text-sm text-white focus:border-emerald-500 focus:outline-none"
+              className={inputClass}
             />
-            <p className="text-[11px] text-slate-400 mt-1">
+            <p className="mt-1 text-[11px] text-slate-500">
               Browser tab title and Google search headline. Optimal length: 50–60 characters.
             </p>
           </div>
 
           {/* Meta Description */}
           <div>
-            <div className="flex items-center justify-between mb-1.5">
-              <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300">
+            <div className="mb-1.5 flex flex-wrap items-center justify-between gap-2">
+              <label className="block text-xs font-medium text-slate-700">
                 Meta Description
               </label>
               <div className="flex items-center gap-2 text-[11px]">
-                <span className={metaDescription.length > 160 ? "text-amber-400 font-semibold" : "text-slate-400"}>
+                <span
+                  className={
+                    metaDescription.length > 160
+                      ? "font-semibold text-amber-700"
+                      : "text-slate-500"
+                  }
+                >
                   {metaDescription.length}/160 chars
                 </span>
-                <span className="text-slate-500">•</span>
-                <span className="text-slate-400">
-                  Fallback: <span className="font-mono text-slate-300">Tour Overview</span>
+                <span className="text-slate-300">·</span>
+                <span className="text-slate-500">
+                  Fallback: <span className="font-mono text-slate-700">Tour Overview</span>
                 </span>
               </div>
             </div>
@@ -1797,109 +1847,85 @@ export default function TourForm({
               placeholder={
                 overview
                   ? `Fallback to Tour Overview (${overview.slice(0, 100)}...)`
-                  : "e.g. Experience the magical valleys of Kashmir on our curated 5-day tour with private chauffeurs, verified stays, and 24/7 local support."
+                  : "e.g. Experience the valleys of Kashmir on our curated 5-day tour with private chauffeurs, verified stays, and 24/7 local support."
               }
-              className="w-full rounded-lg border border-slate-700 bg-slate-800/80 px-3.5 py-2.5 text-sm text-white focus:border-emerald-500 focus:outline-none"
+              className={inputClass}
             />
-            <p className="text-[11px] text-slate-400 mt-1">
-              Google search snippet summary. Optimal length: 140–160 characters. If left blank, automatically uses Tour Overview.
+            <p className="mt-1 text-[11px] text-slate-500">
+              Google search snippet summary. Optimal length: 140–160 characters.
             </p>
           </div>
 
           {/* Live Google Search Snippet Preview */}
-          <div className="pt-2">
-            <label className="block text-[11px] font-semibold uppercase tracking-wider text-slate-400 mb-2">
+          <div className="pt-1">
+            <label className="mb-2 block text-[11px] font-medium uppercase tracking-wider text-slate-500">
               Google Search Snippet Preview
             </label>
-            <div className="p-4 rounded-xl border border-slate-800 bg-slate-900/90 space-y-1 text-left">
-              <div className="flex items-center gap-2 text-xs text-slate-400">
-                <span className="text-emerald-400 font-medium">wanderkashmir.com</span>
+            <div className="space-y-1 rounded-md border border-slate-200 bg-slate-50 p-4 text-left">
+              <div className="flex flex-wrap items-center gap-1.5 text-xs text-slate-500">
+                <span className="font-medium text-[var(--season-primary)]">wanderkashmir.com</span>
                 <span>› tours ›</span>
-                <span className="font-mono text-slate-300">{slug || "tour-slug"}</span>
+                <span className="font-mono text-slate-700">{slug || "tour-slug"}</span>
               </div>
-              <div className="text-base font-semibold text-blue-400 hover:underline cursor-pointer truncate">
-                {seoTitle.trim() || (title ? `${title} (${duration || "Duration"}) | WanderKashmir` : "Tour Title | WanderKashmir")}
+              <div className="truncate text-base font-medium text-blue-700">
+                {seoTitle.trim() ||
+                  (title
+                    ? `${title} (${duration || "Duration"}) | WanderKashmir`
+                    : "Tour Title | WanderKashmir")}
               </div>
-              <p className="text-xs text-slate-300 line-clamp-2 leading-relaxed">
-                {metaDescription.trim() || overview.trim() || "Experience hand-crafted Kashmir tour packages with local guides, private chauffeurs, verified stays, and transparent pricing."}
+              <p className="line-clamp-2 text-xs leading-relaxed text-slate-600">
+                {metaDescription.trim() ||
+                  overview.trim() ||
+                  "Experience hand-crafted Kashmir tour packages with local guides, private chauffeurs, verified stays, and transparent pricing."}
               </p>
             </div>
           </div>
         </div>
-      </div>
+      </section>
 
       {/* Bottom Save Bar */}
-      <div className="flex items-center justify-between gap-3 pt-4 border-t border-slate-800">
+      <div className="flex flex-wrap items-center justify-between gap-3 border-t border-slate-200 pt-4">
         <div>
           {isEdit && (
             <button
               type="button"
               onClick={() => setShowDeleteModal(true)}
-              className="px-4 py-2 rounded-lg text-xs font-semibold text-rose-400 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/20 transition-colors flex items-center gap-1.5"
+              className="inline-flex items-center gap-1.5 rounded-md border border-rose-200 bg-rose-50 px-3.5 py-2 text-xs font-medium text-rose-700 hover:bg-rose-100 transition-colors cursor-pointer"
             >
-              <Trash2 className="w-3.5 h-3.5" /> Delete Tour
+              <Trash2 className="h-3.5 w-3.5" />
+              Delete Tour
             </button>
           )}
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2.5">
           <Link
-            href="/admin/tours"
-            className="px-4 py-2 rounded-lg text-xs font-semibold text-slate-300 bg-slate-800 hover:bg-slate-700 transition-colors border border-slate-700"
+            href={`${basePath}/tours`}
+            className="rounded-md border border-slate-200 bg-white px-4 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50 transition-colors"
           >
             Cancel
           </Link>
           <button
             type="submit"
             disabled={loading}
-            className="inline-flex items-center gap-2 px-6 py-2.5 rounded-lg text-xs font-semibold text-white bg-emerald-600 hover:bg-emerald-500 shadow-lg shadow-emerald-600/20 transition-all disabled:opacity-60 cursor-pointer"
+            className="inline-flex items-center gap-2 rounded-md bg-[var(--season-primary)] px-5 py-2 text-xs font-medium text-white hover:bg-[var(--season-primary-hover)] transition-colors disabled:opacity-60 cursor-pointer"
           >
-            {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+            {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
             {isEdit ? "Save Tour Changes" : "Create Tour"}
           </button>
         </div>
       </div>
 
-      {/* Delete Confirmation Modal */}
-      {showDeleteModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-in fade-in">
-          <div className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl p-6 space-y-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-xl bg-rose-500/10 text-rose-400 border border-rose-500/20">
-                <AlertCircle className="w-6 h-6" />
-              </div>
-              <div>
-                <h3 className="text-base font-bold text-white">Delete Tour Package</h3>
-                <p className="text-xs text-slate-400 mt-0.5 truncate max-w-[280px]">{title}</p>
-              </div>
-            </div>
-
-            <p className="text-xs text-slate-300 leading-relaxed">
-              Are you sure you want to permanently delete this tour package? This action will verify
-              that no customer bookings are linked to this package before proceeding.
-            </p>
-
-            <div className="flex items-center justify-end gap-2.5 pt-2">
-              <button
-                type="button"
-                onClick={() => setShowDeleteModal(false)}
-                disabled={deleting}
-                className="px-4 py-2 text-xs font-semibold text-slate-300 hover:text-white bg-slate-800 hover:bg-slate-700 rounded-xl transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={handleDelete}
-                disabled={deleting}
-                className="px-4 py-2 text-xs font-semibold text-white bg-rose-600 hover:bg-rose-500 rounded-xl shadow-md shadow-rose-600/20 transition-all disabled:opacity-50 flex items-center gap-1.5"
-              >
-                {deleting ? "Deleting..." : "Confirm Delete"}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Delete Confirmation Dialog */}
+      <ConfirmActionDialog
+        open={showDeleteModal}
+        onClose={() => setShowDeleteModal(false)}
+        title="Delete Tour Package"
+        description={`Are you sure you want to permanently delete "${title || "this tour package"}"? This action verifies that no customer bookings are linked before deleting.`}
+        confirmLabel="Confirm Delete"
+        tone="danger"
+        onConfirm={handleDelete}
+      />
     </form>
   );
 }

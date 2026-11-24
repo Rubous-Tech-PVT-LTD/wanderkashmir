@@ -31,15 +31,13 @@ export default async function AdminSeoCommentsPage({ searchParams }: PageProps) 
   const totalPages = res.data?.totalPages || 1;
 
   return (
-    <div className="container mx-auto p-4 sm:p-6 lg:p-8 max-w-7xl">
-      <SeoCommentsClient
-        initialComments={comments}
-        total={total}
-        totalPages={totalPages}
-        currentPage={page}
-        currentSearch={search}
-        currentStatus={status}
-      />
-    </div>
+    <SeoCommentsClient
+      initialComments={comments}
+      total={total}
+      totalPages={totalPages}
+      currentPage={page}
+      currentSearch={search}
+      currentStatus={status}
+    />
   );
 }

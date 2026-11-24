@@ -10,11 +10,10 @@ import {
   ArrowDown,
   MapPin,
   ExternalLink,
-  Edit2,
+  Pencil,
   Check,
   X,
   Compass,
-  Sparkles,
 } from "lucide-react";
 
 export interface NearbyPlaceItemConfig {
@@ -73,18 +72,15 @@ export default function NearbyPlacesEditor({
   onChangeItems,
   availablePlaces,
 }: NearbyPlacesEditorProps) {
-  // Database place search state
   const [searchTerm, setSearchTerm] = useState("");
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
-  // Custom place form state
   const [customName, setCustomName] = useState("");
   const [customDescription, setCustomDescription] = useState("");
   const [customUrl, setCustomUrl] = useState("");
   const [customImageUrl, setCustomImageUrl] = useState("");
   const [customUrlError, setCustomUrlError] = useState<string | null>(null);
 
-  // Editing existing custom item state
   const [editingItemId, setEditingItemId] = useState<string | null>(null);
   const [editName, setEditName] = useState("");
   const [editDescription, setEditDescription] = useState("");
@@ -92,7 +88,6 @@ export default function NearbyPlacesEditor({
   const [editImageUrl, setEditImageUrl] = useState("");
   const [editUrlError, setEditUrlError] = useState<string | null>(null);
 
-  // Set of selected place IDs for quick lookup
   const selectedPlaceIds = useMemo(() => {
     return new Set(
       items
@@ -101,7 +96,6 @@ export default function NearbyPlacesEditor({
     );
   }, [items]);
 
-  // Lookup map for available places
   const placesMap = useMemo(() => {
     const map = new Map<string, AvailablePlaceOption>();
     for (const p of availablePlaces) {
@@ -110,7 +104,6 @@ export default function NearbyPlacesEditor({
     return map;
   }, [availablePlaces]);
 
-  // Filtered available places based on search
   const filteredAvailablePlaces = useMemo(() => {
     if (!searchTerm.trim()) {
       return availablePlaces.slice(0, 8);
@@ -127,7 +120,6 @@ export default function NearbyPlacesEditor({
     });
   }, [availablePlaces, searchTerm]);
 
-  // Validate URL helper
   const validateUrl = (url: string): { isValid: boolean; error?: string } => {
     if (!url.trim()) return { isValid: true };
     const trimmed = url.trim();
@@ -150,7 +142,6 @@ export default function NearbyPlacesEditor({
     };
   };
 
-  // Add DB Place handler
   const handleAddDatabasePlace = (place: AvailablePlaceOption) => {
     if (selectedPlaceIds.has(place.id)) return;
     const newItem: NearbyPlaceItemConfig = {
@@ -167,7 +158,6 @@ export default function NearbyPlacesEditor({
     setIsDropdownOpen(false);
   };
 
-  // Add Custom Place handler
   const handleAddCustomPlace = () => {
     const trimmedName = customName.trim();
     if (!trimmedName) return;
@@ -197,7 +187,6 @@ export default function NearbyPlacesEditor({
     setCustomUrlError(null);
   };
 
-  // Start editing custom item
   const handleStartEdit = (item: NearbyPlaceItemConfig) => {
     setEditingItemId(item.id);
     setEditName(item.name || "");
@@ -207,7 +196,6 @@ export default function NearbyPlacesEditor({
     setEditUrlError(null);
   };
 
-  // Save edited custom item
   const handleSaveEdit = (id: string) => {
     const trimmedName = editName.trim();
     if (!trimmedName) return;
@@ -237,7 +225,6 @@ export default function NearbyPlacesEditor({
     setEditingItemId(null);
   };
 
-  // Cancel edit
   const handleCancelEdit = () => {
     setEditingItemId(null);
     setEditName("");
@@ -247,12 +234,10 @@ export default function NearbyPlacesEditor({
     setEditUrlError(null);
   };
 
-  // Remove item
   const handleRemoveItem = (id: string) => {
     onChangeItems(items.filter((it) => it.id !== id));
   };
 
-  // Move item up / down
   const handleMove = (index: number, direction: "up" | "down") => {
     const targetIdx = direction === "up" ? index - 1 : index + 1;
     if (targetIdx < 0 || targetIdx >= items.length) return;
@@ -265,43 +250,39 @@ export default function NearbyPlacesEditor({
   };
 
   return (
-    <div className="space-y-4">
-      {/* 1. Optional Intro / Overview Text Field (Preserves legacy nearbyPlacesContent) */}
+    <div className="space-y-5">
+      {/* Intro Copy */}
       <div className="space-y-1.5">
         <div className="flex items-center justify-between">
-          <label className="block text-xs font-medium text-slate-300">
-            Nearby Places Intro & Guide Copy (Markdown / Text)
+          <label className="block text-xs font-medium text-slate-700">
+            Nearby Places Overview Copy (Markdown / Text)
           </label>
-          <span className="text-[11px] text-slate-500">
-            SEO supportive overview paragraph for excursions
-          </span>
+          <span className="text-[11px] text-slate-400">Optional intro for nearby excursions</span>
         </div>
         <textarea
           rows={3}
           value={introContent}
           onChange={(e) => onChangeIntroContent(e.target.value)}
           placeholder="e.g. Srinagar serves as the central hub for exploring neighboring valleys and alpine passes..."
-          className="w-full bg-slate-950 border border-slate-800 rounded-lg p-3 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 font-sans leading-relaxed"
+          className="w-full rounded-md border border-slate-200 bg-white p-3 text-xs text-slate-900 placeholder:text-slate-400 focus:border-[var(--season-primary)] focus:ring-1 focus:ring-[var(--season-primary)]/20 focus:outline-hidden leading-relaxed"
         />
       </div>
 
-      {/* 2. Controls & Actions Bar */}
-      <div className="pt-2 border-t border-slate-800/80 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <Compass className="w-4 h-4 text-emerald-400" />
-          <span className="text-xs font-semibold text-slate-200">
-            Configured Places & Suggestions ({items.length})
-          </span>
-        </div>
+      {/* Header */}
+      <div className="pt-2 border-t border-slate-100 flex items-center gap-2">
+        <Compass className="h-4 w-4 text-slate-400" />
+        <span className="text-xs font-semibold text-slate-900">
+          Configured Places & Suggestions ({items.length})
+        </span>
       </div>
 
-      {/* 3. Searchable Multi-Select for Real Database Places */}
+      {/* Searchable Multi-Select for Existing Database Places */}
       <div className="relative">
-        <label className="block text-xs font-medium text-slate-300 mb-1">
-          Select existing places
+        <label className="block text-xs font-medium text-slate-700 mb-1.5">
+          Link Existing Place or Destination
         </label>
         <div className="relative">
-          <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
+          <Search className="h-3.5 w-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
           <input
             type="text"
             value={searchTerm}
@@ -310,41 +291,33 @@ export default function NearbyPlacesEditor({
               setSearchTerm(e.target.value);
               setIsDropdownOpen(true);
             }}
-            placeholder="Search active places by name, slug, or destination..."
-            className="w-full bg-slate-950 border border-slate-800 rounded-lg pl-9 pr-8 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500"
+            placeholder="Search places or destinations by name or slug..."
+            className="w-full rounded-md border border-slate-200 bg-white pl-9 pr-8 py-2 text-xs text-slate-900 placeholder:text-slate-400 focus:border-[var(--season-primary)] focus:ring-1 focus:ring-[var(--season-primary)]/20 focus:outline-hidden"
           />
           {searchTerm && (
             <button
               type="button"
               onClick={() => setSearchTerm("")}
-              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300"
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer"
             >
-              <X className="w-3.5 h-3.5" />
+              <X className="h-3.5 w-3.5" />
             </button>
           )}
         </div>
 
-        {/* Visible message when database has no records */}
         {availablePlaces.length === 0 && (
-          <div className="mt-2 p-2.5 rounded-lg bg-slate-900 border border-slate-800 text-xs text-slate-400 flex items-center gap-2">
-            <span className="w-1.5 h-1.5 rounded-full bg-amber-400 shrink-0" />
-            <span>No database places available. Add places under Destinations → Places, or create a custom suggestion below.</span>
+          <div className="mt-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-500">
+            No places available yet. Add records under Places, or create a custom suggestion below.
           </div>
         )}
 
-        {/* Dropdown Options */}
         {isDropdownOpen && (
           <>
-            <div
-              className="fixed inset-0 z-10"
-              onClick={() => setIsDropdownOpen(false)}
-            />
-            <div className="absolute z-20 w-full mt-1.5 bg-slate-900 border border-slate-700/80 rounded-xl shadow-2xl max-h-60 overflow-y-auto divide-y divide-slate-800">
+            <div className="fixed inset-0 z-10" onClick={() => setIsDropdownOpen(false)} />
+            <div className="absolute z-20 w-full mt-1.5 bg-white border border-slate-200 rounded-md shadow-lg max-h-60 overflow-y-auto divide-y divide-slate-100">
               {filteredAvailablePlaces.length === 0 ? (
-                <div className="p-3 text-center text-xs text-slate-400">
-                  {availablePlaces.length === 0
-                    ? "No database places available. Add places under Destinations → Places, or create a custom suggestion below."
-                    : "No matching database places found."}
+                <div className="p-3 text-center text-xs text-slate-500">
+                  No matching places found.
                 </div>
               ) : (
                 filteredAvailablePlaces.map((place) => {
@@ -360,13 +333,13 @@ export default function NearbyPlacesEditor({
                       onClick={() => !isSelected && handleAddDatabasePlace(place)}
                       className={`p-2.5 flex items-center justify-between text-xs transition-colors ${
                         isSelected
-                          ? "bg-slate-800/40 text-slate-500 cursor-not-allowed"
-                          : "hover:bg-slate-800 text-slate-200 cursor-pointer"
+                          ? "bg-slate-50 text-slate-400 cursor-not-allowed"
+                          : "hover:bg-slate-50 text-slate-700 cursor-pointer"
                       }`}
                     >
                       <div className="flex items-center gap-2.5 min-w-0">
                         {place.imageUrl ? (
-                          <div className="w-7 h-7 rounded-md bg-slate-800 relative overflow-hidden shrink-0 border border-slate-700">
+                          <div className="h-7 w-7 rounded-md bg-slate-100 relative overflow-hidden shrink-0 border border-slate-200">
                             <Image
                               src={place.imageUrl}
                               alt={place.name}
@@ -376,40 +349,31 @@ export default function NearbyPlacesEditor({
                             />
                           </div>
                         ) : (
-                          <div className="w-7 h-7 rounded-md bg-slate-800 flex items-center justify-center shrink-0 border border-slate-700 text-slate-400">
-                            <MapPin className="w-3.5 h-3.5" />
+                          <div className="h-7 w-7 rounded-md bg-slate-100 flex items-center justify-center shrink-0 border border-slate-200 text-slate-400">
+                            <MapPin className="h-3.5 w-3.5" />
                           </div>
                         )}
                         <div className="truncate flex items-center gap-1.5 min-w-0">
-                          <span className="font-medium text-white truncate">{place.name}</span>
-                          {place.entityType === "DESTINATION" ? (
-                            <span className="text-[9.5px] font-semibold text-purple-300 bg-purple-500/20 px-1.5 py-0.5 rounded border border-purple-500/30 shrink-0">
-                              Destination
-                            </span>
-                          ) : (
-                            <span className="text-[9.5px] font-semibold text-emerald-300 bg-emerald-500/20 px-1.5 py-0.5 rounded border border-emerald-500/30 shrink-0">
-                              Attraction
-                            </span>
-                          )}
+                          <span className="font-medium text-slate-900 truncate">{place.name}</span>
+                          <span className="rounded border border-slate-200 bg-slate-100 px-1.5 py-0.5 text-[10px] font-medium text-slate-600 shrink-0">
+                            {place.entityType === "DESTINATION" ? "Destination" : "Place"}
+                          </span>
                           {linkedDestTitle && place.entityType !== "DESTINATION" && (
-                            <span className="text-[11px] text-slate-400 truncate">
+                            <span className="text-[11px] text-slate-500 truncate">
                               ({linkedDestTitle})
                             </span>
                           )}
-                          <span className="font-mono text-[10px] text-slate-500 shrink-0">
-                            /{place.slug}
-                          </span>
                         </div>
                       </div>
 
-                      <div className="shrink-0 flex items-center gap-2">
+                      <div className="shrink-0">
                         {isSelected ? (
-                          <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">
-                            <Check className="w-3 h-3" /> Added
+                          <span className="inline-flex items-center gap-1 rounded-md border border-[var(--season-primary)]/25 bg-[var(--season-primary-light)] px-2 py-0.5 text-[10px] font-medium text-[var(--season-primary-hover)]">
+                            <Check className="h-3 w-3" /> Added
                           </span>
                         ) : (
-                          <span className="inline-flex items-center gap-1 text-[11px] text-slate-400 hover:text-emerald-400">
-                            <Plus className="w-3 h-3" /> Select
+                          <span className="inline-flex items-center gap-1 text-[11px] font-medium text-[var(--season-primary)]">
+                            <Plus className="h-3 w-3" /> Add
                           </span>
                         )}
                       </div>
@@ -422,35 +386,34 @@ export default function NearbyPlacesEditor({
         )}
       </div>
 
-      {/* 4. Custom Nearby Place Input Form (Always Visible) */}
-      <div className="p-3.5 bg-slate-950/80 border border-slate-800 rounded-xl space-y-3">
-        <div className="flex items-center justify-between">
-          <span className="text-xs font-semibold text-amber-300 flex items-center gap-1.5">
-            <Sparkles className="w-3.5 h-3.5" />
-            Add Custom Nearby Place Suggestion
+      {/* Custom Place Input */}
+      <div className="rounded-md border border-slate-200 bg-slate-50/70 p-4 space-y-3">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <span className="text-xs font-semibold text-slate-900">
+            Add Custom Nearby Suggestion
           </span>
-          <span className="text-[10px] text-slate-400">
-            For unlisted or external spots (saved directly with this destination)
+          <span className="text-[11px] text-slate-500">
+            For unlisted spots (saved directly with this destination)
           </span>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
-            <label className="block text-[11px] font-medium text-slate-300 mb-1">
-              Place Name <span className="text-red-400">*</span>
+            <label className="block text-[11px] font-medium text-slate-700 mb-1">
+              Place Name <span className="text-rose-600">*</span>
             </label>
             <input
               type="text"
               value={customName}
               onChange={(e) => setCustomName(e.target.value)}
               placeholder="e.g. Doodhpathri Valley"
-              className="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-amber-400"
+              className="w-full rounded-md border border-slate-200 bg-white px-2.5 py-1.5 text-xs text-slate-900 placeholder:text-slate-400 focus:border-[var(--season-primary)] focus:ring-1 focus:ring-[var(--season-primary)]/20 focus:outline-hidden"
             />
           </div>
 
           <div>
-            <label className="block text-[11px] font-medium text-slate-300 mb-1">
-              Destination / Guide URL (Optional)
+            <label className="block text-[11px] font-medium text-slate-700 mb-1">
+              Guide URL (Optional)
             </label>
             <input
               type="text"
@@ -460,109 +423,102 @@ export default function NearbyPlacesEditor({
                 setCustomUrlError(null);
               }}
               placeholder="/destinations/doodhpathri or https://..."
-              className={`w-full bg-slate-900 border rounded-lg px-2.5 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none ${
-                customUrlError
-                  ? "border-red-500 focus:border-red-400"
-                  : "border-slate-700 focus:border-amber-400"
+              className={`w-full rounded-md border bg-white px-2.5 py-1.5 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-hidden ${
+                customUrlError ? "border-rose-400" : "border-slate-200 focus:border-[var(--season-primary)] focus:ring-1 focus:ring-[var(--season-primary)]/20"
               }`}
             />
-            {customUrlError && (
-              <p className="text-[10px] text-red-400 mt-1">{customUrlError}</p>
-            )}
+            {customUrlError && <p className="text-[11px] text-rose-600 mt-1">{customUrlError}</p>}
           </div>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
-            <label className="block text-[11px] font-medium text-slate-300 mb-1">
-              Short Description / SEO Support Text
+            <label className="block text-[11px] font-medium text-slate-700 mb-1">
+              Short Description
             </label>
             <input
               type="text"
               value={customDescription}
               onChange={(e) => setCustomDescription(e.target.value)}
               placeholder="e.g. Historic Mughal garden beside Dal Lake..."
-              className="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-amber-400"
+              className="w-full rounded-md border border-slate-200 bg-white px-2.5 py-1.5 text-xs text-slate-900 placeholder:text-slate-400 focus:border-[var(--season-primary)] focus:ring-1 focus:ring-[var(--season-primary)]/20 focus:outline-hidden"
             />
           </div>
 
           <div>
-            <label className="block text-[11px] font-medium text-slate-300 mb-1">
-              Image URL (Optional - Cloudinary / Web)
+            <label className="block text-[11px] font-medium text-slate-700 mb-1">
+              Image URL (Optional)
             </label>
             <input
               type="text"
               value={customImageUrl}
               onChange={(e) => setCustomImageUrl(e.target.value)}
-              placeholder="https://res.cloudinary.com/... or image link"
-              className="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-amber-400"
+              placeholder="https://res.cloudinary.com/..."
+              className="w-full rounded-md border border-slate-200 bg-white px-2.5 py-1.5 text-xs text-slate-900 placeholder:text-slate-400 focus:border-[var(--season-primary)] focus:ring-1 focus:ring-[var(--season-primary)]/20 focus:outline-hidden"
             />
           </div>
         </div>
 
-        <div className="flex items-center justify-end gap-2 pt-1">
+        <div className="flex justify-end">
           <button
             type="button"
             onClick={handleAddCustomPlace}
             disabled={!customName.trim()}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-white bg-amber-600 hover:bg-amber-500 disabled:opacity-50 transition-colors cursor-pointer"
+            className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-100 disabled:opacity-40 transition-colors cursor-pointer"
           >
-            <Plus className="w-3.5 h-3.5" />
-            Add Custom Suggestion
+            <Plus className="h-3.5 w-3.5" />
+            <span>Add Custom Suggestion</span>
           </button>
         </div>
       </div>
 
-      {/* 5. Combined Items List */}
-      <div className="space-y-2">
+      {/* Items List */}
+      <div>
         {items.length === 0 ? (
-          <div className="p-4 rounded-xl border border-dashed border-slate-800 text-center space-y-1">
-            <p className="text-xs text-slate-400 font-medium">
-              No nearby places added yet.
-            </p>
-            <p className="text-[11px] text-slate-500">
-              Use the search above to select existing database places, or click &quot;Add Custom Suggestion&quot; to add manual SEO recommendations.
+          <div className="rounded-md border border-dashed border-slate-200 bg-slate-50 p-5 text-center space-y-1">
+            <p className="text-xs font-medium text-slate-600">No nearby places configured yet.</p>
+            <p className="text-[11px] text-slate-400">
+              Select existing records above or add a custom suggestion.
             </p>
           </div>
         ) : (
-          <div className="divide-y divide-slate-800/80 border border-slate-800 rounded-xl overflow-hidden bg-slate-950/40">
+          <div className="divide-y divide-slate-100 rounded-md border border-slate-200 bg-white overflow-hidden">
             {items.map((item, index) => {
               const isDatabase = item.type === "database";
               const dbPlace = isDatabase && item.placeId ? placesMap.get(item.placeId) : null;
               const isEditing = editingItemId === item.id;
 
               const displayName = isDatabase
-                ? dbPlace?.name || `Database Place (${item.placeId})`
+                ? dbPlace?.name || item.name || `Place (${item.placeId})`
                 : item.name || "Custom Suggestion";
 
               const displayDesc = isDatabase
-                ? dbPlace?.description || null
+                ? dbPlace?.description || item.description || null
                 : item.description || null;
 
               const linkedDest = isDatabase
                 ? dbPlace?.destinationPlaces?.[0]?.destination?.title || dbPlace?.destination || null
                 : null;
 
+              const thumbUrl = (isDatabase && dbPlace?.imageUrl) || item.imageUrl || null;
+
               return (
                 <div
                   key={item.id}
-                  className="p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:bg-slate-900/40 transition-colors"
+                  className="p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:bg-slate-50/70 transition-colors"
                 >
                   {isEditing ? (
-                    /* Inline Editing for Custom Item */
-                    <div className="w-full space-y-2">
-                      <div className="flex items-center justify-between">
-                        <span className="text-[11px] font-semibold text-amber-300">
-                          Edit Custom Entry
-                        </span>
-                      </div>
+                    <div className="w-full space-y-2.5">
+                      <span className="text-[11px] font-semibold text-slate-700">
+                        Edit Custom Entry
+                      </span>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                         <input
                           type="text"
                           value={editName}
                           onChange={(e) => setEditName(e.target.value)}
                           placeholder="Place Name"
-                          className="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1 text-xs text-white focus:outline-none focus:border-amber-400"
+                          className="w-full rounded-md border border-slate-200 bg-white px-2.5 py-1.5 text-xs text-slate-900 focus:border-[var(--season-primary)] focus:ring-1 focus:ring-[var(--season-primary)]/20 focus:outline-hidden"
                         />
                         <input
                           type="text"
@@ -572,80 +528,73 @@ export default function NearbyPlacesEditor({
                             setEditUrlError(null);
                           }}
                           placeholder="URL (optional)"
-                          className={`w-full bg-slate-900 border rounded-lg px-2.5 py-1 text-xs text-white focus:outline-none ${
-                            editUrlError
-                              ? "border-red-500 focus:border-red-400"
-                              : "border-slate-700 focus:border-amber-400"
+                          className={`w-full rounded-md border bg-white px-2.5 py-1.5 text-xs text-slate-900 focus:outline-hidden ${
+                            editUrlError ? "border-rose-400" : "border-slate-200 focus:border-[var(--season-primary)] focus:ring-1 focus:ring-[var(--season-primary)]/20"
                           }`}
                         />
                       </div>
-                      {editUrlError && (
-                        <p className="text-[10px] text-red-400">{editUrlError}</p>
-                      )}
+                      {editUrlError && <p className="text-[11px] text-rose-600">{editUrlError}</p>}
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                         <input
                           type="text"
                           value={editDescription}
                           onChange={(e) => setEditDescription(e.target.value)}
                           placeholder="Short Description"
-                          className="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1 text-xs text-white focus:outline-none focus:border-amber-400"
+                          className="w-full rounded-md border border-slate-200 bg-white px-2.5 py-1.5 text-xs text-slate-900 focus:border-[var(--season-primary)] focus:ring-1 focus:ring-[var(--season-primary)]/20 focus:outline-hidden"
                         />
                         <input
                           type="text"
                           value={editImageUrl}
                           onChange={(e) => setEditImageUrl(e.target.value)}
-                          placeholder="Image URL (Cloudinary / Web)"
-                          className="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1 text-xs text-white focus:outline-none focus:border-amber-400"
+                          placeholder="Image URL (optional)"
+                          className="w-full rounded-md border border-slate-200 bg-white px-2.5 py-1.5 text-xs text-slate-900 focus:border-[var(--season-primary)] focus:ring-1 focus:ring-[var(--season-primary)]/20 focus:outline-hidden"
                         />
                       </div>
-                      <div className="flex items-center justify-end gap-2 pt-1">
+                      <div className="flex justify-end gap-2">
                         <button
                           type="button"
                           onClick={handleCancelEdit}
-                          className="px-2 py-0.5 text-xs text-slate-400 hover:text-slate-200"
+                          className="rounded-md border border-slate-200 bg-white px-2.5 py-1 text-xs text-slate-600 hover:bg-slate-50 cursor-pointer"
                         >
                           Cancel
                         </button>
                         <button
                           type="button"
                           onClick={() => handleSaveEdit(item.id)}
-                          className="px-2.5 py-1 rounded text-xs font-semibold text-white bg-amber-600 hover:bg-amber-500"
+                          className="rounded-md bg-[var(--season-primary)] px-3 py-1 text-xs font-semibold text-white hover:bg-[var(--season-primary-hover)] cursor-pointer shadow-xs"
                         >
                           Save
                         </button>
                       </div>
                     </div>
                   ) : (
-                    /* Display Mode */
                     <>
                       <div className="flex items-start gap-2.5 min-w-0">
-                        {/* Order & Drag Indicator */}
                         <div className="flex flex-col gap-0.5 shrink-0 pt-0.5">
                           <button
                             type="button"
                             disabled={index === 0}
                             onClick={() => handleMove(index, "up")}
-                            className="p-0.5 rounded text-slate-500 hover:text-white disabled:opacity-20 cursor-pointer"
-                            title="Move Up"
+                            className="rounded p-0.5 text-slate-400 hover:text-slate-700 disabled:opacity-25 cursor-pointer"
+                            title="Move up"
                           >
-                            <ArrowUp className="w-3 h-3" />
+                            <ArrowUp className="h-3 w-3" />
                           </button>
                           <button
                             type="button"
                             disabled={index === items.length - 1}
                             onClick={() => handleMove(index, "down")}
-                            className="p-0.5 rounded text-slate-500 hover:text-white disabled:opacity-20 cursor-pointer"
-                            title="Move Down"
+                            className="rounded p-0.5 text-slate-400 hover:text-slate-700 disabled:opacity-25 cursor-pointer"
+                            title="Move down"
                           >
-                            <ArrowDown className="w-3 h-3" />
+                            <ArrowDown className="h-3 w-3" />
                           </button>
                         </div>
 
-                        {/* Thumbnail if DB place or custom place has imageUrl */}
-                        {(isDatabase && dbPlace?.imageUrl) || item.imageUrl ? (
-                          <div className="w-9 h-9 rounded-lg bg-slate-800 relative overflow-hidden shrink-0 border border-slate-700 mt-0.5">
+                        {thumbUrl ? (
+                          <div className="h-9 w-9 rounded-lg bg-slate-100 relative overflow-hidden shrink-0 border border-slate-200 mt-0.5">
                             <Image
-                              src={(isDatabase && dbPlace?.imageUrl) || item.imageUrl!}
+                              src={thumbUrl}
                               alt={displayName}
                               fill
                               className="object-cover"
@@ -653,79 +602,64 @@ export default function NearbyPlacesEditor({
                             />
                           </div>
                         ) : (
-                          <div
-                            className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 border mt-0.5 ${
-                              isDatabase
-                                ? "bg-emerald-950/40 border-emerald-800/40 text-emerald-400"
-                                : "bg-amber-950/40 border-amber-800/40 text-amber-400"
-                            }`}
-                          >
-                            <MapPin className="w-4 h-4" />
+                          <div className="h-9 w-9 rounded-lg bg-slate-100 border border-slate-200 flex items-center justify-center shrink-0 text-slate-400 mt-0.5">
+                            <MapPin className="h-4 w-4" />
                           </div>
                         )}
 
                         <div className="min-w-0">
                           <div className="flex flex-wrap items-center gap-1.5">
-                            <span className="font-semibold text-xs text-white">
+                            <span className="font-semibold text-xs text-slate-900">
                               {displayName}
                             </span>
 
-                            {/* Badge */}
-                            {item.entityType === "DESTINATION" || dbPlace?.entityType === "DESTINATION" ? (
-                              <span className="text-[10px] font-semibold text-purple-300 bg-purple-500/20 px-1.5 py-0.5 rounded border border-purple-500/30">
-                                Destination
-                              </span>
-                            ) : isDatabase ? (
-                              <span className="text-[10px] font-semibold text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/20">
-                                Database Place
-                              </span>
-                            ) : (
-                              <span className="text-[10px] font-semibold text-amber-300 bg-amber-500/10 px-1.5 py-0.5 rounded border border-amber-500/20">
-                                Custom Entry
-                              </span>
-                            )}
+                            <span className="rounded border border-slate-200 bg-slate-100 px-1.5 py-0.5 text-[10px] font-medium text-slate-600">
+                              {item.entityType === "DESTINATION" ||
+                              dbPlace?.entityType === "DESTINATION"
+                                ? "Destination"
+                                : isDatabase
+                                ? "Database Place"
+                                : "Custom Entry"}
+                            </span>
 
                             {linkedDest && (
-                              <span className="text-[10px] text-slate-400 bg-slate-800/80 px-1.5 py-0.5 rounded">
-                                {linkedDest}
-                              </span>
+                              <span className="text-[11px] text-slate-500">{linkedDest}</span>
                             )}
 
                             {!isDatabase && item.url && (
-                              <span className="inline-flex items-center gap-0.5 text-[10px] text-sky-400 bg-sky-500/10 px-1.5 py-0.5 rounded border border-sky-500/20 max-w-[150px] truncate">
-                                <ExternalLink className="w-2.5 h-2.5 shrink-0" />
-                                {item.url}
+                              <span className="inline-flex items-center gap-0.5 rounded bg-sky-50 border border-sky-200 px-1.5 py-0.5 text-[10px] text-sky-700 max-w-[160px] truncate">
+                                <ExternalLink className="h-2.5 w-2.5 shrink-0" />
+                                <span className="truncate">{item.url}</span>
                               </span>
                             )}
                           </div>
 
                           {displayDesc && (
-                            <p className="text-[11px] text-slate-400 mt-0.5 line-clamp-1">
+                            <p className="text-[11px] text-slate-500 mt-0.5 line-clamp-1">
                               {displayDesc}
                             </p>
                           )}
                         </div>
                       </div>
 
-                      {/* Actions */}
-                      <div className="shrink-0 flex items-center gap-1.5 self-end sm:self-center">
+                      <div className="shrink-0 flex items-center gap-1 self-end sm:self-center">
                         {!isDatabase && (
                           <button
                             type="button"
                             onClick={() => handleStartEdit(item)}
-                            className="p-1 rounded text-slate-400 hover:text-amber-300 hover:bg-slate-800 transition-colors"
-                            title="Edit Custom Suggestion"
+                            className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-700 transition-colors cursor-pointer"
+                            title="Edit custom suggestion"
                           >
-                            <Edit2 className="w-3.5 h-3.5" />
+                            <Pencil className="h-3.5 w-3.5" />
                           </button>
                         )}
                         <button
                           type="button"
                           onClick={() => handleRemoveItem(item.id)}
-                          className="p-1 rounded text-slate-400 hover:text-red-400 hover:bg-red-500/10 transition-colors"
+                          className="rounded-lg p-1.5 text-slate-400 hover:bg-rose-50 hover:text-rose-600 transition-colors cursor-pointer"
                           title="Remove"
                         >
-                          <Trash2 className="w-3.5 h-3.5" />
+                          <Trash2 className="h-3.5 w-3.5" />
                         </button>
                       </div>
                     </>

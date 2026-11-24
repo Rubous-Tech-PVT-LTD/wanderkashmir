@@ -169,7 +169,11 @@ export default async function DestinationSeoPage({ params }: { params: Promise<{
 
         {/* 2. Top Bento Media Gallery */}
         <div className="mt-4 sm:mt-5">
-          <TourBentoGallery title={destination.h1Heading} images={galleryUrls} />
+          <TourBentoGallery
+            title={destination.h1Heading}
+            images={galleryUrls}
+            emptySubtitle="Verified destination photography will appear here once published."
+          />
         </div>
 
         {/* 3. Title and Description Block */}
@@ -204,6 +208,59 @@ export default async function DestinationSeoPage({ params }: { params: Promise<{
           />
         )}
 
+
+        {/* 5. TOP PLACES TO VISIT (Linked Active Places from DestinationPlace) */}
+        {destination.places.length > 0 && (
+          <div id="places-to-visit" className="mb-14 sm:mb-16">
+            <div className="flex flex-col items-center mb-6 sm:mb-8">
+              <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 text-center font-display tracking-tight">
+                Top Places to Visit in {destination.cleanName || destination.h1Heading}
+              </h2>
+              <p className="text-slate-500 mt-2 font-sans text-sm sm:text-base text-center">
+                Curated landmarks, gardens, and viewpoints across {destination.cleanName || destination.h1Heading}.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {destination.places.map((place) => (
+                <Link
+                  key={place.id}
+                  href={`/destinations/${destination.slug}/${place.slug}`}
+                  className="group flex flex-col bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-all border border-[var(--season-border,#E5E7EB)]"
+                >
+                  <div className="relative aspect-[16/10] w-full overflow-hidden bg-slate-100">
+                    {place.imageUrl ? (
+                      <Image
+                        src={place.imageUrl}
+                        alt={place.name}
+                        fill
+                        className="object-cover transition-transform duration-700 group-hover:scale-105"
+                        sizes="(max-width: 768px) 100vw, 33vw"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-slate-300">
+                        <MapPin className="w-8 h-8" />
+                      </div>
+                    )}
+                  </div>
+                  <div className="p-5 flex-1 flex flex-col">
+                    <h3 className="font-bold text-lg text-slate-900 group-hover:text-[var(--season-primary,#065F46)] transition-colors line-clamp-1">
+                      {place.name}
+                    </h3>
+                    {place.description && (
+                      <p className="text-sm text-slate-600 mt-2 line-clamp-2 leading-relaxed">
+                        {place.description}
+                      </p>
+                    )}
+                    <span className="mt-auto pt-3 text-xs font-semibold text-[var(--season-primary,#065F46)] flex items-center gap-1 group-hover:translate-x-0.5 transition-transform">
+                      Explore Place Guide →
+                    </span>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* 6. WHERE TO STAY (Explicit Featured Accommodations) */}
         <div id="where-to-stay" className="mb-14 sm:mb-16">
@@ -266,9 +323,9 @@ export default async function DestinationSeoPage({ params }: { params: Promise<{
                               <span className="text-slate-500 text-sm">/night</span>
                             </div>
                           </div>
-                          <button className="px-4 py-2 bg-slate-900 text-white rounded-lg text-sm font-medium hover:bg-slate-800 transition-colors">
+                          <span className="px-4 py-2 bg-slate-900 text-white rounded-lg text-sm font-medium group-hover:bg-slate-800 transition-colors">
                             View details
-                          </button>
+                          </span>
                         </div>
                       </div>
                     </Link>
