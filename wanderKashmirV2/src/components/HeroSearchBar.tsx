@@ -570,6 +570,10 @@ export default function HeroSearchBar({
                   type="text"
                   value={destinationQuery}
                   placeholder="Gulmarg, Pahalgam, Dal Lake..."
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (activePopover !== "destination") setActivePopover("destination");
+                  }}
                   onChange={(e) => {
                     setDestinationQuery(e.target.value);
                     setSelectedDestinationName(e.target.value);

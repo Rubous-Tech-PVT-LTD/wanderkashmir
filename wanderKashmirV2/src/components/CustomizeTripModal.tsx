@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useSyncExternalStore } from "react";
+import { createPortal } from "react-dom";
 import {
   X,
   CheckCircle,
@@ -56,6 +57,16 @@ export default function CustomizeTripModal({
 
   const isModalOpen = controlledIsOpen !== undefined ? controlledIsOpen : internalIsOpen;
   const modalRef = useRef<HTMLDivElement>(null);
+  const isMounted = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false
+  );
+  const isSuccessRef = useRef(isSuccess);
+
+  useEffect(() => {
+    isSuccessRef.current = isSuccess;
+  }, [isSuccess]);
 
   // Body scroll lock, Escape key handling, and open tracking
   useEffect(() => {
@@ -90,7 +101,7 @@ export default function CustomizeTripModal({
   }, [isModalOpen]);
 
   const handleClose = () => {
-    if (!isSuccess) {
+    if (!isSuccessRef.current) {
       try {
         localStorage.setItem("lead_popup_dismissed", Date.now().toString());
       } catch (_) {}
@@ -202,17 +213,18 @@ export default function CustomizeTripModal({
         <span onClick={handleOpen}>{trigger}</span>
       ) : null}
 
-      {/* Modal Overlay */}
-      {isModalOpen && (
-        <div
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="customize-modal-title"
-          className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-xs overflow-y-auto animate-in fade-in duration-200"
-          onClick={(e) => {
-            if (e.target === e.currentTarget) handleClose();
-          }}
-        >
+      {/* Modal Overlay rendered in document.body portal to escape ancestor transforms & stacking contexts */}
+      {isModalOpen && isMounted
+        ? createPortal(
+            <div
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="customize-modal-title"
+              className="fixed inset-0 z-[9999] flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-xs overflow-y-auto animate-in fade-in duration-200"
+              onClick={(e) => {
+                if (e.target === e.currentTarget) handleClose();
+              }}
+            >
           <div
             ref={modalRef}
             className="relative w-full max-w-md bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden animate-in zoom-in-95 duration-200 flex flex-col max-h-[88vh] sm:max-h-[90vh] my-auto shrink-0"
@@ -434,8 +446,10 @@ export default function CustomizeTripModal({
               </form>
             )}
           </div>
-        </div>
-      )}
+        </div>,
+            document.body
+          )
+        : null}
     </>
   );
 }

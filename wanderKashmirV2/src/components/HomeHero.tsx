@@ -169,13 +169,13 @@ export default function HomeHero({ rating, totalReviews }: HomeHeroProps) {
 
       {/* ─── DESKTOP ONLY: Original Approved Desktop Hero Layout (Strictly Unchanged) ─── */}
       <section
-        className="hidden md:flex relative items-center justify-center pt-[88px] pb-5 md:pt-[98px] md:pb-6 lg:pt-[106px] lg:pb-7 bg-white border-b transition-all duration-300"
+        className="hidden md:flex relative z-30 items-center justify-center pt-[88px] pb-5 md:pt-[98px] md:pb-6 lg:pt-[106px] lg:pb-7 bg-white border-b transition-all duration-300"
         style={{ borderColor: "var(--season-border)" }}
       >
         <div className="w-full relative z-10 px-4 sm:px-6">
           {/* High-Converting Floating Hero Search Bar - Matches Nav Elements Start & Width on Desktop */}
           <div
-            className="w-full flex justify-center transition-all duration-300"
+            className="w-full flex justify-center relative z-30 transition-all duration-300"
             style={{
               ["--nav-elements-width" as string]: HEADER_SPACING.navElementsWidth || "760px",
               ["--nav-shift-x" as string]: HEADER_SPACING.centerContainerShiftX || "40px",
@@ -190,7 +190,7 @@ export default function HomeHero({ rating, totalReviews }: HomeHeroProps) {
 
           {/* Tailored Trip Quick Trigger */}
           <div
-            className="mt-4 md:mt-5 relative z-20 flex flex-wrap items-center justify-center gap-2 transition-all duration-300 lg:[transform:translateX(var(--nav-shift-x))]"
+            className="mt-4 md:mt-5 relative z-10 flex flex-wrap items-center justify-center gap-2 transition-all duration-300 lg:[transform:translateX(var(--nav-shift-x))]"
             style={{
               ["--nav-shift-x" as string]: HEADER_SPACING.centerContainerShiftX || "40px",
             }}
