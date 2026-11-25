@@ -1,3 +1,4 @@
+
 import prisma from "./prisma";
 import { getValidImageUrl } from "./imageUtils";
 import { cache } from "react";
@@ -175,7 +176,21 @@ export async function mapDestinationDoc(
       : {});
 
   // 2. Resolve Canonical Destination Clean Name
-  const cleanName = cmsDoc.cleanName || (page.title ? page.title.split("|")[0].replace(/\s*Travel Guide.*$/i, "").trim() : "") || (page.slug.charAt(0).toUpperCase() + page.slug.slice(1));
+  const derivedTitleName = page.title
+    ? page.title
+        .split("|")[0]
+        .replace(/\s*Travel Guide.*$/i, "")
+        .replace(/^Places\s+to\s+Visit\s+in\s+/i, "")
+        .trim()
+    : "";
+  const slugFallbackName = page.slug
+    ? page.slug
+        .split("-")
+        .filter(Boolean)
+        .map((w: string) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+        .join(" ")
+    : "";
+  const cleanName = cmsDoc.cleanName || derivedTitleName || slugFallbackName;
 
   // 3. Map Media Gallery (preserve primary imageUrl + gallery items without duplicates)
   const gallery: Array<{ url: string; alt?: string; caption?: string }> = [];
@@ -199,22 +214,98 @@ export async function mapDestinationDoc(
     });
   }
 
-  // 4. Map Places (from cmsDoc or page)
-  const places: DestinationPlaceItem[] = (
-    Array.isArray(cmsDoc.places)
-      ? cmsDoc.places
-      : ((page as any).places || [])
-  )
-    .map((dp: any) => dp.place || dp)
-    .filter((p: any) => p && p.status !== "INACTIVE")
-    .map((p: any) => ({
-      id: p.id || p.slug || p.name,
-      name: p.name,
-      slug: p.slug,
-      imageUrl: p.imageUrl,
-      destination: p.destination || page.h1Heading,
-      description: p.description,
-    }));
+  // 4. Map Places (relational DestinationPlace is authoritative; non-empty cmsDoc.places only if no relation rows;
+  //    plus read-only fallback for unlinked active Place records whose destination field matches this destination)
+  interface RawPlaceInput {
+    id?: string | null;
+    name?: string | null;
+    slug?: string | null;
+    status?: string | null;
+    imageUrl?: string | null;
+    destination?: string | null;
+    description?: string | null;
+  }
+
+  const pagePlaces = (page as { places?: unknown }).places;
+  const rawRelationalPlaces = Array.isArray(pagePlaces) ? pagePlaces : [];
+  const rawCmsPlaces: unknown[] =
+    rawRelationalPlaces.length > 0
+      ? rawRelationalPlaces
+      : Array.isArray(cmsDoc.places) && cmsDoc.places.length > 0
+      ? (cmsDoc.places as unknown[])
+      : [];
+
+  const relationalPlaceItems: RawPlaceInput[] = rawCmsPlaces
+    .map((dp): RawPlaceInput | null => {
+      if (!dp || typeof dp !== "object") return null;
+      const entry = dp as { place?: RawPlaceInput | null } & RawPlaceInput;
+      return entry.place || entry;
+    })
+    .filter(
+      (p): p is RawPlaceInput =>
+        Boolean(p) &&
+        p?.status === "ACTIVE" &&
+        typeof p?.name === "string" &&
+        p.name.trim() !== "" &&
+        typeof p?.slug === "string" &&
+        p.slug.trim() !== ""
+    );
+
+  const placesPromise = (async (): Promise<DestinationPlaceItem[]> => {
+    const deduped: DestinationPlaceItem[] = [];
+    const seenPlaceKeys = new Set<string>();
+
+    const pushPlace = (p: RawPlaceInput) => {
+      const name = p.name?.trim();
+      const slug = p.slug?.trim();
+      if (!name || !slug) return;
+      const key = p.id || slug;
+      if (!key || seenPlaceKeys.has(key)) return;
+      seenPlaceKeys.add(key);
+      deduped.push({
+        id: p.id || slug || name,
+        name,
+        slug,
+        imageUrl: p.imageUrl || null,
+        destination: p.destination || page.h1Heading,
+        description: p.description || null,
+      });
+    };
+
+    for (const p of relationalPlaceItems) {
+      pushPlace(p);
+    }
+
+    // Fallback for unlinked active Place records matching this destination via Place.destination
+    if (!customCmsDoc && page.id && page.slug) {
+      const matchTerms = Array.from(
+        new Set(
+          [page.slug, cleanName, page.title, page.h1Heading]
+            .filter((v): v is string => typeof v === "string" && v.trim().length > 0)
+            .map((v) => v.trim())
+        )
+      );
+
+      if (matchTerms.length > 0) {
+        const unlinkedPlaces = await prisma.place.findMany({
+          where: {
+            status: "ACTIVE",
+            destinationPlaces: { none: {} },
+            OR: matchTerms.map((term) => ({
+              destination: { equals: term, mode: "insensitive" },
+            })),
+          },
+          orderBy: [{ isFeatured: "desc" }, { name: "asc" }],
+        });
+
+        for (const p of unlinkedPlaces) {
+          pushPlace(p);
+        }
+      }
+    }
+
+    return deduped;
+  })();
 
   // 5, 6, 7. Map Featured Properties, Featured Tours, and Nearby Destinations in parallel
   const propertiesPromise = (async (): Promise<DestinationPropertyItem[]> => {
@@ -400,11 +491,7 @@ export async function mapDestinationDoc(
           );
           const resolvedDest = currentLink?.destination || otherPublishedLink?.destination;
 
-          const targetDestSlug =
-            resolvedDest?.slug ||
-            (place.destination && (cleanName || page.h1Heading || page.slug).toLowerCase().includes(place.destination.toLowerCase())
-              ? page.slug
-              : page.slug);
+          const targetDestSlug = resolvedDest?.slug || page.slug;
 
           const canonicalUrl = `/destinations/${targetDestSlug}/${place.slug}`;
 
@@ -470,7 +557,8 @@ export async function mapDestinationDoc(
     return resolvedItems;
   })();
 
-  const [featuredProperties, featuredTours, nearbyDestinations, nearbyPlaces] = await Promise.all([
+  const [places, featuredProperties, featuredTours, nearbyDestinations, nearbyPlaces] = await Promise.all([
+    placesPromise,
     propertiesPromise,
     toursPromise,
     nearbyPromise,

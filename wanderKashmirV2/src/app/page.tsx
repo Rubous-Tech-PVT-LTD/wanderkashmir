@@ -110,7 +110,13 @@ export default async function HomePage() {
           imageUrl: true,
           description: true,
           _count: {
-            select: { places: true },
+            select: {
+              places: {
+                where: {
+                  place: { status: "ACTIVE" },
+                },
+              },
+            },
           },
         },
       })

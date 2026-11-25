@@ -83,12 +83,37 @@ const getPlacesPageData = cache(async () => {
     }),
   ]);
 
+  const slugifyDestination = (value: string) =>
+    value
+      .toLowerCase()
+      .trim()
+      .replace(/[^\w\s-]/g, "")
+      .replace(/\s+/g, "-")
+      .replace(/-+/g, "-")
+      .replace(/^-+|-+$/g, "");
+
   const places: PlaceCardItem[] = rawPlaces.map((p) => {
     // Resolve primary published destination
     const publishedLink = p.destinationPlaces.find(
       (dp) => dp.destination?.workflowState === "PUBLISHED"
     );
-    const dest = publishedLink?.destination;
+    let dest:
+      | { id: string; slug: string; title: string; h1Heading: string }
+      | undefined = publishedLink?.destination;
+
+    if (!dest && p.destination) {
+      const rawDest = p.destination.trim();
+      const rawDestLower = rawDest.toLowerCase();
+      const rawDestSlug = slugifyDestination(rawDest);
+      dest = publishedDestinations.find(
+        (d) =>
+          d.slug === rawDestLower ||
+          d.slug === rawDestSlug ||
+          d.h1Heading?.toLowerCase() === rawDestLower ||
+          d.title?.toLowerCase() === rawDestLower ||
+          (rawDestLower.includes("|") && rawDestLower.includes(d.slug))
+      );
+    }
 
     const destinationName =
       dest?.h1Heading ||
@@ -96,7 +121,8 @@ const getPlacesPageData = cache(async () => {
       p.destination ||
       "Kashmir";
 
-    const destinationSlug = dest?.slug || (p.destination ? p.destination.toLowerCase() : "kashmir");
+    const destinationSlug =
+      dest?.slug || (p.destination ? slugifyDestination(p.destination) || "kashmir" : "kashmir");
 
     const canonicalUrl = dest
       ? `/destinations/${dest.slug}/${p.slug}`

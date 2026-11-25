@@ -840,9 +840,12 @@ export async function assignPlaceToDestinationAction(
       },
     });
 
+    revalidatePath("/");
+    revalidatePath("/places");
     revalidatePath("/destinations");
     revalidatePath(`/destinations/${destination.slug}`);
     revalidatePath(`/destinations/${destination.slug}/${place.slug}`);
+    revalidatePath("/sitemap.xml");
     revalidatePath(`/admin/destinations/${destinationId}`);
 
     return { success: true, data: { id: relation.id } };
@@ -884,6 +887,8 @@ export async function removePlaceFromDestinationAction(
       },
     });
 
+    revalidatePath("/");
+    revalidatePath("/places");
     if (destination?.slug) {
       revalidatePath("/destinations");
       revalidatePath(`/destinations/${destination.slug}`);
@@ -891,6 +896,7 @@ export async function removePlaceFromDestinationAction(
         revalidatePath(`/destinations/${destination.slug}/${place.slug}`);
       }
     }
+    revalidatePath("/sitemap.xml");
     revalidatePath(`/admin/destinations/${destinationId}`);
 
     return { success: true, data: { success: true } };
@@ -935,6 +941,8 @@ export async function reorderDestinationPlacesAction(
       }),
     ]);
 
+    revalidatePath("/");
+    revalidatePath("/places");
     if (destination.slug) {
       revalidatePath("/destinations");
       revalidatePath(`/destinations/${destination.slug}`);

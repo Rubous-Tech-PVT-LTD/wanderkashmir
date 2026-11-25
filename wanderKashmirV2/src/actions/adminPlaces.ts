@@ -40,6 +40,31 @@ function sanitizeSlug(slug: string): string {
     .replace(/^-+|-+$/g, "");
 }
 
+function revalidatePlaceAndDestinationPaths(
+  destinationSlugs: Iterable<string | null | undefined>,
+  placeSlugs: Iterable<string | null | undefined> = []
+) {
+  revalidatePath("/");
+  revalidatePath("/places");
+  revalidatePath("/destinations");
+  revalidatePath("/admin/places");
+  revalidatePath("/sitemap.xml");
+
+  const uniqueDestSlugs = new Set(
+    Array.from(destinationSlugs).filter((s): s is string => Boolean(s && s.trim()))
+  );
+  const uniquePlaceSlugs = new Set(
+    Array.from(placeSlugs).filter((s): s is string => Boolean(s && s.trim()))
+  );
+
+  for (const destSlug of uniqueDestSlugs) {
+    revalidatePath(`/destinations/${destSlug}`);
+    for (const pSlug of uniquePlaceSlugs) {
+      revalidatePath(`/destinations/${destSlug}/${pSlug}`);
+    }
+  }
+}
+
 /**
  * Server Action: Create a new Place record with visitor info, Bento gallery, and SEO metadata.
  * Permitted for: ADMIN and EDITOR.
@@ -112,11 +137,13 @@ export async function createPlaceAction(
       });
 
       // 5. Link DestinationPlace records
-      const destinationIds = Array.isArray(input.destinationIds) ? input.destinationIds : [];
+      const linkedSlugs: string[] = [];
+      const destinationIds = Array.isArray(input.destinationIds)
+        ? input.destinationIds.filter(Boolean)
+        : [];
       if (destinationIds.length > 0) {
         for (let i = 0; i < destinationIds.length; i++) {
           const destId = destinationIds[i];
-          if (!destId) continue;
           await tx.destinationPlace.upsert({
             where: {
               destinationId_placeId: {
@@ -133,6 +160,13 @@ export async function createPlaceAction(
               displayOrder: i,
             },
           });
+        }
+        const linkedDests = await tx.seoLandingPage.findMany({
+          where: { id: { in: destinationIds } },
+          select: { slug: true },
+        });
+        for (const d of linkedDests) {
+          linkedSlugs.push(d.slug);
         }
       } else if (input.destination?.trim()) {
         // Legacy fallback: resolve destination by title/slug
@@ -164,19 +198,17 @@ export async function createPlaceAction(
             },
             update: {},
           });
+          linkedSlugs.push(parentDest.slug);
         }
       }
 
-      return created;
+      return { place: created, linkedSlugs };
     });
 
     // 6. Invalidate relevant caches
-    revalidatePath("/places");
-    revalidatePath("/admin/places");
-    revalidatePath("/destinations");
-    revalidatePath("/sitemap.xml");
+    revalidatePlaceAndDestinationPaths(newPlace.linkedSlugs, [newPlace.place.slug]);
 
-    return { success: true, data: { id: newPlace.id, slug: newPlace.slug } };
+    return { success: true, data: { id: newPlace.place.id, slug: newPlace.place.slug } };
   } catch (error) {
     if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
       return {
@@ -326,28 +358,27 @@ export async function updatePlaceAction(
         }
       }
 
-      return placeRecord;
+      const currentLinks = await tx.destinationPlace.findMany({
+        where: { placeId: id },
+        select: { destination: { select: { slug: true } } },
+      });
+
+      return {
+        place: placeRecord,
+        linkedSlugs: currentLinks.map((link) => link.destination.slug),
+      };
     });
 
-    // 6. Invalidate relevant caches
-    revalidatePath("/places");
-    revalidatePath("/admin/places");
+    // 6. Invalidate relevant caches across existing and newly linked destinations
+    const affectedDestSlugs = [
+      ...existingPlace.destinationPlaces.map((dp) => dp.destination?.slug),
+      ...updated.linkedSlugs,
+    ];
+    revalidatePlaceAndDestinationPaths(affectedDestSlugs, [existingPlace.slug, rawSlug]);
     revalidatePath(`/admin/places/${id}/edit`);
     revalidatePath(`/admin/places/${id}/preview`);
-    revalidatePath("/sitemap.xml");
 
-    // Invalidate public destination pages
-    for (const dp of existingPlace.destinationPlaces) {
-      if (dp.destination?.slug) {
-        revalidatePath(`/destinations/${dp.destination.slug}`);
-        revalidatePath(`/destinations/${dp.destination.slug}/${existingPlace.slug}`);
-        if (rawSlug !== existingPlace.slug) {
-          revalidatePath(`/destinations/${dp.destination.slug}/${rawSlug}`);
-        }
-      }
-    }
-
-    return { success: true, data: { id: updated.id, slug: updated.slug } };
+    return { success: true, data: { id: updated.place.id, slug: updated.place.slug } };
   } catch (error) {
     if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
       return {
@@ -381,13 +412,23 @@ export async function togglePlaceStatusAction(
     const place = await prisma.place.update({
       where: { id },
       data: { status },
-      select: { id: true, slug: true, status: true },
+      select: {
+        id: true,
+        slug: true,
+        status: true,
+        destinationPlaces: {
+          select: {
+            destination: { select: { slug: true } },
+          },
+        },
+      },
     });
 
-    revalidatePath("/places");
-    revalidatePath("/admin/places");
+    revalidatePlaceAndDestinationPaths(
+      place.destinationPlaces.map((dp) => dp.destination.slug),
+      [place.slug]
+    );
     revalidatePath(`/admin/places/${id}/preview`);
-    revalidatePath("/sitemap.xml");
 
     return { success: true, data: { id: place.id, status: place.status } };
   } catch (error) {
@@ -418,7 +459,11 @@ export async function deletePlaceAction(
     const place = await prisma.place.findUnique({
       where: { id },
       include: {
-        destinationPlaces: true,
+        destinationPlaces: {
+          include: {
+            destination: { select: { slug: true } },
+          },
+        },
       },
     });
 
@@ -436,10 +481,10 @@ export async function deletePlaceAction(
       });
     });
 
-    revalidatePath("/places");
-    revalidatePath("/admin/places");
-    revalidatePath("/destinations");
-    revalidatePath("/sitemap.xml");
+    revalidatePlaceAndDestinationPaths(
+      place.destinationPlaces.map((dp) => dp.destination.slug),
+      [place.slug]
+    );
 
     return { success: true, data: { success: true } };
   } catch (error) {

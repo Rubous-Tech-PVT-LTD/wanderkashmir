@@ -191,7 +191,7 @@ const resolveEntity = cache(
     if (linkedEntry) {
       place = linkedEntry.place;
     } else {
-      // Graceful read-only fallback: check if Place exists in the Place table without mutating DB
+      // Graceful read-only fallback: check if unlinked Place matches this destination via Place.destination
       const dbPlace = await prisma.place.findFirst({
         where: {
           slug: placeSlug,
@@ -215,16 +215,31 @@ const resolveEntity = cache(
           isFeatured: true,
           status: true,
           destination: true,
+          destinationPlaces: {
+            select: { id: true },
+          },
         },
       });
 
-      if (dbPlace) {
-        // Validate destination context matches
-        const matchesDestination =
-          !dbPlace.destination ||
-          dbPlace.destination.toLowerCase() === destinationSlug.toLowerCase() ||
-          (destination.title &&
-            destination.title.toLowerCase().includes(dbPlace.destination.toLowerCase()));
+      if (dbPlace && dbPlace.destinationPlaces.length === 0 && dbPlace.destination?.trim()) {
+        const placeDestLower = dbPlace.destination.trim().toLowerCase();
+        const derivedDestName = destination.title
+          ? destination.title
+              .split("|")[0]
+              .replace(/\s*Travel Guide.*$/i, "")
+              .replace(/^Places\s+to\s+Visit\s+in\s+/i, "")
+              .trim()
+          : "";
+        const matchTerms = [
+          destination.slug,
+          derivedDestName,
+          destination.title,
+          destination.h1Heading,
+        ]
+          .filter((v): v is string => typeof v === "string" && v.trim().length > 0)
+          .map((v) => v.trim().toLowerCase());
+
+        const matchesDestination = matchTerms.includes(placeDestLower);
 
         if (matchesDestination) {
           place = {
