@@ -246,12 +246,6 @@ export default function MobileHeroCarousel({
                 className="object-cover object-center pointer-events-none"
               />
 
-              {/* Subtle Dark Gradient Overlay for Readability & Top Navbar Contrast */}
-              <div
-                className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/35 to-black/50 pointer-events-none"
-                aria-hidden="true"
-              />
-
               {/* Hero Banner Content */}
               <div className="relative z-10 w-full px-5 pt-16 pb-11 flex flex-col items-start text-left">
                 {/* Category Icon */}
@@ -283,12 +277,12 @@ export default function MobileHeroCarousel({
                 </div>
 
                 {/* Category Title */}
-                <h2 className="font-display font-extrabold text-white text-2xl sm:text-3xl tracking-tight uppercase leading-tight drop-shadow-[0_2px_10px_rgba(0,0,0,0.85)]">
+                <h2 className="font-display font-extrabold text-white text-2xl sm:text-3xl tracking-tight uppercase leading-tight [text-shadow:_0_1px_4px_rgba(0,0,0,0.9),_0_2px_12px_rgba(0,0,0,0.85)]">
                   {slide.title}
                 </h2>
 
                 {/* Category Subtitle */}
-                <p className="text-white/90 text-sm sm:text-base font-medium leading-snug mt-1 max-w-[300px] drop-shadow-[0_1px_6px_rgba(0,0,0,0.85)]">
+                <p className="text-white text-sm sm:text-base font-medium leading-snug mt-1 max-w-[300px] [text-shadow:_0_1px_4px_rgba(0,0,0,0.9),_0_2px_8px_rgba(0,0,0,0.85)]">
                   {slide.subtitle}
                 </p>
 
