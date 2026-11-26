@@ -1,12 +1,11 @@
 "use client";
 
-import Image from "next/image";
-import { useEffect, useRef, useState } from "react";
 import CustomizeTripModal from "@/components/CustomizeTripModal";
 import HeroSearchBar from "@/components/HeroSearchBar";
 import { HEADER_SPACING } from "@/components/Navbar";
-import HeroTypewriter from "@/components/HeroTypewriter";
 import MobileHeroActionBar from "@/components/MobileHeroActionBar";
+import MobileHeroCarousel from "@/components/MobileHeroCarousel";
+import type { TravelStyleInput } from "@/lib/travelStyles";
 
 // Custom Itinerary SVG Icon (replaces Sparkle icon)
 function ItineraryIcon({
@@ -47,121 +46,19 @@ export const HERO_CONFIG = {
 interface HomeHeroProps {
   rating?: number;
   totalReviews?: number;
+  travelStyles?: TravelStyleInput[];
 }
 
-export default function HomeHero({ rating, totalReviews }: HomeHeroProps) {
-  const mobileVideoRef = useRef<HTMLVideoElement | null>(null);
-  const [isVideoVisible, setIsVideoVisible] = useState(false);
-
-  useEffect(() => {
-    let isCancelled = false;
-    const video = mobileVideoRef.current;
-    if (!video) return;
-
-    // Respect user's reduced-motion preference (keep high-res poster static)
-    if (
-      typeof window !== "undefined" &&
-      window.matchMedia("(prefers-reduced-motion: reduce)").matches
-    ) {
-      return;
-    }
-
-    // Only fade in the video once it is actually actively playing
-    // This guarantees no black/blank frames if playback is slow or fails
-    const onPlaying = () => {
-      if (!isCancelled) {
-        setIsVideoVisible(true);
-      }
-    };
-
-    video.addEventListener("playing", onPlaying, { once: true });
-
-    const activateAndPlay = () => {
-      if (isCancelled) return;
-      cleanup();
-
-      video.muted = true;
-      const playPromise = video.play();
-      if (playPromise !== undefined) {
-        playPromise.catch(() => {
-          // Playback rejected (e.g. Low Power Mode, battery saver, or network failure)
-          // Keep video at opacity-0 so the dedicated poster remains seamlessly visible
-        });
-      }
-    };
-
-    const cleanup = () => {
-      window.removeEventListener("scroll", activateAndPlay);
-      window.removeEventListener("touchstart", activateAndPlay);
-      window.removeEventListener("pointerdown", activateAndPlay);
-      window.removeEventListener("keydown", activateAndPlay);
-    };
-
-    // Activate video on the first user interaction (touch, scroll, tap, keypress)
-    // This guarantees the browser's LCP window is closed before video frames paint
-    window.addEventListener("scroll", activateAndPlay, { passive: true, once: true });
-    window.addEventListener("touchstart", activateAndPlay, { passive: true, once: true });
-    window.addEventListener("pointerdown", activateAndPlay, { passive: true, once: true });
-    window.addEventListener("keydown", activateAndPlay, { passive: true, once: true });
-
-    return () => {
-      isCancelled = true;
-      cleanup();
-      video.removeEventListener("playing", onPlaying);
-    };
-  }, []);
-
+export default function HomeHero({
+  rating,
+  totalReviews,
+  travelStyles,
+}: HomeHeroProps) {
   return (
     <>
-      {/* ─── MOBILE ONLY: Hero Video & Action Section (Copied from production, rest is new design) ─── */}
+      {/* ─── MOBILE ONLY: Cloudinary Travel Style Carousel & Action Bar ─── */}
       <div className="block md:hidden">
-        {/* Mobile Hero Video Container */}
-        <section
-          aria-label="Discover Kashmir Video"
-          className="relative w-full h-[54dvh] min-h-[360px] max-h-[480px] flex flex-col justify-center overflow-hidden bg-black"
-        >
-          {/* Background Video & Dedicated Poster Layer */}
-          <div className="absolute inset-0 z-0 overflow-hidden w-full h-full pointer-events-none">
-            {/* Dedicated Hero Poster Image (Layer 0) */}
-            <Image
-              src="https://res.cloudinary.com/dcmoseix9/video/upload/so_0,w_480,f_auto,q_auto/v1789317861/Final_Video_rdc5nd.jpg"
-              alt="Discover Kashmir scenic travel hero"
-              fill
-              loading="eager"
-              unoptimized
-              sizes="100vw"
-              className="absolute inset-0 w-full h-full object-cover object-center"
-            />
-            {/* Background Video (Layer 1) - Transparent until playback confirmed, then fades in */}
-            <video
-              ref={mobileVideoRef}
-              loop
-              muted
-              playsInline
-              preload="none"
-              title="Discover Kashmir - WanderKashmir Travel"
-              aria-label="WanderKashmir scenic travel video"
-              className={`absolute inset-0 w-full h-full object-cover object-center transition-opacity duration-700 pointer-events-none ${
-                isVideoVisible ? "opacity-100" : "opacity-0"
-              }`}
-            >
-              <source
-                src="https://res.cloudinary.com/dcmoseix9/video/upload/f_auto,q_auto/v1789317861/Final_Video_rdc5nd.mp4"
-                type="video/mp4"
-              />
-            </video>
-            {/* Subtle contrast overlay */}
-            <div className="absolute inset-0 bg-black/35" />
-          </div>
-
-          {/* Mobile Hero Content (H1 + Typewriter) */}
-          <div className="relative z-10 w-full text-center flex flex-col items-center justify-center px-4 gap-[10px] [text-shadow:2px_4px_15px_rgba(0,0,0,0.8)]">
-            <h1 className="text-[#F2F2F2] font-bold text-[20px] sm:text-[22px] tracking-tight leading-snug m-0 max-w-[340px] mx-auto px-1">
-              Kashmir&apos;s Largest Travel Community
-            </h1>
-            <HeroTypewriter />
-          </div>
-        </section>
+        <MobileHeroCarousel travelStyles={travelStyles} />
 
         {/* Mobile Action Bar: WhatsApp, Instagram, Google Rating, Customize Trip, Call */}
         <MobileHeroActionBar rating={rating} totalReviews={totalReviews} />
