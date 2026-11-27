@@ -117,6 +117,16 @@ export default function HomeHero({
           </div>
         </div>
       </section>
+
+      {/* Single Semantic Homepage H1 (Shared across Mobile & Desktop without altering hero height) */}
+      <div
+        className="bg-white border-b px-4 sm:px-6 lg:px-8 py-2.5 sm:py-3 text-center"
+        style={{ borderColor: "var(--season-border)" }}
+      >
+        <h1 className="font-display text-sm sm:text-base md:text-lg font-extrabold text-[#17211D] tracking-tight">
+          Discover Kashmir – Explore Tours, Destinations &amp; Experiences
+        </h1>
+      </div>
     </>
   );
 }

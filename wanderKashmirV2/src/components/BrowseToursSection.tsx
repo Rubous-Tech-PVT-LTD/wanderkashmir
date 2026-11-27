@@ -112,7 +112,7 @@ export default function BrowseToursSection({ durations }: BrowseToursSectionProp
               </h2>
               <Link
                 href="/tours"
-                className="group inline-flex items-center gap-1 text-xs font-bold transition-all duration-200 hover:translate-x-0.5 cursor-pointer"
+                className="group inline-flex items-center gap-1 min-h-[44px] px-1 text-xs font-bold transition-all duration-200 hover:translate-x-0.5 cursor-pointer"
                 style={{ color: "var(--season-primary)" }}
               >
                 <span>View All</span>
@@ -125,13 +125,13 @@ export default function BrowseToursSection({ durations }: BrowseToursSectionProp
                 <Link
                   key={item.days}
                   href={item.href}
-                  className="group flex flex-col items-center justify-center py-3.5 px-3 bg-white rounded-xl border transition-all duration-200 shadow-2xs hover:shadow-md hover:-translate-y-0.5 hover:border-[var(--season-primary)] text-center focus:outline-hidden"
+                  className="group flex flex-col items-center justify-center min-h-[44px] py-3.5 px-3 bg-white rounded-xl border transition-all duration-200 shadow-2xs hover:shadow-md hover:-translate-y-0.5 hover:border-[var(--season-primary)] text-center focus:outline-hidden"
                   style={{ borderColor: "var(--season-border)" }}
                 >
                   <span className="font-display font-extrabold text-sm sm:text-[15px] text-[#17211D] group-hover:text-[var(--season-primary)] transition-colors">
                     {item.days}
                   </span>
-                  <span className="text-[11px] text-[#607069] font-medium mt-0.5">
+                  <span className="text-xs text-[#607069] font-medium mt-0.5">
                     {item.toursCount}
                   </span>
                 </Link>
@@ -170,7 +170,7 @@ export default function BrowseToursSection({ durations }: BrowseToursSectionProp
                   <span className="font-display font-extrabold text-xs sm:text-[13px] text-[#17211D] group-hover:text-[var(--season-primary)] transition-colors">
                     {item.name}
                   </span>
-                  <span className="text-[10.5px] text-[#607069] font-medium mt-0.5">
+                  <span className="text-xs text-[#607069] font-medium mt-0.5">
                     {item.subtext}
                   </span>
                 </Link>
@@ -209,7 +209,7 @@ export default function BrowseToursSection({ durations }: BrowseToursSectionProp
               <div className="mt-4">
                 <Link
                   href="/about"
-                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs sm:text-sm font-bold bg-white text-[#17211D] hover:text-[var(--season-primary)] hover:bg-slate-100 transition-all duration-200 shadow-xs cursor-pointer group"
+                  className="inline-flex items-center gap-1.5 min-h-[44px] px-4 py-2 rounded-xl text-xs sm:text-sm font-bold bg-white text-[#17211D] hover:text-[var(--season-primary)] hover:bg-slate-100 transition-all duration-200 shadow-xs cursor-pointer group"
                 >
                   <span>Meet Our Team</span>
                   <ArrowRight className="w-3.5 h-3.5 transition-transform duration-200 group-hover:translate-x-1" />

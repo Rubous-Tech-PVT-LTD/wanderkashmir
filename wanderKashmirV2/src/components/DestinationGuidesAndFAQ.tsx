@@ -122,7 +122,7 @@ export default function DestinationGuidesAndFAQ({
             </h2>
             <Link
               href="/destinations"
-              className="group inline-flex items-center gap-1 text-xs font-bold transition-all duration-200 hover:translate-x-0.5 cursor-pointer"
+              className="group inline-flex items-center gap-1 min-h-[44px] px-1 text-xs font-bold transition-all duration-200 hover:translate-x-0.5 cursor-pointer"
               style={{ color: "var(--season-primary)" }}
             >
               <span>View All</span>
@@ -164,7 +164,7 @@ export default function DestinationGuidesAndFAQ({
                     <h3 className="font-display font-extrabold text-[13.5px] sm:text-[14px] text-[#17211D] group-hover:text-[var(--season-primary)] transition-colors leading-tight truncate">
                       {dest.name}
                     </h3>
-                    <span className="text-[11px] text-[#56635E] font-medium block mt-0.5">
+                    <span className="text-xs text-[#56635E] font-medium block mt-0.5">
                       {dest.subtitle ||
                         (dest.placesCount && dest.placesCount > 0
                           ? `${dest.placesCount} ${dest.placesCount === 1 ? "Place" : "Places"}`
@@ -188,7 +188,7 @@ export default function DestinationGuidesAndFAQ({
             {guides.length > 0 && (
               <Link
                 href="/blog"
-                className="group inline-flex items-center gap-1 text-xs font-bold transition-all duration-200 hover:translate-x-0.5 cursor-pointer"
+                className="group inline-flex items-center gap-1 min-h-[44px] px-1 text-xs font-bold transition-all duration-200 hover:translate-x-0.5 cursor-pointer"
                 style={{ color: "var(--season-primary)" }}
               >
                 <span>View All</span>
@@ -232,17 +232,17 @@ export default function DestinationGuidesAndFAQ({
                   {/* Guide Content */}
                   <div className="p-3 sm:p-3.5 flex flex-col flex-1">
                     {guide.readingTime && (
-                      <div className="flex items-center gap-2 text-[10.5px] text-[#56635E] font-medium mb-1.5">
+                      <div className="flex items-center gap-2 text-xs text-[#56635E] font-medium mb-1.5">
                         <span>{guide.readingTime}</span>
                       </div>
                     )}
 
-                    <h3 className="font-display font-extrabold text-[13px] sm:text-[13.5px] text-[#17211D] group-hover:text-[var(--season-primary)] transition-colors leading-snug line-clamp-2 mb-1.5">
+                    <h3 className="font-display font-extrabold text-[13.5px] sm:text-[14px] text-[#17211D] group-hover:text-[var(--season-primary)] transition-colors leading-snug line-clamp-2 mb-1.5">
                       {guide.title}
                     </h3>
 
                     {guide.excerpt && (
-                      <p className="text-[11px] text-[#56635E] line-clamp-2 leading-relaxed mt-auto">
+                      <p className="text-xs text-[#56635E] line-clamp-2 leading-relaxed mt-auto">
                         {guide.excerpt}
                       </p>
                     )}
@@ -262,8 +262,8 @@ export default function DestinationGuidesAndFAQ({
               Frequently Asked Questions
             </h2>
             <Link
-              href="/faqs"
-              className="group inline-flex items-center gap-1 text-xs font-bold transition-all duration-200 hover:translate-x-0.5 cursor-pointer"
+              href="/help"
+              className="group inline-flex items-center gap-1 min-h-[44px] px-1 text-xs font-bold transition-all duration-200 hover:translate-x-0.5 cursor-pointer"
               style={{ color: "var(--season-primary)" }}
             >
               <span>View All</span>
@@ -289,7 +289,7 @@ export default function DestinationGuidesAndFAQ({
                     type="button"
                     onClick={() => toggleFaq(faq.id)}
                     aria-expanded={isOpen}
-                    className="w-full flex items-center justify-between gap-2.5 p-3 sm:p-3.5 text-left cursor-pointer transition-colors focus:outline-hidden hover:bg-[var(--season-primary-light)]/30"
+                    className="w-full min-h-[44px] flex items-center justify-between gap-2.5 p-3 sm:p-3.5 text-left cursor-pointer transition-colors focus:outline-hidden hover:bg-[var(--season-primary-light)]/30"
                   >
                     <span className="font-display font-bold text-[13px] sm:text-[13.5px] text-[#17211D] leading-snug">
                       {faq.question}

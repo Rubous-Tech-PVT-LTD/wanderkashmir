@@ -247,7 +247,7 @@ export default function MobileHeroCarousel({
               />
 
               {/* Hero Banner Content */}
-              <div className="relative z-10 w-full px-5 pt-16 pb-11 flex flex-col items-start text-left">
+              <div className="relative z-10 w-full px-4 pt-16 pb-12 flex flex-col items-start text-left">
                 {/* Category Icon */}
                 <div
                   className="mb-2.5 text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.85)]"
@@ -260,9 +260,9 @@ export default function MobileHeroCarousel({
                       <Image
                         src={slide.svgUrl}
                         alt=""
-                        fill
-                        sizes="32px"
-                        className="object-contain filter brightness-0 invert drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]"
+                        width={32}
+                        height={32}
+                        className="w-8 h-8 object-contain filter brightness-0 invert drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]"
                         aria-hidden="true"
                       />
                     </div>
@@ -286,12 +286,12 @@ export default function MobileHeroCarousel({
                   {slide.subtitle}
                 </p>
 
-                {/* Seasonal Theme Explore CTA */}
+                {/* Seasonal Theme Explore CTA (min 44px touch target) */}
                 <Link
                   href={slide.href}
                   tabIndex={isCurrent ? 0 : -1}
                   onClick={handleCtaClick}
-                  className="mt-3.5 inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-xs font-bold text-white shadow-lg transition-all duration-200 hover:brightness-110 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black"
+                  className="mt-3.5 inline-flex items-center gap-2 px-5 py-2.5 min-h-[44px] rounded-full text-xs font-bold text-white shadow-lg transition-all duration-200 hover:brightness-110 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black"
                   style={{
                     backgroundColor: "var(--season-primary, #D62828)",
                   }}
@@ -305,10 +305,10 @@ export default function MobileHeroCarousel({
         })}
       </div>
 
-      {/* Pagination Dots Inside Existing Hero Container */}
+      {/* Pagination Dots Inside Existing Hero Container (44x44 touch target wrapper) */}
       {slides.length > 1 && (
         <div
-          className="absolute bottom-3.5 left-0 right-0 z-20 flex items-center justify-center gap-1.5 px-4"
+          className="absolute bottom-1 left-0 right-0 z-20 flex items-center justify-center px-4"
           role="tablist"
           aria-label="Hero category slides"
         >
@@ -322,17 +322,22 @@ export default function MobileHeroCarousel({
                 aria-selected={isActive}
                 aria-label={`Go to ${slide.title}`}
                 onClick={() => goToSlide(idx)}
-                className={`h-2 rounded-full transition-all duration-200 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white ${
-                  isActive
-                    ? "w-6 shadow-sm"
-                    : "w-2 bg-white/55 hover:bg-white/85"
-                }`}
-                style={
-                  isActive
-                    ? { backgroundColor: "var(--season-primary, #D62828)" }
-                    : undefined
-                }
-              />
+                className="min-w-[44px] min-h-[44px] -mx-2 flex items-center justify-center cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white rounded-full"
+              >
+                <span
+                  aria-hidden="true"
+                  className={`h-2 rounded-full transition-all duration-200 ${
+                    isActive
+                      ? "w-6 shadow-sm"
+                      : "w-2 bg-white/60 hover:bg-white/90"
+                  }`}
+                  style={
+                    isActive
+                      ? { backgroundColor: "var(--season-primary, #D62828)" }
+                      : undefined
+                  }
+                />
+              </button>
             );
           })}
         </div>

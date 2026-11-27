@@ -172,7 +172,7 @@ export default function PopularTours({ initialTours }: PopularToursProps) {
 
           <Link
             href="/tours"
-            className="inline-flex items-center gap-1 text-xs sm:text-sm font-extrabold hover:underline transition-colors shrink-0 group"
+            className="inline-flex items-center gap-1 min-h-[44px] px-1 text-xs sm:text-sm font-extrabold hover:underline transition-colors shrink-0 group"
             style={{ color: "var(--season-primary)" }}
           >
             <span>View All Tours</span>
@@ -181,16 +181,16 @@ export default function PopularTours({ initialTours }: PopularToursProps) {
         </div>
 
         {/* ===================================================================
-            POPULAR TOURS GRID: Compact Viewport-Optimized Cards
+            POPULAR TOURS: Horizontal Snap on Mobile, Grid on Tablet/Desktop
         =================================================================== */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 sm:gap-4">
+        <div className="flex overflow-x-auto snap-x snap-mandatory scrollbar-none gap-3.5 -mx-4 px-4 pb-2 sm:mx-0 sm:px-0 sm:pb-0 sm:grid sm:grid-cols-2 lg:grid-cols-4 sm:gap-4">
           {toursList.map((tour) => {
             const isFav = favorites[tour.id];
 
             return (
               <div
                 key={tour.id}
-                className="group flex flex-col bg-white rounded-xl overflow-hidden border transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5 hover:border-[var(--season-primary)]"
+                className="group w-[82vw] max-w-[310px] shrink-0 snap-start sm:w-auto sm:max-w-none sm:shrink flex flex-col bg-white rounded-xl overflow-hidden border transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5 hover:border-[var(--season-primary)]"
                 style={{
                   borderColor: "var(--season-border)",
                 }}
@@ -226,12 +226,12 @@ export default function PopularTours({ initialTours }: PopularToursProps) {
                     </div>
                   )}
 
-                  {/* Wishlist Heart Button (Top Right - Thin outline floating design) */}
+                  {/* Wishlist Heart Button (Top Right - 44x44 touch target) */}
                   <button
                     type="button"
                     onClick={(e) => toggleFavorite(e, tour.id)}
                     aria-label={isFav ? "Remove from wishlist" : "Add to wishlist"}
-                    className="absolute top-2 right-2 z-10 p-1 cursor-pointer transition-transform duration-200 hover:scale-115 active:scale-90 focus:outline-hidden group/heart"
+                    className="absolute top-0.5 right-0.5 z-10 min-w-[44px] min-h-[44px] flex items-center justify-center cursor-pointer transition-transform duration-200 hover:scale-115 active:scale-90 focus:outline-hidden group/heart"
                   >
                     <Heart
                       strokeWidth={1.8}
@@ -248,12 +248,12 @@ export default function PopularTours({ initialTours }: PopularToursProps) {
                 <div className="p-3 sm:p-3.5 flex-1 flex flex-col justify-between">
                   <div>
                     {/* Duration • Rating Row */}
-                    <div className="flex items-center justify-between gap-1 text-[11px] text-slate-500 mb-1">
+                    <div className="flex items-center justify-between gap-1 text-xs text-slate-600 mb-1">
                       <span className="font-semibold text-slate-700 truncate">{tour.duration}</span>
                       <div className="flex items-center gap-0.5 shrink-0">
                         <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
                         <span className="font-extrabold text-slate-900">{tour.rating}</span>
-                        <span className="text-slate-400">({tour.reviewsCount})</span>
+                        <span className="text-slate-500">({tour.reviewsCount})</span>
                       </div>
                     </div>
 
@@ -263,7 +263,7 @@ export default function PopularTours({ initialTours }: PopularToursProps) {
                     </h3>
 
                     {/* Destinations Covered */}
-                    <p className="text-[11px] text-slate-500 font-sans mt-0.5 line-clamp-1">
+                    <p className="text-xs text-slate-600 font-sans mt-0.5 line-clamp-1">
                       {tour.destinations.join(" • ")}
                     </p>
 
@@ -272,7 +272,7 @@ export default function PopularTours({ initialTours }: PopularToursProps) {
                       {tour.inclusions.slice(0, 4).map((item, idx) => (
                         <div
                           key={idx}
-                          className="flex items-center gap-1.5 text-[11px] text-slate-700 font-medium min-w-0"
+                          className="flex items-center gap-1.5 text-xs text-slate-700 font-medium min-w-0"
                         >
                           {renderInclusionIcon(item.type)}
                           <span className="truncate">{item.label}</span>
@@ -287,7 +287,7 @@ export default function PopularTours({ initialTours }: PopularToursProps) {
                     style={{ borderColor: "var(--season-border)" }}
                   >
                     <div>
-                      <span className="text-[9.5px] uppercase font-bold text-slate-400 block tracking-wider leading-none">
+                      <span className="text-[11px] uppercase font-bold text-slate-500 block tracking-wider leading-none">
                         Starting from
                       </span>
                       <div className="flex items-baseline gap-0.5 mt-0.5">
@@ -297,13 +297,13 @@ export default function PopularTours({ initialTours }: PopularToursProps) {
                         >
                           {formatINR(tour.price)}
                         </span>
-                        <span className="text-[10px] text-slate-500 font-medium">/person</span>
+                        <span className="text-xs text-slate-500 font-medium">/person</span>
                       </div>
                     </div>
 
                     <Link
                       href={`/tours/${tour.slug}`}
-                      className="px-2.5 py-1.5 rounded-lg text-white font-extrabold text-xs shadow-2xs hover:brightness-110 active:scale-95 transition-all flex items-center gap-1 cursor-pointer shrink-0"
+                      className="min-h-[44px] px-3.5 py-2 rounded-lg text-white font-extrabold text-xs shadow-2xs hover:brightness-110 active:scale-95 transition-all flex items-center gap-1 cursor-pointer shrink-0"
                       style={{
                         backgroundColor: "var(--season-primary)",
                       }}

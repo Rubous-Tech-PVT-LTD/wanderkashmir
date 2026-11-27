@@ -172,7 +172,7 @@ export default function Footer() {
             <div className="flex items-center gap-3 sm:gap-3.5 flex-wrap justify-center">
               <Link
                 href="/tours"
-                className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold bg-white hover:bg-slate-100 transition-all duration-200 shadow-xs cursor-pointer group focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-white"
+                className="inline-flex items-center gap-1.5 min-h-[44px] px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold bg-white hover:bg-slate-100 transition-all duration-200 shadow-xs cursor-pointer group focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-white"
                 style={{ color: "var(--season-primary)" }}
               >
                 <span>Explore Tours</span>
@@ -182,7 +182,7 @@ export default function Footer() {
               <button
                 type="button"
                 onClick={() => setCustomizeOpen(true)}
-                className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold bg-white/10 hover:bg-white/20 text-white border border-white/25 transition-all duration-200 shadow-xs cursor-pointer focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-white"
+                className="inline-flex items-center gap-1.5 min-h-[44px] px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold bg-white/10 hover:bg-white/20 text-white border border-white/25 transition-all duration-200 shadow-xs cursor-pointer focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-white"
               >
                 <span>Customize Trip</span>
               </button>
@@ -221,11 +221,11 @@ export default function Footer() {
                 </p>
 
                 {/* Real Verified Contacts */}
-                <div className="mt-4 space-y-2.5 text-xs text-white/80 font-sans">
+                <div className="mt-4 space-y-1 text-xs text-white/80 font-sans">
                   <a
                     href="tel:+916005888754"
                     aria-label="Call WanderKashmir support at +91 60058 88754"
-                    className="flex items-center gap-2.5 hover:text-white transition-colors duration-150 focus-visible:outline-hidden focus-visible:ring-1 focus-visible:ring-white rounded-xs"
+                    className="min-h-[44px] inline-flex items-center gap-2.5 hover:text-white transition-colors duration-150 focus-visible:outline-hidden focus-visible:ring-1 focus-visible:ring-white rounded-xs"
                   >
                     <Phone className="w-3.5 h-3.5 shrink-0" style={{ color: "var(--season-secondary)" }} />
                     <span>+91 60058 88754</span>
@@ -234,29 +234,29 @@ export default function Footer() {
                   <a
                     href="mailto:support@wanderkashmir.com"
                     aria-label="Email WanderKashmir support at support@wanderkashmir.com"
-                    className="flex items-center gap-2.5 hover:text-white transition-colors duration-150 focus-visible:outline-hidden focus-visible:ring-1 focus-visible:ring-white rounded-xs"
+                    className="min-h-[44px] flex items-center gap-2.5 hover:text-white transition-colors duration-150 focus-visible:outline-hidden focus-visible:ring-1 focus-visible:ring-white rounded-xs"
                   >
                     <Mail className="w-3.5 h-3.5 shrink-0" style={{ color: "var(--season-secondary)" }} />
                     <span>support@wanderkashmir.com</span>
                   </a>
 
-                  <div className="flex items-start gap-2.5 text-white/70" aria-label="Registered Office Address">
+                  <div className="flex items-start gap-2.5 text-white/70 pt-1" aria-label="Registered Office Address">
                     <MapPin className="w-3.5 h-3.5 shrink-0 mt-0.5" style={{ color: "var(--season-secondary)" }} />
                     <span>Hati Gam, Anantnag, Jammu and Kashmir, 192401</span>
                   </div>
                 </div>
               </div>
 
-              {/* Social Media & WhatsApp Links */}
+              {/* Social Media & WhatsApp Links (44x44 touch targets) */}
               <div className="pt-2">
-                <div className="flex items-center gap-2.5 flex-wrap">
+                <div className="flex items-center gap-1.5 flex-wrap">
                   {/* WhatsApp Direct */}
                   <a
                     href="https://wa.me/916005888754?text=Hi%20WanderKashmir%2C%20I%20want%20to%20plan%20a%20trip%20to%20Kashmir."
                     target="_blank"
                     rel="noopener noreferrer"
                     aria-label="WhatsApp"
-                    className="w-8 h-8 rounded-full bg-emerald-600 hover:bg-emerald-500 text-white flex items-center justify-center transition-all hover:scale-110 shadow-xs"
+                    className="w-11 h-11 rounded-full bg-emerald-600 hover:bg-emerald-500 text-white flex items-center justify-center transition-all hover:scale-105 shadow-xs"
                   >
                     <WhatsAppIcon className="w-4 h-4" />
                   </a>
@@ -267,9 +267,9 @@ export default function Footer() {
                     target="_blank"
                     rel="noopener noreferrer"
                     aria-label="Instagram"
-                    className="w-8 h-8 rounded-full bg-white/10 hover:bg-[var(--season-primary)] text-white/80 hover:text-white flex items-center justify-center transition-all hover:scale-110"
+                    className="w-11 h-11 rounded-full bg-white/10 hover:bg-[var(--season-primary)] text-white/80 hover:text-white flex items-center justify-center transition-all hover:scale-105"
                   >
-                    <InstagramIcon className="w-3.5 h-3.5" />
+                    <InstagramIcon className="w-4 h-4" />
                   </a>
 
                   {/* Facebook */}
@@ -278,9 +278,9 @@ export default function Footer() {
                     target="_blank"
                     rel="noopener noreferrer"
                     aria-label="Facebook"
-                    className="w-8 h-8 rounded-full bg-white/10 hover:bg-[var(--season-primary)] text-white/80 hover:text-white flex items-center justify-center transition-all hover:scale-110"
+                    className="w-11 h-11 rounded-full bg-white/10 hover:bg-[var(--season-primary)] text-white/80 hover:text-white flex items-center justify-center transition-all hover:scale-105"
                   >
-                    <FacebookIcon className="w-3.5 h-3.5" />
+                    <FacebookIcon className="w-4 h-4" />
                   </a>
 
                   {/* YouTube */}
@@ -289,9 +289,9 @@ export default function Footer() {
                     target="_blank"
                     rel="noopener noreferrer"
                     aria-label="YouTube"
-                    className="w-8 h-8 rounded-full bg-white/10 hover:bg-[var(--season-primary)] text-white/80 hover:text-white flex items-center justify-center transition-all hover:scale-110"
+                    className="w-11 h-11 rounded-full bg-white/10 hover:bg-[var(--season-primary)] text-white/80 hover:text-white flex items-center justify-center transition-all hover:scale-105"
                   >
-                    <YoutubeIcon className="w-3.5 h-3.5" />
+                    <YoutubeIcon className="w-4 h-4" />
                   </a>
 
                   {/* X / Twitter */}
@@ -300,9 +300,9 @@ export default function Footer() {
                     target="_blank"
                     rel="noopener noreferrer"
                     aria-label="Twitter / X"
-                    className="w-8 h-8 rounded-full bg-white/10 hover:bg-[var(--season-primary)] text-white/80 hover:text-white flex items-center justify-center transition-all hover:scale-110"
+                    className="w-11 h-11 rounded-full bg-white/10 hover:bg-[var(--season-primary)] text-white/80 hover:text-white flex items-center justify-center transition-all hover:scale-105"
                   >
-                    <XIcon className="w-3.5 h-3.5" />
+                    <XIcon className="w-4 h-4" />
                   </a>
 
                   {/* LinkedIn */}
@@ -311,9 +311,9 @@ export default function Footer() {
                     target="_blank"
                     rel="noopener noreferrer"
                     aria-label="LinkedIn"
-                    className="w-8 h-8 rounded-full bg-white/10 hover:bg-[var(--season-primary)] text-white/80 hover:text-white flex items-center justify-center transition-all hover:scale-110"
+                    className="w-11 h-11 rounded-full bg-white/10 hover:bg-[var(--season-primary)] text-white/80 hover:text-white flex items-center justify-center transition-all hover:scale-105"
                   >
-                    <LinkedinIcon className="w-3.5 h-3.5" />
+                    <LinkedinIcon className="w-4 h-4" />
                   </a>
                 </div>
               </div>
@@ -324,12 +324,12 @@ export default function Footer() {
               <h3 className="font-display font-extrabold text-sm sm:text-[15px] text-white tracking-wide uppercase mb-3 sm:mb-4">
                 Explore
               </h3>
-              <ul className="space-y-2 text-xs sm:text-sm text-white/75 font-sans">
+              <ul className="space-y-0 text-xs sm:text-sm text-white/75 font-sans">
                 {REAL_FOOTER_LINKS.Explore.map((item) => (
                   <li key={item.label}>
                     <Link
                       href={item.href}
-                      className="hover:text-white transition-colors duration-150 inline-block py-0.5"
+                      className="hover:text-white transition-colors duration-150 inline-flex items-center min-h-[44px] -my-1.5"
                     >
                       {item.label}
                     </Link>
@@ -343,12 +343,12 @@ export default function Footer() {
               <h3 className="font-display font-extrabold text-sm sm:text-[15px] text-white tracking-wide uppercase mb-3 sm:mb-4">
                 Destinations
               </h3>
-              <ul className="space-y-2 text-xs sm:text-sm text-white/75 font-sans">
+              <ul className="space-y-0 text-xs sm:text-sm text-white/75 font-sans">
                 {REAL_FOOTER_LINKS.Destinations.map((item) => (
                   <li key={item.label}>
                     <Link
                       href={item.href}
-                      className="hover:text-white transition-colors duration-150 inline-block py-0.5"
+                      className="hover:text-white transition-colors duration-150 inline-flex items-center min-h-[44px] -my-1.5"
                     >
                       {item.label}
                     </Link>
@@ -362,12 +362,12 @@ export default function Footer() {
               <h3 className="font-display font-extrabold text-sm sm:text-[15px] text-white tracking-wide uppercase mb-3 sm:mb-4">
                 Travel Styles
               </h3>
-              <ul className="space-y-2 text-xs sm:text-sm text-white/75 font-sans">
+              <ul className="space-y-0 text-xs sm:text-sm text-white/75 font-sans">
                 {REAL_FOOTER_LINKS.TravelStyles.map((item) => (
                   <li key={item.label}>
                     <Link
                       href={item.href}
-                      className="hover:text-white transition-colors duration-150 inline-block py-0.5"
+                      className="hover:text-white transition-colors duration-150 inline-flex items-center min-h-[44px] -my-1.5"
                     >
                       {item.label}
                     </Link>
@@ -381,12 +381,12 @@ export default function Footer() {
               <h3 className="font-display font-extrabold text-sm sm:text-[15px] text-white tracking-wide uppercase mb-3 sm:mb-4">
                 Company
               </h3>
-              <ul className="space-y-2 text-xs sm:text-sm text-white/75 font-sans">
+              <ul className="space-y-0 text-xs sm:text-sm text-white/75 font-sans">
                 {REAL_FOOTER_LINKS.Company.map((item) => (
                   <li key={item.label}>
                     <Link
                       href={item.href}
-                      className="hover:text-white transition-colors duration-150 inline-block py-0.5"
+                      className="hover:text-white transition-colors duration-150 inline-flex items-center min-h-[44px] -my-1.5"
                     >
                       {item.label}
                     </Link>
@@ -409,34 +409,34 @@ export default function Footer() {
               © {new Date().getFullYear()} WanderKashmir. All rights reserved. Made with ❤️ in Kashmir.
             </div>
 
-            <div className="flex items-center gap-4 sm:gap-6 flex-wrap justify-center">
+            <div className="flex items-center gap-3 sm:gap-5 flex-wrap justify-center">
               <Link
                 href="/terms"
-                className="hover:text-white transition-colors"
+                className="hover:text-white transition-colors inline-flex items-center min-h-[44px] px-1"
               >
                 Terms
               </Link>
               <Link
                 href="/privacy-policy"
-                className="hover:text-white transition-colors"
+                className="hover:text-white transition-colors inline-flex items-center min-h-[44px] px-1"
               >
                 Privacy
               </Link>
               <Link
                 href="/cancellation"
-                className="hover:text-white transition-colors"
+                className="hover:text-white transition-colors inline-flex items-center min-h-[44px] px-1"
               >
                 Cancellation
               </Link>
               <Link
                 href="/safety"
-                className="hover:text-white transition-colors"
+                className="hover:text-white transition-colors inline-flex items-center min-h-[44px] px-1"
               >
                 Safety
               </Link>
               <Link
                 href="/sitemap.xml"
-                className="hover:text-white transition-colors"
+                className="hover:text-white transition-colors inline-flex items-center min-h-[44px] px-1"
               >
                 Sitemap
               </Link>

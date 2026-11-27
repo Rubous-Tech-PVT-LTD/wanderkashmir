@@ -12,8 +12,7 @@ import {
   Palmtree,
   Anchor,
   Home,
-  Car,
-  UserCheck,
+  Sparkles,
   MapPin,
 } from "lucide-react";
 import CustomizeTripModal from "@/components/CustomizeTripModal";
@@ -364,8 +363,7 @@ const exploreLinks = [
   { label: "Resorts", href: "/stays?type=resort", desc: "Alpine retreats & scenic valley resorts", icon: Palmtree },
   { label: "Dal Lake Houseboats", href: "/stays?type=houseboat", desc: "Heritage cedar wood living on Dal & Nigeen", icon: Anchor },
   { label: "Traditional Homestays", href: "/stays?type=homestay", desc: "Authentic Kashmiri village hospitality", icon: Home },
-  { label: "Cabs & Airport Transfers", href: "/taxis", desc: "Direct commercial fleet with mountain drivers", icon: Car },
-  { label: "Verified Local Guides", href: "/guides", desc: "Certified alpine & cultural specialists", icon: UserCheck },
+  { label: "Kashmir Experiences", href: "/experiences", desc: "Curated shikara, heritage & alpine activities", icon: Sparkles },
 ];
 
 export default function Navbar() {
@@ -374,6 +372,9 @@ export default function Navbar() {
   const [exploreOpen, setExploreOpen] = useState(false);
   const [customizeOpen, setCustomizeOpen] = useState(false);
   const exploreRef = useRef<HTMLDivElement>(null);
+  const menuButtonRef = useRef<HTMLButtonElement>(null);
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
+  const previousFocusRef = useRef<HTMLElement | null>(null);
 
   useEffect(() => {
     const onScroll = () => {
@@ -393,6 +394,41 @@ export default function Navbar() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  // Lock background scrolling, support Escape, and manage focus when mobile drawer opens/closes
+  useEffect(() => {
+    if (!mobileOpen) return;
+
+    previousFocusRef.current = document.activeElement as HTMLElement | null;
+    const fallbackMenuTrigger = menuButtonRef.current;
+    const prevBodyOverflow = document.body.style.overflow;
+    const prevHtmlOverflow = document.documentElement.style.overflow;
+    document.body.style.overflow = "hidden";
+    document.documentElement.style.overflow = "hidden";
+
+    const focusTimer = requestAnimationFrame(() => {
+      closeButtonRef.current?.focus();
+    });
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setMobileOpen(false);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      cancelAnimationFrame(focusTimer);
+      window.removeEventListener("keydown", handleKeyDown);
+      document.body.style.overflow = prevBodyOverflow;
+      document.documentElement.style.overflow = prevHtmlOverflow;
+      if (previousFocusRef.current && typeof previousFocusRef.current.focus === "function") {
+        previousFocusRef.current.focus();
+      } else {
+        fallbackMenuTrigger?.focus();
+      }
+    };
+  }, [mobileOpen]);
+
   return (
     <>
       <nav
@@ -402,21 +438,16 @@ export default function Navbar() {
         }`}
       >
         <div
-          className="relative w-full mx-auto h-full flex items-center justify-between"
+          className="relative w-full mx-auto h-full flex items-center justify-between px-4 lg:px-[27px]"
           style={{
             maxWidth: HEADER_SPACING.containerMaxWidth,
-            paddingLeft: HEADER_SPACING.logoLeftPadding,
-            paddingRight: HEADER_SPACING.whatsappRightPadding,
           }}
         >
-          {/* 1. LEFT: Brand Logo (Anchored to Left, Scale Factor Controlled) */}
+          {/* 1. LEFT: Brand Logo (Native 1x on mobile, 1.4x scale on desktop) */}
           <Link
             href="/"
-            className="flex items-center group shrink-0 focus:outline-hidden focus-visible:ring-2 focus-visible:ring-[var(--season-primary)] rounded-lg transition-transform duration-200"
-            style={{
-              transform: `scale(${HEADER_SPACING.logoScale || 1})`,
-              transformOrigin: "left center",
-            }}
+            aria-label="WanderKashmir — Home"
+            className="flex items-center group shrink-0 focus:outline-hidden focus-visible:ring-2 focus-visible:ring-[var(--season-primary)] rounded-lg transition-transform duration-200 lg:scale-[1.4] lg:origin-left"
           >
             <Image
               src={BRAND_LOGO_SRC}
@@ -561,12 +592,14 @@ export default function Navbar() {
             </a>
           </div>
 
-          {/* Mobile Menu Toggle - Vertically Centered */}
+          {/* Mobile Menu Toggle - Vertically Centered, 44x44 tap target */}
           <button
+            ref={menuButtonRef}
+            type="button"
             onClick={() => setMobileOpen(true)}
             aria-label="Open navigation menu"
             aria-expanded={mobileOpen}
-            className="lg:hidden h-10 w-10 flex items-center justify-center text-[#17211D] hover:bg-neutral-100 rounded-xl transition-colors shrink-0 focus:outline-hidden focus-visible:ring-2 focus-visible:ring-[var(--season-primary)]"
+            className="lg:hidden min-h-[44px] min-w-[44px] flex items-center justify-center text-[#17211D] hover:bg-neutral-100 rounded-xl transition-colors shrink-0 focus:outline-hidden focus-visible:ring-2 focus-visible:ring-[var(--season-primary)]"
           >
             <Menu className="w-6 h-6" aria-hidden="true" />
           </button>
@@ -585,7 +618,7 @@ export default function Navbar() {
             className="h-[64px] min-h-[64px] flex items-center justify-between px-4 border-b"
             style={{ borderColor: "var(--season-border)" }}
           >
-            <Link href="/" className="flex items-center" onClick={() => setMobileOpen(false)}>
+            <Link href="/" aria-label="WanderKashmir — Home" className="flex items-center min-h-[44px]" onClick={() => setMobileOpen(false)}>
               <Image
                 src={BRAND_LOGO_SRC}
                 alt="WanderKashmir - Local Kashmir Marketplace"
@@ -596,9 +629,11 @@ export default function Navbar() {
               />
             </Link>
             <button
+              ref={closeButtonRef}
+              type="button"
               onClick={() => setMobileOpen(false)}
               aria-label="Close navigation menu"
-              className="p-2 text-[#56635E] hover:bg-[#F7F7F3] rounded-xl"
+              className="min-h-[44px] min-w-[44px] flex items-center justify-center text-[#56635E] hover:bg-[#F7F7F3] rounded-xl focus:outline-hidden focus-visible:ring-2 focus-visible:ring-[var(--season-primary)]"
             >
               <X className="w-6 h-6" aria-hidden="true" />
             </button>
@@ -617,7 +652,7 @@ export default function Navbar() {
                     key={link.label}
                     href={link.href}
                     onClick={() => setMobileOpen(false)}
-                    className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold text-[#17211D] hover:bg-neutral-50 hover:text-[var(--season-primary)] transition-colors"
+                    className="flex items-center gap-3 px-3.5 min-h-[44px] py-2.5 rounded-xl text-sm font-semibold text-[#17211D] hover:bg-neutral-50 hover:text-[var(--season-primary)] transition-colors"
                   >
                     <div
                       className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0"
@@ -641,7 +676,7 @@ export default function Navbar() {
               <Link
                 href="/destinations"
                 onClick={() => setMobileOpen(false)}
-                className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold text-[#17211D] hover:bg-neutral-50 hover:text-[var(--season-primary)]"
+                className="flex items-center gap-3 px-3.5 min-h-[44px] py-2.5 rounded-xl text-sm font-semibold text-[#17211D] hover:bg-neutral-50 hover:text-[var(--season-primary)]"
               >
                 <div
                   className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0"
@@ -657,7 +692,7 @@ export default function Navbar() {
               <Link
                 href="/blog"
                 onClick={() => setMobileOpen(false)}
-                className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold text-[#17211D] hover:bg-neutral-50 hover:text-[var(--season-primary)]"
+                className="flex items-center gap-3 px-3.5 min-h-[44px] py-2.5 rounded-xl text-sm font-semibold text-[#17211D] hover:bg-neutral-50 hover:text-[var(--season-primary)]"
               >
                 <div
                   className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0"
@@ -676,7 +711,7 @@ export default function Navbar() {
                   setMobileOpen(false);
                   setCustomizeOpen(true);
                 }}
-                className="w-full text-left px-3.5 py-2.5 rounded-xl text-sm font-bold transition-opacity flex items-center gap-3 cursor-pointer hover:opacity-90"
+                className="w-full text-left px-3.5 min-h-[44px] py-2.5 rounded-xl text-sm font-bold transition-opacity flex items-center gap-3 cursor-pointer hover:opacity-90"
                 style={{
                   color: "var(--season-primary)",
                   backgroundColor: "var(--season-primary-light)",

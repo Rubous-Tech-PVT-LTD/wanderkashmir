@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef, useMemo } from "react";
+import React, { useState, useEffect, useRef, useMemo, useSyncExternalStore, useId } from "react";
 import { useRouter } from "next/navigation";
 import {
   MapPin,
@@ -13,7 +13,6 @@ import {
   ChevronRight,
   Plus,
   Minus,
-  Check,
   Compass,
   Sparkles,
   ArrowRight,
@@ -244,6 +243,46 @@ function isBeforeDay(d1: Date, d2: Date): boolean {
 // =============================================================================
 // MAIN COMPONENT: HeroSearchBar
 // =============================================================================
+const EMPTY_RECENT_SEARCHES: RecentSearchItem[] = [];
+const RECENT_SEARCHES_EVENT = "wk-recent-searches-change";
+let cachedRecentRaw: string | null = null;
+let cachedRecentList: RecentSearchItem[] = EMPTY_RECENT_SEARCHES;
+
+function subscribeRecentSearches(callback: () => void): () => void {
+  if (typeof window === "undefined") return () => {};
+  const onStorage = (e: StorageEvent) => {
+    if (!e.key || e.key === LOCAL_STORAGE_KEY) callback();
+  };
+  window.addEventListener("storage", onStorage);
+  window.addEventListener(RECENT_SEARCHES_EVENT, callback);
+  return () => {
+    window.removeEventListener("storage", onStorage);
+    window.removeEventListener(RECENT_SEARCHES_EVENT, callback);
+  };
+}
+
+function getRecentSearchesSnapshot(): RecentSearchItem[] {
+  if (typeof window === "undefined") return EMPTY_RECENT_SEARCHES;
+  try {
+    const raw = localStorage.getItem(LOCAL_STORAGE_KEY);
+    if (raw === cachedRecentRaw) return cachedRecentList;
+    cachedRecentRaw = raw;
+    if (!raw) {
+      cachedRecentList = EMPTY_RECENT_SEARCHES;
+      return cachedRecentList;
+    }
+    const parsed = JSON.parse(raw);
+    cachedRecentList = Array.isArray(parsed) ? parsed.slice(0, 5) : EMPTY_RECENT_SEARCHES;
+    return cachedRecentList;
+  } catch {
+    return EMPTY_RECENT_SEARCHES;
+  }
+}
+
+function getRecentSearchesServerSnapshot(): RecentSearchItem[] {
+  return EMPTY_RECENT_SEARCHES;
+}
+
 export default function HeroSearchBar({
   className = "",
   onSearchSubmit,
@@ -258,6 +297,7 @@ export default function HeroSearchBar({
   }) => void;
 }) {
   const router = useRouter();
+  const whereToInputId = useId();
 
   // Field states
   const [destinationQuery, setDestinationQuery] = useState("");
@@ -274,27 +314,16 @@ export default function HeroSearchBar({
   // Calendar month view navigation (defaults to current month)
   const [calendarViewDate, setCalendarViewDate] = useState<Date>(() => new Date());
 
-  // Recent Searches state
-  const [recentSearches, setRecentSearches] = useState<RecentSearchItem[]>([]);
+  // Recent Searches state (synced with localStorage without hydration mismatch)
+  const recentSearches = useSyncExternalStore(
+    subscribeRecentSearches,
+    getRecentSearchesSnapshot,
+    getRecentSearchesServerSnapshot
+  );
 
   // Outside click refs
   const searchBarRef = useRef<HTMLDivElement>(null);
   const destinationInputRef = useRef<HTMLInputElement>(null);
-
-  // Load recent searches on mount from localStorage
-  useEffect(() => {
-    try {
-      const saved = localStorage.getItem(LOCAL_STORAGE_KEY);
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed)) {
-          setRecentSearches(parsed.slice(0, 5));
-        }
-      }
-    } catch {
-      // Ignore localStorage errors (e.g. private browsing mode)
-    }
-  }, []);
 
   // Save a search to localStorage
   const saveRecentSearch = (destName: string, start?: Date | null, end?: Date | null, ad = adults, ch = children) => {
@@ -326,8 +355,8 @@ export default function HeroSearchBar({
         (item) => item.destination.toLowerCase() !== destName.trim().toLowerCase()
       );
       const updated = [newRecord, ...existing].slice(0, 5);
-      setRecentSearches(updated);
       localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(updated));
+      window.dispatchEvent(new Event(RECENT_SEARCHES_EVENT));
     } catch {
       // Ignore storage errors
     }
@@ -337,8 +366,8 @@ export default function HeroSearchBar({
     e.stopPropagation();
     try {
       const updated = recentSearches.filter((item) => item.id !== id);
-      setRecentSearches(updated);
       localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(updated));
+      window.dispatchEvent(new Event(RECENT_SEARCHES_EVENT));
     } catch {
       // Ignore
     }
@@ -347,8 +376,8 @@ export default function HeroSearchBar({
   const clearAllRecentSearches = (e: React.MouseEvent) => {
     e.stopPropagation();
     try {
-      setRecentSearches([]);
       localStorage.removeItem(LOCAL_STORAGE_KEY);
+      window.dispatchEvent(new Event(RECENT_SEARCHES_EVENT));
     } catch {
       // Ignore
     }
@@ -562,12 +591,17 @@ export default function HeroSearchBar({
               </div>
 
               <div className="flex-1 min-w-0">
-                <span className="block text-[10px] uppercase font-bold tracking-wider text-white/95 drop-shadow-xs">
+                <label
+                  htmlFor={whereToInputId}
+                  className="block text-[10px] uppercase font-bold tracking-wider text-white/95 drop-shadow-xs"
+                >
                   Where to?
-                </span>
+                </label>
                 <input
+                  id={whereToInputId}
                   ref={destinationInputRef}
                   type="text"
+                  aria-label="Where to? Search Kashmir destinations"
                   value={destinationQuery}
                   placeholder="Gulmarg, Pahalgam, Dal Lake..."
                   onClick={(e) => {

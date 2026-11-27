@@ -111,7 +111,7 @@ export default function HelpMeChoose({ travelStyles }: HelpMeChooseProps = {}) {
     return (
       <section
         aria-labelledby="help-me-choose-heading"
-        className="bg-white border-b py-8 text-center"
+        className="hidden md:block bg-white border-b py-8 text-center"
         style={{ borderColor: "var(--season-border)" }}
       >
         <div className="container mx-auto px-4">
@@ -130,7 +130,7 @@ export default function HelpMeChoose({ travelStyles }: HelpMeChooseProps = {}) {
     <section
       aria-labelledby="help-me-choose-heading"
       data-analytics-section="help-me-choose"
-      className="bg-white border-b relative"
+      className="hidden md:block bg-white border-b relative"
       style={{
         borderColor: "var(--season-border)",
         paddingTop: HELP_ME_CHOOSE_CONFIG.sectionPaddingTop,
@@ -265,9 +265,9 @@ export default function HelpMeChoose({ travelStyles }: HelpMeChooseProps = {}) {
                         <Image
                           src={card.svgUrl}
                           alt=""
-                          fill
-                          sizes="32px"
-                          className="object-contain filter brightness-0 invert drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]"
+                          width={32}
+                          height={32}
+                          className="w-7 h-7 md:w-8 md:h-8 object-contain filter brightness-0 invert drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]"
                           aria-hidden="true"
                         />
                       </div>

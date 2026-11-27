@@ -1,14 +1,16 @@
 "use client";
 
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { usePathname } from "next/navigation";
 import CustomizeTripModal from "@/components/CustomizeTripModal";
 import { trackEvent } from "@/lib/analytics";
 import { LeadContextPayload } from "@/types/leadPopup";
 
 const COOLDOWN_MS = 24 * 60 * 60 * 1000; // 24 hours
-const DEFAULT_DELAY_MS = 15000; // 15 seconds
-const DEFAULT_SCROLL_THRESHOLD = 0.55; // 55% scroll depth
+const DEFAULT_DELAY_MS = 15000; // 15 seconds (desktop)
+const MOBILE_DELAY_MS = 45000; // 45 seconds (less intrusive on mobile)
+const DEFAULT_SCROLL_THRESHOLD = 0.55; // 55% scroll depth (desktop)
+const MOBILE_SCROLL_THRESHOLD = 0.75; // 75% scroll depth (mobile)
 
 const EXCLUDED_ROUTE_PREFIXES = [
   "/admin",
@@ -221,13 +223,42 @@ export default function LeadPopupController() {
 
   const [isOpen, setIsOpen] = useState(false);
   const [activeTrigger, setActiveTrigger] = useState<"time" | "scroll" | "exit_intent" | "cta" | null>(null);
-  const [activeContext, setActiveContext] = useState<ResolvedContext | null>(null);
+  const [ctaOverride, setCtaOverride] = useState<{
+    title?: string;
+    subtitle?: string;
+    payload?: LeadContextPayload;
+  } | null>(null);
+
+  const baseContext = useMemo(() => resolveRouteContext(pathname), [pathname]);
+
+  const activeContext = useMemo<ResolvedContext | null>(() => {
+    if (!baseContext) return null;
+    if (!ctaOverride) return baseContext;
+    return {
+      heading: ctaOverride.title || baseContext.heading,
+      subtitle: ctaOverride.subtitle || baseContext.subtitle,
+      payload: {
+        ...baseContext.payload,
+        ...(ctaOverride.payload || {}),
+      },
+    };
+  }, [baseContext, ctaOverride]);
 
   const hasTriggeredRef = useRef(false);
+  const isOpenRef = useRef(false);
 
-  // Close handler
+  useEffect(() => {
+    isOpenRef.current = isOpen;
+  }, [isOpen]);
+
+  // Close handler - persist cooldown on dismissal to prevent repeated interruptions
   const handleClose = useCallback(() => {
+    sessionPopupShown = true;
+    try {
+      localStorage.setItem("lead_popup_last_shown", Date.now().toString());
+    } catch {}
     setIsOpen(false);
+    setCtaOverride(null);
   }, []);
 
   // Success handler
@@ -235,23 +266,21 @@ export default function LeadPopupController() {
     sessionPopupShown = true;
     try {
       localStorage.setItem("lead_popup_submitted", "true");
-    } catch (_) {}
+    } catch {}
   }, []);
 
   useEffect(() => {
-    // Resolve context for the current route
-    const resolved = resolveRouteContext(pathname);
-    if (!resolved) {
+    if (!baseContext) {
       return;
     }
-    setActiveContext(resolved);
 
     // Reset trigger flag on route change if modal is closed
     hasTriggeredRef.current = false;
 
-    // Trigger helper - first trigger wins
+    // Trigger helper - first trigger wins; skips if another modal/drawer is already open
     const executeTrigger = (triggerType: "time" | "scroll" | "exit_intent") => {
-      if (hasTriggeredRef.current || isOpen) return;
+      if (hasTriggeredRef.current || isOpenRef.current) return;
+      if (document.querySelector('[role="dialog"][aria-modal="true"]')) return;
       hasTriggeredRef.current = true;
       sessionPopupShown = true;
 
@@ -262,11 +291,11 @@ export default function LeadPopupController() {
 
       try {
         localStorage.setItem("lead_popup_last_shown", Date.now().toString());
-      } catch (_) {}
+      } catch {}
 
       trackEvent("customize_popup_trigger", {
         triggerType,
-        ...resolved.payload,
+        ...baseContext.payload,
       });
 
       setActiveTrigger(triggerType);
@@ -292,22 +321,19 @@ export default function LeadPopupController() {
 
       try {
         localStorage.setItem("lead_popup_last_shown", Date.now().toString());
-      } catch (_) {}
+      } catch {}
 
       if (detail.title || detail.subtitle || detail.payload) {
-        setActiveContext({
-          heading: detail.title || resolved.heading,
-          subtitle: detail.subtitle || resolved.subtitle,
-          payload: {
-            ...resolved.payload,
-            ...(detail.payload || {}),
-          },
+        setCtaOverride({
+          title: detail.title,
+          subtitle: detail.subtitle,
+          payload: detail.payload,
         });
       }
 
       trackEvent("customize_popup_trigger", {
         triggerType: "cta",
-        ...(detail.payload || resolved.payload),
+        ...(detail.payload || baseContext.payload),
       });
 
       setActiveTrigger("cta");
@@ -323,12 +349,18 @@ export default function LeadPopupController() {
       };
     }
 
-    // 1. Time-based trigger (15s default)
+    const isMobileViewport = window.innerWidth < 768;
+    const delayMs = isMobileViewport ? MOBILE_DELAY_MS : DEFAULT_DELAY_MS;
+    const scrollThreshold = isMobileViewport
+      ? MOBILE_SCROLL_THRESHOLD
+      : DEFAULT_SCROLL_THRESHOLD;
+
+    // 1. Time-based trigger (45s on mobile, 15s on desktop)
     const timerId = setTimeout(() => {
       executeTrigger("time");
-    }, DEFAULT_DELAY_MS);
+    }, delayMs);
 
-    // 2. Scroll-based trigger (55% default depth)
+    // 2. Scroll-based trigger (75% depth on mobile, 55% on desktop)
     let scrollTicking = false;
     const handleScroll = () => {
       if (scrollTicking || hasTriggeredRef.current) return;
@@ -341,7 +373,7 @@ export default function LeadPopupController() {
 
         if (docHeight > winHeight) {
           const scrollPercent = (scrollTop + winHeight) / docHeight;
-          if (scrollPercent >= DEFAULT_SCROLL_THRESHOLD) {
+          if (scrollPercent >= scrollThreshold) {
             executeTrigger("scroll");
           }
         }
@@ -376,7 +408,7 @@ export default function LeadPopupController() {
       document.removeEventListener("mouseleave", handleMouseLeave);
       window.removeEventListener("open-customize-trip", handleCtaOpen);
     };
-  }, [pathname, isOpen]);
+  }, [baseContext]);
 
   // If on excluded route or context is null, do not render
   if (!activeContext) {

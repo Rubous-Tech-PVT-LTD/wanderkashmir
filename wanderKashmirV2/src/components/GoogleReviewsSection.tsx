@@ -48,6 +48,7 @@ export default function GoogleReviewsSection({ initialData }: GoogleReviewsSecti
     ? `${initialData.userRatingsTotal.toLocaleString()}+ Google Reviews`
     : null;
 
+  const sectionRef = useRef<HTMLElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(true);
@@ -79,18 +80,31 @@ export default function GoogleReviewsSection({ initialData }: GoogleReviewsSecti
     return () => window.removeEventListener("resize", checkScroll);
   }, [checkScroll]);
 
-  // Smooth infinite auto-scroll logic
+  // Smooth infinite auto-scroll: only runs when section is visible, tab is active, and reduced motion is off
   useEffect(() => {
     const el = scrollRef.current;
-    if (!el) return;
+    const sectionEl = sectionRef.current;
+    if (!el || !sectionEl) return;
 
-    let animationFrameId: number;
+    const motionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
+    let animationFrameId: number | null = null;
+    let isInView = false;
+    let isTabVisible = !document.hidden;
+
+    const stopLoop = () => {
+      if (animationFrameId !== null) {
+        cancelAnimationFrame(animationFrameId);
+        animationFrameId = null;
+      }
+    };
 
     const scrollStep = () => {
+      if (!isInView || !isTabVisible || motionQuery.matches) {
+        animationFrameId = null;
+        return;
+      }
       if (!isHovered.current) {
-        // Move by 1 pixel every frame. Adjust for speed.
         el.scrollLeft += 1;
-        // If we reach the end, reset to start for an infinite loop effect
         if (el.scrollLeft >= el.scrollWidth - el.clientWidth - 1) {
           el.scrollLeft = 0;
         }
@@ -98,9 +112,40 @@ export default function GoogleReviewsSection({ initialData }: GoogleReviewsSecti
       animationFrameId = requestAnimationFrame(scrollStep);
     };
 
-    animationFrameId = requestAnimationFrame(scrollStep);
+    const syncLoop = () => {
+      if (isInView && isTabVisible && !motionQuery.matches) {
+        if (animationFrameId === null) {
+          animationFrameId = requestAnimationFrame(scrollStep);
+        }
+      } else {
+        stopLoop();
+      }
+    };
 
-    return () => cancelAnimationFrame(animationFrameId);
+    const observer = new IntersectionObserver(
+      (entries) => {
+        isInView = Boolean(entries[0]?.isIntersecting);
+        syncLoop();
+      },
+      { threshold: 0.05 }
+    );
+    observer.observe(sectionEl);
+
+    const handleVisibilityChange = () => {
+      isTabVisible = !document.hidden;
+      syncLoop();
+    };
+    const handleMotionChange = () => syncLoop();
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    motionQuery.addEventListener("change", handleMotionChange);
+
+    return () => {
+      stopLoop();
+      observer.disconnect();
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      motionQuery.removeEventListener("change", handleMotionChange);
+    };
   }, []);
 
   const handleScroll = (dir: "left" | "right") => {
@@ -128,9 +173,10 @@ export default function GoogleReviewsSection({ initialData }: GoogleReviewsSecti
 
   return (
     <section
+      ref={sectionRef}
       id="reviews"
       aria-labelledby="google-reviews-heading"
-      className="bg-white py-12 md:py-16 border-b transition-colors duration-200"
+      className="bg-white py-10 md:py-16 border-b transition-colors duration-200"
       style={{ borderColor: "var(--season-border)" }}
     >
       <div className="max-w-[1560px] mx-auto px-4 sm:px-6 lg:px-8">
@@ -256,9 +302,10 @@ export default function GoogleReviewsSection({ initialData }: GoogleReviewsSecti
                           <Image
                             src={rev.profile_photo_url}
                             alt={rev.author_name}
-                            fill
+                            width={44}
+                            height={44}
                             sizes="44px"
-                            className="object-cover"
+                            className="w-11 h-11 object-cover"
                             unoptimized={rev.profile_photo_url.includes("googleusercontent.com")}
                           />
                         ) : (

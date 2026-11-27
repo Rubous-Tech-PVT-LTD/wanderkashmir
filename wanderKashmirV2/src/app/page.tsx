@@ -13,6 +13,7 @@ import DestinationGuidesAndFAQ, {
 } from "@/components/DestinationGuidesAndFAQ";
 import GoogleReviewsSection from "@/components/GoogleReviewsSection";
 import Footer from "@/components/Footer";
+import MobileStickyConversionBar from "@/components/MobileStickyConversionBar";
 import prisma from "@/lib/prisma";
 import { getRealGoogleReviews } from "@/lib/googleReviews";
 import { JsonLd } from "@/components/JsonLd";
@@ -415,7 +416,7 @@ export default async function HomePage() {
   };
 
   return (
-    <div className="flex min-h-screen flex-col bg-white text-[var(--season-text)] transition-colors duration-200 overflow-x-clip">
+    <div className="flex min-h-screen flex-col bg-white text-[var(--season-text)] transition-colors duration-200 overflow-x-clip pb-18 md:pb-0">
       <JsonLd data={orgJsonLd} />
       {/* 1. Nav / Header */}
       <Navbar />
@@ -452,6 +453,9 @@ export default async function HomePage() {
 
       {/* 9. Footer */}
       <Footer />
+
+      {/* 10. Mobile Sticky Conversion Bar */}
+      <MobileStickyConversionBar />
     </div>
   );
 }

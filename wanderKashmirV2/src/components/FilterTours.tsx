@@ -207,7 +207,7 @@ export default function FilterTours({ initialTours }: FilterToursProps = {}) {
             >
               Filter Tours
             </h2>
-            <p className="text-[11px] text-[#56635E] font-sans mt-0.5 font-medium flex items-center gap-2">
+            <p className="text-xs text-[#56635E] font-sans mt-0.5 font-medium flex items-center gap-2">
               <span>
                 Showing {Math.min(filteredTours.length, 3)} {Math.min(filteredTours.length, 3) === 1 ? "package" : "packages"}
               </span>
@@ -215,10 +215,10 @@ export default function FilterTours({ initialTours }: FilterToursProps = {}) {
                 <button
                   type="button"
                   onClick={resetAllFilters}
-                  className="inline-flex items-center gap-1 text-[11px] font-semibold cursor-pointer transition-colors"
+                  className="inline-flex items-center gap-1 min-h-[44px] px-1 text-xs font-semibold cursor-pointer transition-colors"
                   style={{ color: "var(--season-primary)" }}
                 >
-                  <RotateCcw className="w-2.5 h-2.5" />
+                  <RotateCcw className="w-3 h-3" />
                   <span>Reset filters</span>
                 </button>
               )}
@@ -226,8 +226,8 @@ export default function FilterTours({ initialTours }: FilterToursProps = {}) {
           </div>
 
           {/* Sort by selector */}
-          <div className="flex items-center gap-1 self-start sm:self-auto">
-            <span className="text-[11px] font-semibold text-[#56635E] whitespace-nowrap">
+          <div className="flex items-center gap-1.5 self-start sm:self-auto">
+            <span className="text-xs font-semibold text-[#56635E] whitespace-nowrap">
               Sort by:
             </span>
             <div className="relative">
@@ -235,7 +235,7 @@ export default function FilterTours({ initialTours }: FilterToursProps = {}) {
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value)}
                 aria-label="Sort tour packages"
-                className="appearance-none bg-white border rounded-lg pl-2 pr-6 py-0.5 text-[11.5px] font-bold text-[#17211D] focus:outline-hidden transition-all cursor-pointer shadow-2xs hover:border-[var(--season-primary)]"
+                className="appearance-none bg-white border rounded-lg min-h-[44px] pl-2.5 pr-7 py-1 text-xs font-bold text-[#17211D] focus:outline-hidden transition-all cursor-pointer shadow-2xs hover:border-[var(--season-primary)]"
                 style={{ borderColor: "var(--season-border)" }}
               >
                 <option value="popular">Popular</option>
@@ -256,10 +256,10 @@ export default function FilterTours({ initialTours }: FilterToursProps = {}) {
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-1.5 sm:gap-2 mb-2 sm:mb-2.5">
           {/* 1. Duration */}
           <div
-            className="h-[42px] flex flex-col justify-between bg-white rounded-lg border px-3 py-1.5 shadow-2xs transition-all hover:border-[var(--season-primary)] focus-within:border-[var(--season-primary)]"
+            className="min-h-[46px] flex flex-col justify-between bg-white rounded-lg border px-3 py-1.5 shadow-2xs transition-all hover:border-[var(--season-primary)] focus-within:border-[var(--season-primary)]"
             style={{ borderColor: durationFilter !== "any" ? "var(--season-primary)" : "var(--season-border)" }}
           >
-            <label htmlFor="filter-duration" className="text-[9px] font-bold text-[#65766F] uppercase tracking-wider block leading-none select-none">
+            <label htmlFor="filter-duration" className="text-[11px] font-bold text-[#65766F] uppercase tracking-wider block leading-none select-none">
               Duration
             </label>
             <div className="relative flex items-center">
@@ -267,7 +267,7 @@ export default function FilterTours({ initialTours }: FilterToursProps = {}) {
                 id="filter-duration"
                 value={durationFilter}
                 onChange={(e) => setDurationFilter(e.target.value)}
-                className="w-full appearance-none bg-transparent text-[11.5px] font-bold text-[#17211D] pr-4 py-0 m-0 border-0 outline-hidden focus:outline-hidden cursor-pointer leading-tight"
+                className="w-full appearance-none bg-transparent text-xs font-bold text-[#17211D] pr-4 py-0 m-0 border-0 outline-hidden focus:outline-hidden cursor-pointer leading-tight"
               >
                 <option value="any">Any</option>
                 {availableDurations.map((days) => (
@@ -282,10 +282,10 @@ export default function FilterTours({ initialTours }: FilterToursProps = {}) {
 
           {/* 2. Destination */}
           <div
-            className="h-[42px] flex flex-col justify-between bg-white rounded-lg border px-3 py-1.5 shadow-2xs transition-all hover:border-[var(--season-primary)] focus-within:border-[var(--season-primary)]"
+            className="min-h-[46px] flex flex-col justify-between bg-white rounded-lg border px-3 py-1.5 shadow-2xs transition-all hover:border-[var(--season-primary)] focus-within:border-[var(--season-primary)]"
             style={{ borderColor: destinationFilter !== "any" ? "var(--season-primary)" : "var(--season-border)" }}
           >
-            <label htmlFor="filter-destination" className="text-[9px] font-bold text-[#65766F] uppercase tracking-wider block leading-none select-none">
+            <label htmlFor="filter-destination" className="text-[11px] font-bold text-[#65766F] uppercase tracking-wider block leading-none select-none">
               Destination
             </label>
             <div className="relative flex items-center">
@@ -293,7 +293,7 @@ export default function FilterTours({ initialTours }: FilterToursProps = {}) {
                 id="filter-destination"
                 value={destinationFilter}
                 onChange={(e) => setDestinationFilter(e.target.value)}
-                className="w-full appearance-none bg-transparent text-[11.5px] font-bold text-[#17211D] pr-4 py-0 m-0 border-0 outline-hidden focus:outline-hidden cursor-pointer leading-tight"
+                className="w-full appearance-none bg-transparent text-xs font-bold text-[#17211D] pr-4 py-0 m-0 border-0 outline-hidden focus:outline-hidden cursor-pointer leading-tight"
               >
                 <option value="any">Any</option>
                 {availableDestinations.map((dest) => (
@@ -308,10 +308,10 @@ export default function FilterTours({ initialTours }: FilterToursProps = {}) {
 
           {/* 3. Travel Style */}
           <div
-            className="h-[42px] flex flex-col justify-between bg-white rounded-lg border px-3 py-1.5 shadow-2xs transition-all hover:border-[var(--season-primary)] focus-within:border-[var(--season-primary)]"
+            className="min-h-[46px] flex flex-col justify-between bg-white rounded-lg border px-3 py-1.5 shadow-2xs transition-all hover:border-[var(--season-primary)] focus-within:border-[var(--season-primary)]"
             style={{ borderColor: travelStyleFilter !== "any" ? "var(--season-primary)" : "var(--season-border)" }}
           >
-            <label htmlFor="filter-style" className="text-[9px] font-bold text-[#65766F] uppercase tracking-wider block leading-none select-none">
+            <label htmlFor="filter-style" className="text-[11px] font-bold text-[#65766F] uppercase tracking-wider block leading-none select-none">
               Travel Style
             </label>
             <div className="relative flex items-center">
@@ -319,7 +319,7 @@ export default function FilterTours({ initialTours }: FilterToursProps = {}) {
                 id="filter-style"
                 value={travelStyleFilter}
                 onChange={(e) => setTravelStyleFilter(e.target.value)}
-                className="w-full appearance-none bg-transparent text-[11.5px] font-bold text-[#17211D] pr-4 py-0 m-0 border-0 outline-hidden focus:outline-hidden cursor-pointer leading-tight"
+                className="w-full appearance-none bg-transparent text-xs font-bold text-[#17211D] pr-4 py-0 m-0 border-0 outline-hidden focus:outline-hidden cursor-pointer leading-tight"
               >
                 <option value="any">Any</option>
                 <option value="family">Family</option>
@@ -334,10 +334,10 @@ export default function FilterTours({ initialTours }: FilterToursProps = {}) {
 
           {/* 4. Month */}
           <div
-            className="h-[42px] flex flex-col justify-between bg-white rounded-lg border px-3 py-1.5 shadow-2xs transition-all hover:border-[var(--season-primary)] focus-within:border-[var(--season-primary)]"
+            className="min-h-[46px] flex flex-col justify-between bg-white rounded-lg border px-3 py-1.5 shadow-2xs transition-all hover:border-[var(--season-primary)] focus-within:border-[var(--season-primary)]"
             style={{ borderColor: monthFilter !== "any" ? "var(--season-primary)" : "var(--season-border)" }}
           >
-            <label htmlFor="filter-month" className="text-[9px] font-bold text-[#65766F] uppercase tracking-wider block leading-none select-none">
+            <label htmlFor="filter-month" className="text-[11px] font-bold text-[#65766F] uppercase tracking-wider block leading-none select-none">
               Month
             </label>
             <div className="relative flex items-center">
@@ -345,7 +345,7 @@ export default function FilterTours({ initialTours }: FilterToursProps = {}) {
                 id="filter-month"
                 value={monthFilter}
                 onChange={(e) => setMonthFilter(e.target.value)}
-                className="w-full appearance-none bg-transparent text-[11.5px] font-bold text-[#17211D] pr-4 py-0 m-0 border-0 outline-hidden focus:outline-hidden cursor-pointer leading-tight"
+                className="w-full appearance-none bg-transparent text-xs font-bold text-[#17211D] pr-4 py-0 m-0 border-0 outline-hidden focus:outline-hidden cursor-pointer leading-tight"
               >
                 <option value="any">Any</option>
                 <option value="jan">January</option>
@@ -367,10 +367,10 @@ export default function FilterTours({ initialTours }: FilterToursProps = {}) {
 
           {/* 5. Budget */}
           <div
-            className="col-span-2 sm:col-span-1 h-[42px] flex flex-col justify-between bg-white rounded-lg border px-3 py-1.5 shadow-2xs transition-all hover:border-[var(--season-primary)] focus-within:border-[var(--season-primary)]"
+            className="col-span-2 sm:col-span-1 min-h-[46px] flex flex-col justify-between bg-white rounded-lg border px-3 py-1.5 shadow-2xs transition-all hover:border-[var(--season-primary)] focus-within:border-[var(--season-primary)]"
             style={{ borderColor: budgetFilter !== "any" ? "var(--season-primary)" : "var(--season-border)" }}
           >
-            <label htmlFor="filter-budget" className="text-[9px] font-bold text-[#65766F] uppercase tracking-wider block leading-none select-none">
+            <label htmlFor="filter-budget" className="text-[11px] font-bold text-[#65766F] uppercase tracking-wider block leading-none select-none">
               Budget
             </label>
             <div className="relative flex items-center">
@@ -378,7 +378,7 @@ export default function FilterTours({ initialTours }: FilterToursProps = {}) {
                 id="filter-budget"
                 value={budgetFilter}
                 onChange={(e) => setBudgetFilter(e.target.value)}
-                className="w-full appearance-none bg-transparent text-[11.5px] font-bold text-[#17211D] pr-4 py-0 m-0 border-0 outline-hidden focus:outline-hidden cursor-pointer leading-tight"
+                className="w-full appearance-none bg-transparent text-xs font-bold text-[#17211D] pr-4 py-0 m-0 border-0 outline-hidden focus:outline-hidden cursor-pointer leading-tight"
               >
                 <option value="any">Any</option>
                 <option value="under15k">Under ₹15,000</option>
@@ -395,14 +395,14 @@ export default function FilterTours({ initialTours }: FilterToursProps = {}) {
             3. CARDS GRID: 3 Compact Cards (100% Fully Visible in Viewport)
         =================================================================== */}
         {filteredTours.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-3.5">
+          <div className="flex overflow-x-auto snap-x snap-mandatory scrollbar-none gap-3 -mx-4 px-4 pb-2 md:mx-0 md:px-0 md:pb-0 md:grid md:grid-cols-2 lg:grid-cols-3 md:gap-3.5">
             {filteredTours.slice(0, 3).map((tour) => {
               const isFav = favorites[tour.id];
 
               return (
                 <div
                   key={tour.id}
-                  className="group flex flex-col bg-white rounded-xl overflow-hidden border transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5 hover:border-[var(--season-primary)]"
+                  className="group w-[82vw] max-w-[310px] shrink-0 snap-start md:w-auto md:max-w-none md:shrink flex flex-col bg-white rounded-xl overflow-hidden border transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5 hover:border-[var(--season-primary)]"
                   style={{
                     borderColor: "var(--season-border)",
                   }}
@@ -438,12 +438,12 @@ export default function FilterTours({ initialTours }: FilterToursProps = {}) {
                       </div>
                     )}
 
-                    {/* Wishlist Heart Button (Top Right - Thin Outline Floating) */}
+                    {/* Wishlist Heart Button (Top Right - 44x44 touch target) */}
                     <button
                       type="button"
                       onClick={(e) => toggleFavorite(e, tour.id)}
                       aria-label={isFav ? "Remove from wishlist" : "Add to wishlist"}
-                      className="absolute top-1.5 right-1.5 z-10 p-1 cursor-pointer transition-transform duration-200 hover:scale-115 active:scale-90 focus:outline-hidden group/heart"
+                      className="absolute top-0 right-0 z-10 min-w-[44px] min-h-[44px] flex items-center justify-center cursor-pointer transition-transform duration-200 hover:scale-115 active:scale-90 focus:outline-hidden group/heart"
                     >
                       <Heart
                         strokeWidth={1.8}
@@ -460,7 +460,7 @@ export default function FilterTours({ initialTours }: FilterToursProps = {}) {
                   <div className="p-2.5 sm:p-3 flex flex-col flex-1 justify-between">
                     <div>
                       {/* Duration */}
-                      <span className="text-[10.5px] text-[#56635E] font-medium block">
+                      <span className="text-xs text-[#56635E] font-medium block">
                         {tour.duration}
                       </span>
 
@@ -472,7 +472,7 @@ export default function FilterTours({ initialTours }: FilterToursProps = {}) {
                       </h3>
 
                       {/* Route Path with Arrows */}
-                      <div className="flex items-center gap-1 flex-wrap text-[10.5px] text-[#56635E] mt-0.5">
+                      <div className="flex items-center gap-1 flex-wrap text-xs text-[#56635E] mt-0.5">
                         {tour.route.map((city, idx) => (
                           <React.Fragment key={city}>
                             <span className="font-medium">{city}</span>
@@ -486,10 +486,10 @@ export default function FilterTours({ initialTours }: FilterToursProps = {}) {
                       {/* Star Rating & Review Count */}
                       <div className="flex items-center gap-1 mt-1">
                         <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
-                        <span className="text-[11px] font-bold text-[#17211D]">
+                        <span className="text-xs font-bold text-[#17211D]">
                           {tour.rating.toFixed(1)}
                         </span>
-                        <span className="text-[10.5px] text-[#56635E]">
+                        <span className="text-xs text-[#56635E]">
                           ({tour.reviewsCount})
                         </span>
                       </div>
@@ -503,7 +503,7 @@ export default function FilterTours({ initialTours }: FilterToursProps = {}) {
                           >
                             {renderInclusionIcon(item.type)}
                             <span
-                              className="font-medium text-[10.5px] text-[#2C3834] truncate"
+                              className="font-medium text-xs text-[#2C3834] truncate"
                               title={item.label}
                             >
                               {item.label}
@@ -519,14 +519,14 @@ export default function FilterTours({ initialTours }: FilterToursProps = {}) {
                         <span className="text-[15px] sm:text-[16px] font-black text-[#17211D] leading-none">
                           {formatINR(tour.price)}
                         </span>
-                        <span className="text-[10px] text-[#56635E] font-medium">
+                        <span className="text-xs text-[#56635E] font-medium">
                           /person
                         </span>
                       </div>
 
                       <Link
                         href={`/tours/${tour.slug}`}
-                        className="btn-season-primary inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-bold shadow-xs transition-all duration-200 active:scale-95 group/btn"
+                        className="btn-season-primary inline-flex items-center gap-1 min-h-[44px] px-3 py-2 rounded-lg text-xs font-bold shadow-xs transition-all duration-200 active:scale-95 group/btn"
                       >
                         <span>View Itinerary</span>
                         <ArrowRight className="w-2.5 h-2.5 transition-transform duration-200 group-hover/btn:translate-x-0.5" />
