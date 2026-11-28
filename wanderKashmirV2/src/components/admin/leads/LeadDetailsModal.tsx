@@ -68,6 +68,7 @@ function getLeadStatusMeta(st: string): {
     return { label: "Quote to Client", tone: "blue" };
   }
   if (upper === "CONFIRMED") return { label: "Confirmed", tone: "season" };
+  if (upper === "COMPLETED") return { label: "Completed", tone: "emerald" };
   if (upper === "PENDING") return { label: "Pending", tone: "amber" };
   if (upper === "CANCELLED") return { label: "Cancelled", tone: "rose" };
   return { label: st || "Pending", tone: "slate" };
@@ -575,6 +576,7 @@ export default function LeadDetailsModal({ lead, isOpen, onClose }: LeadDetailsM
                   <option value="PENDING">Pending (New Lead)</option>
                   <option value="CONTACTED">Quote to Client</option>
                   <option value="CONFIRMED">Confirmed (Advance Locked)</option>
+                  <option value="COMPLETED">Completed</option>
                   <option value="CANCELLED">Cancelled</option>
                 </select>
               </div>

@@ -38,6 +38,9 @@ function getLeadStatusMeta(status: string): {
   if (u === "CONFIRMED") {
     return { label: "Confirmed", tone: "emerald" };
   }
+  if (u === "COMPLETED") {
+    return { label: "Completed", tone: "emerald" };
+  }
   if (u === "CANCELLED") {
     return { label: "Cancelled", tone: "rose" };
   }
@@ -60,15 +63,17 @@ export default function LeadsTableClient({ initialLeads }: LeadsTableClientProps
     let pending = 0;
     let contacted = 0;
     let confirmed = 0;
+    let completed = 0;
     let cancelled = 0;
     for (const lead of initialLeads) {
       const u = (lead.status || "").toUpperCase();
       if (u === "PENDING") pending++;
       else if (u === "CONTACTED" || u === "QUOTE TO CLIENT" || u === "QUOTED") contacted++;
       else if (u === "CONFIRMED") confirmed++;
+      else if (u === "COMPLETED") completed++;
       else if (u === "CANCELLED") cancelled++;
     }
-    return { all: initialLeads.length, pending, contacted, confirmed, cancelled };
+    return { all: initialLeads.length, pending, contacted, confirmed, completed, cancelled };
   }, [initialLeads]);
 
   const filteredLeads = useMemo(() => {
@@ -162,6 +167,7 @@ export default function LeadsTableClient({ initialLeads }: LeadsTableClientProps
     { id: "PENDING", label: "Pending", count: counts.pending },
     { id: "CONTACTED", label: "Quote to Client", count: counts.contacted },
     { id: "CONFIRMED", label: "Confirmed", count: counts.confirmed },
+    { id: "COMPLETED", label: "Completed", count: counts.completed },
     { id: "CANCELLED", label: "Cancelled", count: counts.cancelled },
   ];
 

@@ -35,6 +35,7 @@ const STATUS_PRESETS: Record<string, { label: string; tone: StatusTone }> = {
   LIVE: { label: "Live", tone: "season" },
   APPROVED: { label: "Approved", tone: "season" },
   CONFIRMED: { label: "Confirmed", tone: "season" },
+  COMPLETED: { label: "Completed", tone: "emerald" },
   VALIDATED: { label: "Validated", tone: "season" },
   PENDING: { label: "Pending", tone: "amber" },
   NEW: { label: "New", tone: "amber" },
