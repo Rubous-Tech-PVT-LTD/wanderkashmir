@@ -55,7 +55,7 @@ export default function VoucherToolbar({ activeSeason }: VoucherToolbarProps) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const basePath = useAdminBasePath();
+  const { basePath } = useAdminBasePath();
 
   const handleSelectSeason = (season: SeasonId) => {
     const params = new URLSearchParams(searchParams.toString());

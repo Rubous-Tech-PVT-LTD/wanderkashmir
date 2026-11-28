@@ -180,7 +180,7 @@ function parseInitialLeadState(lead: AdminLeadItem | null) {
 
 export default function LeadDetailsModal({ lead, isOpen, onClose }: LeadDetailsModalProps) {
   const router = useRouter();
-  const basePath = useAdminBasePath();
+  const { basePath } = useAdminBasePath();
   const { selectedSeason } = useSeasonalTheme();
 
   const initial = parseInitialLeadState(lead);
