@@ -29,7 +29,7 @@ import NearbyPlacesEditor, {
   NearbyPlaceItemConfig,
   AvailablePlaceOption,
 } from "./NearbyPlacesEditor";
-import type { AvailablePropertyOption } from "@/lib/admin/destinations";
+import type { AvailablePropertyOption, AvailableTourOption } from "@/lib/admin/destinations";
 import { GalleryImageItem, isValidImageUrl } from "@/lib/places/galleryValidation";
 import {
   AdminPageHeader,
@@ -86,6 +86,7 @@ interface DestinationFormProps {
   };
   availablePlaces: PlaceOption[];
   availableProperties?: AvailablePropertyOption[];
+  availableTours?: AvailableTourOption[];
   isEdit?: boolean;
 }
 
@@ -97,6 +98,7 @@ export default function DestinationForm({
   initialData,
   availablePlaces,
   availableProperties = [],
+  availableTours = [],
   isEdit = false,
 }: DestinationFormProps) {
   const router = useRouter();
@@ -198,13 +200,20 @@ export default function DestinationForm({
     }));
   });
 
-  // Featured Properties & Linked Places
+  // Featured Properties, Featured Tours & Linked Places
   const [featuredPropertyIds, setFeaturedPropertyIds] = useState<string[]>(
     Array.isArray(strategy.featuredPropertyIds)
       ? (strategy.featuredPropertyIds as string[])
       : []
   );
   const [selectedPropertyToAdd, setSelectedPropertyToAdd] = useState("");
+
+  const [featuredTourIds, setFeaturedTourIds] = useState<string[]>(
+    Array.isArray(strategy.featuredTourIds)
+      ? (strategy.featuredTourIds as string[])
+      : []
+  );
+  const [selectedTourToAdd, setSelectedTourToAdd] = useState("");
 
   const [linkedPlaces, setLinkedPlaces] = useState<LinkedPlaceItem[]>(initialData?.places || []);
   const [selectedPlaceIdToAdd, setSelectedPlaceIdToAdd] = useState("");
@@ -275,6 +284,7 @@ export default function DestinationForm({
         spots: photoSpots,
       },
       featuredPropertyIds,
+      featuredTourIds,
     };
 
     try {
@@ -410,7 +420,11 @@ export default function DestinationForm({
     { key: "basics", label: "Basics & SEO" },
     { key: "editorial", label: "Editorial & Nearby" },
     { key: "media", label: "Gallery & Photo Spots", count: galleryItems.length },
-    { key: "relations", label: "Places & Stays", count: linkedPlaces.length + featuredPropertyIds.length },
+    {
+      key: "relations",
+      label: "Places, Stays & Tours",
+      count: linkedPlaces.length + featuredPropertyIds.length + featuredTourIds.length,
+    },
     { key: "faqs", label: "FAQs", count: faqs.length },
   ];
 
@@ -1042,6 +1056,117 @@ export default function DestinationForm({
                         onClick={() => setFeaturedPropertyIds(featuredPropertyIds.filter((id) => id !== propId))}
                         className="p-1.5 rounded-md text-slate-400 hover:text-rose-600 hover:bg-rose-50 cursor-pointer"
                         aria-label="Remove stay"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          {/* Featured Tours */}
+          <div className="bg-white border border-slate-200 rounded-md p-5 space-y-4">
+            <div className="pb-3 border-b border-slate-100">
+              <h2 className="text-sm font-semibold text-slate-900">
+                Featured Tours ({featuredTourIds.length})
+              </h2>
+              <p className="text-xs text-slate-500 mt-0.5">
+                Pin live tour packages for the &ldquo;Featured Tours&rdquo; section. Leave empty to auto-match by destination.
+              </p>
+            </div>
+
+            <div className="flex flex-col sm:flex-row gap-2">
+              <select
+                value={selectedTourToAdd}
+                onChange={(e) => setSelectedTourToAdd(e.target.value)}
+                className="flex-1 bg-white border border-slate-200 rounded-md px-3 py-2 text-xs text-slate-700 focus:outline-none focus:border-[var(--season-primary)] focus:ring-1 focus:ring-[var(--season-primary)]/20"
+              >
+                <option value="">Choose a live tour package to pin...</option>
+                {availableTours
+                  .filter((t) => !featuredTourIds.includes(t.id))
+                  .map((t) => (
+                    <option key={t.id} value={t.id}>
+                      {t.title} — {t.duration} (₹{t.price?.toLocaleString("en-IN")})
+                    </option>
+                  ))}
+              </select>
+              <button
+                type="button"
+                disabled={!selectedTourToAdd}
+                onClick={() => {
+                  if (!selectedTourToAdd || featuredTourIds.includes(selectedTourToAdd)) return;
+                  setFeaturedTourIds([...featuredTourIds, selectedTourToAdd]);
+                  setSelectedTourToAdd("");
+                }}
+                className="inline-flex items-center justify-center gap-1 px-3.5 py-2 rounded-md bg-[var(--season-primary)] text-white text-xs font-medium hover:bg-[var(--season-primary-hover)] disabled:opacity-40 cursor-pointer shrink-0 shadow-xs"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                <span>Add Tour</span>
+              </button>
+            </div>
+
+            {featuredTourIds.length > 0 && (
+              <div className="divide-y divide-slate-100">
+                {featuredTourIds.map((tourId, index) => {
+                  const tour = availableTours.find((t) => t.id === tourId);
+                  return (
+                    <div key={tourId} className="py-2.5 flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="flex gap-1 shrink-0">
+                          <button
+                            type="button"
+                            disabled={index === 0}
+                            onClick={() => {
+                              const next = [...featuredTourIds];
+                              [next[index], next[index - 1]] = [next[index - 1], next[index]];
+                              setFeaturedTourIds(next);
+                            }}
+                            className="p-1 rounded border border-slate-200 bg-white text-slate-500 hover:text-slate-900 disabled:opacity-35 cursor-pointer"
+                            aria-label="Move tour up"
+                          >
+                            <ArrowUp className="w-3 h-3" />
+                          </button>
+                          <button
+                            type="button"
+                            disabled={index === featuredTourIds.length - 1}
+                            onClick={() => {
+                              const next = [...featuredTourIds];
+                              [next[index], next[index + 1]] = [next[index + 1], next[index]];
+                              setFeaturedTourIds(next);
+                            }}
+                            className="p-1 rounded border border-slate-200 bg-white text-slate-500 hover:text-slate-900 disabled:opacity-35 cursor-pointer"
+                            aria-label="Move tour down"
+                          >
+                            <ArrowDown className="w-3 h-3" />
+                          </button>
+                        </div>
+                        <div className="w-10 h-8 rounded bg-slate-100 relative overflow-hidden border border-slate-200 shrink-0">
+                          {tour?.imageUrl ? (
+                            <Image src={tour.imageUrl} alt={tour.title} fill className="object-cover" sizes="40px" />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center text-slate-400">
+                              <MapPin className="w-3.5 h-3.5" />
+                            </div>
+                          )}
+                        </div>
+                        <div className="min-w-0">
+                          <div className="text-xs font-medium text-slate-900 truncate">
+                            {tour ? tour.title : tourId}
+                          </div>
+                          {tour && (
+                            <div className="text-[11px] text-slate-500 truncate">
+                              {tour.duration} · ₹{tour.price?.toLocaleString("en-IN")}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setFeaturedTourIds(featuredTourIds.filter((id) => id !== tourId))}
+                        className="p-1.5 rounded-md text-slate-400 hover:text-rose-600 hover:bg-rose-50 cursor-pointer"
+                        aria-label="Remove tour"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
                       </button>

@@ -3,6 +3,15 @@ import { SeoWorkflowState } from "@prisma/client";
 import type { AvailablePlaceOption } from "@/components/admin/destinations/NearbyPlacesEditor";
 export type { AvailablePlaceOption };
 
+export interface AvailableTourOption {
+  id: string;
+  title: string;
+  slug: string;
+  duration: string;
+  price: number;
+  imageUrl: string | null;
+}
+
 export interface AdminDestinationListItem {
   id: string;
   slug: string;
@@ -396,6 +405,38 @@ export async function getAllAvailableProperties(): Promise<AvailablePropertyOpti
     }));
   } catch (error) {
     console.error("Error fetching available properties:", error);
+    return [];
+  }
+}
+
+/**
+ * Fetch live tour packages for Featured Tours selection in DestinationForm.
+ */
+export async function getAllAvailableTours(): Promise<AvailableTourOption[]> {
+  try {
+    const tours = await prisma.tour.findMany({
+      where: { isLive: true },
+      select: {
+        id: true,
+        title: true,
+        slug: true,
+        duration: true,
+        price: true,
+        images: true,
+      },
+      orderBy: { createdAt: "desc" },
+    });
+
+    return tours.map((t) => ({
+      id: t.id,
+      title: t.title,
+      slug: t.slug,
+      duration: t.duration,
+      price: t.price,
+      imageUrl: t.images && t.images.length > 0 ? t.images[0] : null,
+    }));
+  } catch (error) {
+    console.error("Error fetching available tours:", error);
     return [];
   }
 }

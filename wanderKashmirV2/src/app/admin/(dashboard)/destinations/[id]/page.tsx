@@ -2,6 +2,7 @@ import {
   getAdminDestinationById,
   getAllAvailablePlaces,
   getAllAvailableProperties,
+  getAllAvailableTours,
 } from "@/lib/admin/destinations";
 import DestinationForm from "@/components/admin/destinations/DestinationForm";
 import { AdminNotFoundCard } from "@/components/admin/ui";
@@ -15,10 +16,11 @@ export default async function EditDestinationPage({
 }) {
   const { id } = await params;
 
-  const [destination, availablePlaces, availableProperties] = await Promise.all([
+  const [destination, availablePlaces, availableProperties, availableTours] = await Promise.all([
     getAdminDestinationById(id),
     getAllAvailablePlaces(),
     getAllAvailableProperties(),
+    getAllAvailableTours(),
   ]);
 
   if (!destination) {
@@ -62,6 +64,7 @@ export default async function EditDestinationPage({
       initialData={initialData}
       availablePlaces={availablePlaces}
       availableProperties={availableProperties}
+      availableTours={availableTours}
       isEdit={true}
     />
   );

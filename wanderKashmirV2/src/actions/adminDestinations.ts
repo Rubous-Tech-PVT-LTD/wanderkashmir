@@ -47,6 +47,7 @@ export interface DestinationFormInput {
     }>;
   } | null;
   featuredPropertyIds?: string[];
+  featuredTourIds?: string[];
 }
 
 export interface PlaceFormInput {
@@ -227,6 +228,9 @@ export async function createDestinationAction(
       dynamicSections,
       featuredPropertyIds: Array.isArray(input.featuredPropertyIds)
         ? input.featuredPropertyIds.filter(Boolean)
+        : [],
+      featuredTourIds: Array.isArray(input.featuredTourIds)
+        ? input.featuredTourIds.filter(Boolean)
         : [],
     };
 
@@ -420,6 +424,12 @@ export async function updateDestinationAction(
           ? (Array.isArray(input.featuredPropertyIds) ? input.featuredPropertyIds.filter(Boolean) : [])
           : Array.isArray(existingStrategy.featuredPropertyIds)
           ? (existingStrategy.featuredPropertyIds as string[])
+          : [],
+      featuredTourIds:
+        input.featuredTourIds !== undefined
+          ? (Array.isArray(input.featuredTourIds) ? input.featuredTourIds.filter(Boolean) : [])
+          : Array.isArray(existingStrategy.featuredTourIds)
+          ? (existingStrategy.featuredTourIds as string[])
           : [],
     };
 
